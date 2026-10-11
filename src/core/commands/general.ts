@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { curseForgeAuthStatus } from '../curseforgeAuth'
 import { command } from './registry'
 
 export const status = command({
@@ -45,4 +46,27 @@ export const journal = command({
           .map((e) => `${e.at.slice(0, 16).replace('T', ' ')} ${e.ok ? '✔' : '✖'} ${e.operation} — ${e.source}${e.detail ? ` · ${e.detail}` : ''}${e.error ? ` · ${e.error}` : ''}`)
           .join('\n')
       : 'Aucune opération enregistrée.'
+})
+
+const SOURCES = { saved: 'enregistré dans l’application', env: 'variable d’environnement', dotenv: 'fichier .env' } as const
+
+export const curseforgeStatus = command({
+  name: 'curseforge status',
+  summary: 'Dit si la clé de l’API CurseForge et le jeton d’auteur sont disponibles et acceptés par CurseForge.',
+  description:
+    'Ne les affiche jamais. Ils s’enregistrent dans l’application (Paramètres → Compte CurseForge), pas par une commande. ' +
+    'La clé sert à chercher les mises à jour des mods ; le jeton, à mettre des fichiers en ligne sur CurseForge.',
+  params: z.object({}),
+  kind: 'read',
+  run: () => curseForgeAuthStatus({ dotenvDir: process.cwd() }),
+  print: (status) =>
+    (['apiKey', 'uploadToken'] as const)
+      .map((kind) => {
+        const s = status[kind]
+        const [label, e] = kind === 'apiKey' ? ['Clé de l’API CurseForge', 'e'] : ['Jeton d’auteur CurseForge', '']
+        if (!s.source) return `${label} : absent${e}`
+        const verdict = s.valid ? `accepté${e}` : s.valid === false ? `refusé${e}` : `non vérifié${e}`
+        return `${label} : ${SOURCES[s.source]}, ${verdict}${s.error ? ` (${s.error})` : ''}`
+      })
+      .join('\n')
 })

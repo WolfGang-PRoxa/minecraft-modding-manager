@@ -9,6 +9,7 @@ Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment 
 | `%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
 | `%APPDATA%\Modpack Downloader\settings.json` | Tes réglages (voir ci-dessous). |
 | `%APPDATA%\Modpack Downloader\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
+| `%APPDATA%\Modpack Downloader\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
 | `%APPDATA%\Modpack Downloader\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
 | `%APPDATA%\Modpack Downloader\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
 | `%APPDATA%\Modpack Downloader\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |

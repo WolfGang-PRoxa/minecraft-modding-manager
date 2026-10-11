@@ -1,4 +1,4 @@
-import { journal, status } from './general'
+import { curseforgeStatus, journal, status } from './general'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
@@ -28,5 +28,6 @@ export const COMMANDS = [
   publishPlan,
   publishApply,
   releasesDelete,
+  curseforgeStatus,
   journal
 ] as unknown as Command[]

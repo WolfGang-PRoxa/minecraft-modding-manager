@@ -8,7 +8,7 @@ import { formatDate } from '../lib/format'
 import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
-import { ClaudeCodeSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
+import { ClaudeCodeSetting, CurseForgeAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
 import { APP_NAME } from '../../../shared/config'
 
@@ -175,6 +175,12 @@ export function SettingsDialog() {
             </Button>
           </div>
         </Section>
+
+        {publisher && (
+          <Section title="Compte CurseForge">
+            <CurseForgeAccountSetting />
+          </Section>
+        )}
 
         {publisher && (
           <Section title="Claude Code et terminal">

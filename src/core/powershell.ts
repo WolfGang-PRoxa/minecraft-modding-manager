@@ -28,3 +28,21 @@ export async function moveToRecycleBin(path: string): Promise<void> {
     path
   )
 }
+
+const DPAPI = "Add-Type -AssemblyName System.Security; $d=[Console]::In.ReadToEnd().Trim(); $s='CurrentUser';"
+
+/**
+ * Chiffre un secret pour la session Windows de l'utilisateur (DPAPI) : seul ce compte, sur ce PC, peut le relire.
+ * Résultat en base64, à enregistrer dans un fichier.
+ */
+export const protectSecret = (text: string): Promise<string> =>
+  powershell(
+    `${DPAPI} [Convert]::ToBase64String([Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes($d),$null,$s))`,
+    text
+  )
+
+export const unprotectSecret = (base64: string): Promise<string> =>
+  powershell(
+    `${DPAPI} [Text.Encoding]::UTF8.GetString([Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String($d),$null,$s))`,
+    base64
+  )

@@ -1,8 +1,9 @@
 import { BrowserWindow, dialog, ipcMain, shell, app } from 'electron'
-import type { InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
+import type { CurseForgeSecretKind, InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
 import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
 import { registerAuthIpc } from './authIpc'
 import { registerClaudeCodeIpc } from './claudeCode'
+import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth'
 import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
 import { getCatalog } from './github'
 import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
@@ -21,6 +22,16 @@ export function registerIpc(
   registerAuthIpc()
   registerRoleIpc()
   registerClaudeCodeIpc()
+  ipcMain.handle('cfauth:status', () => curseForgeAuthStatus())
+  ipcMain.handle('cfauth:save', async (_e, kind: CurseForgeSecretKind, value: string | null) => {
+    if (kind !== 'apiKey' && kind !== 'uploadToken') return { ok: false, error: 'Secret inconnu.' }
+    try {
+      await saveCurseForgeSecret(kind, typeof value === 'string' ? value : null)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
 
   const send = (channel: string, payload: unknown) => {
     const win = getWindow()

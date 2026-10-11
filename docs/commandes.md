@@ -68,6 +68,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
+| `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :

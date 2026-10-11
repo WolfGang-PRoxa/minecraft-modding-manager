@@ -6,7 +6,7 @@ import { parseRepo, repoSlug } from '../shared/repo'
 import type { CredentialSource, DeviceLogin, GitHubAccount, RepoInfo, RepoRef } from '../shared/types'
 import { readJson, writeJsonAtomic } from './fsutil'
 import { GITHUB_HEADERS, repoApiBase, userApiUrl } from './githubEnv'
-import { powershell } from './powershell'
+import { protectSecret as protect, unprotectSecret as unprotect } from './powershell'
 import { settingsDir } from './settings'
 
 // Connexion GitHub partagée par l'application, le studio et les scripts. Le jeton est chiffré par
@@ -25,18 +25,6 @@ interface StoredCredential {
 }
 
 const credentialFile = () => join(settingsDir(), 'github-auth.json')
-
-const DPAPI = "Add-Type -AssemblyName System.Security; $d=[Console]::In.ReadToEnd().Trim(); $s='CurrentUser';"
-const protect = (text: string) =>
-  powershell(
-    `${DPAPI} [Convert]::ToBase64String([Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes($d),$null,$s))`,
-    text
-  )
-const unprotect = (base64: string) =>
-  powershell(
-    `${DPAPI} [Text.Encoding]::UTF8.GetString([Security.Cryptography.ProtectedData]::Unprotect([Convert]::FromBase64String($d),$null,$s))`,
-    base64
-  )
 
 // Déchiffrer lance PowerShell : on garde le résultat tant que le fichier ne change pas.
 let decrypted: { key: string; token: string } | null = null

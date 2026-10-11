@@ -3,7 +3,8 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès que tu le modifies.
 
-Les sections **Dossier des modpacks** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
+Les sections **Dossier des modpacks**, **Compte CurseForge** et **Claude Code et terminal** n’apparaissent qu’en mode
+publieur.
 
 ## Utilisation
 
@@ -60,6 +61,20 @@ Indique si Modpack Manager a un raccourci sur ton bureau.
 - **Ajouter au bureau** (ou **Recréer sur le bureau**) crée le raccourci sur le bureau, ou le remplace. Le recréer
   répare aussi une icône restée vide.
 - **Autre emplacement…** crée un raccourci à l’endroit de ton choix.
+
+## Compte CurseForge
+
+Réservé aux publieurs : ce qu’il faut pour travailler avec CurseForge.
+
+- **Clé de l’API CurseForge** : sert à chercher les mises à jour des mods, packs de textures et shaders. Elle se crée
+  sur [console.curseforge.com](https://console.curseforge.com/) (**Profile API key**).
+- **Jeton d’auteur** : sert à mettre tes modpacks en ligne sur tes projets CurseForge. Il se crée sur
+  [authors.curseforge.com](https://authors.curseforge.com/account/api-tokens) (**API Tokens**).
+
+Colle la clé ou le jeton dans son champ, puis **Vérifier et enregistrer** : CurseForge doit l’accepter, sinon rien
+n’est enregistré. L’état indique s’il est enregistré et accepté. **Retirer** le supprime de l’application. Les deux
+sont chiffrés par Windows pour ton compte (comme ta connexion GitHub) ; ni l’application, ni le terminal, ni Claude
+ne les affichent.
 
 ## Claude Code et terminal
 

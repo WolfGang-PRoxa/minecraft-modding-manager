@@ -10,6 +10,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ### Ajouts
 
+- Publieurs : **Paramètres → Compte CurseForge** enregistre ta clé de l’API CurseForge et ton jeton d’auteur,
+  vérifiés par CurseForge puis chiffrés par Windows. Ils prépareront la mise à jour des mods et la mise en ligne sur
+  CurseForge.
+
 - Studio : tes **profils CurseForge**, rangés dans les mêmes dossiers que dans CurseForge, chacun face au modpack qui
   en vient. Une pastille dit s’il est à jour ou s’il a changé depuis la dernière version, et un clic propose la suite :
   créer la version suivante, ou créer un modpack depuis un profil (avec sa v1) en une fois.

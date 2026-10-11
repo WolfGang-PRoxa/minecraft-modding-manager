@@ -17,6 +17,7 @@ import { COMMANDS } from '../core/commands'
 import { createCommandRuntime } from '../core/commands/context'
 import { printPlan } from '../core/commands/publish'
 import type { Command, CommandContext } from '../core/commands/registry'
+import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { describeError, StudioError } from '../core/studio/analyze'
 import { startMcpServer } from '../mcp/server'
@@ -162,7 +163,10 @@ async function interactive(name: 'ranger' | 'publier', runtime: Runtime, globals
 
 async function main(): Promise<void> {
   // Le faux GitHub des tests (MPD_GITHUB_API) n'est jamais pris en compte dans l'application installée.
-  if (!/app\.asar/i.test(process.argv[1] ?? '')) setGitHubApiOverride(process.env.MPD_GITHUB_API)
+  if (!/app\.asar/i.test(process.argv[1] ?? '')) {
+    setGitHubApiOverride(process.env.MPD_GITHUB_API)
+    setCurseForgeApiOverride(process.env.MPD_CURSEFORGE_API)
+  }
   const { globals, rest } = splitGlobals(process.argv.slice(2))
   const repo = globals.repo ? parseRepo(globals.repo) : undefined
   if (globals.repo && !repo) throw new StudioError(`Dépôt invalide : ${globals.repo} (format : propriétaire/dépôt).`)

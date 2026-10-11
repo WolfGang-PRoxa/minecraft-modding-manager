@@ -111,7 +111,15 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     fichier d'ATM10 pèse 3 Mo). `listGroups` : dossiers de CurseForge (`groups.json`, Minecraft seulement). Lecture
     seule : l'app n'écrit jamais dans les profils ni dans les fichiers de CurseForge.
   - `zip.ts` (yauzl, protection zip-slip, accepte un zip avec dossier racine), `fsutil.ts`, `powershell.ts`
-    (`powershell` : script sans fenêtre, données par stdin ; `moveToRecycleBin`).
+    (`powershell` : script sans fenêtre, données par stdin ; `moveToRecycleBin` ; `protectSecret` / `unprotectSecret` :
+    DPAPI, partagés par `auth.ts` et `curseforgeAuth.ts`).
+  - `curseforgeAuth.ts` : clé de l'API CurseForge (`apiKey`, en-tête `x-api-key`, vérifiée par `GET /v1/games/432`)
+    et jeton d'auteur (`uploadToken`, en-tête `X-Api-Token`, vérifié par `GET minecraft.curseforge.com/api/game/versions` ;
+    `/game/version-types` répond 504 à un jeton invalide). 403 = refusé. `curseforge-auth.json` à côté des réglages,
+    chiffré ; ordre : enregistré > `CURSEFORGE_API_KEY` / `CURSEFORGE_UPLOAD_TOKEN` > `.env`. Enregistrés seulement
+    par la fenêtre (Paramètres → Compte CurseForge, canaux `cfauth:*`), après vérification ; aucune commande ne les
+    reçoit ni ne les affiche (`curseforge status` dit seulement s'ils sont acceptés). `MPD_CURSEFORGE_API` remplace
+    les deux API en test (`setCurseForgeApiOverride`, ignoré une fois packagé).
   - `lock.ts` (`OperationLock`) et `journal.ts` (`Journal`), créés par `operationTools(holder)` (`operations.ts`) à
     côté des réglages : `operation.lock` (création exclusive `wx` ; opération, `holder`, pid, jeton ; ignoré si le
     processus est mort ou au bout de 24 h) et `journal.jsonl` (une ligne par écriture : source, opération, résultat ;
@@ -336,6 +344,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   au premier lancement.
 - TypeScript est épinglé en 6.x (la 7 est le compilateur natif, pas encore validé ici). archiver 8 est en ESM
   (exports nommés `ZipArchive`). lucide-react v1 n'a plus d'icônes de marques. Tailwind v4 : `px-0!`, `bg-linear-to-r`.
+- Tester sans CurseForge : `test/support/fakeCurseForge.ts` (clé `cle-de-test`, jeton `jeton-de-test`) et
+  `setCurseForgeApiOverride` / `MPD_CURSEFORGE_API`.
 - Tester sans GitHub : `test/support/fakeGitHub.ts` (releases en mémoire : lecture anonyme, écriture avec jeton,
   `upload_url` et téléchargement d'asset par redirection vers lui-même) et
   `MPD_GITHUB_API=http://127.0.0.1:<port>/repos/o/r` (`setGitHubApiOverride` dans un test ; `GITHUB_TOKEN=x` pour

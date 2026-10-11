@@ -330,8 +330,30 @@ export interface ClaudeApi {
   connectClaudeCode(): Promise<{ ok: true } | { ok: false; error: string }>
 }
 
+/** `apiKey` : clé de l'API CurseForge (lire les mods) ; `uploadToken` : jeton d'auteur (mettre en ligne). */
+export type CurseForgeSecretKind = 'apiKey' | 'uploadToken'
+
+export interface CurseForgeSecretStatus {
+  /** Où il a été trouvé : enregistré dans l'application, variable d'environnement, fichier .env ; null : absent. */
+  source: 'saved' | 'env' | 'dotenv' | null
+  /** Accepté par CurseForge (true), refusé (false), ou pas vérifié (null : absent ou CurseForge injoignable). */
+  valid: boolean | null
+  error: string | null
+}
+
+export interface CurseForgeAuthStatus {
+  apiKey: CurseForgeSecretStatus
+  uploadToken: CurseForgeSecretStatus
+}
+
+export interface CurseForgeAuthApi {
+  getCurseForgeAuth(): Promise<CurseForgeAuthStatus>
+  /** Vérifie puis enregistre (chiffré) un secret ; null le retire. */
+  saveCurseForgeSecret(kind: CurseForgeSecretKind, value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi, ClaudeApi {
+export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi {
   getLaunchInfo(): Promise<LaunchInfo>
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
   onActivated(listener: (view: AppView | null) => void): () => void

@@ -2,6 +2,7 @@ import { app, BrowserWindow, Menu, protocol, shell } from 'electron'
 import { join } from 'node:path'
 import { APP_NAME, APP_USER_MODEL_ID, LEGACY_APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
+import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { useSettingsFile } from '../core/settings'
@@ -67,8 +68,9 @@ function createWindow(): void {
   }
 }
 
-// En développement, MPD_GITHUB_API permet de pointer vers un faux serveur de releases.
+// En développement, MPD_GITHUB_API et MPD_CURSEFORGE_API permettent de pointer vers de faux serveurs.
 setGitHubApiOverride(app.isPackaged ? null : process.env.MPD_GITHUB_API)
+setCurseForgeApiOverride(app.isPackaged ? null : process.env.MPD_CURSEFORGE_API)
 
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])

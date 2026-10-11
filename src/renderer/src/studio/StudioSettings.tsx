@@ -1,6 +1,6 @@
-import { Bot, FolderCog, FolderOpen, Plug, RotateCcw, TerminalSquare } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import type { ClaudeCodeStatus } from '../../../shared/types'
+import { Bot, CircleCheck, CircleX, FolderCog, FolderOpen, KeyRound, Plug, RotateCcw, TerminalSquare, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus } from '../../../shared/types'
 import { Button } from '../components/Button'
 import { useStore } from '../store'
 import { openPath, refreshStudioIfOpen } from './store'
@@ -99,6 +99,116 @@ export function ClaudeCodeSetting() {
           liste ses commandes.
         </p>
       </div>
+    </>
+  )
+}
+
+const SECRET_INFO: Record<CurseForgeSecretKind, { label: string; hint: string; url: string; site: string }> = {
+  apiKey: {
+    label: 'Clé de l’API CurseForge',
+    hint: 'Pour chercher les mises à jour des mods, packs de textures et shaders.',
+    url: 'https://console.curseforge.com/',
+    site: 'console.curseforge.com'
+  },
+  uploadToken: {
+    label: 'Jeton d’auteur',
+    hint: 'Pour mettre tes modpacks en ligne sur tes projets CurseForge.',
+    url: 'https://authors.curseforge.com/account/api-tokens',
+    site: 'authors.curseforge.com'
+  }
+}
+
+function SecretRow({ kind, status, onChange }: { kind: CurseForgeSecretKind; status: CurseForgeSecretStatus | null; onChange: () => void }) {
+  const pushToast = useStore((s) => s.pushToast)
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const info = SECRET_INFO[kind]
+
+  async function save(next: string | null) {
+    setBusy(true)
+    try {
+      const result = await window.api.saveCurseForgeSecret(kind, next)
+      if (result.ok) {
+        pushToast({ kind: 'success', title: next === null ? `${info.label} retiré${kind === 'apiKey' ? 'e' : ''}` : `${info.label} enregistré${kind === 'apiKey' ? 'e' : ''}` })
+        setValue('')
+      } else {
+        pushToast({ kind: 'error', title: 'Enregistrement impossible', message: result.error })
+      }
+    } finally {
+      setBusy(false)
+      onChange()
+    }
+  }
+
+  const e = kind === 'apiKey' ? 'e' : ''
+  const state = !status
+    ? 'Vérification…'
+    : !status.source
+      ? `Absent${e}.`
+      : status.valid
+        ? status.source === 'saved'
+          ? `Enregistré${e} et accepté${e} par CurseForge.`
+          : `Trouvé${e} dans ${status.source === 'env' ? 'une variable d’environnement' : 'un fichier .env'}, accepté${e} par CurseForge.`
+        : status.valid === false
+          ? `Refusé${e} par CurseForge : remplace-l${kind === 'apiKey' ? 'a' : 'e'}.`
+          : (status.error ?? `Non vérifié${e}.`)
+
+  return (
+    <div className="py-3 first:pt-0 last:pb-0">
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink-100">{info.label}</p>
+          <p className="mt-0.5 text-xs text-ink-400">
+            {info.hint} À créer sur{' '}
+            <button type="button" className="font-semibold text-grass-300 hover:text-grass-400" onClick={() => void window.api.openExternal(info.url)}>
+              {info.site}
+            </button>
+            .
+          </p>
+        </div>
+        <span className={`flex shrink-0 items-center gap-1.5 text-xs ${status?.valid ? 'text-grass-400' : status?.valid === false ? 'text-red-300' : 'text-ink-400'}`}>
+          {status?.valid ? <CircleCheck size={14} /> : status?.valid === false ? <CircleX size={14} /> : null}
+          {state}
+        </span>
+      </div>
+      <div className="mt-2.5 flex gap-2">
+        <input
+          type="password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={status?.source === 'saved' ? 'Coller pour remplacer…' : 'Coller ici…'}
+          autoComplete="off"
+          spellCheck={false}
+          className="min-w-0 flex-1 rounded-lg bg-ink-950/60 px-3 py-1.5 font-mono text-sm text-ink-100 ring-1 ring-white/10 outline-none placeholder:font-sans placeholder:text-ink-500 focus:ring-grass-400/50"
+        />
+        <Button size="sm" icon={KeyRound} disabled={busy || !value.trim()} onClick={() => void save(value)}>
+          Vérifier et enregistrer
+        </Button>
+        {status?.source === 'saved' && (
+          <Button size="sm" variant="ghost" icon={Trash2} disabled={busy} onClick={() => void save(null)}>
+            Retirer
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** Clé de l'API et jeton d'auteur CurseForge (publieurs), chiffrés pour la session Windows. */
+export function CurseForgeAccountSetting() {
+  const [status, setStatus] = useState<CurseForgeAuthStatus | null>(null)
+  const load = useCallback(() => void window.api.getCurseForgeAuth().then(setStatus), [])
+  useEffect(load, [load])
+  return (
+    <>
+      <div className="divide-y divide-white/[0.05]">
+        <SecretRow kind="apiKey" status={status?.apiKey ?? null} onChange={load} />
+        <SecretRow kind="uploadToken" status={status?.uploadToken ?? null} onChange={load} />
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-ink-400">
+        Vérifiés par CurseForge avant d’être enregistrés, chiffrés par Windows pour ton compte : ni l’application, ni le terminal,
+        ni Claude ne les affichent.
+      </p>
     </>
   )
 }
