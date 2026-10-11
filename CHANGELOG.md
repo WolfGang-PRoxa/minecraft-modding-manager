@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.3.0] - 2026-10-11
+
 ### Ajouts
 
 - Publieurs : **Paramètres → Compte CurseForge** enregistre ta clé de l’API CurseForge et ton jeton d’auteur,
@@ -166,7 +168,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.2.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.3.0...HEAD
+[1.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.2.0...app-v1.3.0
 [1.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.1.0...app-v1.2.0
 [1.1.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.5...app-v1.1.0
 [1.0.5]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.4...app-v1.0.5
