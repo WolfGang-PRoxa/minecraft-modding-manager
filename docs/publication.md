@@ -120,3 +120,33 @@ Fermer la fenêtre pendant une publication l’interrompt : les étapes terminé
 - **Teste chez un joueur** : après la publication, installe la nouvelle version depuis la Bibliothèque, comme le
   ferait un joueur.
 - **Garde le dépôt public**, sinon tes joueurs ne voient plus rien.
+
+## Publier sur CurseForge
+
+Un modpack peut être publié sur GitHub, sur CurseForge, ou les deux. Il faut d’abord créer son projet une fois sur le
+site de CurseForge, et enregistrer ton jeton d’auteur ([Compte CurseForge](parametres.md#compte-curseforge)).
+
+Sur la carte du modpack, la ligne **Publié sur…** dit où il est publié. **Publier aussi sur CurseForge** demande
+l’adresse de la page du projet (ou son numéro) et le lie au modpack. Pour un projet qui a déjà des versions, la
+numérotation continue après la plus haute (après `Mon Pack_V27.zip`, la prochaine version est la v28), et les fichiers
+joints à l’export sont repris de sa dernière version.
+
+**Réglages**, sur cette ligne, règle :
+
+- **Fichiers joints à l’export** : un chemin par ligne, depuis la racine du profil (jokers `*` et `?`), comme dans la
+  fenêtre d’export de CurseForge (packs de textures, réglages des shaders…). Les mods n’y vont jamais : CurseForge les
+  installe lui-même ;
+- **Publier aussi sur GitHub** : désactivé, le modpack n’est publié que sur CurseForge. Les joueurs de l’application ne
+  voient plus ses nouvelles versions, et ses releases GitHub ne sont plus jamais touchées ;
+- **Retirer le lien** avec le projet.
+
+Sur la ligne de la dernière version, **Publier sur CurseForge** montre le nom affiché (`<nom>_V<N>.zip`), les fichiers
+joints et les notes de version, et demande le type (version stable, bêta, alpha). La version est exportée au format de
+CurseForge (la liste des mods et des fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en
+modération : la ligne affiche **En modération**, puis **Sur CurseForge** une fois acceptée (ou **Refusée par
+CurseForge**). Une version envoyée ne se retire que depuis le site.
+
+> [!NOTE]
+> Un mod qui ne vient pas de CurseForge (posé à la main dans `mods`) bloque l’envoi : la modération de CurseForge le
+> refuserait. Installe-le depuis CurseForge, ou retire-le du profil. Le pack serveur se joint encore à la main sur le
+> site.

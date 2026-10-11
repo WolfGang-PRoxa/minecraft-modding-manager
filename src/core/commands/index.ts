@@ -1,3 +1,4 @@
+import { curseforgeExport, curseforgeLink, curseforgePublish, curseforgeTargets, curseforgeVersions } from './curseforge'
 import { curseforgeStatus, journal, status } from './general'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
@@ -36,6 +37,11 @@ export const COMMANDS = [
   rangerApply,
   publishPlan,
   publishApply,
+  curseforgeLink,
+  curseforgeTargets,
+  curseforgeExport,
+  curseforgePublish,
+  curseforgeVersions,
   releasesDelete,
   curseforgeStatus,
   journal

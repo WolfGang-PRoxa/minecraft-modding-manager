@@ -21,13 +21,14 @@ import {
   Upload
 } from 'lucide-react'
 import { findPresentVersions, type PresentVersion } from '../../../shared/presence'
-import type { ExcludedInZip, PackView, PendingZip, RemoteOnlyVersion, RemoteStatus, VersionView } from '../../../shared/studio'
+import type { CurseForgeFileState, ExcludedInZip, PackView, PendingZip, RemoteOnlyVersion, RemoteStatus, VersionView } from '../../../shared/studio'
 import type { CurseForgeProfile } from '../../../shared/types'
 import { describePresence } from '../components/Badges'
 import { Button, IconButton } from '../components/Button'
 import { Cover } from '../components/Cover'
 import { formatBytes, formatDate, formatLoader } from '../lib/format'
 import { useStore } from '../store'
+import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeStatuses } from './CurseForgePanel'
 import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
 import { errorMessage, openLink, openPath, useStudio } from './store'
 
@@ -135,8 +136,8 @@ function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode
   return (
     <div className="flex items-start gap-4 rounded-xl px-4 py-3 transition hover:bg-white/[0.03]">
       <div className="w-14 shrink-0 pt-0.5">{badge}</div>
-      <div className="min-w-0 flex-1">{children}</div>
-      {aside && <div className="flex shrink-0 items-center gap-2">{aside}</div>}
+      <div className="min-w-48 flex-1">{children}</div>
+      {aside && <div className="flex flex-wrap items-center justify-end gap-2">{aside}</div>}
     </div>
   )
 }
@@ -225,7 +226,17 @@ function CurseForgeNote({
   )
 }
 
-function VersionRow({ pack, version, present }: { pack: PackView; version: VersionView; present: PresentVersion[] }) {
+function VersionRow({
+  pack,
+  version,
+  present,
+  curseforge
+}: {
+  pack: PackView
+  version: VersionView
+  present: PresentVersion[]
+  curseforge: CurseForgeFileState | undefined
+}) {
   const openDialog = useStudio((s) => s.openDialog)
   const status = STATUS[version.remote]
   return (
@@ -241,9 +252,12 @@ function VersionRow({ pack, version, present }: { pack: PackView; version: Versi
               Version sur CurseForge
             </Pill>
           )}
-          <Pill className={status.className} title={version.changes.join('\n') || undefined}>
-            {status.label}
-          </Pill>
+          <CurseForgeVersionStatus pack={pack} version={version} state={curseforge} />
+          {pack.github && (
+            <Pill className={status.className} title={version.changes.join('\n') || undefined}>
+              {status.label}
+            </Pill>
+          )}
           <Button
             size="sm"
             variant="ghost"
@@ -450,6 +464,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
     return findPresentVersions(known, installed, profiles)
   }, [pack, installed, profiles])
   const { over, handlers } = useFileDrop(pack.folder)
+  const curseforge = useCurseForgeStatuses(pack)
   const empty = !pack.versions.length && !pack.pending.length && !pack.remoteOnly.length
   let next = pack.nextVersion
 
@@ -487,6 +502,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             <p className="mt-1.5 text-sm text-ink-500 italic">Pas encore de description.</p>
           )}
           <CurseForgeNote pack={pack} present={present} profiles={profiles} />
+          <CurseForgeLine pack={pack} />
           <SettingsSummary pack={pack} />
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>
@@ -533,6 +549,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             pack={pack}
             version={version}
             present={present.filter((p) => p.version === String(version.number))}
+            curseforge={curseforge[String(version.number)]}
           />
         ))}
         {pack.remoteOnly.map((version) => (

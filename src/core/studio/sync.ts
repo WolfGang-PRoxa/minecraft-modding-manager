@@ -259,6 +259,11 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
       warnings.push(`« ${pack.meta.name} » est ignoré tant que ses erreurs ne sont pas corrigées.`)
       continue
     }
+    // Modpack publié seulement sur CurseForge : rien n'est publié sur GitHub, et ses releases n'y sont jamais retirées.
+    if (!pack.meta.github) {
+      blockedIds.add(pack.meta.id)
+      continue
+    }
     for (const version of pack.versions) {
       const tag = modpackTag(pack.meta.id, String(version.number))
       if (version.analysis) desired.set(tag, desiredFor(pack, version as Desired['version'], author))

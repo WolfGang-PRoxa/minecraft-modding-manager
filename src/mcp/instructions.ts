@@ -28,6 +28,11 @@ Méthode :
   refaire l'essai sans sa mise à jour (updates_discard puis updates_apply avec only). Sinon :
   updates_discard. Les mises à jour « skipped » se font à la main dans CurseForge (l'auteur interdit le téléchargement
   ailleurs) : dis-le au publieur.
+- CurseForge : un modpack se lie à son projet par curseforge_link (le projet est créé une fois par le publieur sur le
+  site). curseforge_publish envoie la dernière version (export au format CurseForge, nom « <nom>_V<N>.zip », notes en
+  Markdown) : irréversible, montre d'abord version, notes et type au publieur, et teste la version avant. Un mod posé
+  à la main bloque l'envoi. curseforge_versions suit la modération. github: false (curseforge_targets) = seulement sur
+  CurseForge.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).
 - Les suppressions (packs_delete, versions_delete, releases_delete, publish_apply qui supprime) sont définitives sur
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.

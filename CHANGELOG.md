@@ -10,6 +10,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ### Ajouts
 
+- Studio : **publication sur CurseForge**. Lie un modpack à son projet CurseForge (la numérotation continue après tes
+  versions déjà publiées), puis publie sa dernière version en un clic : export au format de CurseForge, nom affiché
+  `<nom>_V<N>.zip`, notes de version, puis suivi de la modération sur la carte. Un modpack peut être publié sur GitHub,
+  sur CurseForge, ou les deux. En commandes : `curseforge link`, `curseforge publish`, `curseforge versions`…
+
 - Studio : **tests avant publication**, dans le détail d’un profil ou de son essai. **Vérifier les fichiers** trouve
   en quelques secondes les mods en double, les dépendances manquantes et les mods faits pour un autre chargeur ;
   **Tester sur un serveur** démarre un vrai serveur Minecraft avec les mods du profil et dit s’il démarre, ou pourquoi

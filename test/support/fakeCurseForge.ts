@@ -12,8 +12,10 @@ export interface FakeCatalog {
   mods: CfMod[]
   files: CfFile[]
   changelogs: Record<number, string>
-  /** Contenu téléchargeable, par identifiant de fichier (adresse : `<url>/files/<id>`). */
+  /** Contenu téléchargeable, par identifiant de fichier (adresse : `<url>/files/<id>`, ou `<url>/cdn/files/…`). */
   downloads: Record<number, Buffer>
+  /** Fichiers reçus par l'API de mise en ligne. */
+  uploads: Array<{ projectId: number; metadata: Record<string, unknown>; fileName: string; content: Buffer; id: number }>
 }
 
 export interface FakeCurseForge {
@@ -33,7 +35,8 @@ function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
 }
 
 export async function startFakeCurseForge(): Promise<FakeCurseForge> {
-  const catalog: FakeCatalog = { mods: [], files: [], changelogs: {}, downloads: {} }
+  const catalog: FakeCatalog = { mods: [], files: [], changelogs: {}, downloads: {}, uploads: [] }
+  let nextFileId = 900_000
   const json = (res: ServerResponse, status: number, body: unknown) => {
     res.writeHead(status, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify(body))
@@ -51,6 +54,16 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
         const ids = ((await readBody(req)).fileIds as number[]) ?? []
         return json(res, 200, { data: catalog.files.filter((f) => ids.includes(f.id)) })
       }
+      if (path === '/v1/mods/search') {
+        const query = new URL(req.url ?? '/', 'http://localhost').searchParams
+        const found = catalog.mods.filter((m) => m.slug === query.get('slug') && String(m.classId) === (query.get('classId') ?? String(m.classId)))
+        return json(res, 200, { data: found })
+      }
+      const projectFiles = /^\/v1\/mods\/(\d+)\/files$/.exec(path)
+      if (projectFiles) {
+        const list = catalog.files.filter((f) => f.modId === Number(projectFiles[1])).sort((a, b) => b.id - a.id)
+        return json(res, 200, { data: list, pagination: { totalCount: list.length } })
+      }
       const changelog = /^\/v1\/mods\/\d+\/files\/(\d+)\/changelog$/.exec(path)
       if (changelog) {
         const text = catalog.changelogs[Number(changelog[1])]
@@ -58,7 +71,8 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
       }
     }
     // Téléchargements : contenu des fichiers du catalogue (`downloads`), servi sans clé comme le CDN.
-    const download = /^\/files\/(\d+)$/.exec(path)
+    const cdn = /^\/cdn\/files\/(\d+)\/(\d+)\//.exec(path)
+    const download = cdn ? [path, String(Number(cdn[1]) * 1000 + Number(cdn[2]))] : /^\/files\/(\d+)$/.exec(path)
     if (download) {
       const data = catalog.downloads[Number(download[1])]
       if (!data) return json(res, 404, {})
@@ -69,7 +83,33 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
       const token = req.headers['x-api-token']
       if (!token) return json(res, 401, { errorCode: 401, errorMessage: 'You must provide an API token.' })
       if (token !== VALID_UPLOAD_TOKEN) return json(res, 403, { errorCode: 403, errorMessage: 'Invalid API token provided.' })
-      if (path === '/api/game/versions') return json(res, 200, [{ id: 1, gameVersionTypeID: 1, name: '1.20.1', slug: '1-20-1' }])
+      if (path === '/api/game/versions') {
+        return json(res, 200, [
+          { id: 1, gameVersionTypeID: 1, name: '1.20.1', slug: '1-20-1' },
+          { id: 9990, gameVersionTypeID: 75125, name: '1.20.1', slug: '1-20-1' },
+          { id: 7498, gameVersionTypeID: 68441, name: 'Forge', slug: 'forge' },
+          { id: 7499, gameVersionTypeID: 68441, name: 'Fabric', slug: 'fabric' }
+        ])
+      }
+      if (path === '/api/game/version-types') {
+        return json(res, 200, [
+          { id: 1, name: 'Bukkit', slug: 'bukkit' },
+          { id: 75125, name: 'Minecraft 1.20', slug: 'minecraft-1-20' },
+          { id: 68441, name: 'Modloader', slug: 'modloader' }
+        ])
+      }
+      const upload = /^\/api\/projects\/(\d+)\/upload-file$/.exec(path)
+      if (upload && req.method === 'POST') {
+        const chunks: Buffer[] = []
+        for await (const chunk of req) chunks.push(chunk as Buffer)
+        const form = await new Response(Buffer.concat(chunks), { headers: { 'content-type': req.headers['content-type'] ?? '' } }).formData()
+        const file = form.get('file') as File
+        const id = nextFileId++
+        const metadata = JSON.parse(String(form.get('metadata'))) as Record<string, unknown>
+        catalog.uploads.push({ projectId: Number(upload[1]), metadata, fileName: file.name, content: Buffer.from(await file.arrayBuffer()), id })
+        catalog.files.push({ ...({ fileStatus: 3 } as object), id, modId: Number(upload[1]), displayName: String(metadata.displayName), fileName: file.name, releaseType: 1, fileDate: new Date().toISOString(), fileLength: file.size, downloadUrl: null, isAvailable: true, gameVersions: [], hashes: [], dependencies: [] } as never)
+        return json(res, 200, { id })
+      }
     }
     json(res, 404, { message: `Route inconnue du faux CurseForge : ${req.method} ${path}` })
   }

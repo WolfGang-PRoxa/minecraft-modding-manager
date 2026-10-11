@@ -124,6 +124,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     dernier fichier par version de Minecraft, chargeur et type de version), `POST /v1/mods/files`, changelog (HTML).
     Énumérations : chargeur Forge 1, Fabric 4, Quilt 5, NeoForge 6 ; release 1, beta 2, alpha 3 ; dépendance
     obligatoire 3 ; catégories mod 6, pack de textures 12, shader 6552 ; hash sha1 1, md5 2.
+  - `curseforgeExport.ts` : export au format CurseForge depuis le zip d'une version (`manifest.json` : `minecraft`
+    (`modLoaders` : `manifestLoaderId`, sans la version de Minecraft que CurseForge ajoute à Fabric), `manifestType`,
+    `manifestVersion` 1, `name`, `author: ''`, `files` (`projectID`, `fileID`, `required` = mod actif), `overrides`,
+    `image` ; `modlist.html` ; `overrides/` choisis), refusé si un mod de `mods` n'a pas d'entrée CurseForge.
+    `curseforgeUpload.ts` (`CurseForgeUploader`, jeton d'auteur) : `gameVersionIds` (la version dont le type a un slug
+    `minecraft-…`, plus le chargeur : type `modloader`), `upload` (multipart `metadata` + `file`), `FILE_STATUS_LABELS`.
   - `trialProfile.ts` (`createTrialCopy` : copie à côté de l'original, sans journaux ni marqueur, nouvelle identité,
     chemins réécrits, jamais lancée) et `addonFiles.ts` (`replaceAddonFile` : téléchargement avec `x-api-key`, SHA-1
     vérifié avant d'apparaître, ancien fichier retiré, entrée réécrite par `installedFileFrom` ; un mod désactivé le
@@ -185,6 +191,16 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `no-version`, `up-to-date`, `older`, `changed` : empreinte des mods comparée aux versions). Service :
     `library()`, `linkProfile`, `createPackFromProfile` (modpack + v1, un seul verrou) ; `zipInstance` enregistre le
     profil zippé comme source (`zipNextVersion`).
+  - `curseforgePublish.ts` (CurseForge) : `resolveProject` (numéro, slug ou page ; classe 4471 = modpack),
+    `inspectProject` (plus haut `_V<N>` des noms affichés, fichiers joints de la dernière version, lus dans son zip
+    sur le serveur de fichiers : `downloadUrl` est vide pour les modpacks), `publishVersion` (export depuis le zip de
+    la version, puis envoi), `versionStatuses`. Service : `linkCurseForge` (relève `lastVersion` au plus haut `_V`),
+    `updatePublishTargets` (fichiers joints, `github`, retrait du lien ; jamais publié nulle part), `publishToCurseForge`
+    (verrou ; refusé pour une version déjà envoyée ou plus ancienne qu'une version envoyée), `curseForgeStatuses`.
+    `pack.json` : `curseforge` (`projectId`, `url`, `overrides`, `files` : fichier CurseForge par numéro) et
+    `github: false` (seulement CurseForge : `computePlan` met le modpack de côté, ses releases ne sont jamais retirées).
+    Interface : `studio/CurseForgePanel.tsx` (ligne « Publié sur… », réglages, pastille par version, bouton sur la
+    dernière version).
 - `src/core/commands/` — registre des commandes (`registry.ts` : `command({ name, summary, description, params: zod,
   kind: read | write | destructive, run, print })`, `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP
   `packs_list`. `context.ts` (`createCommandRuntime`) construit le service hors de la fenêtre : publie d'office en
@@ -373,6 +389,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   version antérieure) : après relance, CurseForge affiche le profil, la version écrite, et propose la mise à jour ; il
   réécrit `minecraftinstance.json` en gardant nos valeurs (`installedFile`, `isFuzzyMatch: false`) et range la copie
   à part de l'original dans son index.
+- Publications du propriétaire sur CurseForge (constaté le 2026-10-11, compte `WolfGang_PRoxa`, id 112688113,
+  9 modpacks) : fichier `<nom du profil>.zip` (export de CurseForge), nom affiché `<nom>_V<N>.zip` (V0, V1…), notes,
+  un pack serveur fait à la main joint à presque chaque version (`<nom> (Server Pack)_V<N>.zip`, `parentProjectFileId`).
+  L'export joint peu de fichiers (packs de textures, `.txt` de réglages des shaders, `profileImage/`), jamais `config`.
+  API de lecture : `downloadUrl` vide pour ces fichiers ; le serveur de fichiers les sert à
+  `https://edge.forgecdn.net/files/<id / 1000>/<id % 1000>/<nom>`.
 - Test du serveur (constaté le 2026-10-11) : Fabric 26.3, 3 mods, 14 s téléchargement compris ; Forge 1.20.1, 55 mods,
   79 s dont 19 s d'installation de Forge. Forge démarre même avec deux mods de même identifiant (il en garde un) : un
   doublon est un avertissement, pas une erreur. CurseForge garde les Java de Mojang dans `Install/java/` (gamma 17,

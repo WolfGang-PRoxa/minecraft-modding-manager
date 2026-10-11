@@ -2,7 +2,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, join, resolve } from 'node:path'
 import { normalizeExclusions } from '../../shared/exclusions'
 import { isValidModpackId, slugify } from '../../shared/releases'
-import type { DisabledMod, PackProfileLink, PackSettings, RangerOrders, RangerPackPlan, RangerPlan } from '../../shared/studio'
+import type { DisabledMod, PackCurseForge, PackProfileLink, PackSettings, RangerOrders, RangerPackPlan, RangerPlan } from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
 
@@ -25,6 +25,10 @@ export interface PackFile extends PackSettings {
   notes: Record<string, string>
   /** Profil CurseForge d'où viennent ses versions (écrit seulement s'il est connu). */
   profile: PackProfileLink | null
+  /** Faux : le modpack n'est pas publié sur GitHub (écrit seulement dans ce cas). */
+  github: boolean
+  /** Son projet CurseForge, s'il en a un. */
+  curseforge: PackCurseForge | null
 }
 
 export interface LocalFile {
@@ -96,6 +100,8 @@ function defaultPackFile(folder: string): PackFile {
     lastVersion: 0,
     notes: {},
     profile: null,
+    github: true,
+    curseforge: null,
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -153,6 +159,8 @@ async function readPackFile(
       lastVersion: Number.isInteger(data.lastVersion) && data.lastVersion! > 0 ? data.lastVersion! : 0,
       notes,
       profile: normalizeProfileLink(data.profile),
+      github: data.github !== false,
+      curseforge: normalizeCurseForge(data.curseforge),
       ...normalizePackSettings(data)
     }
     const error = isValidModpackId(meta.id)
@@ -171,8 +179,22 @@ export function normalizeProfileLink(value: unknown): PackProfileLink | null {
   return { guid: typeof link?.guid === 'string' && link.guid.trim() ? link.guid.trim() : null, name }
 }
 
+export function normalizeCurseForge(value: unknown): PackCurseForge | null {
+  const data = value as Partial<PackCurseForge> | null | undefined
+  const projectId = Number(data?.projectId)
+  if (!Number.isInteger(projectId) || projectId <= 0) return null
+  const files: Record<string, number> = {}
+  for (const [version, id] of Object.entries(data?.files ?? {})) if (Number.isInteger(id) && id > 0) files[version] = id
+  return {
+    projectId,
+    url: typeof data?.url === 'string' && /^https:\/\//.test(data.url) ? data.url : null,
+    overrides: Array.isArray(data?.overrides) ? normalizeExclusions(data.overrides.filter((o): o is string => typeof o === 'string')) : [],
+    files
+  }
+}
+
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { exclude, disabledMods, keepPlayerConfigs, profile, ...info } = meta
+  const { exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -182,6 +204,8 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...info,
     notes,
     ...(profile ? { profile } : {}),
+    ...(github ? {} : { github: false }),
+    ...(curseforge ? { curseforge } : {}),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),
     ...(keepPlayerConfigs ? { keepPlayerConfigs } : {})

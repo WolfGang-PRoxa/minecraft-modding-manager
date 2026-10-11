@@ -13,6 +13,10 @@ export type Dialog =
   | { kind: 'notes'; folder: string; version: number }
   /** Créer la version suivante depuis CurseForge ; `profilePath` : profil déjà choisi. */
   | { kind: 'import'; folder: string; profilePath?: string }
+  /** Lien avec le projet CurseForge et réglages de publication. */
+  | { kind: 'curseforge'; folder: string }
+  /** Mettre une version en ligne sur CurseForge. */
+  | { kind: 'curseforge-publish'; folder: string; version: number }
   /** Créer un modpack (et sa v1) depuis un profil CurseForge. */
   | { kind: 'from-profile'; profilePath: string; profileName: string }
   | { kind: 'ranger' }

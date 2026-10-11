@@ -256,6 +256,12 @@ correction : revenir en arrière sur le mod en cause, en retenir un autre, figer
 
 ### Phase 6 — Publication sur CurseForge (1.6.0)
 
+**État : faite le 2026-10-11, pas encore publiée.** Lien avec un projet existant (numérotation et fichiers joints
+repris des versions publiées), export au format CurseForge vérifié contre les fichiers publiés du propriétaire, envoi
+par le jeton d'auteur, suivi de la modération, modpack « seulement CurseForge ». Testé sur un faux CurseForge et dans
+l'application ; **aucun envoi réel n'a encore été fait** : le premier se fera avec le propriétaire. Reste à faire :
+le pack serveur (le propriétaire en joint un, fait à la main, à presque chaque version).
+
 - Cibles par modpack : GitHub, CurseForge, ou les deux ; tableau des versions avec leur état sur chaque cible.
 - `export curseforge` : zip au format CurseForge (`manifest.json` + `overrides`, mods de CurseForge référencés, pas
   inclus). Un mod qui n'est pas sur CurseForge bloque l'export (à retirer, ou à garder seulement pour GitHub).

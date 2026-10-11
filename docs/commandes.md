@@ -74,6 +74,11 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `tests server` | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités. |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
+| `curseforge link` | Lie un modpack à son projet CurseForge (numéro, adresse de la page ou slug). |
+| `curseforge targets` | Où le modpack est publié (GitHub ou non) et les fichiers joints à son export CurseForge. |
+| `curseforge export` | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier. |
+| `curseforge publish` | Met une version en ligne sur CurseForge (elle passe en modération). |
+| `curseforge versions` | L’état sur CurseForge des versions publiées (en modération, approuvée, refusée…). |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
 | `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
@@ -107,6 +112,19 @@ Avant de garder un essai ou de publier une version, teste le profil (ou son essa
   télécharge le serveur (gardé ensuite dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu
   (Sodium, Iris, Oculus…) sont laissés de côté. En cas de plantage, le rapport donne sa cause et les mods suspectés.
   Ce serveur local accepte pour toi le [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA).
+
+Pour publier sur CurseForge, le projet doit exister (on le crée une fois sur le site de CurseForge) et ton jeton
+d’auteur être enregistré ([Compte CurseForge](parametres.md#compte-curseforge)) :
+
+- **`curseforge link`** lie le modpack au projet. Pour un projet qui a déjà des versions, la numérotation continue
+  après la plus haute (après `Mon Pack_V27.zip`, la prochaine version est la v28), et les fichiers joints à l’export
+  sont ceux de la dernière version publiée (packs de textures, réglages des shaders…). `curseforge targets` les
+  change, et `--no-github` publie le modpack seulement sur CurseForge : ses releases GitHub ne sont alors plus jamais
+  touchées.
+- **`curseforge publish`** exporte la version au format de CurseForge (`manifest.json`, `modlist.html`, fichiers
+  joints : comme l’export de CurseForge), l’affiche sous le nom `<nom>_V<N>.zip` avec ses notes, et l’envoie. Un mod
+  qui ne vient pas de CurseForge bloque l’envoi : la modération le refuserait. La version passe ensuite en modération ;
+  `curseforge versions` suit son état. Le pack serveur se joint encore à la main sur le site.
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu

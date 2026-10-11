@@ -24,6 +24,7 @@ import { Spinner } from './Modal'
 import { ContentsDialog } from './ContentsDialog'
 import { DeleteDialog } from './DeleteDialog'
 import { PackCard } from './PackCard'
+import { CurseForgeDialog, PublishCurseForgeDialog } from './CurseForgePanel'
 import { FromProfileDialog, ImportDialog, NewPackDialog, NotesDialog, PackInfoDialog } from './PackDialogs'
 import { PackSettingsDialog, StripDialog } from './PackSettingsDialog'
 import { ProfileDetail, ProfilesSidebar, UnlinkedPackDetail } from './Profiles'
@@ -450,6 +451,10 @@ function Dialogs() {
       return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'import':
       return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />
+    case 'curseforge':
+      return <CurseForgeDialog key={dialog.folder} folder={dialog.folder} />
+    case 'curseforge-publish':
+      return <PublishCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'from-profile':
       return <FromProfileDialog key={dialog.profilePath} profilePath={dialog.profilePath} profileName={dialog.profileName} />
     case 'ranger':

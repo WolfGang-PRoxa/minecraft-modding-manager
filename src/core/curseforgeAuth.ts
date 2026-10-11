@@ -20,10 +20,11 @@ export function setCurseForgeApiOverride(url: string | null | undefined): void {
   override = url ? url.replace(/\/+$/, '') : null
 }
 
-/** Adresses de l'API de lecture (clé d'API) et de l'API de mise en ligne (jeton d'auteur). */
+/** Adresses de l'API de lecture (clé d'API), de l'API de mise en ligne (jeton d'auteur) et du serveur de fichiers. */
 export const curseForgeApis = () => ({
   core: override ?? CURSEFORGE_API,
-  upload: override ? `${override}/api` : CURSEFORGE_UPLOAD_API
+  upload: override ? `${override}/api` : CURSEFORGE_UPLOAD_API,
+  cdn: override ? `${override}/cdn` : 'https://edge.forgecdn.net'
 })
 
 const ENV_NAMES: Record<CurseForgeSecretKind, string> = {

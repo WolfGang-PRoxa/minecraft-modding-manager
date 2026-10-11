@@ -114,6 +114,12 @@ export class CurseForgeClient {
     return files
   }
 
+  /** Un modpack d'après l'adresse de sa page (slug), ou null. */
+  async searchModpackBySlug(slug: string): Promise<CfMod | null> {
+    const found = await this.request<CfMod[]>('GET', `/v1/mods/search?gameId=432&classId=4471&slug=${encodeURIComponent(slug)}`)
+    return found[0] ?? null
+  }
+
   /** Fichiers d'un projet, du plus récent au plus ancien, pour une version de Minecraft et un chargeur. */
   getModFiles(modId: number, filter: { gameVersion?: string; modLoaderType?: number | null } = {}): Promise<CfFile[]> {
     const query = new URLSearchParams({ pageSize: '50' })

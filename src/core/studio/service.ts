@@ -29,6 +29,8 @@ import type { Credential } from '../auth'
 import { pathExists } from '../fsutil'
 import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
 import type { CurseForgeClient } from '../curseforgeApi'
+import type { CurseForgeUploader } from '../curseforgeUpload'
+import { exportToFile, inspectProject, publishVersion, resolveProject, versionStatuses } from './curseforgePublish'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
@@ -111,6 +113,8 @@ export interface StudioServiceOptions {
   getInstancesDir?(): Promise<string>
   /** Client de l'API CurseForge avec la clé du publieur (mises à jour des mods). */
   getCurseForgeClient?(): Promise<CurseForgeClient>
+  /** Mise en ligne sur CurseForge avec le jeton d'auteur du publieur. */
+  getCurseForgeUploader?(): Promise<CurseForgeUploader>
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -350,6 +354,8 @@ export class StudioService {
       description: pack.meta.description,
       coverUrl: this.options.coverUrl?.(pack) ?? null,
       profile: pack.meta.profile,
+      github: pack.meta.github,
+      curseforge: pack.meta.curseforge,
       settings: {
         exclude: pack.meta.exclude,
         disabledMods: pack.meta.disabledMods,
@@ -657,6 +663,96 @@ export class StudioService {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       await writePackFile(dir, { ...meta, profile: profile ? { guid: profile.guid, name: profile.name } : null })
     })
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Publication sur CurseForge
+
+  /**
+   * Lie un modpack à son projet CurseForge (numéro, slug ou page). Pour un projet qui a déjà des versions, la
+   * numérotation continue après la plus haute (« _V27 ») et les fichiers joints sont ceux de la dernière.
+   */
+  async linkCurseForge(folder: string, ref: string): Promise<{ projectId: number; name: string; highestVersion: number; overrides: string[] }> {
+    const client = await this.curseForge()
+    const project = await resolveProject(client, ref)
+    const { highestVersion, overrides } = await inspectProject(client, project.id)
+    await this.logged(`le lien de ${folder} au projet CurseForge ${project.name}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      const files = meta.curseforge?.projectId === project.id ? meta.curseforge.files : {}
+      await writePackFile(dir, {
+        ...meta,
+        lastVersion: Math.max(meta.lastVersion, highestVersion),
+        curseforge: { projectId: project.id, url: project.url, overrides, files }
+      })
+    })
+    return { projectId: project.id, name: project.name, highestVersion, overrides }
+  }
+
+  /** Réglages de publication : fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait du lien. */
+  async updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }): Promise<void> {
+    await this.logged(`les cibles de publication de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      if (changes.overrides && !meta.curseforge) throw new StudioError('Lie d’abord ce modpack à son projet CurseForge.')
+      const curseforge = changes.unlinkCurseForge ? null : meta.curseforge && { ...meta.curseforge, overrides: changes.overrides ?? meta.curseforge.overrides }
+      const github = changes.github ?? meta.github
+      if (!github && !curseforge) throw new StudioError('Un modpack doit être publié quelque part : sur GitHub, sur CurseForge, ou les deux.')
+      await writePackFile(dir, { ...meta, github, curseforge })
+    })
+  }
+
+  private async versionFor(folder: string, version: number) {
+    const workspace = (await this.scan())!
+    const pack = workspace.packs.find((p) => p.folder === folder)
+    if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
+    if (!pack.meta.curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)
+    const local = pack.versions.find((v) => v.number === version)
+    if (!local || !local.analysis) throw new StudioError(`${pack.meta.name} n’a pas de v${version} utilisable.`)
+    return { pack, local, analysis: local.analysis, curseforge: pack.meta.curseforge }
+  }
+
+  /** Exporte une version au format CurseForge sans l'envoyer (pour vérifier). */
+  async exportCurseForge(folder: string, version: number, destination: string) {
+    this.requireWorkspace()
+    const { pack, local, curseforge } = await this.versionFor(folder, version)
+    return exportToFile({ name: pack.meta.name, versionZip: local.path, curseforge }, destination)
+  }
+
+  /** Met une version en ligne sur le projet CurseForge du modpack ; elle passe ensuite en modération. */
+  publishToCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha', onStep: (text: string) => void): Promise<number> {
+    return this.exclusive(
+      `la publication de la v${version} de ${folder} sur CurseForge`,
+      async () => {
+        this.requireWorkspace()
+        if (!this.options.getCurseForgeUploader) throw new StudioError('Publication sur CurseForge impossible depuis ce programme.')
+        const { pack, local, analysis, curseforge } = await this.versionFor(folder, version)
+        if (!analysis.minecraftVersion) throw new StudioError('Version de Minecraft inconnue pour ce zip.')
+        const fileId = await publishVersion(
+          await this.options.getCurseForgeUploader(),
+          {
+            name: pack.meta.name,
+            version,
+            versionZip: local.path,
+            minecraftVersion: analysis.minecraftVersion,
+            modLoader: analysis.modLoader,
+            notes: pack.meta.notes[String(version)] ?? '',
+            releaseType,
+            curseforge
+          },
+          onStep
+        )
+        const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+        if (meta.curseforge) await writePackFile(dir, { ...meta, curseforge: { ...meta.curseforge, files: { ...meta.curseforge.files, [String(version)]: fileId } } })
+        return fileId
+      },
+      (fileId) => ({ ok: true, detail: `fichier CurseForge ${fileId}, en modération` })
+    )
+  }
+
+  /** État de modération de chaque version publiée sur CurseForge. */
+  async curseForgeStatuses(folder: string) {
+    const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (!meta.curseforge) return {}
+    return versionStatuses(await this.curseForge(), meta.curseforge)
   }
 
   // ---------------------------------------------------------------------------------------------

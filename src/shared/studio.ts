@@ -104,6 +104,26 @@ export interface PackProfileLink {
   name: string
 }
 
+/** État sur CurseForge d'une version publiée par l'application. */
+export interface CurseForgeFileState {
+  fileId: number
+  /** FileStatus de CurseForge (3 en modération, 4 approuvé, 5 refusé, 10 publié…). */
+  status: number
+  label: string
+  displayName: string
+}
+
+/** Le projet CurseForge d'un modpack (pack.json). */
+export interface PackCurseForge {
+  projectId: number
+  /** Page du projet. */
+  url: string | null
+  /** Fichiers joints à l'export (chemins depuis la racine de l'instance, jokers permis), comme dans l'export de CurseForge. */
+  overrides: string[]
+  /** Fichier CurseForge de chaque version publiée, par numéro. */
+  files: Record<string, number>
+}
+
 export interface PackView {
   folder: string
   dir: string
@@ -114,6 +134,9 @@ export interface PackView {
   settings: PackSettings
   /** Profil CurseForge source, s'il est connu. */
   profile: PackProfileLink | null
+  /** Publié sur GitHub (faux : modpack seulement sur CurseForge, jamais touché sur GitHub). */
+  github: boolean
+  curseforge: PackCurseForge | null
   /** Versions numérotées, de la plus récente à la plus ancienne. */
   versions: VersionView[]
   pending: PendingZip[]
@@ -436,6 +459,16 @@ export interface StudioApi {
   ): Promise<{ ok: true; result: TrialResult } | { ok: false; error: string }>
   onUpdateProgress(listener: (progress: { done: number; total: number; name: string }) => void): () => void
   promoteTrial(profilePath: string): Promise<{ ok: true; promoted: string[] } | { ok: false; error: string }>
+  /** Lie un modpack à son projet CurseForge (numéro, slug ou page). */
+  linkCurseForge(
+    folder: string,
+    ref: string
+  ): Promise<{ ok: true; projectId: number; name: string; highestVersion: number; overrides: string[] } | { ok: false; error: string }>
+  /** Fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait du lien. */
+  updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }): Promise<ActionResult>
+  publishCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; fileId: number } | { ok: false; error: string }>
+  onCurseForgeProgress(listener: (text: string) => void): () => void
+  curseForgeStatuses(folder: string): Promise<{ ok: true; statuses: Record<string, CurseForgeFileState> } | { ok: false; error: string }>
   /** Vérifie les fichiers du profil sans lancer le jeu. */
   checkProfile(profilePath: string): Promise<{ ok: true; report: StaticCheckReport } | { ok: false; error: string }>
   /** Démarre un serveur dédié avec les mods du profil (étapes : onTestProgress). */
