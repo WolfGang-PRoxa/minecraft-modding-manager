@@ -10,12 +10,12 @@ import type {
   InstanceMarker,
   ModpackVersion
 } from '../shared/types'
-import { getCurseForgeStatus, isCurseForgeRunning, isGameRunningFrom, launchCurseForge } from './curseforge'
+import { getCurseForgeStatus, isCurseForgeRunning, isGameRunningFrom, launchCurseForge } from '../core/curseforge'
 import { downloadFile } from './download'
-import { pathExists, readJson, removeQuietly, renameWithRetry, writeJsonAtomic } from './fsutil'
-import { applyModStates, carryOverConfigs, hashConfigFiles, readModStates } from './playerChoices'
-import { getSettings } from './settings'
-import { extractZip } from './zip'
+import { pathExists, readJson, removeQuietly, renameWithRetry, writeJsonAtomic } from '../core/fsutil'
+import { applyModStates, carryOverConfigs, hashConfigFiles, readModStates } from '../core/playerChoices'
+import { getSettings } from '../core/settings'
+import { extractZip } from '../core/zip'
 
 /**
  * Ce qu'on fait des données du joueur lors d'une mise à jour sur place :

@@ -6,9 +6,11 @@ Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment 
 
 | Emplacement | Contenu |
 |---|---|
-| `%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` | L’application elle-même, remplacée à chaque mise à jour. |
+| `%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
 | `%APPDATA%\Modpack Downloader\settings.json` | Tes réglages (voir ci-dessous). |
 | `%APPDATA%\Modpack Downloader\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
+| `%APPDATA%\Modpack Downloader\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
+| `%APPDATA%\Modpack Downloader\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
 | `%APPDATA%\Modpack Downloader\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
 | `%TEMP%\modpack-downloader` | Les téléchargements en cours (zips de modpack, installeurs de l’application). Vidé automatiquement. |
 | Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
@@ -25,7 +27,7 @@ installés et tes raccourcis.
 
 ## Le fichier settings.json
 
-Les réglages de l’application, partagés avec les [commandes en ligne](ligne-de-commande.md). Modifie-les plutôt
+Les réglages de l’application, partagés avec les [commandes](commandes.md). Modifie-les plutôt
 depuis les paramètres ; pour les modifier à la main, ferme d’abord l’application.
 
 | Champ | Contenu |

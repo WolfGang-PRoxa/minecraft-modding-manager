@@ -1,6 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import type { AuthStatus, LoginResult } from '../shared/types'
-import { accountFor, completeDeviceLogin, deviceLoginAvailable, logout, resolveCredential, saveLogin, startDeviceLogin } from './auth'
+import { accountFor, completeDeviceLogin, deviceLoginAvailable, logout, resolveCredential, saveLogin, startDeviceLogin } from '../core/auth'
 
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err))
 

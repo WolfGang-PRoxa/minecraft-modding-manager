@@ -1,4 +1,4 @@
-import { execFile, spawn } from 'node:child_process'
+import { execFile } from 'node:child_process'
 import { readFile, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { GITHUB_OAUTH_CLIENT_ID } from '../shared/config'
@@ -6,6 +6,7 @@ import { parseRepo, repoSlug } from '../shared/repo'
 import type { CredentialSource, DeviceLogin, GitHubAccount, RepoInfo, RepoRef } from '../shared/types'
 import { readJson, writeJsonAtomic } from './fsutil'
 import { GITHUB_HEADERS, repoApiBase, userApiUrl } from './githubEnv'
+import { powershell } from './powershell'
 import { settingsDir } from './settings'
 
 // Connexion GitHub partagée par l'application, le studio et les scripts. Le jeton est chiffré par
@@ -24,19 +25,6 @@ interface StoredCredential {
 }
 
 const credentialFile = () => join(settingsDir(), 'github-auth.json')
-
-function powershell(script: string, input: string): Promise<string> {
-  return new Promise((resolvePromise, reject) => {
-    const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true })
-    let out = ''
-    let err = ''
-    child.stdout.on('data', (d: Buffer) => (out += d.toString()))
-    child.stderr.on('data', (d: Buffer) => (err += d.toString()))
-    child.on('error', reject)
-    child.on('close', (code) => (code === 0 ? resolvePromise(out.trim()) : reject(new Error(err.trim() || `PowerShell ${code}`))))
-    child.stdin.end(input)
-  })
-}
 
 const DPAPI = "Add-Type -AssemblyName System.Security; $d=[Console]::In.ReadToEnd().Trim(); $s='CurrentUser';"
 const protect = (text: string) =>

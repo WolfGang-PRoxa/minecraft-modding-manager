@@ -28,21 +28,24 @@ fenêtre ni de processus. Interface et messages en français.
 npm run dev              # app en développement (HMR)
 npm run typecheck        # tsc sur main/preload/scripts puis sur le renderer
 npm run docs:verifier    # docs/ (sommaire, titres, liens, ancres, pas de HTML) et format de CHANGELOG.md
-npm run build            # typecheck + docs:verifier + build electron-vite dans out/
+npm test                 # tests (test/*.test.ts, node:test + tsx) : moteur, commandes, serveur MCP, faux GitHub
+npm run build            # typecheck + docs:verifier + test + build electron-vite dans out/ (index.js et cli.js)
 npm run changelog        # « Non publié » et commits feat/fix/perf depuis le dernier tag app-v*, mentionnés ou non
 npm run changelog -- --brouillon       # ajoute à « Non publié » une entrée par commit non mentionné
 npm run changelog -- --version 1.2.0   # « Non publié » → 1.2.0 datée du jour, package(-lock).json en 1.2.0 (ni commit ni tag)
 npm run changelog -- --notes 1.2.0     # texte de la release GitHub (--sortie <fichier>), utilisé par la CI
 npm run build:win        # build + images de l'installeur + installeur NSIS dans dist/
 npm run studio           # app en développement, ouverte sur la vue Studio (--studio)
-npm run modpacks:ranger  # numérote les zips déposés (--dir, --yes)
-npm run modpacks:publier # met les releases en accord avec le dossier (--dir, --yes, --dry-run)
+npm run mpm -- <commande> # commandes du moteur (sans argument : la liste ; --json, --yes, --dir, --repo)
+npm run mpm -- mcp       # serveur MCP (stdio) pour Claude Code
+npm run modpacks:ranger  # = mpm ranger : aperçu, confirmation, numérotation des zips déposés
+npm run modpacks:publier # = mpm publier : aperçu, confirmation, publication
 npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp depuis build/icon.png (non versionné, fait par build:win)
 ```
 
 ## Architecture
 
-- `src/main/` — processus principal (un seul, une seule fenêtre)
+- `src/main/` — processus principal Electron (un seul, une seule fenêtre). Le métier est dans `src/core/`.
   - `index.ts` : verrou d'instance, protocole `studio-media:` déclaré avant `ready`, IPC de l'app puis du studio.
     Relancée pendant qu'elle tourne (`second-instance`, éventuellement avec `--studio`) → `app:activated`.
   - `windowState.ts` : fenêtre ouverte agrandie (barre des tâches visible), plein écran par F11 qui ramène à la taille
@@ -61,20 +64,6 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `keepPlayerConfigs`) garde ses fichiers de config modifiés (marqueur sans empreintes : date du fichier après
     `installedAt`) ; `applyModStates` désactive les mods demandés par le publieur (`disabledMods`) puis rend à chaque
     mod l'état que le joueur lui avait donné. `InstallResult.keptConfigs` est annoncé dans la notification.
-  - `playerChoices.ts` et `instanceAddons.ts` (Node pur, testables avec tsx) : reprise des choix du joueur ; lecture
-    et écriture de l'état des mods dans `installedAddons` (projet CurseForge par fichier, `setAddonEnabled`).
-  - `curseforge.ts` : détection (protocole `curseforge://` dans `HKCR`, puis chemins connus Overwolf/autonome),
-    lancement, dossier `Instances` (réglage > logs CurseForge > défaut), détection de Minecraft lancé, relance
-    (`restartCurseForge`, canal `curseforge:restart` : ses processus fermés poliment puis de force, jamais Overwolf,
-    Minecraft ni ce qui tourne depuis le dossier du jeu ; refusée si Minecraft tourne).
-  - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
-    `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
-    Lu aussi par les scripts (`%APPDATA%\Modpack Downloader\settings.json`).
-  - `auth.ts` (Node pur) : connexion GitHub partagée app / scripts. Jeton chiffré par DPAPI via PowerShell
-    (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
-    `GITHUB_TOKEN` > `.env` (scripts) > `gh auth token`. Vérifie le droit de publier (`permissions.push`) et gère la
-    connexion par code (device flow, `GITHUB_OAUTH_CLIENT_ID`). Canaux `auth:*` (`authIpc.ts`) et `role:*` (`roleIpc.ts`).
-  - `githubEnv.ts` : base de l'API d'un dépôt ; `MPD_GITHUB_API` la remplace pour tous les dépôts en test.
   - `shortcut.ts` : raccourci `.lnk` de l'app (bureau ou emplacement choisi). Non packagée : cible
     `electron.exe "<projet>"` et icône `.ico` générée depuis `build/icon.png`.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
@@ -85,16 +74,46 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `noteRunningVersion` (réglage `lastRunVersion`) dit au lancement si l'app vient d'être mise à jour, et depuis
     quelle version (`LaunchInfo.previousVersion` : la page Nouveautés marque « Nouveau » ce qui a été reçu depuis).
     `AppUpdateInfo.releases` porte le texte de chaque release `app-v*` plus récente que l'app, jusqu'à celle proposée.
-  - `modsSignature.ts` (Node pur) : empreinte des mods d'une instance (nom et taille de chaque `.jar` posé dans
-    `mods`), calculée à l'identique pour un zip (`analyze.ts`) et pour un profil CurseForge (`profiles.ts`,
-    `listProfiles`, canal `curseforge:profiles`). Relu à chaque fois : ~30 ms pour 29 profils et 2 800 mods.
   - `report.ts` : signalement d'un problème (canaux `report:*`). Issue créée sur `APP_REPO` avec le compte GitHub
     connecté (`resolveCredential`) ; sans compte, ou si GitHub refuse, la page « nouvelle issue » s'ouvre préremplie
     dans le navigateur. Le corps (`src/shared/report.ts`) est du Markdown simple, lisible tel quel dans un mail ; les
     informations techniques jointes ne contiennent ni chemin ni nom de compte.
-  - `zip.ts` (yauzl, protection zip-slip, accepte un zip avec dossier racine), `download.ts`, `ipc.ts`.
-- `src/main/studio/` — la vue Studio. Tout est Node pur (réutilisé par `scripts/modpacks.ts`) sauf `ipc.ts`
-  (canaux `studio:*`, images via `studio-media://cover/`, surveillance du dossier des modpacks).
+  - `claudeCode.ts` : connexion à Claude Code (canaux `claude:*`, Paramètres → Claude Code et terminal) : `claude mcp
+    add --scope user modpack-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
+    (`claude.exe` natif de `~/.local/bin`, sinon `where claude`, `.cmd` par cmd.exe). « Connecté » = `claude mcp get`
+    cite le cli.js de cette installation.
+  - `studioIpc.ts` : canaux `studio:*` (appellent `StudioService`), images via `studio-media://cover/`, surveillance du
+    dossier des modpacks (un changement fait par `mpm` ou Claude rafraîchit la vue). `studioTask` compte aussi
+    l'opération d'un autre processus (verrou partagé) : la mise à jour de l'app l'attend.
+  - `download.ts`, `ipc.ts`, `authIpc.ts` (canaux `auth:*`), `roleIpc.ts` (canaux `role:*`).
+- `src/core/` — le moteur, Node pur : **jamais d'import d'Electron** (test `architecture`). Réutilisé par la fenêtre,
+  `mpm` et le serveur MCP.
+  - `playerChoices.ts` et `instanceAddons.ts` (Node pur, testables avec tsx) : reprise des choix du joueur ; lecture
+    et écriture de l'état des mods dans `installedAddons` (projet CurseForge par fichier, `setAddonEnabled`).
+  - `curseforge.ts` : détection (protocole `curseforge://` dans `HKCR`, puis chemins connus Overwolf/autonome),
+    lancement, dossier `Instances` (réglage > logs CurseForge > défaut), détection de Minecraft lancé, relance
+    (`restartCurseForge`, canal `curseforge:restart` : ses processus fermés poliment puis de force, jamais Overwolf,
+    Minecraft ni ce qui tourne depuis le dossier du jeu ; refusée si Minecraft tourne).
+  - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
+    `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
+    Lu aussi par les scripts (`%APPDATA%\Modpack Downloader\settings.json`).
+  - `auth.ts` : connexion GitHub partagée app / commandes. Jeton chiffré par DPAPI via PowerShell
+    (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
+    `GITHUB_TOKEN` > `.env` (scripts) > `gh auth token`. Vérifie le droit de publier (`permissions.push`) et gère la
+    connexion par code (device flow, `GITHUB_OAUTH_CLIENT_ID`).
+  - `githubEnv.ts` : base de l'API d'un dépôt ; `MPD_GITHUB_API` la remplace pour tous les dépôts en test.
+  - `modsSignature.ts` (Node pur) : empreinte des mods d'une instance (nom et taille de chaque `.jar` posé dans
+    `mods`), calculée à l'identique pour un zip (`analyze.ts`) et pour un profil CurseForge (`profiles.ts`,
+    `listProfiles`, canal `curseforge:profiles`). Relu à chaque fois : ~30 ms pour 29 profils et 2 800 mods.
+  - `zip.ts` (yauzl, protection zip-slip, accepte un zip avec dossier racine), `fsutil.ts`, `powershell.ts`
+    (`powershell` : script sans fenêtre, données par stdin ; `moveToRecycleBin`).
+  - `lock.ts` (`OperationLock`) et `journal.ts` (`Journal`), créés par `operationTools(holder)` (`operations.ts`) à
+    côté des réglages : `operation.lock` (création exclusive `wx` ; opération, `holder`, pid, jeton ; ignoré si le
+    processus est mort ou au bout de 24 h) et `journal.jsonl` (une ligne par écriture : source, opération, résultat ;
+    `journal.old.jsonl` au-delà de 512 Ko). `StudioService.exclusive` prend le verrou et journalise ; les petites
+    écritures (fiche, réglages, notes, image) passent par `logged` (journal sans verrou).
+- `src/core/studio/` — le Studio. `StudioService` (`service.ts`) est l'unique point d'entrée de la fenêtre et des
+  commandes ; ses options injectent ce qui dépend de l'hôte (`trashItem`, `lock`, `journal`, `blockedBy`, `coverUrl`).
   - `workspace.ts` : lecture du dossier (un sous-dossier par modpack, `pack.json`, `cover.*`), rangement
     (`planRanger`/`applyRanger`). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
     `keepPlayerConfigs`, écrits seulement s'ils servent ; `normalizePackSettings`).
@@ -111,10 +130,29 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `githubApi.ts` : client d'écriture (dépôt configuré), envois en streaming.
   - `archive.ts` : zip d'une instance (`DEFAULT_EXCLUSIONS` + exclusions du modpack), fichiers exclus trouvés dans
     un zip (`findExcludedInZip`) et réécriture sans eux (`stripExcludedFromZip`, une entrée à la fois),
-    `service.ts` : orchestration + verrou d'exclusivité ; les zips qui partiront à la prochaine publication sont
+    `service.ts` : orchestration, verrou et journal ; les zips qui partiront à la prochaine publication sont
     cherchés pour des fichiers exclus (`findExcluded`, mémorisé) : avertissement sur la ligne et dans le plan
     (`annotatePlan`). `settings.ts` : dossier des modpacks (repris une fois de l'ancien
     `%APPDATA%\Modpack Studio\studio-settings.json`).
+- `src/core/commands/` — registre des commandes (`registry.ts` : `command({ name, summary, description, params: zod,
+  kind: read | write | destructive, run, print })`, `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP
+  `packs_list`. `context.ts` (`createCommandRuntime`) construit le service hors de la fenêtre : publie d'office en
+  publieur, corbeille par PowerShell, `holder` « la ligne de commande » ou « Claude (MCP) ». Un modpack se désigne par
+  dossier, id ou nom (`findPack`). `publish apply` exige l'empreinte de `publish plan`. Toute commande doit figurer
+  dans `docs/commandes.md` (test).
+- `src/cli/` — `mpm` (`index.ts`) : options déduites du schéma zod (`args.ts`, via `z.toJSONSchema` : `--kebab`,
+  `--no-x`, option répétée pour une liste, obligatoires aussi dans l'ordre), confirmation des commandes
+  `destructive` (sauf `--yes`), progression sur stderr, `--json` sur stdout. `mpm ranger` / `mpm publier` : aperçu,
+  confirmation, opération. Compilé en `out/main/cli.js` (deuxième entrée de `electron.vite.config.ts`) ; l'app
+  installée a `mpm.cmd` (`build/mpm.cmd`, `extraFiles`) qui lance l'exécutable avec `ELECTRON_RUN_AS_NODE=1`.
+  `MPD_GITHUB_API` ignoré quand cli.js est dans `app.asar`.
+- `src/mcp/` — `server.ts` : chaque commande devient un outil (`registerTool`, schéma zod, annotations
+  `readOnlyHint` / `destructiveHint`, progression par `notifications/progress`) ; `instructions.ts` : la méthode
+  donnée à Claude (status d'abord, plan montré avant publication, suppressions confirmées). Rien d'autre que le
+  protocole sur stdout.
+- `test/` — `node:test` + tsx : `studio.test.ts` (bout en bout sur dossier temporaire), `commands.test.ts` (options,
+  scénario par le registre, serveur MCP piloté par le client du SDK), `operations.test.ts` (verrou, journal,
+  architecture), `exclusions.test.ts`. `support/fakeGitHub.ts` (faux GitHub en mémoire), `support/fixtures.ts`.
 - `src/preload/index.ts` — un seul preload : `window.api` (`RendererApi`) et `window.studio` (`StudioApi`,
   `src/shared/studio.ts`).
 - `src/renderer/` — React 19 + Tailwind v4 + zustand, une seule page (`index.html`). `store.ts` : état de l'app,
@@ -163,8 +201,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   ligne par `\` en fin de ligne. Toute page doit figurer dans `docs/README.md`.
 - `CHANGELOG.md` — historique des versions de l'app : `## [Non publié]` en tête, puis `## [x.y.z] - AAAA-MM-JJ`,
   rubriques `###`, liens de comparaison en fin de fichier. Un commentaire `<!-- 1a2b3c4 -->` cite un commit.
-- `scripts/modpacks.ts` — les commandes `ranger` et `publier` du studio en ligne de commande.
-  `scripts/changelog.ts` et `scripts/docs.ts` — suivi de l'historique et vérification de la documentation.
+- `scripts/changelog.ts` et `scripts/docs.ts` — suivi de l'historique et vérification de la documentation.
 - `relay/` — service Netlify indépendant de l'application (aucune dépendance, fonctions dans `netlify/functions`,
   code partagé dans `src/`, syntaxe TypeScript effaçable : il s'exécute aussi tel quel avec `node`). `/github`
   reçoit le webhook du dépôt : mail au propriétaire à chaque issue, puis, quand une session de correction pousse une
@@ -277,9 +314,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   au premier lancement.
 - TypeScript est épinglé en 6.x (la 7 est le compilateur natif, pas encore validé ici). archiver 8 est en ESM
   (exports nommés `ZipArchive`). lucide-react v1 n'a plus d'icônes de marques. Tailwind v4 : `px-0!`, `bg-linear-to-r`.
-- Tester sans GitHub : un faux serveur de releases (lecture anonyme, écriture avec jeton, `upload_url` et
-  téléchargement d'asset par redirection vers lui-même) et `MPD_GITHUB_API=http://localhost:<port>/repos/o/r`
-  (+ `GITHUB_TOKEN=x` pour le studio et les scripts). La surcharge est ignorée dans l'app packagée.
+- Tester sans GitHub : `test/support/fakeGitHub.ts` (releases en mémoire : lecture anonyme, écriture avec jeton,
+  `upload_url` et téléchargement d'asset par redirection vers lui-même) et
+  `MPD_GITHUB_API=http://127.0.0.1:<port>/repos/o/r` (`setGitHubApiOverride` dans un test ; `GITHUB_TOKEN=x` pour
+  le studio et les commandes). La surcharge est ignorée dans l'app packagée et par le cli.js d'`app.asar`.
 - Binaire Electron absent (script d'install bloqué par npm 11) : `node -e "require('electron')"` le télécharge.
 - Piloter l'app en test : Playwright `_electron` (installé hors du dépôt). `--user-data-dir=<dossier>` isole ses
   données (réglages, jeton, cache) et son verrou d'instance ; `APPDATA=<dossier>` isole ce que lisent les scripts.
@@ -341,9 +379,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   packagée ignorant `MPD_GITHUB_API`, compiler l'ancienne avec `setGitHubApiOverride(process.env.MPD_GITHUB_API)`
   le temps du build (à retirer aussitôt, ne jamais committer). Ne jamais cliquer « Mettre à jour » dans une app de
   test branchée sur le vrai GitHub : elle lancerait le vrai installeur, qui remplace l'installation réelle.
-- Tests de la logique hors du dépôt avec tsx : un fichier `.mts` (await au premier niveau), qui importe les sources
-  par `file:///C:/…/src/….ts`. `playerChoices.ts`, `instanceAddons.ts`, `archive.ts`, `sync.ts` et `service.ts` se
-  testent ainsi sur des dossiers temporaires ; `installer.ts` (Electron) se teste dans l'app, avec Playwright.
+- Tests : `npm test` (`test/*.test.ts`, lancés par `npm run build`, donc par la CI). Le moteur (`src/core`) se teste
+  sur des dossiers temporaires (`test/support/fixtures.ts` : fausses instances CurseForge) ; un test qui lit les
+  réglages appelle `useSettingsFile` sur un fichier temporaire. `installer.ts` (Electron) se teste dans l'app, avec
+  Playwright. Le serveur MCP se teste par le client du SDK (`StdioClientTransport`, `node --import tsx`).
+- Tester `mpm.cmd` et le serveur MCP de l'app compilée sans l'installer : `npx electron-builder --win --dir
+  -c.directories.output=<dossier>` puis `<dossier>\win-unpacked\mpm.cmd status`. Ne pas tester « Connecter » depuis
+  l'app de développement : il inscrirait dans la configuration Claude Code de l'utilisateur un chemin de dev
+  (`claude mcp add --scope project` dans un dossier temporaire pour essayer, puis supprimer le dossier).
 - Tester les réglages des versions de bout en bout : app compilée (`out/`), `--user-data-dir`, réglages publieur avec
   `instancesDir` de test (le profil source du publieur y est aussi), faux GitHub en écriture, `GITHUB_TOKEN=x`,
   `APPDATA` isolé ; Studio (créer, régler, publier) puis Bibliothèque (installer, simuler les choix du joueur dans le

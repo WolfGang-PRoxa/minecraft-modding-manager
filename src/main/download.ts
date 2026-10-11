@@ -4,7 +4,7 @@ import { createWriteStream } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { finished } from 'node:stream/promises'
-import { removeQuietly, renameWithRetry } from './fsutil'
+import { removeQuietly, renameWithRetry } from '../core/fsutil'
 
 export interface DownloadProgress {
   done: number

@@ -2,15 +2,16 @@ import { BrowserWindow, dialog, ipcMain, shell, app } from 'electron'
 import type { InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
 import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
 import { registerAuthIpc } from './authIpc'
-import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from './curseforge'
+import { registerClaudeCodeIpc } from './claudeCode'
+import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
 import { getCatalog } from './github'
 import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
-import { listProfiles } from './profiles'
+import { listProfiles } from '../core/profiles'
 import { openReportInBrowser, reportInfo, submitReport } from './report'
 import { registerRoleIpc } from './roleIpc'
-import { getSettings, updateSettings } from './settings'
+import { getSettings, updateSettings } from '../core/settings'
 import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut'
-import { studioTask } from './studio/ipc'
+import { studioTask } from './studioIpc'
 import { toggleMaximize } from './windowState'
 
 export function registerIpc(
@@ -19,6 +20,7 @@ export function registerIpc(
 ): void {
   registerAuthIpc()
   registerRoleIpc()
+  registerClaudeCodeIpc()
 
   const send = (channel: string, payload: unknown) => {
     const win = getWindow()

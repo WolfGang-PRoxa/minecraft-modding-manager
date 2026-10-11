@@ -8,7 +8,7 @@ import { formatDate } from '../lib/format'
 import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
-import { CommandLineHint, WorkspaceFolderSetting } from '../studio/StudioSettings'
+import { ClaudeCodeSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
 import { APP_NAME } from '../../../shared/config'
 
@@ -177,8 +177,8 @@ export function SettingsDialog() {
         </Section>
 
         {publisher && (
-          <Section title="En ligne de commande">
-            <CommandLineHint />
+          <Section title="Claude Code et terminal">
+            <ClaudeCodeSetting />
           </Section>
         )}
 

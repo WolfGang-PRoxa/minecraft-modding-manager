@@ -10,6 +10,10 @@ files:
   - out/**/*
   - package.json
 asarUnpack: []
+# mpm.cmd : les commandes du moteur dans le terminal, à côté de l'exécutable.
+extraFiles:
+  - from: build/mpm.cmd
+    to: mpm.cmd
 win:
   target:
     - target: nsis

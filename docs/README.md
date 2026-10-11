@@ -23,7 +23,8 @@ Cette documentation est aussi intégrée à l’application : bouton **Aide** de
 - [Réglages des versions](reglages.md) : fichiers jamais publiés, mods désactivés chez les joueurs, configurations
   gardées.
 - [Publier et supprimer](publication.md) : mettre les releases GitHub en accord avec le dossier.
-- [En ligne de commande](ligne-de-commande.md) : ranger et publier depuis un terminal.
+- [Claude Code et commandes](commandes.md) : laisser Claude Code gérer tes modpacks, ou les gérer depuis un
+  terminal.
 
 ## L’application
 

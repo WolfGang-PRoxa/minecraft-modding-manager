@@ -9,15 +9,17 @@
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "npm run typecheck && npm run docs:verifier && electron-vite build",
+    "build": "npm run typecheck && npm run docs:verifier && npm test && electron-vite build",
+    "test": "tsx --test \"test/*.test.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json && tsc -p relay/tsconfig.json",
     "docs:verifier": "tsx scripts/docs.ts",
     "changelog": "tsx scripts/changelog.ts",
     "build:win": "npm run build && tsx scripts/generate-installer-images.ts && electron-builder --win --publish never",
     "preview": "electron-vite preview",
     "studio": "electron-vite dev -- --studio",
-    "modpacks:ranger": "tsx scripts/modpacks.ts ranger",
-    "modpacks:publier": "tsx scripts/modpacks.ts publier"
+    "mpm": "tsx src/cli/index.ts",
+    "modpacks:ranger": "tsx src/cli/index.ts ranger",
+    "modpacks:publier": "tsx src/cli/index.ts publier"
   },
   "dependencies": {
     "yauzl": "^3.4.0"
@@ -25,7 +27,7 @@
   "devDependencies": {
     "@fontsource-variable/inter": "^5.3.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
-    "@inquirer/prompts": "^8.7.2",
+    "@modelcontextprotocol/sdk": "^1.30.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/archiver": "^8.0.0",
     "@types/node": "^24.0.0",
@@ -46,6 +48,7 @@
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
     "vite": "^7.3.6",
+    "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
   "allowScripts": {

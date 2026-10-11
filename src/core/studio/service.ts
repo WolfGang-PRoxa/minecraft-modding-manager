@@ -21,6 +21,8 @@ import type {
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
 import { pathExists } from '../fsutil'
+import type { Journal } from '../journal'
+import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, StudioError, type CachedAnalysis } from './analyze'
 import { findExcludedInZip, stripExcludedFromZip, zipInstance } from './archive'
 import { previewZipEntry, readZipContents } from './contents'
@@ -84,9 +86,25 @@ export interface StudioServiceOptions {
   onAnalyzing?(fileName: string | null): void
   /** Ce qui interdit de démarrer une opération d'écriture (« la mise à jour de l'application »…), sinon null. */
   blockedBy?(): string | null
-  /** Met un fichier ou un dossier à la corbeille (fenêtre seulement : les scripts ne suppriment rien eux-mêmes). */
+  /** Met un fichier ou un dossier à la corbeille. Sans elle, les suppressions sont refusées. */
   trashItem?(path: string): Promise<void>
+  /** Verrou partagé avec les autres processus (fenêtre, ligne de commande, serveur MCP). */
+  lock?: OperationLock
+  /** Journal des opérations d'écriture. */
+  journal?: Journal
 }
+
+/** Ce qu'une opération a donné, pour le journal. */
+interface Outcome {
+  ok: boolean
+  detail?: string
+  error?: string
+}
+
+const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
+
+const publishOutcome = (result: PublishResult): Outcome =>
+  result.ok ? { ok: true, detail: `${plural(result.done, 'changement')} sur GitHub` } : { ok: false, error: result.error }
 
 function uncheckedGitHub(repo: RepoRef): GitHubStatus {
   return {
@@ -123,16 +141,49 @@ export class StudioService {
     return this.options.getWorkspaceDir()
   }
 
-  /** Empêche deux opérations d'écriture en même temps (rangement pendant une publication…). */
-  private async exclusive<T>(label: string, run: () => Promise<T>): Promise<T> {
+  /**
+   * Empêche deux opérations d'écriture en même temps (rangement pendant une publication…), dans ce processus et,
+   * par le verrou partagé, avec les autres. L'opération est inscrite au journal.
+   */
+  private async exclusive<T>(label: string, run: () => Promise<T>, outcome?: (result: T) => Outcome): Promise<T> {
     const other = this.busy ?? this.options.blockedBy?.() ?? null
     if (other) throw new StudioError(`Patiente : ${other} est en cours.`)
     this.busy = label
     try {
-      return await run()
+      const release = await this.options.lock?.acquire(label)
+      try {
+        return await this.logged(label, run, outcome)
+      } finally {
+        await release?.()
+      }
     } finally {
       this.busy = null
     }
+  }
+
+  /** Exécute une écriture et l'inscrit au journal, réussie ou non. */
+  private async logged<T>(label: string, run: () => Promise<T>, outcome?: (result: T) => Outcome): Promise<T> {
+    const started = Date.now()
+    const journal = this.options.journal
+    try {
+      const result = await run()
+      await journal?.append({ operation: label, durationMs: Date.now() - started, ...(outcome?.(result) ?? { ok: true }) })
+      return result
+    } catch (err) {
+      await journal?.append({ operation: label, ok: false, error: describeError(err), durationMs: Date.now() - started })
+      throw err
+    }
+  }
+
+  /** Dernières opérations d'écriture, tous processus confondus, de la plus récente à la plus ancienne. */
+  recentOperations(limit?: number) {
+    return this.options.journal?.read(limit) ?? Promise.resolve([])
+  }
+
+  /** Opération d'écriture en cours dans un autre processus (« la publication (la ligne de commande) »), sinon null. */
+  get otherProcessTask(): string | null {
+    const info = this.options.lock?.currentSync()
+    return info && info.pid !== process.pid ? `${info.operation} (${info.holder})` : null
   }
 
   /** Opération d'écriture en cours (« la publication »…), sinon null. */
@@ -341,7 +392,7 @@ export class StudioService {
       this.requireWorkspace()
       const workspace = (await this.scan())!
       return applyRanger(workspace, planRanger(workspace, orders))
-    })
+    }, (renamed) => ({ ok: true, detail: `${plural(renamed, 'zip')} renommé${renamed > 1 ? 's' : ''}` }))
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -401,7 +452,7 @@ export class StudioService {
       } finally {
         await this.refreshRemote()
       }
-    })
+    }, publishOutcome)
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -412,7 +463,7 @@ export class StudioService {
    * sans attendre la prochaine publication. Son numéro reste pris.
    */
   deleteVersion(folder: string, number: number): Promise<PublishResult> {
-    return this.unpublish(true, async (workspace) => {
+    return this.unpublish(`la suppression de la v${number} de ${folder}`, true, async (workspace) => {
       const pack = workspace.packs.find((p) => p.folder === folder)
       const version = pack?.versions.find((v) => v.number === number)
       if (!pack || !version) throw new StudioError(`La v${number} de ${folder} est introuvable : le dossier a changé.`)
@@ -429,7 +480,7 @@ export class StudioService {
 
   /** Supprime un modpack : son dossier part à la corbeille, puis toutes ses releases sont retirées de GitHub. */
   deletePack(folder: string): Promise<PublishResult> {
-    return this.unpublish(true, async (workspace) => {
+    return this.unpublish(`la suppression du modpack ${folder}`, true, async (workspace) => {
       const pack = workspace.packs.find((p) => p.folder === folder)
       if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable : le dossier a changé.`)
       // Sans pack.json lisible, on ne sait pas sous quel identifiant le modpack a été publié.
@@ -441,7 +492,7 @@ export class StudioService {
 
   /** Retire tout de suite de GitHub des releases dont le zip n'est plus dans le dossier. */
   deleteReleases(tags: string[]): Promise<PublishResult> {
-    return this.unpublish(false, async () => tags)
+    return this.unpublish(`le retrait de ${tags.join(', ')}`, false, async () => tags)
   }
 
   private async trash(path: string): Promise<void> {
@@ -459,10 +510,11 @@ export class StudioService {
    * reste la référence. GitHub est vérifié avant de toucher au dossier.
    */
   private unpublish(
+    label: string,
     changesFolder: boolean,
     prepare: (workspace: LocalWorkspace) => Promise<string[]>
   ): Promise<PublishResult> {
-    return this.exclusive('la suppression', async () => {
+    return this.exclusive(label, async () => {
       let tags: string[]
       try {
         await this.freshPlan()
@@ -491,7 +543,7 @@ export class StudioService {
       } finally {
         await this.refreshRemote()
       }
-    })
+    }, publishOutcome)
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -521,37 +573,50 @@ export class StudioService {
   // Modpacks
 
   createPack(name: string): Promise<string> {
-    return this.exclusive('la création du modpack', async () => {
-      this.requireWorkspace()
-      return createPack((await this.scan())!, name)
-    })
+    return this.exclusive(
+      `la création du modpack ${name.trim()}`,
+      async () => {
+        this.requireWorkspace()
+        return createPack((await this.scan())!, name)
+      },
+      (folder) => ({ ok: true, detail: folder })
+    )
   }
 
   async updatePackInfo(folder: string, info: { name: string; description: string }): Promise<void> {
     const name = info.name.trim().replace(/\s+/g, ' ')
     if (!name) throw new StudioError('Le nom ne peut pas être vide.')
-    const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-    await writePackFile(dir, { ...meta, name, description: info.description.trim() })
+    await this.logged(`la fiche de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      await writePackFile(dir, { ...meta, name, description: info.description.trim() })
+    })
   }
 
   /** Enregistre les réglages des versions d'un modpack (fichiers exclus, mods désactivés, configurations). */
   async updatePackSettings(folder: string, settings: PackSettings): Promise<void> {
-    const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-    await writePackFile(dir, { ...meta, ...normalizePackSettings(settings) })
+    await this.logged(`les réglages des versions de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      await writePackFile(dir, { ...meta, ...normalizePackSettings(settings) })
+    })
   }
 
   async setNotes(folder: string, version: number, notes: string): Promise<void> {
-    const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-    await writePackFile(dir, { ...meta, notes: { ...meta.notes, [String(version)]: notes.replace(/\r\n/g, '\n').trim() } })
+    await this.logged(`les notes de la v${version} de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      const text = notes.replace(/\r\n/g, '\n').trim()
+      await writePackFile(dir, { ...meta, notes: { ...meta.notes, [String(version)]: text } })
+    })
   }
 
   async setCover(folder: string, source: string | null): Promise<void> {
-    const { dir } = await loadPackMeta(this.requireWorkspace(), folder)
-    await setCover(dir, source)
+    await this.logged(`l’image de ${folder}`, async () => {
+      const { dir } = await loadPackMeta(this.requireWorkspace(), folder)
+      await setCover(dir, source)
+    })
   }
 
   async importFiles(folder: string, paths: string[]) {
-    return this.exclusive('la copie des fichiers', async () => {
+    return this.exclusive(`la copie de fichiers dans ${folder}`, async () => {
       const { dir } = await loadPackMeta(this.requireWorkspace(), folder)
       return importFiles(dir, paths)
     })
@@ -565,23 +630,27 @@ export class StudioService {
     onProgress: (done: number, total: number) => void,
     signal: AbortSignal
   ): Promise<string> {
-    return this.exclusive('la création du zip', async () => {
-      this.requireWorkspace()
-      const workspace = (await this.scan())!
-      const pack = workspace.packs.find((p) => p.folder === folder)
-      if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
-      if (pack.packFileError) throw new StudioError(pack.packFileError)
-      const number = nextVersionNumber(pack)
-      const fileName = versionFileName(pack.folder, number)
-      await zipInstance(instancePath, join(pack.dir, fileName), {
-        includeSaves,
-        exclude: pack.meta.exclude,
-        onProgress,
-        signal
-      })
-      await writePackFile(pack.dir, { ...pack.meta, lastVersion: number })
-      return fileName
-    })
+    return this.exclusive(
+      `la création d’une version de ${folder}`,
+      async () => {
+        this.requireWorkspace()
+        const workspace = (await this.scan())!
+        const pack = workspace.packs.find((p) => p.folder === folder)
+        if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
+        if (pack.packFileError) throw new StudioError(pack.packFileError)
+        const number = nextVersionNumber(pack)
+        const fileName = versionFileName(pack.folder, number)
+        await zipInstance(instancePath, join(pack.dir, fileName), {
+          includeSaves,
+          exclude: pack.meta.exclude,
+          onProgress,
+          signal
+        })
+        await writePackFile(pack.dir, { ...pack.meta, lastVersion: number })
+        return fileName
+      },
+      (fileName) => ({ ok: true, detail: fileName })
+    )
   }
 
   /** Retire d'un zip du modpack (zip à ranger ou version) les fichiers exclus dans ses réglages. */
@@ -591,13 +660,17 @@ export class StudioService {
     onProgress: (done: number, total: number) => void,
     signal: AbortSignal
   ): Promise<number> {
-    return this.exclusive('le nettoyage du zip', async () => {
-      const file = await this.packZip(folder, fileName)
-      const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
-      if (!meta.exclude.length) throw new StudioError('Aucun fichier n’est exclu dans les réglages de ce modpack.')
-      const removed = await stripExcludedFromZip(file, meta.exclude, { onProgress, signal })
-      if (removed === 0) throw new StudioError('Ce zip ne contient aucun fichier exclu.')
-      return removed
-    })
+    return this.exclusive(
+      `le nettoyage de ${fileName}`,
+      async () => {
+        const file = await this.packZip(folder, fileName)
+        const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
+        if (!meta.exclude.length) throw new StudioError('Aucun fichier n’est exclu dans les réglages de ce modpack.')
+        const removed = await stripExcludedFromZip(file, meta.exclude, { onProgress, signal })
+        if (removed === 0) throw new StudioError('Ce zip ne contient aucun fichier exclu.')
+        return removed
+      },
+      (removed) => ({ ok: true, detail: `${plural(removed, 'fichier')} retiré${removed > 1 ? 's' : ''}` })
+    )
   }
 }

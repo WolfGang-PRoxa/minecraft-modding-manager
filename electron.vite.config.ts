@@ -5,7 +5,13 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        // cli : la ligne de commande `mpm` et le serveur MCP, lancés par mpm.cmd avec l'exécutable en mode Node.
+        input: { index: resolve(__dirname, 'src/main/index.ts'), cli: resolve(__dirname, 'src/cli/index.ts') }
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]

@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron'
 import { repoSlug } from '../shared/repo'
 import type { RoleResult, Settings } from '../shared/types'
-import { checkPublicRepo, checkPublisherAccess, parseRepoInput, RepoError, resolveCredential } from './auth'
-import { updateSettings } from './settings'
+import { checkPublicRepo, checkPublisherAccess, parseRepoInput, RepoError, resolveCredential } from '../core/auth'
+import { updateSettings } from '../core/settings'
 
 async function roleResult(run: () => Promise<Omit<Extract<RoleResult, { ok: true }>, 'ok'>>): Promise<RoleResult> {
   try {

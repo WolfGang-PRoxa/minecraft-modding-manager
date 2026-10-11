@@ -160,17 +160,29 @@ Le logo est en place (`build/icon.png`, seule source du logo). Renommer sans cas
 
 Aucune nouveauté visible pour les récepteurs ; c'est la fondation de tout le reste.
 
+**État : faite le 2026-10-11, pas encore publiée.** 21 commandes (`src/core/commands/`), `mpm` et `mpm.cmd`, serveur
+MCP, bouton « Connecter » (Paramètres → Claude Code et terminal), verrou entre processus, journal, `npm test` (20
+tests, dont le serveur MCP piloté par un vrai client). Vérifié sur l'app compilée : `mpm.cmd` et le serveur MCP lisent
+le vrai dossier des modpacks et GitHub.
+
+Deux choix en cours de route :
+
+- **L'IPC du studio ne passe pas par les commandes** : fenêtre et commandes appellent le même `StudioService`, où vivent
+  la logique, le verrou et le journal. Les commandes restent une couche fine (paramètres, résolution d'un modpack par
+  son nom, affichage) ; les faire traverser par l'IPC aurait réécrit l'interface sans rien gagner.
+- **Pas de skill dans le dépôt** : la méthode de travail de Claude est dans les instructions du serveur MCP
+  (`src/mcp/instructions.ts`), livrées avec l'application installée, donc valables hors du dépôt.
+
 1. `npm test` et les premiers tests sur le code existant (rangement, plan de publication, choix du joueur).
 2. Déplacer `src/main/studio/` (déjà en Node pur) vers `src/core/`, sans changer son comportement.
 3. Registre de commandes, verrou entre processus, journal.
-4. `mpm` avec les opérations d'aujourd'hui : `packs list`, `pack show`, `pack create`, `version create` (zip depuis le
-   profil), `ranger`, `publish --dry-run`, `publish`, `settings`… Sortie `--json` stable.
-5. Serveur MCP, skill `.claude/skills/modpacks/`, page `docs/commandes.md` (remplace `ligne-de-commande.md`,
-   générée en partie depuis le registre).
-6. L'IPC du studio passe par les commandes (une seule logique).
+4. `mpm` avec les opérations d'aujourd'hui. Sortie `--json` stable.
+5. Serveur MCP, page `docs/commandes.md` (remplace `ligne-de-commande.md` ; un test vérifie qu'elle cite chaque
+   commande).
 
 **Terminé quand** : dans une session Claude Code, Claude liste les modpacks, crée une version depuis un profil et la
-publie sur GitHub uniquement par des commandes, pendant que l'app ouverte suit en direct.
+publie sur GitHub uniquement par des commandes, pendant que l'app ouverte suit en direct. (À confirmer par le
+propriétaire une fois la 1.2.0 installée et connectée.)
 
 ### Phase 3 — La vue publieur : profils CurseForge (1.3.0)
 

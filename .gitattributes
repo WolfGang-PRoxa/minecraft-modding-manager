@@ -1,0 +1,2 @@
+# Les scripts cmd.exe gardent des fins de ligne Windows, quel que soit le poste qui les extrait.
+*.cmd text eol=crlf

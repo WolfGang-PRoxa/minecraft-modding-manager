@@ -293,8 +293,23 @@ export interface RoleApi {
   becomePublisher(repo: string): Promise<RoleResult>
 }
 
+/** Connexion de l'application à Claude Code (serveur MCP du moteur), pour les publieurs. */
+export interface ClaudeCodeStatus {
+  /** Le programme claude est présent sur ce PC. */
+  installed: boolean
+  /** Le serveur MCP de cette installation est enregistré dans Claude Code. */
+  connected: boolean
+  /** La commande à taper soi-même, si la connexion automatique est impossible. */
+  manualCommand: string
+}
+
+export interface ClaudeApi {
+  getClaudeCodeStatus(): Promise<ClaudeCodeStatus>
+  connectClaudeCode(): Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi {
+export interface RendererApi extends AuthApi, RoleApi, ClaudeApi {
   getLaunchInfo(): Promise<LaunchInfo>
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
   onActivated(listener: (view: AppView | null) => void): () => void

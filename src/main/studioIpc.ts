@@ -3,17 +3,18 @@ import { watch, type FSWatcher } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { ActionResult, PackSettings, PublishResult, RangerOrders } from '../../shared/studio'
-import { appUpdateTask } from '../appUpdate'
-import { resolveCredential } from '../auth'
-import { resolveInstancesDir } from '../curseforge'
-import { pathExists } from '../fsutil'
-import { getSettings } from '../settings'
-import { AnalysisCache, describeError, StudioError } from './analyze'
-import { listInstances } from './archive'
-import { StudioService } from './service'
-import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from './settings'
-import { COVER_EXTENSIONS, type LocalPack } from './workspace'
+import type { ActionResult, PackSettings, PublishResult, RangerOrders } from '../shared/studio'
+import { appUpdateTask } from './appUpdate'
+import { resolveCredential } from '../core/auth'
+import { resolveInstancesDir } from '../core/curseforge'
+import { pathExists } from '../core/fsutil'
+import { operationTools } from '../core/operations'
+import { getSettings } from '../core/settings'
+import { AnalysisCache, describeError, StudioError } from '../core/studio/analyze'
+import { listInstances } from '../core/studio/archive'
+import { StudioService } from '../core/studio/service'
+import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
+import { COVER_EXTENSIONS, type LocalPack } from '../core/studio/workspace'
 
 /** Protocole qui sert les images des modpacks à la fenêtre (déclaré avant `ready` dans index.ts). */
 export const COVER_SCHEME = 'studio-media'
@@ -85,9 +86,12 @@ async function action(run: () => Promise<unknown>): Promise<ActionResult> {
   }
 }
 
-/** Opération du studio qu'une fermeture de l'application interromprait (« la publication »…), sinon null. */
+/**
+ * Opération du studio qu'une mise à jour de l'application interromprait (« la publication »…), sinon null : celle
+ * de la fenêtre, ou celle d'un autre processus (ligne de commande, serveur MCP), que l'installeur fermerait aussi.
+ */
 export function studioTask(): string | null {
-  return service?.currentTask ?? null
+  return service?.currentTask ?? service?.otherProcessTask ?? null
 }
 
 /** Arrête proprement une publication ou une création de zip en cours (fermeture de la fenêtre). */
@@ -110,7 +114,8 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     coverUrl,
     onAnalyzing: (fileName) => send('studio:analyzing', fileName),
     blockedBy: appUpdateTask,
-    trashItem: (path) => shell.trashItem(path)
+    trashItem: (path) => shell.trashItem(path),
+    ...operationTools('l’application')
   })
   registerCoverProtocol()
   restartWatcher()

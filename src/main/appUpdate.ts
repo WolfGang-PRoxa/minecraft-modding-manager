@@ -5,9 +5,9 @@ import { join } from 'node:path'
 import { compareVersions } from '../shared/releases'
 import type { AppUpdateProgress, AppUpdateResult } from '../shared/types'
 import { downloadFile } from './download'
-import { removeQuietly } from './fsutil'
+import { removeQuietly } from '../core/fsutil'
 import { getCatalog } from './github'
-import { getSettings, updateSettings } from './settings'
+import { getSettings, updateSettings } from '../core/settings'
 
 const INSTALLER_PREFIX = 'Modpack-Manager-Setup-'
 const downloadDir = () => join(app.getPath('temp'), 'modpack-downloader')

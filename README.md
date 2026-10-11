@@ -46,7 +46,7 @@ La documentation est intégrée à l'application (bouton **Aide** de la barre de
 - **Jouer** : [La bibliothèque](docs/bibliotheque.md) · [CurseForge](docs/curseforge.md)
 - **Publier** : [Devenir publieur](docs/publieur.md) · [Le Studio](docs/studio.md) ·
   [Préparer une version](docs/versions.md) · [Publier et supprimer](docs/publication.md) ·
-  [En ligne de commande](docs/ligne-de-commande.md)
+  [Claude Code et commandes](docs/commandes.md)
 - **L'application** : [Paramètres](docs/parametres.md) · [Mises à jour](docs/mises-a-jour.md) ·
   [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.md)
 - **Référence** : [Dépannage](docs/depannage.md) · [Fichiers et dossiers](docs/fichiers.md) ·

@@ -3,7 +3,7 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès que tu le modifies.
 
-Les sections **Dossier des modpacks** et **En ligne de commande** n’apparaissent qu’en mode publieur.
+Les sections **Dossier des modpacks** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 ## Utilisation
 
@@ -61,10 +61,12 @@ Indique si Modpack Manager a un raccourci sur ton bureau.
   répare aussi une icône restée vide.
 - **Autre emplacement…** crée un raccourci à l’endroit de ton choix.
 
-## En ligne de commande
+## Claude Code et terminal
 
-Réservé aux publieurs : rappelle que les opérations du Studio existent aussi dans un terminal. Voir
-[En ligne de commande](ligne-de-commande.md).
+Réservé aux publieurs. Indique si [Claude Code](https://claude.com/claude-code) est installé sur ce PC et s’il est
+connecté à tes modpacks. **Connecter** (ou **Reconnecter**) inscrit l’application dans Claude Code : il peut alors
+créer, régler et publier tes modpacks à ta demande. Rappelle aussi que les mêmes opérations existent dans un terminal
+(`mpm.cmd`). Voir [Claude Code et commandes](commandes.md).
 
 ## À propos
 

@@ -31,10 +31,11 @@ d’Electron est donc téléchargé au premier lancement. S’il manque, `node -
 | `npm run studio` | La même chose, ouverte sur le Studio (`--studio`). |
 | `npm run typecheck` | Vérification des types : processus principal, scripts, interface et relais. |
 | `npm run docs:verifier` | Vérification de la documentation et de l’historique des versions (voir plus bas). |
-| `npm run build` | Types, documentation, puis compilation dans `out/`. |
+| `npm test` | Les tests (`test/*.test.ts`, avec `node:test` et tsx) : moteur, commandes, serveur MCP, sur des dossiers temporaires et un faux GitHub. |
+| `npm run build` | Types, documentation, tests, puis compilation dans `out/`. |
 | `npm run build:win` | L’installeur Windows, dans `dist/` : compilation, images des fenêtres de l’installeur, puis electron-builder. |
 | `npm run changelog` | État de l’historique des versions (voir [Suivi des changements](#suivi-des-changements)). |
-| `npm run modpacks:ranger`, `npm run modpacks:publier` | Les opérations du Studio en ligne de commande (voir [En ligne de commande](ligne-de-commande.md)). |
+| `npm run mpm -- <commande>` | Les commandes du moteur (voir [Claude Code et commandes](commandes.md)) ; `npm run mpm -- mcp` démarre le serveur MCP. `npm run modpacks:ranger` et `npm run modpacks:publier` en sont des raccourcis. |
 | `npx tsx scripts/generate-installer-images.ts` | Régénère les images des fenêtres de l’installeur (`build/installer/`), à partir du logo `build/icon.png`. `npm run build:win` le fait. |
 
 ## Organisation du code
@@ -44,12 +45,16 @@ Une application [Electron](https://www.electronjs.org/) : un processus principal
 
 | Dossier | Contenu |
 |---|---|
-| `src/main` | Processus principal : lecture des releases (`github.ts`), installation (`installer.ts`), CurseForge (`curseforge.ts`), réglages, connexion GitHub (`auth.ts`), mise à jour de l’application (`appUpdate.ts`), signalements (`report.ts`), canaux IPC. |
-| `src/main/studio` | Le Studio, en Node pur (réutilisé par les scripts) : lecture du dossier, analyse des zips, rangement, comparaison avec GitHub et publication. |
+| `src/main` | Processus principal (Electron) : fenêtre, lecture des releases (`github.ts`), installation (`installer.ts`), mise à jour de l’application (`appUpdate.ts`), signalements (`report.ts`), connexion à Claude Code (`claudeCode.ts`), canaux IPC. |
+| `src/core` | Le moteur, en Node pur (sans Electron, vérifié par un test) : réglages, connexion GitHub, CurseForge, choix du joueur, et le Studio (`studio/` : dossier, analyse des zips, rangement, publication). Verrou et journal des opérations, partagés entre processus. |
+| `src/core/commands` | Le registre des commandes : une commande = un nom, une description, des paramètres (zod) et une fonction. La ligne de commande et le serveur MCP en sont tirés. |
+| `src/cli` | `mpm`, la ligne de commande (`mpm.cmd` dans l’application installée), et `mpm mcp`. |
+| `src/mcp` | Le serveur MCP pour Claude Code, et les instructions qu’il donne à Claude. |
 | `src/preload` | Le pont entre la fenêtre et le processus principal : `window.api` et `window.studio`. |
 | `src/renderer` | L’interface : `src/` (Bibliothèque, composants, état), `src/studio/` (vue Studio), `src/docs/` (aide intégrée). |
 | `src/shared` | Code commun : types, configuration (`APP_REPO`…), format des releases, lecture de la documentation et de l’historique des versions. |
-| `scripts` | Commandes en ligne : `modpacks.ts`, `changelog.ts`, `docs.ts`, et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
+| `test` | Les tests, et leurs outils (`support/` : faux GitHub, fausses instances CurseForge). |
+| `scripts` | Outils du dépôt : `changelog.ts`, `docs.ts`, et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
 | `docs` | Cette documentation. |
 | `relay` | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)). |
 | `build` | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |

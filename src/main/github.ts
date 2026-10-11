@@ -12,9 +12,9 @@ import {
 } from '../shared/releases'
 import { repoSlug } from '../shared/repo'
 import type { AppUpdateInfo, Catalog, ModpackManifest, ModpackVersion, RepoRef } from '../shared/types'
-import { readJson, writeJsonAtomic } from './fsutil'
-import { repoApiBase } from './githubEnv'
-import { getSettings } from './settings'
+import { readJson, writeJsonAtomic } from '../core/fsutil'
+import { repoApiBase } from '../core/githubEnv'
+import { getSettings } from '../core/settings'
 
 const MAX_PAGES = 5
 const MEMORY_TTL_MS = 60_000

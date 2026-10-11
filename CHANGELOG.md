@@ -8,6 +8,21 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Publieurs : **Claude Code** peut gérer tes modpacks. Connecte-le dans **Paramètres → Claude Code et terminal** :
+  à ta demande, il crée une version depuis ton profil CurseForge, règle le modpack, écrit les notes et publie, en te
+  montrant avant ce qui changera sur GitHub.
+- Publieurs : toutes les opérations du Studio existent aussi en commandes, dans un terminal (`mpm.cmd`, à côté de
+  l’application).
+
+### Améliorations
+
+- Le Studio, le terminal et Claude ne peuvent plus se gêner : une seule opération d’écriture tourne à la fois, et la
+  mise à jour de l’application attend qu’elle soit finie.
+- Chaque opération du Studio (création de version, réglages, publication, suppression) est notée dans un journal,
+  avec son auteur et son résultat.
+
 ## [1.1.0] - 2026-10-11
 
 ### Améliorations

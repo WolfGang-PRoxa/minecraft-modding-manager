@@ -4,12 +4,12 @@ import { APP_REPO } from '../shared/config'
 import { repoSlug, repoUrl } from '../shared/repo'
 import { REPORT_KINDS, reportBody, reportProblem } from '../shared/report'
 import type { IssueReport, ReportInfo, ReportResult } from '../shared/types'
-import { accountFor, resolveCredential } from './auth'
-import { getCurseForgeStatus } from './curseforge'
+import { accountFor, resolveCredential } from '../core/auth'
+import { getCurseForgeStatus } from '../core/curseforge'
 import { getCatalog } from './github'
-import { GITHUB_HEADERS, repoApiBase } from './githubEnv'
+import { GITHUB_HEADERS, repoApiBase } from '../core/githubEnv'
 import { listInstalled } from './installer'
-import { getSettings } from './settings'
+import { getSettings } from '../core/settings'
 
 // Signalement d'un problème depuis l'application : une issue sur le dépôt de l'application, créée avec le compte
 // GitHub connecté. Sans compte, la page GitHub s'ouvre dans le navigateur, déjà remplie.
