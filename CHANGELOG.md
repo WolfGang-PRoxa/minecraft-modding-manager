@@ -8,13 +8,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.5.0] - 2026-10-11
+
 ### Ajouts
 
 - Studio : **publication sur CurseForge**. Lie un modpack à son projet CurseForge (la numérotation continue après tes
   versions déjà publiées), puis publie sa dernière version en un clic : export au format de CurseForge, nom affiché
   `<nom>_V<N>.zip`, notes de version, puis suivi de la modération sur la carte. Un modpack peut être publié sur GitHub,
   sur CurseForge, ou les deux. En commandes : `curseforge link`, `curseforge publish`, `curseforge versions`…
-
 - Studio : **tests avant publication**, dans le détail d’un profil ou de son essai. **Vérifier les fichiers** trouve
   en quelques secondes les mods en double, les dépendances manquantes et les mods faits pour un autre chargeur ;
   **Tester sur un serveur** démarre un vrai serveur Minecraft avec les mods du profil et dit s’il démarre, ou pourquoi
@@ -197,7 +198,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.4.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...HEAD
+[1.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.4.0...app-v1.5.0
 [1.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.3.0...app-v1.4.0
 [1.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.2.0...app-v1.3.0
 [1.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.1.0...app-v1.2.0

@@ -232,7 +232,7 @@ modpack (pack.json) restent à brancher dans l'interface (phase 7, avec la fréq
 
 ### Phase 5 — Tests avant publication (1.5.0)
 
-**État : niveaux 1 et 2 faits le 2026-10-11, pas encore publiés.** Vérification des fichiers et serveur dédié, dans le
+**État : niveaux 1 et 2 faits le 2026-10-11, publiés en 1.5.0.** Vérification des fichiers et serveur dédié, dans le
 détail d'un profil (et de son essai) et en commandes ; validés sur les vrais profils (doublons trouvés : JEI dans
 LMA-26.3, CC: Tweaked dans ATM10 ; serveurs Fabric et Forge démarrés). Le niveau 3 (lancer le jeu) reste à faire :
 il demande un lanceur en ligne de commande et le compte Minecraft du propriétaire ; en attendant, le publieur joue sur
@@ -256,7 +256,7 @@ correction : revenir en arrière sur le mod en cause, en retenir un autre, figer
 
 ### Phase 6 — Publication sur CurseForge (1.6.0)
 
-**État : faite le 2026-10-11, pas encore publiée.** Lien avec un projet existant (numérotation et fichiers joints
+**État : faite le 2026-10-11, publiée en 1.5.0.** Lien avec un projet existant (numérotation et fichiers joints
 repris des versions publiées), export au format CurseForge vérifié contre les fichiers publiés du propriétaire, envoi
 par le jeton d'auteur, suivi de la modération, modpack « seulement CurseForge ». Testé sur un faux CurseForge et dans
 l'application ; **aucun envoi réel n'a encore été fait** : le premier se fera avec le propriétaire. Reste à faire :
