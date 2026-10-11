@@ -1,0 +1,11 @@
+Grosse mise à jour du projet :
+
+    - On renomme l'application "Modpack Manager".
+    - Les principaux changements seront côté publieur :
+        - Le publieur voit maintenant une interface ou il y a tous ses modpacks présents sur CurseForge. Avec une vue en arborescence d'après les dossers qu'on peut faire sur CuirseForge.
+        - Cette nouvelle interface permet au publieur de gérer tous ses modpacks, de les mettre à jour (mettre les mods, les packs de textures, et les shaders à jour, et un menu qui permet de les tester avant de les publier sur le site de CurseForge), de les supprimer ou d'en créer de nouveaux.
+        - Claude doit pouvoir entièrement prendre en charge la gestion des modpacks, y compris la mise à jour des mods et les tests avant publication d'une nouvelle version.
+        -Le but serait de mettre à jour les modpacks automatiquement toutes les 1 à deux semaines. Pour chaque modpacks, le publieur pourra choisir à quelle fréquence il souhaite que le modpack soit mis à jour (toutes les semaines, toutes les deux semaines, tous les mois, etc.). Le publieur pourra également choisir de ne pas mettre à jour un modpack s'il le souhaite.
+        - Le publieur pourra également choisir de mettre à jour un modpack manuellement s'il le souhaite.
+        - Précision importante : Le publieur pourra toujours choisir de publier un modpack sur CurseForge ou seulement sur GitHub (pour que les utilisateurs qui utilisent le modpack manager (modpack downloader actuellement) puissent télécharger les modpacks depuis GitHub), ou les deux. Alors on conçoit une interface adéquate qui permet de visualiser les modpacks publiés sur CurseForge et ceux publiés sur GitHub, et de gérer les deux types de publication.
+        - Si le processus de publication sur CurseForge ne pas être pris en charge par claude à 100%, alors on fait en sorte de concevoir un processus qui réalise la plus grande partie possible du processus globale de maintient des modpacks, et on laisse le publieur faire la dernière étape de publication sur CurseForge (qui est actuellement la plus complexe à automatiser). On peut imaginer que Claude fasse tout le travail de mise à jour du modpack, et que le publieur n'ait plus qu'à cliquer sur un bouton pour publier le modpack sur CurseForge. Mais dans l'idéal, on aimerait que tout le processus soit automatisé.
