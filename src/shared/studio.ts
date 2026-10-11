@@ -185,6 +185,50 @@ export interface ProfileView extends CurseForgeProfile {
   matchingVersion: number | null
 }
 
+/** Ce qu'un profil contient depuis CurseForge (catégorie du projet). */
+export type AddonKind = 'mod' | 'resourcepack' | 'shader'
+
+/** Canal des mises à jour : `release` seulement, ou aussi les versions `beta`. */
+export type UpdateChannel = 'release' | 'beta'
+
+export interface AddonFileRef {
+  fileId: number
+  fileName: string
+  date: string | null
+  /** 1 release, 2 beta, 3 alpha. */
+  releaseType: number
+}
+
+/** Un changement proposé : un fichier plus récent, ou une dépendance obligatoire à ajouter. */
+export interface AddonUpdate {
+  projectId: number
+  name: string
+  kind: AddonKind
+  /** null : projet absent du profil, ajouté comme dépendance. */
+  from: AddonFileRef | null
+  to: AddonFileRef
+  /** Projets qui le demandent (dépendance ajoutée). */
+  requiredBy: string[]
+  url: string | null
+}
+
+/** Ce qu'une mise à jour du profil changerait (même version de Minecraft, même chargeur). */
+export interface UpdatePlan {
+  profile: string
+  profilePath: string
+  minecraftVersion: string
+  modLoader: string | null
+  channel: UpdateChannel
+  /** Projets CurseForge vérifiés. */
+  checked: number
+  updates: AddonUpdate[]
+  /** Projets figés par le publieur, laissés tels quels. */
+  pinned: string[]
+  /** Fichiers posés à la main dans mods (inconnus de CurseForge) : jamais mis à jour. */
+  untracked: string[]
+  warnings: string[]
+}
+
 /** Un dossier de CurseForge et ses profils ; `id` null : les profils rangés dans aucun dossier. */
 export interface ProfileFolder {
   id: string | null

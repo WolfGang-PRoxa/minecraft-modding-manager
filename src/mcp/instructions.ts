@@ -17,6 +17,10 @@ Méthode :
   packs_create avec profile (crée aussi la v1).
 - Publier : publish_plan, montre le plan au publieur (surtout les suppressions), puis publish_apply avec l'empreinte du
   plan, seulement avec son accord ou s'il t'a délégué cette publication. Une empreinte périmée = refaire publish_plan.
+- Mises à jour des mods : updates_check (sur le pack ou le profil ; demande la clé CurseForge, voir curseforge_status)
+  liste ce qui a une version plus récente pour la même version de Minecraft et le même chargeur. Pour une mise à jour
+  importante (changement de version majeure, dépendance ajoutée), lis updates_changelog avant de la conseiller.
+  L'application de ces mises à jour au profil arrive bientôt : pour l'instant, le publieur les fait dans CurseForge.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).
 - Les suppressions (packs_delete, versions_delete, releases_delete, publish_apply qui supprime) sont définitives sur
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.

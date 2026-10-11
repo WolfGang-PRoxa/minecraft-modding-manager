@@ -120,6 +120,15 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     par la fenêtre (Paramètres → Compte CurseForge, canaux `cfauth:*`), après vérification ; aucune commande ne les
     reçoit ni ne les affiche (`curseforge status` dit seulement s'ils sont acceptés). `MPD_CURSEFORGE_API` remplace
     les deux API en test (`setCurseForgeApiOverride`, ignoré une fois packagé).
+  - `curseforgeApi.ts` (`CurseForgeClient`, clé du publieur) : `POST /v1/mods` (projets, `latestFilesIndexes` :
+    dernier fichier par version de Minecraft, chargeur et type de version), `POST /v1/mods/files`, changelog (HTML).
+    Énumérations : chargeur Forge 1, Fabric 4, Quilt 5, NeoForge 6 ; release 1, beta 2, alpha 3 ; dépendance
+    obligatoire 3 ; catégories mod 6, pack de textures 12, shader 6552 ; hash sha1 1, md5 2.
+  - `updates.ts` (`checkUpdates`, lecture seule) : pour chaque projet d'`installedAddons`, le fichier le plus récent
+    (plus grand id) pour la même version de Minecraft et le même chargeur (`bestFileIndex` ; Quilt accepte Fabric ;
+    pack de textures / shader dont le fichier installé ne cite pas la version : dernier fichier toutes versions), puis
+    les dépendances obligatoires absentes (4 tours). Projets figés (`pinned`), canal `release` / `beta`. Les `.jar`
+    inconnus d'`installedAddons` sont `untracked`, jamais touchés. Commandes `updates check` et `updates changelog`.
   - `lock.ts` (`OperationLock`) et `journal.ts` (`Journal`), créés par `operationTools(holder)` (`operations.ts`) à
     côté des réglages : `operation.lock` (création exclusive `wx` ; opération, `holder`, pid, jeton ; ignoré si le
     processus est mort ou au bout de 24 h) et `journal.jsonl` (une ligne par écriture : source, opération, résultat ;
@@ -322,6 +331,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `minecraftinstance.json` (absent : aucun dossier). `MinecraftGameInstance.json`, à côté (26 Mo), est l'index de
   CurseForge : ne jamais y écrire. Chaque profil a un `guid` stable ; `projectID` ≠ 0 = installation d'un modpack de
   CurseForge. Application autonome : emplacement de `groups.json` supposé (`%APPDATA%\CurseForge\GameInstances`).
+- Entrée d'`installedAddons` (constaté) : `addonID`, `name`, `categoryClassID` (6 mod, 12 pack de textures, 6552
+  shader ; `categorySection.path` : dossier, par ex. `shaderpacks`), `modFolderPath`, `fileNameOnDisk`, `filePaths`,
+  `isEnabled`, `installedFile` (presque le `File` de l'API : `id`, `fileName`, `fileDate`, `fileLength`, `releaseType`,
+  `downloadUrl`, `dependencies`, `packageFingerprint` ; mais `gameVersion` au lieu de `gameVersions` et `hashes`
+  `{ type, value }` au lieu de `{ algo, value }`), et `latestFile` (dernier fichier connu de CurseForge, même format).
+  Écrire une entrée soi-même (phase 4, appliquer une mise à jour) doit reprendre ce format : à vérifier sur une copie.
 - Mod désactivé (constaté sur les profils du PC du propriétaire) : fichier `x.jar.disabled` dans `mods` ; dans
   `installedAddons`, l'entrée du mod a `isEnabled: false`, et son `fileNameOnDisk` et ses `filePaths` prennent
   `.disabled` ; `installedFile.fileName` et `installedFile.fileNameOnDisk` gardent le nom d'origine. Le projet

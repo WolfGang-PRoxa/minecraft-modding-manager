@@ -65,6 +65,8 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
 | `versions strip` | Retire d’un zip les fichiers exclus dans les réglages. |
 | `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
+| `updates check` | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien. |
+| `updates changelog` | Les notes de version d’un fichier CurseForge, pour juger une mise à jour. |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
@@ -73,6 +75,11 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :
 `mpm packs show lma-26.3`. Un profil CurseForge, par son nom (celui de son dossier) ou le chemin de son dossier. Les paramètres obligatoires peuvent se donner sans leur nom, dans l’ordre.
+
+**`updates check`** demande la clé de l’API CurseForge (voir [Compte CurseForge](parametres.md#compte-curseforge)).
+Elle vérifie le profil source d’un modpack (`--pack`) ou un profil donné (`--profile`), en versions stables
+seulement, sauf avec `--beta`. Les fichiers posés à la main dans `mods` (inconnus de CurseForge) sont listés mais
+jamais mis à jour.
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu
