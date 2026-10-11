@@ -44,7 +44,7 @@ export async function downloadFile(options: DownloadOptions): Promise<{ sha256: 
   await mkdir(dirname(destination), { recursive: true })
 
   const res = await fetch(url, {
-    headers: { 'User-Agent': `ModpackDownloader/${app.getVersion()}` },
+    headers: { 'User-Agent': `ModpackManager/${app.getVersion()}` },
     redirect: 'follow',
     signal
   })

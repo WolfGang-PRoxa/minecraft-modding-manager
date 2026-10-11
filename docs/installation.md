@@ -1,20 +1,20 @@
 # Installation et premier lancement
 
-Cette page explique comment installer Modpack Downloader, ce qui se passe au premier lancement, et comment
+Cette page explique comment installer Modpack Manager, ce qui se passe au premier lancement, et comment
 désinstaller l’application proprement.
 
 ## Installer l’application
 
 1. Installe [CurseForge](https://www.curseforge.com/download/app) si ce n’est pas déjà fait : c’est depuis
    CurseForge que tu lanceras les modpacks.
-2. Télécharge **Modpack-Downloader-Setup-x.y.z.exe** depuis la
+2. Télécharge **Modpack-Manager-Setup-x.y.z.exe** depuis la
    [dernière version publiée](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/latest).
 3. Lance le fichier téléchargé. Une petite fenêtre aux couleurs de l’application montre la progression :
    l’installation prend quelques secondes, sans aucune question, puis l’application s’ouvre.
 
 L’application s’installe pour ton compte Windows seulement, **sans droits d’administrateur**, dans
 `%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` (soit `C:\Users\<toi>\AppData\Local\Programs\…`). Un raccourci
-**Modpack Downloader** est ajouté au menu Démarrer.
+**Modpack Manager** est ajouté au menu Démarrer.
 
 > [!NOTE]
 > Windows peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis
@@ -24,7 +24,7 @@ L’application s’installe pour ton compte Windows seulement, **sans droits d�
 
 ## Le premier lancement
 
-L’écran **Bienvenue dans Modpack Downloader** te demande comment tu vas utiliser l’application :
+L’écran **Bienvenue dans Modpack Manager** te demande comment tu vas utiliser l’application :
 
 - **Récepteur** (le choix par défaut) : tu installes les modpacks publiés et tu joues. Clique sur **Continuer** : la
   Bibliothèque s’affiche, avec les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-downloader`.
@@ -53,7 +53,7 @@ raccourci répare aussi une icône restée vide.
 
 ## Lancer l’application
 
-Lance Modpack Downloader depuis le menu Démarrer ou depuis ton raccourci. La fenêtre s’ouvre en grand, la barre des
+Lance Modpack Manager depuis le menu Démarrer ou depuis ton raccourci. La fenêtre s’ouvre en grand, la barre des
 tâches restant visible ; `F11` passe en plein écran.
 
 L’application ne s’ouvre qu’une fois : la relancer alors qu’elle tourne déjà ramène simplement sa fenêtre au premier
@@ -76,7 +76,7 @@ publication, attends qu’il se termine avant de continuer.
 
 L’en-tête de la fenêtre de progression dit ce qui se passe : **Installation**, **Réinstallation**, **Mise à jour**
 (en bleu, avec l’ancienne et la nouvelle version, par exemple `1.0.3 → 1.0.4`) ou **Retour à une version
-précédente** (en orange). Une mise à jour a aussi son propre titre de fenêtre, « Mise à jour de Modpack Downloader ».
+précédente** (en orange). Une mise à jour a aussi son propre titre de fenêtre, « Mise à jour de Modpack Manager ».
 
 Une installation abîmée (fichiers de l’application supprimés à la main) est simplement réinstallée. En mode
 silencieux (`/S`), l’installeur ne pose aucune question et n’affiche aucune fenêtre : il ferme l’application si elle
@@ -86,7 +86,7 @@ Tes réglages, ta connexion GitHub et tes modpacks ne sont jamais touchés par u
 
 ## Désinstaller
 
-Ouvre **Paramètres Windows → Applications → Applications installées**, cherche **Modpack Downloader**, puis
+Ouvre **Paramètres Windows → Applications → Applications installées**, cherche **Modpack Manager**, puis
 **Désinstaller**. Une fenêtre demande confirmation : clique sur **Désinstaller** (la touche `Entrée` ne suffit pas,
 pour éviter une fausse manœuvre) ; elle se ferme d’elle-même une fois l’application retirée. Si l’application est
 ouverte, la confirmation le signale : elle est fermée avant d’être retirée. Le raccourci du bureau est retiré avec

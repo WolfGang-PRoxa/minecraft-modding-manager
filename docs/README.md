@@ -1,6 +1,6 @@
-# Documentation de Modpack Downloader
+# Documentation de Modpack Manager
 
-Modpack Downloader installe en un clic, directement dans CurseForge, les modpacks Minecraft publiés sur GitHub, et
+Modpack Manager installe en un clic, directement dans CurseForge, les modpacks Minecraft publiés sur GitHub, et
 les garde à jour. Ses auteurs les publient avec le Studio, dans la même application.
 
 Cette documentation est aussi intégrée à l’application : bouton **Aide** de la barre de titre, ou touche `F1`.

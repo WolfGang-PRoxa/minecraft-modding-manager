@@ -20,6 +20,7 @@ import type {
 import type { ToastItem as Toast } from './components/Toasts'
 import { changelog, CHANGELOG_PAGE } from './docs/content'
 import { showDocs, useDocs } from './docs/store'
+import { APP_NAME } from '../../shared/config'
 
 interface State {
   catalog: Catalog | null
@@ -316,7 +317,7 @@ export const useStore = create<State>((set, get) => ({
       get().pushToast({
         kind: 'success',
         title: 'Raccourci créé',
-        message: onDesktop ? 'Modpack Downloader est maintenant sur ton bureau.' : result.path
+        message: onDesktop ? `${APP_NAME} est maintenant sur ton bureau.` : result.path
       })
       set({ settings: await window.api.getSettings(), shortcut: await window.api.getShortcutStatus() })
     } else if (!result.cancelled) {

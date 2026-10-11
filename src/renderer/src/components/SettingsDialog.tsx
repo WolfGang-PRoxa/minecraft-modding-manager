@@ -10,6 +10,7 @@ import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
 import { CommandLineHint, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
+import { APP_NAME } from '../../../shared/config'
 
 const SOURCE_LABELS = {
   settings: 'Choisi manuellement',
@@ -162,7 +163,7 @@ export function SettingsDialog() {
         <Section title="Raccourci">
           <p className="text-sm text-ink-200">
             {shortcut?.onDesktop
-              ? 'Modpack Downloader a un raccourci sur ton bureau.'
+              ? `${APP_NAME} a un raccourci sur ton bureau.`
               : 'Pas de raccourci sur ton bureau pour l’instant.'}
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -183,7 +184,7 @@ export function SettingsDialog() {
 
         <Section title="À propos">
           <p className="text-sm text-ink-200">
-            Modpack Downloader v{appVersion}
+            {APP_NAME} v{appVersion}
             {releasedOn && <span className="text-ink-400"> · publiée le {formatDate(`${releasedOn}T12:00:00`)}</span>}
           </p>
           <p className="mt-1 text-xs leading-relaxed text-ink-400">

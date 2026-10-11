@@ -19,5 +19,5 @@ export function userApiUrl(): string {
 export const GITHUB_HEADERS = {
   Accept: 'application/vnd.github+json',
   'X-GitHub-Api-Version': '2022-11-28',
-  'User-Agent': 'ModpackDownloader'
+  'User-Agent': 'ModpackManager'
 }

@@ -1,6 +1,6 @@
 # Confidentialité et sécurité
 
-Modpack Downloader ne collecte aucune donnée et n’envoie rien à ses auteurs de lui-même. Cette page détaille ce qui
+Modpack Manager ne collecte aucune donnée et n’envoie rien à ses auteurs de lui-même. Cette page détaille ce qui
 transite sur le réseau, ce qui reste sur ton PC, et comment l’application protège ce qu’elle installe.
 
 ## Ce qui est envoyé, et à qui

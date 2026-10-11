@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ExternalLink, FolderOpen, Monitor, TriangleAlert, WifiOff } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { CURSEFORGE_DOWNLOAD_URL } from '../../../shared/config'
+import { APP_NAME, CURSEFORGE_DOWNLOAD_URL } from '../../../shared/config'
 import { useStore } from '../store'
 import { Button } from './Button'
 
@@ -80,7 +80,7 @@ export function ShortcutBanner() {
       }
     >
       <strong className="font-semibold">Ajouter un raccourci ?</strong>{' '}
-      <span className="text-ink-300">Pour retrouver Modpack Downloader directement depuis ton bureau, ou l’endroit de ton choix.</span>
+      <span className="text-ink-300">Pour retrouver {APP_NAME} directement depuis ton bureau, ou l’endroit de ton choix.</span>
     </Banner>
   )
 }

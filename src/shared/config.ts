@@ -1,5 +1,13 @@
 import type { RepoRef } from './types'
 
+// Nom de l'application, affiché partout (aussi dans package.json et electron-builder.yml).
+export const APP_NAME = 'Modpack Manager'
+// Ancien nom (jusqu'à la 1.0.5), gardé là où les versions installées et Windows le connaissent déjà : dossier des
+// données (%APPDATA%\Modpack Downloader), nom de l'exécutable (electron-builder.yml), raccourci du bureau à renommer.
+export const LEGACY_APP_NAME = 'Modpack Downloader'
+// Identifiant de l'application pour Windows (barre des tâches, raccourcis), à ne jamais changer.
+export const APP_USER_MODEL_ID = 'com.wolfgangproxa.modpackdownloader'
+
 // Dépôt de l'application : ses mises à jour (tags app-v*) en viennent toujours,
 // et c'est la source des modpacks par défaut. Un publieur peut en choisir une autre.
 export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modpack-downloader' }

@@ -367,11 +367,11 @@ function releaseNotes(version: string): void {
       `La version ${version} n’a pas d’entrée dans ${CHANGELOG} : prépare-la avec « npm run changelog -- --version ${version} ».`
     )
   }
-  const installer = `Modpack-Downloader-Setup-${version}.exe`
+  const installer = `Modpack-Manager-Setup-${version}.exe`
   const body = [
     releaseNotesMarkdown(release),
     '---',
-    `Télécharge **${installer}** ci-dessous et lance-le. Si Modpack Downloader est déjà installé, il propose lui-même cette mise à jour en haut de sa fenêtre.`,
+    `Télécharge **${installer}** ci-dessous et lance-le. Si Modpack Manager (ou Modpack Downloader) est déjà installé, il propose lui-même cette mise à jour en haut de sa fenêtre.`,
     'Windows peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis **Exécuter quand même**.',
     `[Historique complet des versions](${APP_REPO_URL}/blob/${APP_TAG_PREFIX}${version}/${CHANGELOG})`
   ].join('\n\n')

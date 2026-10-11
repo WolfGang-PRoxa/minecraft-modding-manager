@@ -1,6 +1,6 @@
 # Mises à jour de l’application
 
-Modpack Downloader se tient à jour tout seul : quand une nouvelle version sort, il te la propose, la télécharge, la
+Modpack Manager se tient à jour tout seul : quand une nouvelle version sort, il te la propose, la télécharge, la
 vérifie et l’installe en un clic, sans rien te faire perdre.
 
 ## Être prévenu

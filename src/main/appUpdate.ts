@@ -9,7 +9,7 @@ import { removeQuietly } from './fsutil'
 import { getCatalog } from './github'
 import { getSettings, updateSettings } from './settings'
 
-const INSTALLER_PREFIX = 'Modpack-Downloader-Setup-'
+const INSTALLER_PREFIX = 'Modpack-Manager-Setup-'
 const downloadDir = () => join(app.getPath('temp'), 'modpack-downloader')
 
 // Posé du clic sur « Mettre à jour » jusqu'à la fermeture de l'application (ou l'échec de la mise à jour).
@@ -49,7 +49,8 @@ export async function noteRunningVersion(): Promise<{ justUpdated: boolean; prev
 export function cleanAppUpdateDownloads(): void {
   cleaning = (async () => {
     const names = await readdir(downloadDir()).catch(() => [] as string[])
-    const installers = names.filter((name) => name.startsWith(INSTALLER_PREFIX))
+    // Aussi ceux d'avant le changement de nom (Modpack-Downloader-Setup-…), dont celui qui a installé cette version.
+    const installers = names.filter((name) => /^Modpack-(Manager|Downloader)-Setup-.*\.exe$/i.test(name))
     await Promise.all(installers.map((name) => removeQuietly(join(downloadDir(), name))))
   })()
 }

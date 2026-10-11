@@ -18,7 +18,7 @@ Tu lances un installeur plus ancien que la version installée. **Ouvrir la …**
 L’application tourne encore : elle doit être fermée pour être remplacée. Termine d’abord une installation de modpack
 ou une publication en cours, puis clique sur **Fermer et continuer** ; elle est rouverte à la fin.
 
-**« Modpack Downloader ne peut pas être fermé »**\
+**« Modpack Manager ne peut pas être fermé »**\
 L’installeur n’a pas réussi à fermer l’application, sans doute lancée en tant qu’administrateur. Ferme-la toi-même,
 puis clique sur **Réessayer**.
 

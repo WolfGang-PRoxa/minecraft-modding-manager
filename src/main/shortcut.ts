@@ -1,8 +1,9 @@
 import { app, dialog, nativeImage, shell, type BrowserWindow } from 'electron'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, rename, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
+import { APP_NAME, APP_USER_MODEL_ID, LEGACY_APP_NAME } from '../shared/config'
 import type { ShortcutLocation, ShortcutResult, ShortcutStatus } from '../shared/types'
 
 export interface ShortcutSpec {
@@ -15,10 +16,10 @@ export interface ShortcutSpec {
 }
 
 export const PLAYER_SHORTCUT: ShortcutSpec = {
-  name: 'Modpack Downloader',
-  description: 'Installer les modpacks Minecraft dans CurseForge',
+  name: APP_NAME,
+  description: 'Installer et gérer les modpacks Minecraft de CurseForge',
   args: [],
-  appUserModelId: 'com.wolfgangproxa.modpackdownloader'
+  appUserModelId: APP_USER_MODEL_ID
 }
 
 const quote = (arg: string) => (/[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg)
@@ -48,6 +49,19 @@ async function shortcutIcon(): Promise<string> {
 
 export function desktopShortcutPath(spec: ShortcutSpec): string {
   return join(app.getPath('desktop'), `${spec.name}.lnk`)
+}
+
+/**
+ * Le raccourci du bureau créé par une version d'avant le changement de nom prend le nouveau nom. Il pointe vers le
+ * même exécutable : un simple renommage suffit. Rien n'est fait si le nouveau existe déjà, ni en développement (le
+ * raccourci est alors celui de l'application installée).
+ */
+export function renameLegacyDesktopShortcut(): void {
+  if (!app.isPackaged) return
+  const legacy = desktopShortcutPath({ ...PLAYER_SHORTCUT, name: LEGACY_APP_NAME })
+  const current = desktopShortcutPath(PLAYER_SHORTCUT)
+  if (!existsSync(legacy) || existsSync(current)) return
+  rename(legacy, current).catch(() => {})
 }
 
 export function shortcutStatus(spec: ShortcutSpec): ShortcutStatus {

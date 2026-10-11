@@ -49,7 +49,7 @@ Sans session existante, connecte-toi avec un jeton d’accès *fine-grained*, li
 
 1. Ouvre la page de [création d’un jeton](https://github.com/settings/personal-access-tokens/new) (lien
    **en créer un** dans l’application).
-2. Donne-lui un nom (« Modpack Downloader ») et une date d’expiration.
+2. Donne-lui un nom (« Modpack Manager ») et une date d’expiration.
 3. Dans **Repository access**, choisis **Only select repositories**, puis ton dépôt de modpacks.
 4. Dans **Permissions → Repository permissions**, règle **Contents** sur **Read and write**.
 5. Clique sur **Generate token** et copie le jeton (il commence par `github_pat_`).

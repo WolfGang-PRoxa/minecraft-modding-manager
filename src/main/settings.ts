@@ -1,6 +1,6 @@
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
-import { APP_REPO } from '../shared/config'
+import { APP_REPO, LEGACY_APP_NAME } from '../shared/config'
 import { isRepoRef } from '../shared/repo'
 import type { Settings } from '../shared/types'
 import { readJson, writeJsonAtomic } from './fsutil'
@@ -18,7 +18,7 @@ const DEFAULTS: Settings = {
 
 // Réglages de l'application (rôle, dépôt, dossier des modpacks…), lus aussi par les scripts `modpacks:*` :
 // le fichier n'est pas gardé en mémoire, pour voir tout de suite un changement fait par un script.
-let file = join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'Modpack Downloader', 'settings.json')
+let file = join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), LEGACY_APP_NAME, 'settings.json')
 
 /** L'application des joueurs utilise son dossier userData (qui peut être déplacé par --user-data-dir). */
 export function useSettingsFile(path: string): void {

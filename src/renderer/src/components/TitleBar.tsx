@@ -3,6 +3,7 @@ import type { AppView, WindowState } from '../../../shared/types'
 import { useDocs } from '../docs/store'
 import { useStudio } from '../studio/store'
 import { useStore } from '../store'
+import { APP_NAME } from '../../../shared/config'
 import { IconButton } from './Button'
 import { Logo } from './Logo'
 
@@ -112,7 +113,7 @@ export function TitleBar() {
       <div className="flex items-center gap-3">
         <Logo size={26} />
         <div className="leading-tight">
-          <div className="font-display text-[15px] font-semibold tracking-tight text-ink-100">Modpack Downloader</div>
+          <div className="font-display text-[15px] font-semibold tracking-tight text-ink-100">{APP_NAME}</div>
         </div>
       </div>
       <ViewTabs />

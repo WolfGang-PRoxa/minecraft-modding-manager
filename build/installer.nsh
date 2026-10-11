@@ -20,6 +20,9 @@
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     Delete "$DESKTOP\${SHORTCUT_NAME}.lnk"
+    ; Raccourci créé sous l'ancien nom de l'application (Modpack Downloader), qu'elle n'a pas encore renommé : c'est
+    ; aussi le nom de l'exécutable, gardé exprès (executableName dans electron-builder.yml).
+    Delete "$DESKTOP\${PRODUCT_FILENAME}.lnk"
   ${endIf}
   ; Pas de page de fin : la fenêtre se ferme d'elle-même.
   SetAutoClose true
@@ -158,7 +161,7 @@
 ; ==================================================================================================================
 ; Apparence
 ; ==================================================================================================================
-; Les fenêtres reprennent le style de l'application : fond sombre, logo pixel, couleurs d'accent. Les pages de Modern
+; Les fenêtres reprennent le style de l'application : fond sombre, logo, couleurs d'accent. Les pages de Modern
 ; UI gardent leur mécanique (enchaînement, progression), mais leur décor (bandeau, boutons, mention de version) est
 ; caché et chaque page est redessinée ici. Les boutons sont des textes cliquables : Windows ne colore pas ses boutons.
 
@@ -268,10 +271,10 @@ Var mpd.choice
   ${NSD_OnClick} ${_OUT} ${_CALLBACK}
 !macroend
 
-; Logo dessiné pour l'échelle de l'affichage (build/installer/logo-<case>.bmp, scripts/generate-installer-images.ts).
-!macro MPD_LOGO_FILE _CELL
-  ${Case} ${_CELL}
-    File "/oname=$PLUGINSDIR\mpd-logo.bmp" "${BUILD_RESOURCES_DIR}\installer\logo-${_CELL}.bmp"
+; Logo dessiné pour l'échelle de l'affichage (build/installer/logo-<n>.bmp, scripts/generate-installer-images.ts).
+!macro MPD_LOGO_FILE _N
+  ${Case} ${_N}
+    File "/oname=$PLUGINSDIR\mpd-logo.bmp" "${BUILD_RESOURCES_DIR}\installer\logo-${_N}.bmp"
 !macroend
 
 ; Les fonctions sont insérées après les en-têtes d'electron-builder et de Modern UI, dont elles utilisent les noms.
@@ -311,7 +314,7 @@ Var mpd.choice
     System::Call 'dwmapi::DwmSetWindowAttribute(p $HWNDPARENT, i 35, *i ${MPD_COLORREF_BG}, i 4)'
     SetCtlColors $HWNDPARENT "" ${MPD_BG}
     Call ${MPD_FN}mpdHideChrome
-    ; Une case du logo fait 4 pixels à 100 % : 5 à 125 %, 6 à 150 %…
+    ; Image n = ppp / 24 (logo de 16 × n pixels) : 4 à 100 %, 5 à 125 %, 6 à 150 %…
     InitPluginsDir
     IntOp $0 $mpd.dpi + 12
     IntOp $0 $0 / 24

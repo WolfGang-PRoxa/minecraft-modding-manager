@@ -35,10 +35,10 @@ function page(title: string, content: string, status = 200): Response {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>${esc(title)} · Modpack Downloader</title>
+<title>${esc(title)} · Modpack Manager</title>
 <style>${STYLE}</style>
 </head>
-<body><main><div class="brand">Modpack Downloader</div>${content}</main></body>
+<body><main><div class="brand">Modpack Manager</div>${content}</main></body>
 </html>`
   return new Response(html, {
     status,

@@ -1,9 +1,11 @@
 import { app, BrowserWindow, Menu, protocol, shell } from 'electron'
 import { join } from 'node:path'
+import { APP_NAME, APP_USER_MODEL_ID, LEGACY_APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setGitHubApiOverride } from './githubEnv'
 import { registerIpc } from './ipc'
 import { useSettingsFile } from './settings'
+import { renameLegacyDesktopShortcut } from './shortcut'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studio/ipc'
 import { toggleFullScreen, watchWindowState } from './windowState'
 
@@ -11,7 +13,7 @@ let mainWindow: BrowserWindow | null = null
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
-    title: 'Modpack Downloader',
+    title: APP_NAME,
     width: 1440,
     height: 900,
     minWidth: 960,
@@ -71,6 +73,12 @@ setGitHubApiOverride(app.isPackaged ? null : process.env.MPD_GITHUB_API)
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 
+// Les données restent dans le dossier de l'ancien nom (%APPDATA%\Modpack Downloader), que les scripts lisent aussi :
+// par défaut, Electron le tirerait de productName. --user-data-dir (tests) garde la priorité.
+if (!app.commandLine.hasSwitch('user-data-dir')) {
+  app.setPath('userData', join(app.getPath('appData'), LEGACY_APP_NAME))
+}
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
@@ -85,10 +93,11 @@ if (!app.requestSingleInstanceLock()) {
   })
 
   app.whenReady().then(async () => {
-    app.setAppUserModelId('com.wolfgangproxa.modpackdownloader')
+    app.setAppUserModelId(APP_USER_MODEL_ID)
     Menu.setApplicationMenu(null)
     const launch = await noteRunningVersion()
     cleanAppUpdateDownloads()
+    renameLegacyDesktopShortcut()
     registerIpc(() => mainWindow, launch)
     await registerStudio(() => mainWindow)
     createWindow()

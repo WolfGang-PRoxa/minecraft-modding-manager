@@ -1,3 +1,4 @@
+import { APP_NAME } from './config'
 import type { IssueReport, ReportKind } from './types'
 
 export const REPORT_TITLE_MAX = 120
@@ -27,6 +28,6 @@ export function reportBody(report: IssueReport, modpack: string | null, diagnost
   if (report.includeDiagnostics && diagnostics.length > 0) {
     parts.push(['---', '**Informations techniques**', ...diagnostics.map((line) => `- ${line}`)].join('\n'))
   }
-  parts.push('_Envoyé depuis Modpack Downloader._')
+  parts.push(`_Envoyé depuis ${APP_NAME}._`)
   return parts.join('\n\n')
 }

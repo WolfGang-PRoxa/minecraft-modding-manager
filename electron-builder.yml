@@ -1,5 +1,8 @@
 appId: com.wolfgangproxa.modpackdownloader
-productName: Modpack Downloader
+productName: Modpack Manager
+# Nom de l'exécutable gardé de l'ancien nom de l'application (Modpack Downloader) : les installeurs repèrent l'application
+# installée et ouverte à ce nom (build/installer.nsh), et les épingles de la barre des tâches pointent vers lui.
+executableName: Modpack Downloader
 directories:
   buildResources: build
   output: dist
@@ -12,7 +15,7 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.png
-  artifactName: Modpack-Downloader-Setup-${version}.${ext}
+  artifactName: Modpack-Manager-Setup-${version}.${ext}
 nsis:
   # Installeur « assisté » pour pouvoir dessiner ses fenêtres aux couleurs de l'application (build/installer.nsh),
   # réglé pour se comporter comme un installeur « en un clic » : aucune question, pour l'utilisateur seul.
@@ -23,7 +26,7 @@ nsis:
   createDesktopShortcut: false
   include: build/installer.nsh
   createStartMenuShortcut: true
-  shortcutName: Modpack Downloader
+  shortcutName: Modpack Manager
   runAfterFinish: true
   deleteAppDataOnUninstall: false
 publish: null

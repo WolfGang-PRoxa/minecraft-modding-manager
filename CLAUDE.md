@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+Le projet devient **Modpack Manager** (anciennement Modpack Downloader) : feuille de route dans `PLAN.md`.
+
 Application Windows (Electron) qui affiche les modpacks Minecraft publiés en releases sur
 `WolfGang-PRoxa/minecraft-modpack-downloader` et les installe directement comme profils CurseForge.
 Une seule fenêtre, deux vues : la **Bibliothèque** (installer les modpacks) et le **Studio** (ranger ses zips et
@@ -9,9 +11,10 @@ fenêtre ni de processus. Interface et messages en français.
 
 ## Règles git — impératif
 
-- **Ne jamais mentionner Claude** dans les commits, PR, tags ou fichiers : pas de ligne
-  `Co-Authored-By`, pas de « Generated with Claude Code », pas de Claude parmi les contributeurs.
-  L'auteur des commits est celui de la config git locale.
+- **Aucune attribution à Claude** dans les commits, PR, tags ou fichiers : pas de ligne `Co-Authored-By`, pas de
+  « Generated with Claude Code », pas de Claude parmi les contributeurs ou les auteurs. L'auteur des commits est celui
+  de la config git locale. Nommer Claude comme **fonction** de l'application (gestion des modpacks par Claude Code,
+  skill, commandes, interface, docs) est permis.
 - Messages de commit en français, au format conventionnel (`feat: …`, `fix: …`, `docs: …`).
 - Ne pas créer de release ni pousser de tag sans demande explicite (un tag `app-v*` déclenche la CI).
 - Tout commit `feat`, `fix` ou `perf` visible des utilisateurs ajoute son entrée dans la section `## [Non publié]` de
@@ -34,8 +37,7 @@ npm run build:win        # build + images de l'installeur + installeur NSIS dans
 npm run studio           # app en développement, ouverte sur la vue Studio (--studio)
 npm run modpacks:ranger  # numérote les zips déposés (--dir, --yes)
 npm run modpacks:publier # met les releases en accord avec le dossier (--dir, --yes, --dry-run)
-npx tsx scripts/generate-icon.ts   # régénère build/icon.png depuis src/shared/logo.ts
-npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<case>.bmp (non versionné, fait par build:win)
+npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp depuis build/icon.png (non versionné, fait par build:win)
 ```
 
 ## Architecture
@@ -142,7 +144,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<case>.bmp
   mise à jour disponible en tête (notes des releases), « Ta version », « Nouveau ». Store `useDocs` / `showDocs`.
   `F1` et `Échap` de l'aide ignorent une fenêtre ouverte par-dessus : toute fenêtre de dialogue porte
   `aria-modal="true"` (`Modal`, `SettingsDialog`).
-- `src/shared/` — config (`APP_REPO`…), types, dépôts (`repo.ts`), parsing des releases, logo pixel-art.
+- `src/shared/` — config (`APP_REPO`…), types, dépôts (`repo.ts`), parsing des releases.
+- `build/icon.png` — le logo (PNG RVBA 1024 × 1024), seule source : `Logo` (renderer) l'importe, electron-builder en
+  tire l'icône de l'exécutable et de l'installeur, `shortcut.ts` celle du raccourci en développement,
+  `scripts/generate-installer-images.ts` les images des fenêtres de l'installeur (lecture PNG : `scripts/png.ts`, sans
+  dépendance, RVB ou RVBA 8 bits). Changer de logo = remplacer ce fichier.
   `presence.ts` : `findPresentVersions` — un profil installé par l'app est reconnu à son marqueur, les autres à
   l'empreinte de leurs mods (à égalité entre versions d'un même modpack, la plus récente).
   `report.ts` : types de signalement, validation et corps de l'issue (`reportBody`).
@@ -183,7 +189,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<case>.bmp
   (`customInstallMode`), sans page de fin, l'app ouverte à la fin par `customInstall` (avec `--updated` après une mise à
   jour demandée par l'app). Chaque fenêtre est redessinée aux couleurs de l'app : décor de Modern UI caché, textes
   `STATIC` posés à la main, boutons = textes cliquables nsDialogs (survol relevé par minuterie), barre de progression
-  plate, barre de titre sombre (DWM), tout mis à l'échelle du DPI. Logo : `build/installer/logo-<case>.bmp`, généré par
+  plate, barre de titre sombre (DWM), tout mis à l'échelle du DPI. Logo : `build/installer/logo-<n>.bmp`, généré par
   `scripts/generate-installer-images.ts`. Fenêtres : progression « Installation », « Mise à jour » (bleu, `Version a →
   b`, titre de fenêtre « Mise à jour de … »), « Réinstallation », « Retour à une version précédente » (orange) ; pages
   « déjà installé » et « application ouverte » ; désinstalleur : confirmation (Entrée ne désinstalle pas) puis
@@ -256,6 +262,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<case>.bmp
   `isEnabled: true` (vu sur un profil) : `readModStates` se fie au nom du fichier.
 
 ## Pièges connus
+
+- **Ancien nom gardé exprès** (Modpack Downloader → Modpack Manager en 1.1.0) : seuls les noms affichés ont changé
+  (`APP_NAME`, `productName`, `shortcutName`, installeur `Modpack-Manager-Setup-*.exe`). Restent à l'ancien nom :
+  `appId` et `APP_USER_MODEL_ID`, le paquet (`Programs\minecraft-modpack-downloader`), l'exécutable
+  (`executableName` : les installeurs repèrent l'app installée et ouverte à ce nom, les épingles pointent vers lui),
+  `userData` (`LEGACY_APP_NAME`, fixé dans `index.ts`, sinon Electron le tirerait de `productName`), le marqueur
+  `.modpack-downloader.json`, les dossiers temporaires, le dépôt GitHub. Les changer casse la mise à jour des apps
+  installées. Le raccourci du bureau créé sous l'ancien nom est renommé au lancement (`renameLegacyDesktopShortcut`).
 
 - L'extension VS Code définit `ELECTRON_RUN_AS_NODE=1` : Electron démarre alors comme Node et plante
   (`app` undefined). Retirer cette variable pour lancer l'app depuis un outil.

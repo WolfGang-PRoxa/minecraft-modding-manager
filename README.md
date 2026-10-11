@@ -1,4 +1,4 @@
-# Modpack Downloader
+# Modpack Manager
 
 Application Windows pour installer en un clic les modpacks Minecraft publiés sur GitHub. Le modpack apparaît
 directement dans CurseForge, prêt à être lancé, et se met à jour sans perdre tes mondes. Les auteurs de modpacks les
@@ -25,7 +25,7 @@ publient avec le Studio, dans la même application.
 ## Installation
 
 1. Installe [CurseForge](https://www.curseforge.com/download/app) si ce n'est pas déjà fait.
-2. Télécharge **Modpack-Downloader-Setup-x.y.z.exe** depuis la
+2. Télécharge **Modpack-Manager-Setup-x.y.z.exe** depuis la
    [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/latest) et lance-le.
    Les installeurs signés indiquent l'éditeur **SignPath Foundation** (voir
    [Politique de signature du code](#politique-de-signature-du-code)). Si Windows affiche « Windows a protégé votre
@@ -130,7 +130,7 @@ Seuls les installeurs construits par GitHub Actions à partir de ce dépôt sont
 
 ### Confidentialité
 
-Modpack Downloader ne collecte aucune donnée et n'envoie rien à ses auteurs de lui-même. Il ne contacte que GitHub
+Modpack Manager ne collecte aucune donnée et n'envoie rien à ses auteurs de lui-même. Il ne contacte que GitHub
 (`api.github.com`, `github.com` et ses serveurs de fichiers) : pour lister les modpacks et les mises à jour du dépôt
 suivi, télécharger les fichiers que tu choisis d'installer et afficher les avatars des comptes. En mode publieur, la
 connexion GitHub (jeton) reste chiffrée sur ton PC et n'est envoyée qu'à GitHub, pour publier sur le dépôt choisi.

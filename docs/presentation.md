@@ -1,6 +1,6 @@
 # Présentation
 
-Modpack Downloader est une application Windows qui installe des modpacks Minecraft dans CurseForge en un clic, et
+Modpack Manager est une application Windows qui installe des modpacks Minecraft dans CurseForge en un clic, et
 les garde à jour. Les modpacks sont publiés sur GitHub par leurs auteurs, qui utilisent la même application, avec
 le Studio, pour préparer et publier chaque nouvelle version.
 

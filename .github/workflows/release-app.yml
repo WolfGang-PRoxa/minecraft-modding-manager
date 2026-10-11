@@ -37,7 +37,7 @@ jobs:
             exit 1
           fi
           echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
-          echo "installer=Modpack-Downloader-Setup-$PKG_VERSION.exe" >> "$GITHUB_OUTPUT"
+          echo "installer=Modpack-Manager-Setup-$PKG_VERSION.exe" >> "$GITHUB_OUTPUT"
 
       - run: npm ci
 
@@ -87,7 +87,7 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
-          name: Modpack Downloader ${{ steps.version.outputs.version }}
+          name: Modpack Manager ${{ steps.version.outputs.version }}
           files: dist/${{ steps.version.outputs.installer }}
           make_latest: true
           body_path: release-notes.md

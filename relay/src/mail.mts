@@ -73,7 +73,7 @@ function layout(parts: { heading: string; intro: string; body: string; buttons: 
 <body style="margin:0;padding:24px 12px;background:#f3f5f8;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1b2330;">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #dfe4ea;border-radius:16px;">
     <tr><td style="padding:28px 28px 0;">
-      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2f9e44;">Modpack Downloader</div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#2f9e44;">Modpack Manager</div>
       <h1 style="margin:8px 0 0;font-size:21px;line-height:1.3;color:#1b2330;">${parts.heading}</h1>
       <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:#5b6675;">${parts.intro}</p>
     </td></tr>
@@ -95,7 +95,7 @@ export function issueMail(issue: Issue, links: { fix: string; context: string })
   const author = issue.user?.login ?? 'quelqu’un'
   const body = truncate(issue.body ?? '', 3000) || '(sans description)'
   return {
-    subject: `[Modpack Downloader] Nouvelle issue #${issue.number} : ${truncate(issue.title, 120)}`,
+    subject: `[Modpack Manager] Nouvelle issue #${issue.number} : ${truncate(issue.title, 120)}`,
     html: layout({
       heading: `Issue #${issue.number} : ${esc(issue.title)}`,
       intro: `Signalée par ${esc(author)}.`,
@@ -137,7 +137,7 @@ export function proposalMail(
   const filesHtml = `<p style="margin:18px 0 6px;font-size:13px;font-weight:700;color:#1b2330;">Fichiers modifiés (${proposal.files.length})</p>
 <div style="font-family:Consolas,'Courier New',monospace;font-size:12.5px;line-height:1.7;color:#3d4756;word-break:break-all;">${files.map(esc).join('<br>')}</div>`
   return {
-    subject: `[Modpack Downloader] Correction proposée pour l’issue #${issue.number} : ${truncate(issue.title, 100)}`,
+    subject: `[Modpack Manager] Correction proposée pour l’issue #${issue.number} : ${truncate(issue.title, 100)}`,
     html: layout({
       heading: `Correction proposée — issue #${issue.number}`,
       intro: `${esc(issue.title)}`,
@@ -169,7 +169,7 @@ export function proposalMail(
 export function emptyProposalMail(issue: Issue, proposal: { title: string; summary: string }, links: { reject: string }): Mail {
   const summary = unwrap(proposal.summary) || proposal.title || '(la session n’a pas laissé d’explication)'
   return {
-    subject: `[Modpack Downloader] Pas de correction pour l’issue #${issue.number} : ${truncate(issue.title, 100)}`,
+    subject: `[Modpack Manager] Pas de correction pour l’issue #${issue.number} : ${truncate(issue.title, 100)}`,
     html: layout({
       heading: `Pas de correction — issue #${issue.number}`,
       intro: `${esc(issue.title)}. La session n’a modifié aucun fichier ; voici son explication.`,

@@ -49,7 +49,7 @@ Le zip est créé directement dans le dossier du modpack, déjà numéroté : pa
 - `screenshots`, `logs`, `crash-reports`, `backups`, `local`, `downloads`, `.mixin.out` ;
 - les données des cartes JourneyMap (`journeymap/data`) et Xaero’s (`xaero`, `xaerowaypoints`, `xaeroworldmap`) ;
 - `usercache.json`, `usernamecache.json`, `command_history.txt` ;
-- les fichiers propres à Modpack Downloader (`.modpack-downloader.json`, image du profil) ;
+- les fichiers propres à Modpack Manager (`.modpack-downloader.json`, image du profil) ;
 - les fichiers que tu as exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (tes options du jeu,
   tes shaders…) : la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
 

@@ -17,6 +17,7 @@ import { useStore } from '../store'
 import { changelog, releaseAnchor, type DocLink } from './content'
 import { DocMarkdown } from './DocMarkdown'
 import { useDocs } from './store'
+import { APP_NAME } from '../../../shared/config'
 
 const CATEGORY_STYLES: Record<string, { icon: LucideIcon; accent: string; chip: string }> = {
   Ajouts: { icon: Sparkles, accent: 'text-grass-300', chip: 'bg-grass-400/15 text-grass-300 ring-grass-400/30' },
@@ -197,7 +198,7 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
     <div>
       <h1 className="font-display text-4xl font-bold tracking-tight text-ink-100">{title}</h1>
       <p className="mt-3 text-[1.05rem] leading-relaxed text-ink-300">
-        L’historique des versions de Modpack Downloader, de la plus récente à la plus ancienne.{' '}
+        L’historique des versions de {APP_NAME}, de la plus récente à la plus ancienne.{' '}
         {appVersion && (
           <>
             Tu utilises la version <strong className="font-semibold text-ink-100">{appVersion}</strong>.

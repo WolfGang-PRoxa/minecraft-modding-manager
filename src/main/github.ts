@@ -34,7 +34,7 @@ let lastCatalog: { at: number; base: string; catalog: Catalog } | null = null
 const cacheFile = (name: string) => join(app.getPath('userData'), 'cache', name)
 
 function userAgent(): string {
-  return `ModpackDownloader/${app.getVersion()}`
+  return `ModpackManager/${app.getVersion()}`
 }
 
 async function loadCaches(): Promise<void> {

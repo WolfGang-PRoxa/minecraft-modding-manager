@@ -9,6 +9,7 @@ import { useStore } from '../store'
 import { Button } from './Button'
 import { Avatar, GitHubAccount } from './GitHubAccount'
 import { refreshStudioIfOpen } from '../studio/store'
+import { APP_NAME } from '../../../shared/config'
 import { Logo } from './Logo'
 import type { ToastItem } from './Toasts'
 
@@ -250,7 +251,7 @@ export function SetupView() {
           <div className="absolute inset-0 scale-150 rounded-full bg-grass-400/20 blur-3xl" />
           <Logo size={72} className="relative drop-shadow-2xl" />
         </div>
-        <h1 className="mt-6 font-display text-4xl font-bold tracking-tight">Bienvenue dans Modpack Downloader</h1>
+        <h1 className="mt-6 font-display text-4xl font-bold tracking-tight">Bienvenue dans {APP_NAME}</h1>
         <p className="mt-3 text-ink-300">
           Comment vas-tu utiliser l’application ? Tu pourras changer d’avis à tout moment dans les paramètres.{' '}
           <button

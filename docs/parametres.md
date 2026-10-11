@@ -55,7 +55,7 @@ l’application ne trouve pas tes profils. Voir [Le dossier des instances](curse
 
 ## Raccourci
 
-Indique si Modpack Downloader a un raccourci sur ton bureau.
+Indique si Modpack Manager a un raccourci sur ton bureau.
 
 - **Ajouter au bureau** (ou **Recréer sur le bureau**) crée le raccourci sur le bureau, ou le remplace. Le recréer
   répare aussi une icône restée vide.

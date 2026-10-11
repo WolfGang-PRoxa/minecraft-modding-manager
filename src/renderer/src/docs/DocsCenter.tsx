@@ -36,6 +36,7 @@ import {
 import { DocMarkdown } from './DocMarkdown'
 import { searchDocs, type SearchHit } from './search'
 import { useDocs } from './store'
+import { APP_NAME } from '../../../shared/config'
 
 /** Hauteur réservée à la barre du haut de la page, pour qu'une ancre ne s'y cache pas. */
 const TOP_OFFSET = 96
@@ -146,7 +147,7 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
       </nav>
 
       <div className="border-t border-white/[0.06] px-5 py-3 text-xs text-ink-500">
-        Modpack Downloader {appVersion && `v${appVersion}`}
+        {APP_NAME} {appVersion && `v${appVersion}`}
       </div>
     </aside>
   )

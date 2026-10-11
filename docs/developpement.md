@@ -35,8 +35,7 @@ d’Electron est donc téléchargé au premier lancement. S’il manque, `node -
 | `npm run build:win` | L’installeur Windows, dans `dist/` : compilation, images des fenêtres de l’installeur, puis electron-builder. |
 | `npm run changelog` | État de l’historique des versions (voir [Suivi des changements](#suivi-des-changements)). |
 | `npm run modpacks:ranger`, `npm run modpacks:publier` | Les opérations du Studio en ligne de commande (voir [En ligne de commande](ligne-de-commande.md)). |
-| `npx tsx scripts/generate-icon.ts` | Régénère `build/icon.png` à partir du logo de `src/shared/logo.ts`. |
-| `npx tsx scripts/generate-installer-images.ts` | Régénère les images des fenêtres de l’installeur (`build/installer/`), à partir du même logo. `npm run build:win` le fait. |
+| `npx tsx scripts/generate-installer-images.ts` | Régénère les images des fenêtres de l’installeur (`build/installer/`), à partir du logo `build/icon.png`. `npm run build:win` le fait. |
 
 ## Organisation du code
 
@@ -50,10 +49,10 @@ Une application [Electron](https://www.electronjs.org/) : un processus principal
 | `src/preload` | Le pont entre la fenêtre et le processus principal : `window.api` et `window.studio`. |
 | `src/renderer` | L’interface : `src/` (Bibliothèque, composants, état), `src/studio/` (vue Studio), `src/docs/` (aide intégrée). |
 | `src/shared` | Code commun : types, configuration (`APP_REPO`…), format des releases, lecture de la documentation et de l’historique des versions. |
-| `scripts` | Commandes en ligne : `modpacks.ts`, `changelog.ts`, `docs.ts`, et les générateurs d’images (`generate-icon.ts`, `generate-installer-images.ts`). |
+| `scripts` | Commandes en ligne : `modpacks.ts`, `changelog.ts`, `docs.ts`, et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
 | `docs` | Cette documentation. |
 | `relay` | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)). |
-| `build` | Icône, et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
+| `build` | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
 | `.github/workflows` | La publication de l’application sur un tag `app-v*`. |
 
 Le dépôt de l’application (`APP_REPO`) et l’identifiant de l’application OAuth GitHub utilisé par « Se connecter avec

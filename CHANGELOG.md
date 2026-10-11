@@ -1,12 +1,18 @@
 # Historique des versions
 
-Toutes les évolutions notables de Modpack Downloader, de la plus récente à la plus ancienne. L’application affiche
-le même historique dans **Aide → Nouveautés**.
+Toutes les évolutions notables de Modpack Manager (Modpack Downloader jusqu’à la 1.0.5), de la plus récente à la plus
+ancienne. L’application affiche le même historique dans **Aide → Nouveautés**.
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour tenir ce fichier à jour, voir
 [Suivi des changements](docs/developpement.md#suivi-des-changements).
 
 ## [Non publié]
+
+### Améliorations
+
+- Modpack Downloader devient **Modpack Manager**, avec un nouveau logo : dans l’application, sur l’icône du
+  programme et de ses raccourcis, et dans les fenêtres de l’installeur. La mise à jour garde tout : réglages,
+  connexion GitHub, modpacks installés, raccourcis et épingles de la barre des tâches.
 
 ## [1.0.5] - 2026-10-03
 

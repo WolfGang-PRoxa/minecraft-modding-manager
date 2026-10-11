@@ -1,6 +1,6 @@
 # Fichiers et dossiers
 
-Où Modpack Downloader range ce qu’il installe et ce qu’il retient, et comment sont faites les releases qu’il lit.
+Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment sont faites les releases qu’il lit.
 
 ## Sur ton PC
 
@@ -17,6 +17,11 @@ Où Modpack Downloader range ce qu’il installe et ce qu’il retient, et comme
 
 `%APPDATA%\Modpack Downloader` contient aussi les fichiers internes de la fenêtre de l’application (cache du
 navigateur intégré…). Tout ce dossier est conservé lors d’une mise à jour ou d’une désinstallation.
+
+Plusieurs de ces noms viennent de l’ancien nom de l’application, **Modpack Downloader** : le dossier des données,
+celui de l’application, l’exécutable (`Modpack Downloader.exe`), les dossiers temporaires et le marqueur des profils.
+Ils sont gardés exprès : c’est grâce à eux qu’une mise à jour retrouve tes réglages, ta connexion GitHub, tes modpacks
+installés et tes raccourcis.
 
 ## Le fichier settings.json
 

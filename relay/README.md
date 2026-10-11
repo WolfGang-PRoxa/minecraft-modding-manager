@@ -70,7 +70,7 @@ commit qui le précède (celle des commits du dépôt), le titre et le résumé 
 | `LINK_SECRET` | Secret qui signe les liens des mails. |
 | `RESEND_API_KEY` | Clé de [Resend](https://resend.com), qui envoie les mails. Sans domaine vérifié, Resend n'écrit qu'à l'adresse du compte : c'est justement celle du propriétaire. |
 | `OWNER_EMAIL` | Adresse qui reçoit les mails. |
-| `MAIL_FROM` | Expéditeur (facultatif, par défaut `Modpack Downloader <onboarding@resend.dev>`). |
+| `MAIL_FROM` | Expéditeur (facultatif, par défaut `Modpack Manager <onboarding@resend.dev>`). |
 | `ROUTINE_FIRE_URL`, `ROUTINE_TOKEN` | Point d'entrée et jeton de la routine qui ouvre les sessions de correction. |
 | `RELAY_URL` | Adresse publique du relais, pour les liens des mails. |
 

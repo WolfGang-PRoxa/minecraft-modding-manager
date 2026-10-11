@@ -1,22 +1,6 @@
-import { LOGO_PALETTE, LOGO_PIXELS } from '../../../shared/logo'
-
-const rects = LOGO_PIXELS.flatMap((row, y) =>
-  [...row].flatMap((key, x) => (LOGO_PALETTE[key] ? [{ x, y, fill: LOGO_PALETTE[key] }] : []))
-)
+// Logo de l'application : l'icône de l'exécutable (build/icon.png), seule source du logo.
+import icon from '../../../../build/icon.png'
 
 export function Logo({ size = 28, className }: { size?: number; className?: string }) {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      shapeRendering="crispEdges"
-      className={className}
-      aria-hidden="true"
-    >
-      {rects.map(({ x, y, fill }) => (
-        <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />
-      ))}
-    </svg>
-  )
+  return <img src={icon} width={size} height={size} alt="" draggable={false} className={className} />
 }
