@@ -274,7 +274,7 @@ le pack serveur (le propriétaire en joint un, fait à la main, à presque chaqu
 
 ### Phase 7 — Mise à jour automatique (1.7.0)
 
-**État : faite le 2026-10-11, pas encore publiée.** Réglages par modpack (`pack.json` `updates`), passage complet
+**État : faite le 2026-10-11, publiée en 1.6.0.** Réglages par modpack (`pack.json` `updates`), passage complet
 (recherche, essai, vérification, serveur, version prête ou publiée), validation et abandon depuis la carte ou par
 commandes, tâche planifiée Windows avec réveil (vérifiée sur le PC du propriétaire sous un autre nom, sans droits
 d'administrateur), notification, Claude Code pour analyser un échec (outils en lecture seulement). Testé sur un faux

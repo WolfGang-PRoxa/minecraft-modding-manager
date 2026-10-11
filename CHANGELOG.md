@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.6.0] - 2026-10-11
+
 ### Ajouts
 
 - Studio : **mises à jour automatiques**. Chaque modpack a sa fréquence (chaque semaine, toutes les deux semaines,
@@ -207,7 +209,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.6.0...HEAD
+[1.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...app-v1.6.0
 [1.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.4.0...app-v1.5.0
 [1.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.3.0...app-v1.4.0
 [1.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.2.0...app-v1.3.0
