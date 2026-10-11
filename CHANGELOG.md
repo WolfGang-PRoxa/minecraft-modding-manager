@@ -10,9 +10,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ### Ajouts
 
-- Publieurs : la commande `updates check` (et Claude) cherche sur CurseForge les mises à jour des mods, packs de
-  textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui
-  manqueraient ; `updates changelog` affiche les notes de version d’une mise à jour.
+- Studio : **mises à jour des mods**. Dans le détail d’un profil, l’application cherche sur CurseForge les nouvelles
+  versions de ses mods, packs de textures et shaders (même version de Minecraft, même chargeur, dépendances
+  manquantes comprises). Celles que tu choisis sont appliquées à une **copie d’essai** du profil, à tester dans
+  CurseForge ; tu la gardes (ses mises à jour passent dans ton profil, tes mondes, réglages et mods désactivés restent
+  les tiens) ou tu l’abandonnes. Ton profil n’est jamais modifié sans ton accord.
+- Les mêmes opérations en commandes, pour toi et pour Claude : `updates check`, `updates changelog`, `updates apply`,
+  `updates promote`, `updates discard`.
 
 ### Corrections
 

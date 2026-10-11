@@ -147,6 +147,7 @@ describe('recherche des mises à jour', () => {
         ['Lib', null, 901, ['Alpha']]
       ]
     )
+    assert.ok(plan.updates.every((u) => u.downloadable))
     assert.deepEqual(plan.untracked, ['local.jar'])
     assert.match(plan.warnings.join('\n'), /Disparu n’est plus disponible/)
   })

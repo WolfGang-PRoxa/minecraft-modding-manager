@@ -2,15 +2,14 @@
 // de CurseForge, comme le ferait CurseForge : téléchargement vérifié, ancien fichier retiré, entrée d'installedAddons
 // mise à jour dans le format de CurseForge (voir CLAUDE.md, « Faits CurseForge »). À n'utiliser que sur une copie
 // d'essai : le profil d'origine du publieur n'est jamais modifié ainsi.
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import type { AddonKind } from '../shared/studio'
-import type { CfFile } from './curseforgeApi'
-import { baseModFile } from './instanceAddons'
+import { CLASS_IDS, type CfFile, type CfMod } from './curseforgeApi'
 import { StudioError } from './studio/analyze'
 
 type Json = Record<string, unknown>
@@ -89,6 +88,9 @@ export async function downloadCurseForgeFile(file: CfFile, destination: string, 
   }
 }
 
+/** Télécharge un fichier vers sa destination (avec la clé de l'API : CurseForgeClient.download). */
+export type Download = (file: CfFile, destination: string) => Promise<void>
+
 /**
  * Remplace dans le profil le fichier d'un projet par `file` : téléchargement, puis ancien fichier retiré et entrée de
  * minecraftinstance.json (objet `instance`, à réécrire ensuite par l'appelant) mise à jour. Un mod désactivé le reste.
@@ -99,25 +101,83 @@ export async function replaceAddonFile(
   projectId: number,
   kind: AddonKind,
   file: CfFile & Json,
-  apiKey: string
+  download: Download
 ): Promise<void> {
   const addons = (instance.installedAddons as Json[] | undefined) ?? []
   const entry = addons.find((a) => Number(a.addonID) === projectId)
   if (!entry) throw new StudioError(`Le projet ${projectId} n’est pas dans ce profil.`)
   const folder = join(profilePath, ADDON_FOLDERS[kind])
   await mkdir(folder, { recursive: true })
-  const disabled = entry.isEnabled === false
-  const onDisk = disabled ? `${file.fileName}.disabled` : file.fileName
-  await downloadCurseForgeFile(file, join(folder, onDisk), apiKey)
+  const onDisk = entry.isEnabled === false ? `${file.fileName}.disabled` : file.fileName
+  await download(file, join(folder, onDisk))
 
   const previous = typeof entry.fileNameOnDisk === 'string' ? entry.fileNameOnDisk : null
-  if (previous && baseModFile(previous).toLowerCase() !== file.fileName.toLowerCase()) {
-    await rm(join(folder, previous), { force: true })
-  }
-  const path = join(folder, onDisk)
+  if (previous && previous.toLowerCase() !== onDisk.toLowerCase()) await rm(join(folder, previous), { force: true })
   entry.installedFile = installedFileFrom(file, (entry.installedFile as Json) ?? {}, file.fileName)
   entry.fileNameOnDisk = onDisk
-  entry.filePaths = [path]
+  entry.filePaths = [join(folder, onDisk)]
   entry.modFolderPath = folder
   entry.dateUpdated = new Date().toISOString()
+}
+
+/**
+ * Ajoute au profil un projet qu'il n'avait pas (une dépendance obligatoire) : son fichier, et une entrée
+ * d'installedAddons faite sur le modèle d'une entrée existante de la même catégorie (champs propres à CurseForge
+ * compris), complétée par ce que l'API dit du projet.
+ */
+export async function addAddon(
+  profilePath: string,
+  instance: Json,
+  mod: CfMod,
+  kind: AddonKind,
+  file: CfFile & Json,
+  download: Download
+): Promise<void> {
+  const addons = (instance.installedAddons as Json[] | undefined) ?? []
+  if (addons.some((a) => Number(a.addonID) === mod.id)) throw new StudioError(`${mod.name} est déjà dans ce profil.`)
+  const folder = join(profilePath, ADDON_FOLDERS[kind])
+  await mkdir(folder, { recursive: true })
+  await download(file, join(folder, file.fileName))
+
+  const classId = CLASS_IDS[kind]
+  const template = addons.find((a) => Number(a.categoryClassID) === classId) ?? addons[0] ?? {}
+  const now = new Date().toISOString()
+  const installed = installedFileFrom(file, {}, file.fileName)
+  const entry: Json = {
+    ...structuredClone(template),
+    instanceID: randomUUID(),
+    addonID: mod.id,
+    gameID: 432,
+    categoryClassID: classId,
+    categoryIds: (mod.categories ?? []).map((c) => c.id),
+    gameInstanceID: instance.guid,
+    name: mod.name,
+    modFolderPath: folder,
+    fileNameOnDisk: file.fileName,
+    authors: (mod.authors ?? []).map((a) => ({ id: a.id, name: a.name })),
+    primaryAuthor: mod.authors?.[0]?.name ?? null,
+    primaryCategoryId: mod.primaryCategoryId ?? null,
+    webSiteURL: mod.links?.websiteUrl ?? null,
+    thumbnailUrl: mod.logo?.thumbnailUrl ?? null,
+    installedFile: installed,
+    latestFile: structuredClone(installed),
+    dateInstalled: now,
+    dateUpdated: now,
+    isEnabled: true,
+    isLocked: false,
+    filePaths: [join(folder, file.fileName)],
+    preferenceReleaseType: null,
+    preferenceAutoInstallUpdates: null,
+    preferenceAlternateFile: false,
+    preferenceIsIgnored: false,
+    isModified: false,
+    isWorkingCopy: false,
+    isFuzzyMatch: false,
+    manifestName: null,
+    installedTargets: [],
+    allowModDistribution: mod.allowModDistribution ?? null
+  }
+  if (!template.categorySection) delete entry.categorySection
+  addons.push(entry)
+  instance.installedAddons = addons
 }

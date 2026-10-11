@@ -1,16 +1,26 @@
 // La vue du publieur : ses profils CurseForge, rangés dans les dossiers de CurseForge, chacun face au modpack qui en
 // vient. Fonction pure : les profils, les dossiers et les modpacks sont lus ailleurs.
 import type { PackView, ProfileFolder, ProfileState, ProfileView, PublisherLibrary } from '../../shared/studio'
+import { TRIAL_PROFILE_SUFFIX } from '../../shared/config'
 import type { CurseForgeGroup, CurseForgeProfile } from '../../shared/types'
 
 const UNGROUPED = 'Sans dossier'
+
+/** Le profil dont celui-ci est la copie d'essai (« <profil> (essai) »), s'il existe. */
+function trialSource(profile: CurseForgeProfile, profiles: CurseForgeProfile[]): CurseForgeProfile | null {
+  if (!profile.name.endsWith(TRIAL_PROFILE_SUFFIX)) return null
+  const base = profile.name.slice(0, -TRIAL_PROFILE_SUFFIX.length).toLowerCase()
+  return profiles.find((p) => p.name.toLowerCase() === base) ?? null
+}
+
+const isTrial = (profile: CurseForgeProfile, profiles: CurseForgeProfile[]) => trialSource(profile, profiles) !== null
 
 /** « LMA_26.3 », « lma 26.3 » et « LMA-26.3 » désignent le même modpack. */
 const comparable = (name: string) => name.toLowerCase().replace(/[\s_\-.]+/g, '')
 
 /** Le profil source d'un modpack : enregistré (guid, sinon nom), sinon deviné (mêmes mods qu'une version, sinon même nom). */
 function sourceOf(pack: PackView, profiles: CurseForgeProfile[]): { profile: CurseForgeProfile; link: 'saved' | 'guessed' } | null {
-  // Un profil installé par l'application est la copie d'un joueur, jamais une source.
+  // Un profil installé par l'application est la copie d'un joueur : jamais une source.
   const candidates = profiles.filter((p) => !p.installedPack)
   if (pack.profile) {
     const { guid, name } = pack.profile
@@ -48,7 +58,8 @@ export function buildLibrary(
   // Les liens enregistrés d'abord : un lien deviné ne prend jamais le profil d'un autre modpack.
   const ordered = [...packs].sort((a, b) => Number(Boolean(b.profile)) - Number(Boolean(a.profile)))
   for (const pack of ordered) {
-    const source = sourceOf(pack, profiles.filter((p) => !packOf.has(p.path)))
+    // Une copie d'essai est un brouillon : jamais la source d'un modpack.
+    const source = sourceOf(pack, profiles.filter((p) => !packOf.has(p.path) && !isTrial(p, profiles)))
     if (source) packOf.set(source.profile.path, { pack, link: source.link })
     else packsWithoutProfile.push(pack.folder)
   }
@@ -60,7 +71,9 @@ export function buildLibrary(
       ...profile,
       pack: pack ? { folder: pack.folder, id: pack.id, name: pack.name } : null,
       link: linked?.link ?? null,
-      ...stateOf(profile, pack)
+      ...stateOf(profile, pack),
+      trialPath: profiles.find((p) => trialSource(p, profiles)?.path === profile.path)?.path ?? null,
+      trialOf: trialSource(profile, profiles)?.path ?? null
     }
   }
   const byName = (a: ProfileView, b: ProfileView) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })

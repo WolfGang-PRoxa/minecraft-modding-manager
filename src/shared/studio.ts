@@ -183,6 +183,10 @@ export interface ProfileView extends CurseForgeProfile {
   state: ProfileState
   /** Version dont il a exactement les mods. */
   matchingVersion: number | null
+  /** Sa copie d'essai en cours (mises à jour à tester), s'il en a une. */
+  trialPath: string | null
+  /** Ce profil est la copie d'essai de ce profil-là. */
+  trialOf: string | null
 }
 
 /** Ce qu'un profil contient depuis CurseForge (catégorie du projet). */
@@ -210,6 +214,8 @@ export interface AddonUpdate {
   /** Projets qui le demandent (dépendance ajoutée). */
   requiredBy: string[]
   url: string | null
+  /** Faux : son auteur n'autorise le téléchargement que depuis CurseForge, la mise à jour s'y fait à la main. */
+  downloadable: boolean
 }
 
 /** Ce qu'une mise à jour du profil changerait (même version de Minecraft, même chargeur). */
@@ -227,6 +233,14 @@ export interface UpdatePlan {
   /** Fichiers posés à la main dans mods (inconnus de CurseForge) : jamais mis à jour. */
   untracked: string[]
   warnings: string[]
+}
+
+/** Une copie d'essai créée avec des mises à jour. */
+export interface TrialResult {
+  trialPath: string
+  applied: AddonUpdate[]
+  /** Mises à jour laissées de côté, avec la raison (téléchargement interdit hors de CurseForge…). */
+  skipped: Array<{ update: AddonUpdate; reason: string }>
 }
 
 /** Un dossier de CurseForge et ses profils ; `id` null : les profils rangés dans aucun dossier. */
@@ -375,6 +389,17 @@ export interface StudioApi {
   getLibrary(): Promise<PublisherLibrary>
   /** Lie un modpack à un profil CurseForge (son dossier), ou retire le lien (null). */
   linkProfile(folder: string, profilePath: string | null): Promise<ActionResult>
+  /** Mises à jour des mods d'un profil (lecture seule). */
+  checkUpdates(profilePath: string, channel: UpdateChannel): Promise<{ ok: true; plan: UpdatePlan } | { ok: false; error: string }>
+  /** Crée la copie d'essai du profil avec ces mises à jour (projets `only`). */
+  applyUpdates(
+    profilePath: string,
+    channel: UpdateChannel,
+    only: number[]
+  ): Promise<{ ok: true; result: TrialResult } | { ok: false; error: string }>
+  onUpdateProgress(listener: (progress: { done: number; total: number; name: string }) => void): () => void
+  promoteTrial(profilePath: string): Promise<{ ok: true; promoted: string[] } | { ok: false; error: string }>
+  discardTrial(profilePath: string): Promise<ActionResult>
   /** Crée un modpack depuis un profil, et sa v1 : le profil lui est lié. */
   createPackFromProfile(name: string, profilePath: string, includeSaves: boolean): Promise<ActionResult & { folder?: string }>
   /** Retire d'un zip du modpack les fichiers exclus dans ses réglages (même progression que la création d'un zip). */

@@ -1,7 +1,8 @@
 // Client de l'API de lecture de CurseForge (api.curseforge.com), avec la clé du publieur : projets (mods, packs de
 // textures, shaders), leurs fichiers et leurs notes de version. Seulement les champs dont l'application se sert.
-import { StudioError } from './studio/analyze'
+import { downloadCurseForgeFile } from './addonFiles'
 import { curseForgeApis, curseForgeSecret } from './curseforgeAuth'
+import { StudioError } from './studio/analyze'
 
 /** Catégories de projets CurseForge qu'un profil peut contenir (`categoryClassID` dans installedAddons). */
 export const CLASS_IDS = { mod: 6, resourcepack: 12, shader: 6552 } as const
@@ -30,6 +31,10 @@ export interface CfMod {
   allowModDistribution: boolean | null
   links: { websiteUrl: string | null }
   latestFilesIndexes: CfFileIndex[]
+  authors?: Array<{ id: number; name: string }>
+  logo?: { thumbnailUrl: string | null } | null
+  categories?: Array<{ id: number }>
+  primaryCategoryId?: number
 }
 
 export interface CfFile {
@@ -115,6 +120,11 @@ export class CurseForgeClient {
     if (filter.gameVersion) query.set('gameVersion', filter.gameVersion)
     if (filter.modLoaderType) query.set('modLoaderType', String(filter.modLoaderType))
     return this.request<CfFile[]>('GET', `/v1/mods/${modId}/files?${query}`)
+  }
+
+  /** Télécharge un fichier de CurseForge (avec la clé) et vérifie son empreinte. */
+  download(file: CfFile, destination: string): Promise<void> {
+    return downloadCurseForgeFile(file, destination, this.apiKey)
   }
 
   /** Notes de version d'un fichier, en HTML. */

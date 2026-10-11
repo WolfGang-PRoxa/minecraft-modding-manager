@@ -194,9 +194,6 @@ export async function checkUpdates(profilePath: string, client: CurseForgeClient
   for (const c of chosen.values()) {
     const file = files.get(c.fileId)
     if (!file) continue
-    if (!file.isAvailable || !file.downloadUrl) {
-      plan.warnings.push(`${c.mod.name} : le fichier ${file.fileName} ne peut pas être téléchargé hors de CurseForge.`)
-    }
     plan.updates.push({
       projectId: c.mod.id,
       name: c.mod.name,
@@ -204,7 +201,8 @@ export async function checkUpdates(profilePath: string, client: CurseForgeClient
       from: c.addon?.file ?? null,
       to: fileRef(file),
       requiredBy: [...c.requiredBy].sort(),
-      url: c.mod.links?.websiteUrl ?? null
+      url: c.mod.links?.websiteUrl ?? null,
+      downloadable: file.isAvailable && Boolean(file.downloadUrl)
     })
   }
   plan.updates.sort((a, b) => Number(a.from === null) - Number(b.from === null) || a.name.localeCompare(b.name, 'fr'))

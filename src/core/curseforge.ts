@@ -225,20 +225,40 @@ export async function restartCurseForge(instancesDir: string): Promise<CurseForg
   if (await isGameRunningFrom(instancesDir)) {
     return { ok: false, error: 'Minecraft est lancé depuis CurseForge : ferme le jeu, puis relance CurseForge.' }
   }
-  const pids = await curseForgeProcesses(instancesDir)
-  if (pids.length > 0) {
-    // D'abord comme la croix de sa fenêtre ; s'il reste dans la zone de notification, de force.
-    await taskkill(pids, false)
-    let alive = await waitForExit(pids, 5000)
-    if (alive.length > 0) {
-      await taskkill(alive, true)
-      alive = await waitForExit(alive, 5000)
-    }
-    if (alive.length > 0) return { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis rouvre-le.' }
-    // Le temps pour Overwolf de constater la fermeture de l'application avant de la relancer.
-    await sleep(1000)
-  }
+  const stopped = await stopCurseForge(instancesDir)
+  if (!stopped.ok) return stopped
   return (await launchCurseForge()) ? { ok: true } : { ok: false, error: 'CurseForge est introuvable sur ce PC.' }
+}
+
+/** Ferme CurseForge s'il est ouvert ; `wasRunning` dit s'il faudra le rouvrir. */
+export async function stopCurseForge(instancesDir: string): Promise<{ ok: true; wasRunning: boolean } | { ok: false; error: string }> {
+  const pids = await curseForgeProcesses(instancesDir)
+  if (pids.length === 0) return { ok: true, wasRunning: false }
+  // D'abord comme la croix de sa fenêtre ; s'il reste dans la zone de notification, de force.
+  await taskkill(pids, false)
+  let alive = await waitForExit(pids, 5000)
+  if (alive.length > 0) {
+    await taskkill(alive, true)
+    alive = await waitForExit(alive, 5000)
+  }
+  if (alive.length > 0) return { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.' }
+  // Le temps pour Overwolf de constater la fermeture de l'application avant de la relancer.
+  await sleep(1000)
+  return { ok: true, wasRunning: true }
+}
+
+/**
+ * Exécute `run` CurseForge fermé, puis le rouvre s'il était ouvert : CurseForge garde ses profils en mémoire et les
+ * réécrit lui-même, une modification faite pendant qu'il tourne pourrait être perdue ou ignorée.
+ */
+export async function withCurseForgeClosed<T>(instancesDir: string, run: () => Promise<T>): Promise<T> {
+  const stopped = await stopCurseForge(instancesDir)
+  if (!stopped.ok) throw new Error(stopped.error)
+  try {
+    return await run()
+  } finally {
+    if (stopped.wasRunning) await launchCurseForge()
+  }
 }
 
 /** Indique si un Minecraft (java/javaw) tourne actuellement depuis ce dossier d'instance. */

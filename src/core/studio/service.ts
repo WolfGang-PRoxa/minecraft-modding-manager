@@ -11,6 +11,9 @@ import type {
   PublishProgress,
   PublishResult,
   PublisherLibrary,
+  TrialResult,
+  UpdateChannel,
+  UpdatePlan,
   RangerOrders,
   RangerPlan,
   StudioOverview,
@@ -22,8 +25,12 @@ import type {
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
 import { pathExists } from '../fsutil'
+import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
+import type { CurseForgeClient } from '../curseforgeApi'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, readProfile } from '../profiles'
+import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
+import { checkUpdates } from '../updates'
 import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, StudioError, type CachedAnalysis } from './analyze'
 import { findExcludedInZip, stripExcludedFromZip, zipInstance } from './archive'
@@ -97,6 +104,8 @@ export interface StudioServiceOptions {
   journal?: Journal
   /** Dossier Instances de CurseForge (profils du publieur). */
   getInstancesDir?(): Promise<string>
+  /** Client de l'API CurseForge avec la clé du publieur (mises à jour des mods). */
+  getCurseForgeClient?(): Promise<CurseForgeClient>
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -642,6 +651,74 @@ export class StudioService {
     await this.logged(label, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       await writePackFile(dir, { ...meta, profile: profile ? { guid: profile.guid, name: profile.name } : null })
+    })
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Mises à jour des mods d'un profil, par une copie d'essai
+
+  private async curseForge(): Promise<CurseForgeClient> {
+    if (!this.options.getCurseForgeClient) throw new StudioError('Mises à jour impossibles depuis ce programme.')
+    return this.options.getCurseForgeClient()
+  }
+
+  /** Ce qu'une mise à jour du profil changerait (lecture seule). */
+  async checkUpdates(profilePath: string, channel: UpdateChannel = 'release'): Promise<UpdatePlan> {
+    const profile = await this.profileAt(profilePath)
+    return checkUpdates(profile.path, await this.curseForge(), { channel })
+  }
+
+  /** Crée « <profil> (essai) » avec les mises à jour (toutes, ou celles des projets `only`). */
+  applyUpdatesToTrial(
+    profilePath: string,
+    options: { channel?: UpdateChannel; only?: number[] },
+    onProgress: (done: number, total: number, name: string) => void
+  ): Promise<TrialResult> {
+    return this.exclusive(
+      `l’essai des mises à jour de ${basename(profilePath)}`,
+      async () => {
+        const client = await this.curseForge()
+        const plan = await checkUpdates((await this.profileAt(profilePath)).path, client, { channel: options.channel })
+        return applyToTrial(plan, { getFiles: (ids) => client.getFiles(ids), getMods: (ids) => client.getMods(ids), download: (f, d) => client.download(f, d) }, { only: options.only, onProgress })
+      },
+      (r) => ({
+        ok: true,
+        detail: `${r.applied.length} ${r.applied.length > 1 ? 'mises' : 'mise'} à jour dans ${basename(r.trialPath)}${r.skipped.length ? `, ${r.skipped.length} à faire dans CurseForge` : ''}`
+      })
+    )
+  }
+
+  /**
+   * Reporte l'essai validé dans le profil d'origine, CurseForge fermé le temps de l'écriture (puis rouvert), et met
+   * l'essai à la corbeille. Refusé si Minecraft tourne depuis l'un des deux.
+   */
+  promoteTrial(profilePath: string): Promise<string[]> {
+    return this.exclusive(
+      `le report de l’essai dans ${basename(profilePath)}`,
+      async () => {
+        const trialPath = trialPathOf(profilePath)
+        if ((await isGameRunningFrom(profilePath)) || (await isGameRunningFrom(trialPath))) {
+          throw new StudioError('Minecraft tourne depuis ce profil ou son essai : ferme le jeu, puis recommence.')
+        }
+        const instancesDir = await this.options.getInstancesDir?.()
+        if (!instancesDir) throw new StudioError('Dossier Instances de CurseForge introuvable.')
+        return withCurseForgeClosed(instancesDir, async () => {
+          const changed = await promoteTrial(profilePath)
+          await this.trash(trialPath)
+          return changed
+        })
+      },
+      (changed) => ({ ok: true, detail: `${plural(changed.length, 'projet')} reporté${changed.length > 1 ? 's' : ''}` })
+    )
+  }
+
+  /** Abandonne l'essai d'un profil (corbeille). */
+  discardTrial(profilePath: string): Promise<void> {
+    return this.exclusive(`l’abandon de l’essai de ${basename(profilePath)}`, async () => {
+      const trialPath = trialPathOf(profilePath)
+      if (!(await pathExists(trialPath))) throw new StudioError(`Pas d’essai pour ${basename(profilePath)}.`)
+      if (await isGameRunningFrom(trialPath)) throw new StudioError('Minecraft tourne depuis l’essai : ferme le jeu, puis recommence.')
+      await this.trash(trialPath)
     })
   }
 

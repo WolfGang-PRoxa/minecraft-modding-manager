@@ -3,7 +3,7 @@ import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes,
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
 import type { Command } from './registry'
-import { updatesChangelog, updatesCheck } from './updates'
+import { updatesApply, updatesChangelog, updatesCheck, updatesDiscard, updatesPromote } from './updates'
 import { versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions'
 
 /** Toutes les commandes, dans l'ordre de l'aide. */
@@ -26,6 +26,9 @@ export const COMMANDS = [
   versionsDelete,
   updatesCheck,
   updatesChangelog,
+  updatesApply,
+  updatesPromote,
+  updatesDiscard,
   rangerPlan,
   rangerApply,
   publishPlan,

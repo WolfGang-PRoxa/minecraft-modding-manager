@@ -17,7 +17,8 @@ function describeProfile(p: ProfileView): string {
   const game = [p.minecraftVersion, formatLoader(p.modLoader), p.modCount !== null ? `${p.modCount} mods` : null].filter(Boolean).join(' · ')
   const pack = p.pack ? ` → ${p.pack.folder}${p.link === 'guessed' ? ' (lien deviné)' : ''} : ${STATE_LABELS[p.state]}` : ''
   const origin = p.installedPack ? ` [installé par l’application : ${p.installedPack.id} v${p.installedPack.version}]` : p.curseforgeProjectId ? ' [modpack CurseForge]' : ''
-  return `${p.name} — ${game}${origin}${pack}`
+  const trial = p.trialOf ? ' [copie d’essai]' : p.trialPath ? ' [essai en cours]' : ''
+  return `${p.name} — ${game}${origin}${trial}${pack}`
 }
 
 export const profilesList = command({

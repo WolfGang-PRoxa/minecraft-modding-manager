@@ -3,7 +3,7 @@ import { watch, type FSWatcher } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { ActionResult, PackSettings, PublishResult, RangerOrders } from '../shared/studio'
+import type { ActionResult, PackSettings, PublishResult, RangerOrders, UpdateChannel } from '../shared/studio'
 import { appUpdateTask } from './appUpdate'
 import { resolveCredential } from '../core/auth'
 import { resolveInstancesDir } from '../core/curseforge'
@@ -11,6 +11,7 @@ import { pathExists } from '../core/fsutil'
 import { operationTools } from '../core/operations'
 import { getSettings } from '../core/settings'
 import { AnalysisCache, describeError, StudioError } from '../core/studio/analyze'
+import { CurseForgeClient } from '../core/curseforgeApi'
 import { listProfiles } from '../core/profiles'
 import { StudioService } from '../core/studio/service'
 import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
@@ -116,6 +117,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     blockedBy: appUpdateTask,
     trashItem: (path) => shell.trashItem(path),
     getInstancesDir: async () => (await resolveInstancesDir(await getSettings())).dir,
+    getCurseForgeClient: () => CurseForgeClient.create(),
     ...operationTools('l’application')
   })
   registerCoverProtocol()
@@ -206,6 +208,32 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     return { dir, instances: await listProfiles(dir) }
   })
   ipcMain.handle('studio:library', () => service.library())
+  const outcome = async <T>(run: () => Promise<T>) => {
+    try {
+      return { ok: true as const, ...(await run()) }
+    } catch (err) {
+      return { ok: false as const, error: describeError(err) }
+    }
+  }
+  ipcMain.handle('studio:checkUpdates', (_e, profilePath: string, channel: UpdateChannel) =>
+    outcome(async () => ({ plan: await service.checkUpdates(profilePath, channel === 'beta' ? 'beta' : 'release') }))
+  )
+  ipcMain.handle('studio:applyUpdates', (_e, profilePath: string, channel: UpdateChannel, only: number[]) =>
+    outcome(async () => {
+      let last = 0
+      const result = await service.applyUpdatesToTrial(profilePath, { channel: channel === 'beta' ? 'beta' : 'release', only }, (done, total, name) => {
+        const now = Date.now()
+        if (now - last < 120 && done < total) return
+        last = now
+        send('studio:update-progress', { done, total, name })
+      })
+      return { result }
+    })
+  )
+  ipcMain.handle('studio:promoteTrial', (_e, profilePath: string) =>
+    outcome(async () => ({ promoted: await service.promoteTrial(profilePath) }))
+  )
+  ipcMain.handle('studio:discardTrial', (_e, profilePath: string) => action(() => service.discardTrial(profilePath)))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>
     action(() => service.linkProfile(folder, profilePath))
   )

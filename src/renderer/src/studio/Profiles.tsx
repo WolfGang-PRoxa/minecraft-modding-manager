@@ -7,6 +7,7 @@ import {
   CircleCheck,
   Download,
   ExternalLink,
+  FlaskConical,
   Folder,
   FolderOpen,
   FolderPlus,
@@ -23,6 +24,7 @@ import type { PackView, ProfileState, ProfileView } from '../../../shared/studio
 import { Button } from '../components/Button'
 import { formatLoader, formatRelative } from '../lib/format'
 import { PackCard } from './PackCard'
+import { ProfileUpdates } from './ProfileUpdates'
 import { openLink, openPath, useStudio, type Selection } from './store'
 
 const STATE_DOT: Record<ProfileState, { className: string; label: (p: ProfileView) => string } | null> = {
@@ -86,6 +88,13 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
         </span>
       </span>
       {profile.installedPack && <Download size={13} className="shrink-0 text-ink-500" aria-label="Installé par l’application" />}
+      {(profile.trialOf || profile.trialPath) && (
+        <FlaskConical
+          size={13}
+          className="shrink-0 text-violet-300"
+          aria-label={profile.trialOf ? 'Copie d’essai' : 'Essai en cours'}
+        />
+      )}
       {profile.curseforgeProjectId && !profile.installedPack && (
         <span className="shrink-0 text-[10px] font-bold text-curseforge" title="Installation d’un modpack de CurseForge">
           CF
@@ -267,6 +276,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
       </Button>
     )
 
+  if (profile.trialOf) return null
   if (profile.installedPack) {
     return (
       <Banner icon={Download} tone="bg-white/[0.04] text-ink-300 ring-white/[0.08]">
@@ -422,6 +432,7 @@ export function ProfileDetail({ profile }: { profile: ProfileView }) {
           </div>
         </div>
         <ProfileStatus profile={profile} pack={pack} />
+        <ProfileUpdates profile={profile} />
       </section>
       {pack && <PackCard pack={pack} index={1} />}
     </div>

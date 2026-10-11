@@ -156,6 +156,29 @@ Les modpacks dont le profil n’est pas (ou plus) dans CurseForge sont listés e
 > [!NOTE]
 > L’application ne modifie jamais tes profils ni tes dossiers CurseForge : elle les lit seulement.
 
+### Mettre à jour les mods
+
+Le détail d’un profil a une partie **Mises à jour des mods**. Elle demande la clé de l’API CurseForge (voir
+[Compte CurseForge](parametres.md#compte-curseforge)).
+
+1. **Chercher les mises à jour** interroge CurseForge : pour chaque mod, pack de textures et shader installé depuis
+   CurseForge, la version la plus récente pour la même version de Minecraft et le même chargeur. Une mise à jour qui
+   demande un mod absent du profil l’ajoute (**ajouté**, avec le mod qui le demande). **Bêtas comprises** accepte
+   aussi les versions bêta. Les mods posés à la main dans `mods` sont signalés mais jamais mis à jour.
+2. Décoche ce que tu ne veux pas. Une mise à jour **à faire dans CurseForge** ne peut pas être cochée : son auteur
+   n’autorise le téléchargement que depuis CurseForge.
+3. **Créer l’essai** crée à côté de ton profil une copie, `<profil> (essai)`, avec les mises à jour cochées. Ton profil
+   n’est pas touché.
+4. **Relancer CurseForge** : l’essai y apparaît (dans le même dossier que ton profil). Joue dessus pour vérifier que
+   tout fonctionne.
+5. **Garder l’essai** reporte dans ton profil les mods, packs de textures et shaders mis à jour ; tes mondes, tes
+   réglages et tes mods désactivés restent les tiens. Ferme Minecraft avant : CurseForge est fermé le temps de
+   l’écriture, puis rouvert. L’essai part à la corbeille. Il ne reste qu’à créer la nouvelle version du modpack.
+   **Abandonner** met l’essai à la corbeille sans rien changer à ton profil.
+
+Une seule copie d’essai à la fois par profil : garde-la ou abandonne-la avant d’en créer une autre. Dans la colonne
+de gauche, un flacon marque le profil qui a un essai en cours, et l’essai lui-même.
+
 ### Sur la carte du modpack
 
 Le Studio reconnaît aussi, parmi tes profils, ceux qui contiennent une version de tes modpacks : il compare leurs

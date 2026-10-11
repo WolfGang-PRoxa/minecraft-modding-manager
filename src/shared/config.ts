@@ -25,6 +25,9 @@ export const MODPACK_MANIFEST_ASSET = 'modpack.json'
 // Fichier déposé dans chaque instance installée par l'application.
 export const INSTANCE_MARKER_FILE = '.modpack-downloader.json'
 
+// Suffixe de la copie d'essai d'un profil, où les mises à jour sont appliquées et testées.
+export const TRIAL_PROFILE_SUFFIX = ' (essai)'
+
 // Fichier de métadonnées d'une instance CurseForge.
 export const CURSEFORGE_INSTANCE_FILE = 'minecraftinstance.json'
 

@@ -20,7 +20,11 @@ Méthode :
 - Mises à jour des mods : updates_check (sur le pack ou le profil ; demande la clé CurseForge, voir curseforge_status)
   liste ce qui a une version plus récente pour la même version de Minecraft et le même chargeur. Pour une mise à jour
   importante (changement de version majeure, dépendance ajoutée), lis updates_changelog avant de la conseiller.
-  L'application de ces mises à jour au profil arrive bientôt : pour l'instant, le publieur les fait dans CurseForge.
+  Pour les appliquer : updates_apply crée « <profil> (essai) » avec les mises à jour (le profil d'origine n'est pas
+  touché) ; le publieur relance CurseForge et y joue pour tester. S'il valide : updates_promote (reporte dans son profil,
+  ferme et rouvre CurseForge ; demande-lui d'abord de quitter Minecraft), puis versions_create et publish_plan. Sinon :
+  updates_discard. Les mises à jour « skipped » se font à la main dans CurseForge (l'auteur interdit le téléchargement
+  ailleurs) : dis-le au publieur.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).
 - Les suppressions (packs_delete, versions_delete, releases_delete, publish_apply qui supprime) sont définitives sur
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.

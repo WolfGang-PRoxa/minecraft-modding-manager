@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto'
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
-import { installedFileFrom, replaceAddonFile } from '../src/core/addonFiles'
+import { downloadCurseForgeFile, installedFileFrom, replaceAddonFile, type Download } from '../src/core/addonFiles'
 import type { CfFile } from '../src/core/curseforgeApi'
 import { setCurseForgeApiOverride } from '../src/core/curseforgeAuth'
 import { writeCurseClientFile } from '../src/core/instanceIdentity'
@@ -12,6 +12,7 @@ import { createTrialCopy } from '../src/core/trialProfile'
 import { startFakeCurseForge, type FakeCurseForge } from './support/fakeCurseForge'
 import { makeInstance, tempDir } from './support/fixtures'
 
+const download: Download = (file, destination) => downloadCurseForgeFile(file, destination, 'cle')
 const readJson = async (file: string) => JSON.parse(await readFile(file, 'utf8')) as Record<string, any>
 
 describe('copie d’essai et fichiers des mods', () => {
@@ -92,8 +93,8 @@ describe('copie d’essai et fichiers des mods', () => {
     const beta = Buffer.from('nouveau beta')
     curseforge.catalog.downloads[501] = alpha
     curseforge.catalog.downloads[502] = beta
-    await replaceAddonFile(trial, instance, 11, 'mod', cfFile(501, 11, 'alpha-1.1.jar', alpha, curseforge.url) as never, 'cle')
-    await replaceAddonFile(trial, instance, 22, 'mod', cfFile(502, 22, 'beta-1.1.jar', beta, curseforge.url) as never, 'cle')
+    await replaceAddonFile(trial, instance, 11, 'mod', cfFile(501, 11, 'alpha-1.1.jar', alpha, curseforge.url) as never, download)
+    await replaceAddonFile(trial, instance, 22, 'mod', cfFile(502, 22, 'beta-1.1.jar', beta, curseforge.url) as never, download)
     assert.deepEqual((await readdir(join(trial, 'mods'))).sort(), ['alpha-1.1.jar', 'beta-1.1.jar.disabled'])
     const [a, b] = instance.installedAddons
     assert.deepEqual([a.installedFile.id, a.fileNameOnDisk, a.filePaths[0]], [501, 'alpha-1.1.jar', join(trial, 'mods', 'alpha-1.1.jar')])
@@ -105,7 +106,7 @@ describe('copie d’essai et fichiers des mods', () => {
     const instance = await readJson(join(trial, 'minecraftinstance.json'))
     curseforge.catalog.downloads[503] = Buffer.from('contenu modifié')
     const file = { ...cfFile(503, 11, 'alpha-1.2.jar', Buffer.from('contenu attendu'), curseforge.url) }
-    await assert.rejects(replaceAddonFile(trial, instance, 11, 'mod', file as never, 'cle'), /abîmé/)
+    await assert.rejects(replaceAddonFile(trial, instance, 11, 'mod', file as never, download), /abîmé/)
     assert.deepEqual((await readdir(join(trial, 'mods'))).sort(), ['alpha-1.1.jar', 'beta-1.1.jar.disabled'])
   })
 })

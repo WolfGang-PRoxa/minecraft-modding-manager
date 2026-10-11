@@ -3,6 +3,7 @@ import { resolve } from 'node:path'
 import type { RepoRef } from '../../shared/types'
 import { resolveCredential } from '../auth'
 import { resolveInstancesDir } from '../curseforge'
+import { CurseForgeClient } from '../curseforgeApi'
 import { operationTools } from '../operations'
 import { moveToRecycleBin } from '../powershell'
 import { getSettings } from '../settings'
@@ -56,6 +57,7 @@ export async function createCommandRuntime(options: ContextOptions): Promise<{
     onAnalyzing: options.onAnalyzing,
     trashItem: moveToRecycleBin,
     getInstancesDir: () => instancesDir(),
+    getCurseForgeClient: () => CurseForgeClient.create({ dotenvDir: options.dotenvDir }),
     ...operationTools(options.holder)
   })
   return { service, context: (extra) => ({ service, instancesDir, ...extra }) }

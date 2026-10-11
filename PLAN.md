@@ -207,6 +207,14 @@ la v2) et par les tests. Reste pour plus tard : la date de la prochaine mise à 
 
 ### Phase 4 — Mises à jour des mods, packs de textures et shaders (1.4.0)
 
+**État : faite le 2026-10-11, pas encore publiée.** Clé de l'API et jeton d'auteur dans Paramètres → Compte
+CurseForge (la « Profile API key » `cfc_pat_…` de la console ne sert pas pour l'API publique : il faut une clé d'API
+d'organisation). Recherche validée sur les vrais profils (Full Horror Adventure : 26 mises à jour et une dépendance).
+Méthode validée sur une copie réelle : CurseForge accepte les entrées écrites par l'application. Interface dans le
+détail d'un profil, commandes `updates *`. Le report (`updates promote`) n'a pas encore été fait sur un vrai profil :
+à faire avec le propriétaire lors de la première mise à jour réelle. Les choix « figés » (`pinned`) et le canal par
+modpack (pack.json) restent à brancher dans l'interface (phase 7, avec la fréquence).
+
 - Clé de l'API CurseForge du publieur, saisie dans les paramètres et chiffrée comme le jeton GitHub (DPAPI). Sans clé,
   la fonction est expliquée et désactivée.
 - `updates check <pack>` : pour chaque élément de `installedAddons`, dernier fichier compatible (version du jeu,

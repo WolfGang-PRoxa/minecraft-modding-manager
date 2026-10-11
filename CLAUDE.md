@@ -128,6 +128,13 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     chemins réécrits, jamais lancée) et `addonFiles.ts` (`replaceAddonFile` : téléchargement avec `x-api-key`, SHA-1
     vérifié avant d'apparaître, ancien fichier retiré, entrée réécrite par `installedFileFrom` ; un mod désactivé le
     reste ; un fichier sans `downloadUrl` est refusé : son auteur interdit le téléchargement hors de CurseForge).
+  - `trialUpdates.ts` : `applyToTrial` (copie `<profil> (essai)` + mises à jour choisies ; refusé si un essai existe ;
+    sans `downloadUrl` → `skipped`) et `promoteTrial` (reporte dans l'original les entrées dont le fichier diffère :
+    fichier copié depuis l'essai, état actif / désactivé de l'original gardé, entrée ajoutée avec le guid de
+    l'original). Service : `checkUpdates`, `applyUpdatesToTrial`, `promoteTrial` (dans `withCurseForgeClosed` de
+    `curseforge.ts` : fermé, écrit, rouvert ; refusé si Minecraft tourne depuis le profil ou l'essai ; essai à la
+    corbeille), `discardTrial`. `TRIAL_PROFILE_SUFFIX` (shared/config) ; `library.ts` marque `trialPath` / `trialOf`,
+    et une copie d'essai n'est jamais prise pour la source d'un modpack.
   - `updates.ts` (`checkUpdates`, lecture seule) : pour chaque projet d'`installedAddons`, le fichier le plus récent
     (plus grand id) pour la même version de Minecraft et le même chargeur (`bestFileIndex` ; Quilt accepte Fabric ;
     pack de textures / shader dont le fichier installé ne cite pas la version : dernier fichier toutes versions), puis
@@ -203,7 +210,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `studio/Profiles.tsx` : arborescence des profils (`ProfilesSidebar`, dossiers repliés gardés en `localStorage`),
   `ProfileDetail` (état et action : créer le modpack, créer la version suivante, lier, confirmer un lien deviné) et
   `UnlinkedPackDetail` ; `useStudio.selection` (`all` / `profile` / `pack`), `useStudio.library` relu avec l'aperçu.
-  `StudioView` : deux colonnes, chacune avec son défilement. `FromProfileDialog` (PackDialogs) ; `ImportDialog`
+  `StudioView` : deux colonnes, chacune avec son défilement. `studio/ProfileUpdates.tsx` : mises à jour des mods du
+  profil (recherche, choix ; une mise à jour non téléchargeable n'est pas cochable) et essai en cours (relancer
+  CurseForge, garder, abandonner) ; canaux `studio:checkUpdates`, `studio:applyUpdates` (+ `studio:update-progress`),
+  `studio:promoteTrial`, `studio:discardTrial`. `FromProfileDialog` (PackDialogs) ; `ImportDialog`
   accepte un profil déjà choisi.
   `studio/PackSettingsDialog.tsx` : « Réglages des versions » d'un modpack (onglets Fichiers exclus : arborescence du
   zip le plus récent à cocher ; Mods désactivés ; Configurations des joueurs), et `StripDialog` (« Retirer du zip »).
@@ -347,6 +357,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   (`applyInstanceGuid`, `writeCurseClientFile` : un fichier caché ne s'ouvre pas en `w` sous Windows, réécrit en `r+`)
   sert à l'installeur et à la copie d'essai ; `.curseclient` est dans `DEFAULT_EXCLUSIONS`. CurseForge ouvert ne voit
   pas un profil créé ou copié (ni son index `MinecraftGameInstance.json`, ni le fichier du profil ne changent).
+- Entrées écrites par l'application (essai du 2026-10-11 sur une copie de `Test-mod-LMA`, Fabric API remplacé par une
+  version antérieure) : après relance, CurseForge affiche le profil, la version écrite, et propose la mise à jour ; il
+  réécrit `minecraftinstance.json` en gardant nos valeurs (`installedFile`, `isFuzzyMatch: false`) et range la copie
+  à part de l'original dans son index.
 - Mod désactivé (constaté sur les profils du PC du propriétaire) : fichier `x.jar.disabled` dans `mods` ; dans
   `installedAddons`, l'entrée du mod a `isEnabled: false`, et son `fileNameOnDisk` et ses `filePaths` prennent
   `.disabled` ; `installedFile.fileName` et `installedFile.fileNameOnDisk` gardent le nom d'origine. Le projet

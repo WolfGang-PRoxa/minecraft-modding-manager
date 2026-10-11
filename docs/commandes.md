@@ -67,6 +67,9 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
 | `updates check` | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien. |
 | `updates changelog` | Les notes de version d’un fichier CurseForge, pour juger une mise à jour. |
+| `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
+| `updates promote` | Reporte l’essai validé dans le profil d’origine, puis met l’essai à la corbeille. |
+| `updates discard` | Abandonne l’essai (corbeille). |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
@@ -80,6 +83,17 @@ Un modpack se désigne par le nom de son dossier, son identifiant ou son nom aff
 Elle vérifie le profil source d’un modpack (`--pack`) ou un profil donné (`--profile`), en versions stables
 seulement, sauf avec `--beta`. Les fichiers posés à la main dans `mods` (inconnus de CurseForge) sont listés mais
 jamais mis à jour.
+
+Les mises à jour ne s’appliquent jamais directement à ton profil : **`updates apply`** crée à côté de lui une copie
+d’essai, `<profil> (essai)`, avec les nouveaux fichiers (téléchargés depuis CurseForge et vérifiés). Relance CurseForge
+pour la voir et y jouer. Une mise à jour dont l’auteur interdit le téléchargement hors de CurseForge est laissée de
+côté : fais-la dans CurseForge. Ensuite :
+
+- **`updates promote`** reporte dans ton profil les fichiers changés ou ajoutés par l’essai ; tes mondes, tes réglages
+  et tes mods désactivés restent les tiens. CurseForge est fermé le temps de l’écriture, puis rouvert (refusé si
+  Minecraft tourne depuis le profil ou son essai). L’essai part à la corbeille. Crée ensuite la nouvelle version du
+  modpack (`versions create`) ;
+- **`updates discard`** met l’essai à la corbeille sans rien changer à ton profil.
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu

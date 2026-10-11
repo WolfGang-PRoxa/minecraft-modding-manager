@@ -82,6 +82,11 @@ const studio: StudioApi = {
 
   listInstances: () => ipcRenderer.invoke('studio:listInstances'),
   getLibrary: () => ipcRenderer.invoke('studio:library'),
+  checkUpdates: (profilePath, channel) => ipcRenderer.invoke('studio:checkUpdates', profilePath, channel),
+  applyUpdates: (profilePath, channel, only) => ipcRenderer.invoke('studio:applyUpdates', profilePath, channel, only),
+  onUpdateProgress: (listener) => subscribe('studio:update-progress', listener),
+  promoteTrial: (profilePath) => ipcRenderer.invoke('studio:promoteTrial', profilePath),
+  discardTrial: (profilePath) => ipcRenderer.invoke('studio:discardTrial', profilePath),
   linkProfile: (folder, profilePath) => ipcRenderer.invoke('studio:linkProfile', folder, profilePath),
   createPackFromProfile: (name, profilePath, includeSaves) =>
     ipcRenderer.invoke('studio:createPackFromProfile', name, profilePath, includeSaves),
