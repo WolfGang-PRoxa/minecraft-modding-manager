@@ -2,6 +2,8 @@
 // paramètres, nature), puis exposée telle quelle par la ligne de commande `mpm` et par le serveur MCP. Ajouter une
 // commande = l'écrire dans un fichier de ce dossier et l'ajouter à COMMANDS (index.ts).
 import type { z } from 'zod'
+import type { OperationLock } from '../lock'
+import type { MaintenanceLauncher } from '../maintenance/scheduledTask'
 import type { StudioService } from '../studio/service'
 
 /**
@@ -16,6 +18,10 @@ export interface CommandContext {
   service: StudioService
   /** Dossier Instances de CurseForge (réglage, logs de CurseForge, ou emplacement par défaut). */
   instancesDir(): Promise<string>
+  /** Verrou des passages de mise à jour automatique. */
+  maintenanceLock: OperationLock
+  /** Ce que la tâche planifiée doit lancer depuis ce programme ; null hors de l'application installée. */
+  launcher: MaintenanceLauncher | null
   /** Avancement d'une opération longue. `total` absent : on ne sait pas combien il reste. */
   progress(message: string, done?: number, total?: number): void
   signal: AbortSignal

@@ -3,13 +3,13 @@
 // L'exécutable de l'application est lancé en mode Node (ELECTRON_RUN_AS_NODE) sur out/main/cli.js : rien d'autre à
 // installer, et le chemin ne change pas d'une mise à jour à l'autre.
 import { app, ipcMain } from 'electron'
-import { execFile } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { tmpdir } from 'node:os'
+import { MCP_SERVER_NAME } from '../core/maintenance/claude'
 import type { ClaudeCodeStatus } from '../shared/types'
-
-export const MCP_SERVER_NAME = 'modpack-manager'
 
 /** Commande qui démarre le serveur MCP de cette installation. */
 function mcpLaunch(): { command: string; args: string[] } {
@@ -74,6 +74,41 @@ async function connect(): Promise<{ ok: true } | { ok: false; error: string }> {
   await runClaude(claude, ['mcp', 'remove', '--scope', 'user', MCP_SERVER_NAME])
   const { code, output } = await runClaude(claude, addArgs())
   return code === 0 ? { ok: true } : { ok: false, error: output || `claude mcp add a échoué (code ${code}).` }
+}
+
+/**
+ * Pose une question à Claude Code sans fenêtre (`claude -p`, demande par l'entrée standard) avec, pour seuls outils,
+ * ceux donnés du serveur MCP de cette installation : ni fichiers, ni commandes, ni autres serveurs. Renvoie sa
+ * réponse, ou null si Claude Code est absent ou n'a pas répondu à temps.
+ */
+export async function askClaude(prompt: string, tools: string[], timeoutMs = 10 * 60_000): Promise<string | null> {
+  const claude = await findClaude()
+  if (!claude || /\.cmd$/i.test(claude)) return null
+  const { command, args } = mcpLaunch()
+  const mcpConfig = JSON.stringify({ mcpServers: { [MCP_SERVER_NAME]: { command, args, env: { ELECTRON_RUN_AS_NODE: '1' } } } })
+  const claudeArgs = [
+    '-p',
+    '--output-format', 'text',
+    '--strict-mcp-config', '--mcp-config', mcpConfig,
+    '--tools', '',
+    '--allowedTools', ...tools,
+    '--permission-mode', 'dontAsk',
+    '--no-session-persistence'
+  ]
+  return new Promise((resolve) => {
+    const env = { ...process.env }
+    delete env.ELECTRON_RUN_AS_NODE
+    const child = spawn(claude, claudeArgs, { windowsHide: true, cwd: tmpdir(), env })
+    let out = ''
+    child.stdout.on('data', (d: Buffer) => (out += d.toString()))
+    const timer = setTimeout(() => child.kill(), timeoutMs)
+    child.on('error', () => resolve(null))
+    child.on('close', (code) => {
+      clearTimeout(timer)
+      resolve(code === 0 && out.trim() ? out.trim() : null)
+    })
+    child.stdin.end(prompt)
+  })
 }
 
 /** Canaux `claude:*`. */

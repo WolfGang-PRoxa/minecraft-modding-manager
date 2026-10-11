@@ -274,6 +274,13 @@ le pack serveur (le propriétaire en joint un, fait à la main, à presque chaqu
 
 ### Phase 7 — Mise à jour automatique (1.7.0)
 
+**État : faite le 2026-10-11, pas encore publiée.** Réglages par modpack (`pack.json` `updates`), passage complet
+(recherche, essai, vérification, serveur, version prête ou publiée), validation et abandon depuis la carte ou par
+commandes, tâche planifiée Windows avec réveil (vérifiée sur le PC du propriétaire sous un autre nom, sans droits
+d'administrateur), notification, Claude Code pour analyser un échec (outils en lecture seulement). Testé sur un faux
+CurseForge et un faux GitHub ; aucun passage réel encore fait (le propriétaire attend d'avoir tout mis en place).
+Reste : le test en jeu (niveau 3 de la phase 5), le mail par le relais, Claude pour rédiger les notes de version.
+
 - **Une seule tâche planifiée Windows** (quotidienne, créée et retirée par l'app, option « réveiller le PC ») lance
   `mpm maintenance --due` : les modpacks dont le tour est venu, selon `updates.frequency`.
 - Pour chacun : recherche → s'il y a du nouveau, copie d'essai → tests → selon `autoPublish` : publication sur les

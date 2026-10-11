@@ -28,6 +28,12 @@ Méthode :
   refaire l'essai sans sa mise à jour (updates_discard puis updates_apply avec only). Sinon :
   updates_discard. Les mises à jour « skipped » se font à la main dans CurseForge (l'auteur interdit le téléchargement
   ailleurs) : dis-le au publieur.
+- Mises à jour automatiques : maintenance status d'abord. maintenance run enchaîne recherche, essai et tests ; un
+  modpack réglé sur autoPublish est publié s'il passe les tests (préviens le publieur avant). Une mise à jour prête
+  (outcome ready) se valide par maintenance validate après accord du publieur (il peut jouer sur l'essai avant) ; un
+  échec (failed) : lis le message, tests check sur l'essai, updates changelog des mods en cause, puis propose de figer
+  un mod (maintenance configure pin) ou d'abandonner (maintenance discard). N'active autoPublish et ne crée la tâche
+  planifiée (maintenance schedule) qu'à sa demande.
 - CurseForge : un modpack se lie à son projet par curseforge_link (le projet est créé une fois par le publieur sur le
   site). curseforge_publish envoie la dernière version (export au format CurseForge, nom « <nom>_V<N>.zip », notes en
   Markdown) : irréversible, montre d'abord version, notes et type au publieur, et teste la version avant. Un mod posé

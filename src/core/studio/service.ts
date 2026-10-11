@@ -2,27 +2,29 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { APP_REPO } from '../../shared/config'
 import { modpackTag, parseModpackTag } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
-import type {
-  ExcludedInZip,
-  GitHubStatus,
-  OrphanPack,
-  PackSettings,
-  PackView,
-  PublishProgress,
-  PublishResult,
-  PublisherLibrary,
-  ServerTestReport,
-  StaticCheckReport,
-  TrialResult,
-  UpdateChannel,
-  UpdatePlan,
-  RangerOrders,
-  RangerPlan,
-  StudioOverview,
-  StudioSettings,
-  ZipAnalysis,
-  ZipContents,
-  ZipEntryPreview
+import {
+  DEFAULT_PACK_UPDATES,
+  type ExcludedInZip,
+  type GitHubStatus,
+  type OrphanPack,
+  type PackSettings,
+  type PackUpdates,
+  type PackView,
+  type PublishProgress,
+  type PublishResult,
+  type PublisherLibrary,
+  type ServerTestReport,
+  type StaticCheckReport,
+  type TrialResult,
+  type UpdateChannel,
+  type UpdatePlan,
+  type RangerOrders,
+  type RangerPlan,
+  type StudioOverview,
+  type StudioSettings,
+  type ZipAnalysis,
+  type ZipContents,
+  type ZipEntryPreview
 } from '../../shared/studio'
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
@@ -52,6 +54,7 @@ import {
   loadPackMeta,
   nextVersionNumber,
   normalizePackSettings,
+  normalizePackUpdates,
   planRanger,
   scanWorkspace,
   setCover,
@@ -356,6 +359,7 @@ export class StudioService {
       profile: pack.meta.profile,
       github: pack.meta.github,
       curseforge: pack.meta.curseforge,
+      updates: pack.meta.updates,
       settings: {
         exclude: pack.meta.exclude,
         disabledMods: pack.meta.disabledMods,
@@ -475,6 +479,32 @@ export class StudioService {
 
       try {
         return await applyPlan(auth.client, plan, { onProgress, signal })
+      } finally {
+        await this.refreshRemote()
+      }
+    }, publishOutcome)
+  }
+
+  /**
+   * Publie sur GitHub les nouvelles versions et changements d'un seul modpack, sans toucher aux autres ni rien retirer
+   * (publication d'une mise à jour automatique). Rien à publier : réussi, sans changement.
+   */
+  publishPack(folder: string, onProgress: (progress: PublishProgress) => void, signal: AbortSignal): Promise<PublishResult> {
+    return this.exclusive(`la publication de ${folder}`, async () => {
+      let plan: InternalPlan
+      try {
+        plan = await this.freshPlan()
+      } catch (err) {
+        return { ok: false, cancelled: false, error: describeError(err), done: 0 }
+      }
+      const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
+      if (!pack) return { ok: false, cancelled: false, error: `Le modpack ${folder} est introuvable.`, done: 0 }
+      if (pack.errors.length) return { ok: false, cancelled: false, error: pack.errors[0], done: 0 }
+      const steps = plan.steps.filter((s) => s.kind !== 'delete' && s.action.packId === pack.meta.id)
+      const auth = await this.client()
+      if (!auth) return { ok: false, cancelled: false, error: 'Pas de connexion GitHub.', done: 0 }
+      try {
+        return await applyPlan(auth.client, { ...plan, steps }, { onProgress, signal })
       } finally {
         await this.refreshRemote()
       }
@@ -808,22 +838,22 @@ export class StudioService {
   }
 
   /** Ce qu'une mise à jour du profil changerait (lecture seule). */
-  async checkUpdates(profilePath: string, channel: UpdateChannel = 'release'): Promise<UpdatePlan> {
+  async checkUpdates(profilePath: string, channel: UpdateChannel = 'release', pinned: number[] = []): Promise<UpdatePlan> {
     const profile = await this.profileAt(profilePath)
-    return checkUpdates(profile.path, await this.curseForge(), { channel })
+    return checkUpdates(profile.path, await this.curseForge(), { channel, pinned })
   }
 
   /** Crée « <profil> (essai) » avec les mises à jour (toutes, ou celles des projets `only`). */
   applyUpdatesToTrial(
     profilePath: string,
-    options: { channel?: UpdateChannel; only?: number[] },
+    options: { channel?: UpdateChannel; only?: number[]; pinned?: number[] },
     onProgress: (done: number, total: number, name: string) => void
   ): Promise<TrialResult> {
     return this.exclusive(
       `l’essai des mises à jour de ${basename(profilePath)}`,
       async () => {
         const client = await this.curseForge()
-        const plan = await checkUpdates((await this.profileAt(profilePath)).path, client, { channel: options.channel })
+        const plan = await checkUpdates((await this.profileAt(profilePath)).path, client, { channel: options.channel, pinned: options.pinned })
         return applyToTrial(plan, { getFiles: (ids) => client.getFiles(ids), getMods: (ids) => client.getMods(ids), download: (f, d) => client.download(f, d) }, { only: options.only, onProgress })
       },
       (r) => ({
@@ -896,6 +926,18 @@ export class StudioService {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       await writePackFile(dir, { ...meta, ...normalizePackSettings(settings) })
     })
+  }
+
+  /** Enregistre les réglages des mises à jour automatiques d'un modpack. */
+  async updatePackUpdates(folder: string, updates: Partial<PackUpdates>): Promise<PackUpdates> {
+    let next = DEFAULT_PACK_UPDATES
+    await this.logged(`les mises à jour automatiques de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      next = normalizePackUpdates({ ...meta.updates, ...updates })
+      if (next.autoPublish && !meta.github && !meta.curseforge) throw new StudioError('Ce modpack n’est publié nulle part.')
+      await writePackFile(dir, { ...meta, updates: next })
+    })
+    return next
   }
 
   async setNotes(folder: string, version: number, notes: string): Promise<void> {

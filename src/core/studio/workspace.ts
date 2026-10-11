@@ -2,7 +2,18 @@ import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, join, resolve } from 'node:path'
 import { normalizeExclusions } from '../../shared/exclusions'
 import { isValidModpackId, slugify } from '../../shared/releases'
-import type { DisabledMod, PackCurseForge, PackProfileLink, PackSettings, RangerOrders, RangerPackPlan, RangerPlan } from '../../shared/studio'
+import {
+  DEFAULT_PACK_UPDATES,
+  type DisabledMod,
+  type PackCurseForge,
+  type PackProfileLink,
+  type PackSettings,
+  type PackUpdates,
+  type RangerOrders,
+  type RangerPackPlan,
+  type RangerPlan,
+  type UpdateFrequency
+} from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
 
@@ -29,6 +40,8 @@ export interface PackFile extends PackSettings {
   github: boolean
   /** Son projet CurseForge, s'il en a un. */
   curseforge: PackCurseForge | null
+  /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
+  updates: PackUpdates
 }
 
 export interface LocalFile {
@@ -102,6 +115,7 @@ function defaultPackFile(folder: string): PackFile {
     profile: null,
     github: true,
     curseforge: null,
+    updates: DEFAULT_PACK_UPDATES,
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -161,6 +175,7 @@ async function readPackFile(
       profile: normalizeProfileLink(data.profile),
       github: data.github !== false,
       curseforge: normalizeCurseForge(data.curseforge),
+      updates: normalizePackUpdates(data.updates),
       ...normalizePackSettings(data)
     }
     const error = isValidModpackId(meta.id)
@@ -193,8 +208,30 @@ export function normalizeCurseForge(value: unknown): PackCurseForge | null {
   }
 }
 
+const FREQUENCIES: UpdateFrequency[] = ['weekly', 'biweekly', 'monthly', 'manual', 'never']
+
+/** Réglages des mises à jour lus dans pack.json (ou reçus d'une commande), remis au propre. */
+export function normalizePackUpdates(value: unknown): PackUpdates {
+  const data = (value ?? {}) as Partial<Record<keyof PackUpdates, unknown>>
+  const pinned = new Map<number, string>()
+  for (const item of Array.isArray(data.pinned) ? (data.pinned as Array<Record<string, unknown>>) : []) {
+    const projectId = Number(item?.projectId)
+    if (!Number.isInteger(projectId) || projectId <= 0 || pinned.has(projectId)) continue
+    pinned.set(projectId, typeof item.name === 'string' && item.name.trim() ? item.name.trim() : `Projet ${projectId}`)
+  }
+  return {
+    frequency: FREQUENCIES.includes(data.frequency as UpdateFrequency) ? (data.frequency as UpdateFrequency) : DEFAULT_PACK_UPDATES.frequency,
+    channel: data.channel === 'beta' ? 'beta' : 'release',
+    pinned: [...pinned].map(([projectId, name]) => ({ projectId, name })),
+    autoPublish: data.autoPublish === true
+  }
+}
+
+const isDefaultUpdates = (u: PackUpdates) =>
+  u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
+
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, ...info } = meta
+  const { exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -206,6 +243,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...(profile ? { profile } : {}),
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
+    ...(isDefaultUpdates(updates) ? {} : { updates }),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),
     ...(keepPlayerConfigs ? { keepPlayerConfigs } : {})

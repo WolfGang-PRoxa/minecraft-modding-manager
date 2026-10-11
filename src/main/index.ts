@@ -5,6 +5,7 @@ import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
+import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
 import { useSettingsFile } from '../core/settings'
 import { renameLegacyDesktopShortcut } from './shortcut'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
@@ -81,7 +82,16 @@ if (!app.commandLine.hasSwitch('user-data-dir')) {
   app.setPath('userData', join(app.getPath('appData'), LEGACY_APP_NAME))
 }
 
-if (!app.requestSingleInstanceLock()) {
+if (process.argv.includes(MAINTENANCE_SWITCH)) {
+  // Passage de la tâche planifiée : sans fenêtre ni verrou d'instance (la fenêtre peut être ouverte), avec ses
+  // propres données de Chromium ; les réglages, jetons et journal restent ceux de l'application.
+  useSettingsFile(join(app.getPath('userData'), 'settings.json'))
+  app.setPath('userData', join(app.getPath('userData'), 'maintenance-session'))
+  void app.whenReady().then(() => {
+    app.setAppUserModelId(APP_USER_MODEL_ID)
+    return runScheduledMaintenance()
+  })
+} else if (!app.requestSingleInstanceLock()) {
   app.quit()
 } else {
   useSettingsFile(join(app.getPath('userData'), 'settings.json'))

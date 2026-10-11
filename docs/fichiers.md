@@ -12,6 +12,8 @@ Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment 
 | `%APPDATA%\Modpack Downloader\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
 | `%APPDATA%\Modpack Downloader\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
 | `%APPDATA%\Modpack Downloader\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
+| `%APPDATA%\Modpack Downloader\maintenance.json` | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente). |
+| `%APPDATA%\Modpack Downloader\maintenance.lock` | Présent pendant un passage des mises à jour automatiques. |
 | `%APPDATA%\Modpack Downloader\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
 | `%TEMP%\modpack-downloader` | Les téléchargements en cours (zips de modpack, installeurs de l’application). Vidé automatiquement. |
 | Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
@@ -41,6 +43,7 @@ depuis les paramètres ; pour les modifier à la main, ferme d’abord l’appli
 | `workspaceDir` | Le dossier des modpacks du Studio. |
 | `lastView` | La dernière vue affichée (`library` ou `studio`), rouverte au lancement. |
 | `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
+| `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |
 
 ## Dans un profil installé
 
@@ -109,6 +112,7 @@ il prend quelques dizaines de millisecondes, même pour des milliers de mods.
 |---|---|
 | `--studio` | Ouvre l’application sur le Studio (publieurs). Relancée ainsi alors qu’elle tourne déjà, elle passe sur le Studio. |
 | `--updated` | Passée par l’installeur après une mise à jour : l’application annonce sa nouvelle version. |
+| `--maintenance` | Passée par la tâche planifiée : l’application fait, sans fenêtre, les [mises à jour automatiques](automatique.md) dont le tour est venu, puis se ferme. |
 | `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modpack Downloader` (tests). |
 
 L’installeur accepte `/S` (installation silencieuse : ni question ni fenêtre) et `--updated` (mise à jour lancée

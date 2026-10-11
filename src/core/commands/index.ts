@@ -1,5 +1,13 @@
 import { curseforgeExport, curseforgeLink, curseforgePublish, curseforgeTargets, curseforgeVersions } from './curseforge'
 import { curseforgeStatus, journal, status } from './general'
+import {
+  maintenanceConfigure,
+  maintenanceDiscard,
+  maintenanceRun,
+  maintenanceSchedule,
+  maintenanceStatusCommand,
+  maintenanceValidate
+} from './maintenance'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
@@ -33,6 +41,12 @@ export const COMMANDS = [
   updatesDiscard,
   testsCheck,
   testsServer,
+  maintenanceStatusCommand,
+  maintenanceConfigure,
+  maintenanceRun,
+  maintenanceValidate,
+  maintenanceDiscard,
+  maintenanceSchedule,
   rangerPlan,
   rangerApply,
   publishPlan,

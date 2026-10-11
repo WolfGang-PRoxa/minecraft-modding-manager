@@ -29,6 +29,7 @@ import { Cover } from '../components/Cover'
 import { formatBytes, formatDate, formatLoader } from '../lib/format'
 import { useStore } from '../store'
 import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeStatuses } from './CurseForgePanel'
+import { UpdatesLine } from './MaintenancePanel'
 import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
 import { errorMessage, openLink, openPath, useStudio } from './store'
 
@@ -503,6 +504,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
           )}
           <CurseForgeNote pack={pack} present={present} profiles={profiles} />
           <CurseForgeLine pack={pack} />
+          <UpdatesLine pack={pack} />
           <SettingsSummary pack={pack} />
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>

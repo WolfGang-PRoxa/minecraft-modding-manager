@@ -13,7 +13,8 @@ const DEFAULTS: Settings = {
   repo: APP_REPO,
   workspaceDir: null,
   lastView: 'library',
-  lastRunVersion: null
+  lastRunVersion: null,
+  maintenanceClaude: false
 }
 
 // Réglages de l'application (rôle, dépôt, dossier des modpacks…), lus aussi par les scripts `modpacks:*` :
@@ -39,7 +40,8 @@ export async function getSettings(): Promise<Settings> {
     repo: isRepoRef(stored?.repo) ? { owner: stored.repo.owner, name: stored.repo.name } : APP_REPO,
     workspaceDir: typeof stored?.workspaceDir === 'string' && stored.workspaceDir ? stored.workspaceDir : null,
     lastView: stored?.lastView === 'studio' ? 'studio' : 'library',
-    lastRunVersion: typeof stored?.lastRunVersion === 'string' && stored.lastRunVersion ? stored.lastRunVersion : null
+    lastRunVersion: typeof stored?.lastRunVersion === 'string' && stored.lastRunVersion ? stored.lastRunVersion : null,
+    maintenanceClaude: stored?.maintenanceClaude === true
   }
 }
 

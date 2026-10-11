@@ -78,10 +78,17 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     connecté (`resolveCredential`) ; sans compte, ou si GitHub refuse, la page « nouvelle issue » s'ouvre préremplie
     dans le navigateur. Le corps (`src/shared/report.ts`) est du Markdown simple, lisible tel quel dans un mail ; les
     informations techniques jointes ne contiennent ni chemin ni nom de compte.
+  - `maintenance.ts` : `--maintenance` (tâche planifiée) : `index.ts` ne prend pas le verrou d'instance, garde les
+    réglages de l'app mais met les données de Chromium dans `userData\maintenance-session`, lance
+    `runScheduledMaintenance` (publieur seulement ; passages `due` ; Claude pour les échecs si `maintenanceClaude` ;
+    notification, un clic lance l'app avec `--studio`) puis quitte. Canaux `maintenance:*` de la vue Studio ;
+    `maintenanceTask` fait attendre la mise à jour de l'app. Interface : `studio/MaintenancePanel.tsx` (`UpdatesLine`
+    sur la carte, essai à valider, `UpdatesDialog`), `studio/maintenanceStore.ts`, `MaintenanceSetting` (Paramètres).
   - `claudeCode.ts` : connexion à Claude Code (canaux `claude:*`, Paramètres → Claude Code et terminal) : `claude mcp
     add --scope user modpack-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
     (`claude.exe` natif de `~/.local/bin`, sinon `where claude`, `.cmd` par cmd.exe). « Connecté » = `claude mcp get`
-    cite le cli.js de cette installation.
+    cite le cli.js de cette installation. `askClaude` : `claude -p` (demande par stdin), `--strict-mcp-config` avec
+    le seul serveur MCP de cette installation, `--tools ""`, `--allowedTools` donnés, `--permission-mode dontAsk`.
   - `studioIpc.ts` : canaux `studio:*` (appellent `StudioService`), images via `studio-media://cover/`, surveillance du
     dossier des modpacks (un changement fait par `mpm` ou Claude rafraîchit la vue). `studioTask` compte aussi
     l'opération d'un autre processus (verrou partagé) : la mise à jour de l'app l'attend.
@@ -201,6 +208,22 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `github: false` (seulement CurseForge : `computePlan` met le modpack de côté, ses releases ne sont jamais retirées).
     Interface : `studio/CurseForgePanel.tsx` (ligne « Publié sur… », réglages, pastille par version, bouton sur la
     dernière version).
+- `src/core/maintenance/` — mises à jour automatiques (Node pur). `pipeline.ts` : `maintainPack` (profil source
+  enregistré seulement, pas un lien deviné ; `checkUpdates` avec `pinned` → `applyUpdatesToTrial` → `checkProfile` →
+  `testServer` sur l'essai → `ready`, ou si `autoPublish` `createVersion` : `promoteTrial`, `zipInstance`, notes
+  (`notes.ts`), `publishPack` (GitHub, ce modpack seul, sans suppression) puis `publishToCurseForge`) ; un échec est un
+  résultat (`failed`), jamais une exception. `runMaintenance` (`folders`, `due`, sinon tous sauf `never`),
+  `finishPending` / `discardPending` (essai en attente), `maintenanceStatus`, `summarize`. Un passage tient
+  `maintenance.lock` (`maintenanceLock`, distinct d'`operation.lock` que prend chaque étape). `state.ts` :
+  `maintenance.json` à côté des réglages (`checkedAt` et dernier passage par id de modpack ; un `skipped` ne remplace
+  pas un essai `ready` / `failed` en attente). `schedule.ts` : `dueAt` / `isDue` (marge de 6 h). `scheduledTask.ts` :
+  tâche Windows `Modpack Manager - mises a jour des modpacks` (racine, compte de l'utilisateur, `Interactive`,
+  `Limited`, quotidienne, `WakeToRun`, `StartWhenAvailable` ; PowerShell par stdin en UTF-8, sans droits
+  d'administrateur : vérifié le 2026-10-11) ; `foreign` si elle lance une autre installation. `claude.ts` : demande
+  à Claude pour un échec et outils MCP en lecture permis (`ANALYSIS_TOOLS`). `pack.json` `updates` (`PackUpdates` :
+  `frequency`, `channel`, `pinned`, `autoPublish`), écrit seulement s'il diffère de `DEFAULT_PACK_UPDATES`
+  (`manual`). Commandes `maintenance *` (`commands/maintenance.ts`), contexte `maintenanceLock` et `launcher`
+  (mpm de l'app installée : `<exe> --maintenance`).
 - `src/core/commands/` — registre des commandes (`registry.ts` : `command({ name, summary, description, params: zod,
   kind: read | write | destructive, run, print })`, `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP
   `packs_list`. `context.ts` (`createCommandRuntime`) construit le service hors de la fenêtre : publie d'office en

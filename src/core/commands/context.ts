@@ -5,7 +5,8 @@ import { resolveCredential } from '../auth'
 import { resolveInstancesDir } from '../curseforge'
 import { CurseForgeClient } from '../curseforgeApi'
 import { CurseForgeUploader } from '../curseforgeUpload'
-import { operationTools } from '../operations'
+import type { MaintenanceLauncher } from '../maintenance/scheduledTask'
+import { maintenanceLock, operationTools } from '../operations'
 import { moveToRecycleBin } from '../powershell'
 import { getSettings } from '../settings'
 import { StudioError } from '../studio/analyze'
@@ -23,6 +24,13 @@ export interface ContextOptions {
   /** Dossier où chercher un .env (GITHUB_TOKEN), pour les commandes lancées depuis le dépôt. */
   dotenvDir?: string
   onAnalyzing?(fileName: string | null): void
+  /** Ce que la tâche planifiée lance ; par défaut l'application installée, si c'est elle qui exécute ces commandes. */
+  launcher?: MaintenanceLauncher | null
+}
+
+/** mpm de l'application installée : son exécutable, lancé en mode Node sur le cli.js de son app.asar. */
+function installedLauncher(): MaintenanceLauncher | null {
+  return process.versions.electron && /app\.asar/i.test(process.argv[1] ?? '') ? { execute: process.execPath, arguments: '--maintenance' } : null
 }
 
 /** Dossier Instances de CurseForge : réglage de l'application, logs de CurseForge, sinon l'emplacement par défaut. */
@@ -62,5 +70,7 @@ export async function createCommandRuntime(options: ContextOptions): Promise<{
     getCurseForgeUploader: () => CurseForgeUploader.create({ dotenvDir: options.dotenvDir }),
     ...operationTools(options.holder)
   })
-  return { service, context: (extra) => ({ service, instancesDir, ...extra }) }
+  const lock = maintenanceLock(options.holder)
+  const launcher = options.launcher === undefined ? installedLauncher() : options.launcher
+  return { service, context: (extra) => ({ service, instancesDir, maintenanceLock: lock, launcher, ...extra }) }
 }

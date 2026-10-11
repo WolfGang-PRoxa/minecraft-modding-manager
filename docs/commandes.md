@@ -72,6 +72,12 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `updates discard` | Abandonne l’essai (corbeille). |
 | `tests check` | Vérifie les fichiers d’un profil sans lancer le jeu : mods en double, dépendances manquantes, mods faits pour un autre chargeur. |
 | `tests server` | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités. |
+| `maintenance status` | Les [mises à jour automatiques](automatique.md) : réglages de chaque modpack, dernier et prochain passage, tâche planifiée. |
+| `maintenance configure` | Règle les mises à jour automatiques d’un modpack : fréquence, bêtas, publication automatique, mods figés. |
+| `maintenance run` | Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu (`--due`), ou tous. |
+| `maintenance validate` | Valide l’essai en attente d’un modpack : il devient la version suivante, publiée (sauf `--no-publish`). |
+| `maintenance discard` | Abandonne l’essai en attente d’un modpack. |
+| `maintenance schedule` | Crée (`--time 04:00`, `--wake`) ou retire (`--off`) la tâche planifiée de Windows. |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
 | `curseforge link` | Lie un modpack à son projet CurseForge (numéro, adresse de la page ou slug). |
@@ -125,6 +131,12 @@ d’auteur être enregistré ([Compte CurseForge](parametres.md#compte-curseforg
   joints : comme l’export de CurseForge), l’affiche sous le nom `<nom>_V<N>.zip` avec ses notes, et l’envoie. Un mod
   qui ne vient pas de CurseForge bloque l’envoi : la modération le refuserait. La version passe ensuite en modération ;
   `curseforge versions` suit son état. Le pack serveur se joint encore à la main sur le site.
+
+Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
+pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests server` sur l’essai, puis laisse la
+mise à jour prête (`maintenance validate` ou `maintenance discard` ensuite), ou la publie si le modpack est réglé
+ainsi (`maintenance configure --auto-publish`). `maintenance schedule` ne marche que depuis l’application installée :
+la tâche planifiée lance son exécutable.
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu

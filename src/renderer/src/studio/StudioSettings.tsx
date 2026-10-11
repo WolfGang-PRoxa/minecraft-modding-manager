@@ -1,8 +1,12 @@
-import { Bot, CircleCheck, CircleX, FolderCog, FolderOpen, KeyRound, Plug, RotateCcw, TerminalSquare, Trash2 } from 'lucide-react'
+import { AlarmClock, Bot, CircleCheck, CircleX, FolderCog, FolderOpen, KeyRound, Plug, RotateCcw, TerminalSquare, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
+import type { MaintenanceTask } from '../../../shared/studio'
 import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus } from '../../../shared/types'
 import { Button } from '../components/Button'
+import { Toggle } from '../components/Toggle'
+import { formatDate } from '../lib/format'
 import { useStore } from '../store'
+import { useMaintenance } from './maintenanceStore'
 import { openPath, refreshStudioIfOpen } from './store'
 
 /** Réglage « Dossier des modpacks » (publieurs), dans les paramètres de l'application. */
@@ -209,6 +213,114 @@ export function CurseForgeAccountSetting() {
         Vérifiés par CurseForge avant d’être enregistrés, chiffrés par Windows pour ton compte : ni l’application, ni le terminal,
         ni Claude ne les affichent.
       </p>
+    </>
+  )
+}
+
+const formatTime = (iso: string) => `${formatDate(iso)} à ${new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+
+/** Tâche planifiée des mises à jour automatiques, et Claude pour les échecs (publieurs), dans les paramètres. */
+export function MaintenanceSetting() {
+  const pushToast = useStore((s) => s.pushToast)
+  const status = useMaintenance((s) => s.status)
+  const refresh = useMaintenance((s) => s.refresh)
+  const [time, setTime] = useState<string | null>(null)
+  const [wake, setWake] = useState<boolean | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    void refresh()
+  }, [refresh])
+
+  const task: MaintenanceTask | null = status?.task ?? null
+  const shownTime = time ?? task?.time ?? '04:00'
+  const shownWake = wake ?? (task?.installed ? task.wake : true)
+  const scheduled = (status?.packs ?? []).filter((p) => ['weekly', 'biweekly', 'monthly'].includes(p.updates.frequency)).length
+
+  async function schedule(next: { time: string; wake: boolean } | null) {
+    setBusy(true)
+    try {
+      const result = await window.studio.scheduleMaintenance(next)
+      if (!result.ok) pushToast({ kind: 'error', title: 'Tâche planifiée impossible', message: result.error })
+      else pushToast({ kind: 'success', title: next ? `Passage chaque jour à ${next.time}` : 'Tâche planifiée retirée' })
+      setTime(null)
+      setWake(null)
+      await refresh()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <div className="flex gap-3">
+        <AlarmClock size={18} className="mt-0.5 shrink-0 text-ink-400" />
+        <div className="text-sm">
+          <p className="text-ink-200">
+            {!status
+              ? 'Lecture de la tâche planifiée…'
+              : task?.installed
+                ? `Chaque jour à ${task.time ?? '?'}${task.wake ? ', en réveillant le PC' : ''}, les modpacks dont le tour est venu sont mis à jour et testés.`
+                : 'Pas de tâche planifiée : les mises à jour ne se font qu’à la demande.'}
+          </p>
+          <p className="mt-0.5 text-xs text-ink-400">
+            {task?.installed && task.nextRunAt ? `Prochain passage : ${formatTime(task.nextRunAt)}. ` : ''}
+            {task?.lastRunAt ? `Dernier : ${formatTime(task.lastRunAt)}. ` : ''}
+            {scheduled ? `${scheduled} modpack${scheduled > 1 ? 's ont' : ' a'} une fréquence.` : 'Règle la fréquence de chaque modpack sur sa carte.'}
+          </p>
+          {task?.foreign && (
+            <p className="mt-1 text-xs text-amber-glow">Elle lance une autre installation de l’application : enregistre-la à nouveau d’ici.</p>
+          )}
+        </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-ink-200">
+          Heure
+          <input
+            type="time"
+            value={shownTime}
+            onChange={(e) => setTime(e.target.value)}
+            className="rounded-lg bg-ink-950/60 px-2.5 py-1.5 text-sm text-ink-100 ring-1 ring-white/10 ring-inset focus:ring-grass-400/60 focus:outline-none"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-ink-200">
+          <Toggle size="sm" label="Réveiller le PC" checked={shownWake} onChange={setWake} />
+          Réveiller le PC en veille
+        </label>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button size="sm" icon={AlarmClock} disabled={busy || !status} onClick={() => void schedule({ time: shownTime, wake: shownWake })}>
+          {task?.installed ? 'Enregistrer' : 'Activer'}
+        </Button>
+        {task?.installed && (
+          <Button size="sm" variant="ghost" icon={Trash2} disabled={busy} onClick={() => void schedule(null)}>
+            Retirer la tâche
+          </Button>
+        )}
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-ink-400">
+        La tâche tourne sous ton compte, quand ta session Windows est ouverte (verrouillée suffit). Pour le réveil, il faut
+        aussi « Autoriser les minuteurs de réveil » dans les options d’alimentation de Windows.
+      </p>
+
+      <div className="mt-5 flex items-center justify-between gap-6">
+        <div className="flex gap-3">
+          <Bot size={18} className="mt-0.5 shrink-0 text-ink-400" />
+          <div>
+            <div className="text-sm font-medium text-ink-100">Confier les échecs à Claude Code</div>
+            <div className="mt-0.5 text-xs text-ink-400">
+              Quand une mise à jour échoue aux tests, Claude Code en cherche la cause et propose quoi faire. Il ne peut rien
+              modifier. Utilise ton abonnement Claude.
+            </div>
+          </div>
+        </div>
+        <Toggle
+          label="Confier les échecs à Claude Code"
+          checked={status?.claude ?? false}
+          disabled={!status}
+          onChange={(enabled) => void window.studio.setMaintenanceClaude(enabled).then(refresh)}
+        />
+      </div>
     </>
   )
 }

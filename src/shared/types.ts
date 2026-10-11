@@ -180,6 +180,8 @@ export interface Settings {
   lastView: AppView
   /** Version de l'application au dernier lancement : sert à annoncer qu'une mise à jour vient d'être installée. */
   lastRunVersion: string | null
+  /** Un passage automatique qui échoue est confié à Claude Code, qui en cherche la cause. */
+  maintenanceClaude: boolean
 }
 
 /** D'où vient la connexion GitHub : connexion faite dans l'application, ou repli sur une session existante. */

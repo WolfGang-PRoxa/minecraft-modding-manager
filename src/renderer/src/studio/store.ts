@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { ActionResult, PublisherLibrary, StudioOverview } from '../../../shared/studio'
 import type { ToastItem } from '../components/Toasts'
 import { useStore } from '../store'
+import { useMaintenance } from './maintenanceStore'
 import type { SettingsTab } from './PackSettingsDialog'
 
 export type Dialog =
@@ -17,6 +18,8 @@ export type Dialog =
   | { kind: 'curseforge'; folder: string }
   /** Mettre une version en ligne sur CurseForge. */
   | { kind: 'curseforge-publish'; folder: string; version: number }
+  /** Réglages des mises à jour automatiques d'un modpack. */
+  | { kind: 'updates'; folder: string }
   /** Créer un modpack (et sa v1) depuis un profil CurseForge. */
   | { kind: 'from-profile'; profilePath: string; profileName: string }
   | { kind: 'ranger' }
@@ -94,6 +97,7 @@ export const useStudio = create<StudioState>((set, get) => ({
         (library) => set({ library }),
         () => {}
       )
+      void useMaintenance.getState().refresh()
       set({ overview: await window.studio.getOverview({ refreshRemote: remote }) })
       await library
     } catch (err) {

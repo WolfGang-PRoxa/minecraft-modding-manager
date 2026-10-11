@@ -76,6 +76,13 @@ n’est enregistré. L’état indique s’il est enregistré et accepté. **Ret
 sont chiffrés par Windows pour ton compte (comme ta connexion GitHub) ; ni l’application, ni le terminal, ni Claude
 ne les affichent.
 
+## Mises à jour automatiques
+
+Réservé aux publieurs. **Activer** crée la tâche planifiée de Windows qui fait chaque jour, à l’**heure** choisie, les
+passages des modpacks dont le tour est venu ; **Réveiller le PC en veille** le sort de veille pour cela.
+**Enregistrer** change l’heure ou le réveil, **Retirer la tâche** la supprime. **Confier les échecs à Claude Code**
+fait analyser par Claude Code une mise à jour qui échoue aux tests. Voir [Mises à jour automatiques](automatique.md).
+
 ## Claude Code et terminal
 
 Réservé aux publieurs. Indique si [Claude Code](https://claude.com/claude-code) est installé sur ce PC et s’il est

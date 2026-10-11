@@ -89,6 +89,8 @@ Chaque modpack a sa carte :
 - son **image** (un clic ouvre **Infos et image**), son **nom**, son **identifiant** (en petits caractères) et sa
   description ;
 - une ligne qui indique **la version que contient ton CurseForge** (voir plus bas) ;
+- où il est publié (GitHub, [CurseForge](publication.md#publier-sur-curseforge), ou les deux), et le rythme de ses
+  [mises à jour automatiques](automatique.md), avec la mise à jour prête à valider s’il y en a une ;
 - les pastilles des [réglages des versions](reglages.md) en service (fichiers exclus, mods désactivés,
   configurations gardées) : un clic ouvre le réglage ;
 - les boutons **Infos et image**, **Réglages**, **Créer la vN depuis CurseForge**, **Ouvrir le dossier**, et la
@@ -237,6 +239,10 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 | `exclude` | Les [fichiers exclus](reglages.md#exclure-des-fichiers) : des chemins depuis la racine de l’instance. Absent s’il n’y en a pas. |
 | `disabledMods` | Les [mods désactivés chez les joueurs](reglages.md#désactiver-des-mods-chez-les-joueurs) : pour chacun, son projet CurseForge (`addonId`, ou `null`), son fichier (`file`) et son nom (`name`). Absent s’il n’y en a pas. |
 | `keepPlayerConfigs` | `true` pour [garder les configurations modifiées par les joueurs](reglages.md#garder-les-configurations-des-joueurs). Absent sinon. |
+| `profile` | Le profil CurseForge d’où viennent ses versions : `guid` et nom. Absent s’il n’est pas connu. |
+| `github` | `false` si le modpack n’est publié que sur CurseForge. Absent sinon. |
+| `curseforge` | Son [projet CurseForge](publication.md#publier-sur-curseforge) : numéro, page, fichiers joints à l’export, et le fichier CurseForge de chaque version publiée. Absent s’il n’en a pas. |
+| `updates` | Ses [mises à jour automatiques](automatique.md#régler-un-modpack) : `frequency` (`weekly`, `biweekly`, `monthly`, `manual`, `never`), `channel` (`release` ou `beta`), `pinned` (mods figés) et `autoPublish`. Absent tant qu’elles restent à la demande, sans rien d’autre. |
 
 Tu peux le modifier à la main avec précaution : un fichier illisible, un identifiant invalide ou déjà utilisé par un
 autre dossier bloquent la publication du modpack, avec un message qui dit quoi corriger.

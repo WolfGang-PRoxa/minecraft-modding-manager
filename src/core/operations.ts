@@ -14,3 +14,11 @@ export function operationTools(holder: string): { lock: OperationLock; journal: 
     journal: new Journal(join(settingsDir(), 'journal.jsonl'), holder)
   }
 }
+
+/**
+ * Verrou des passages de mise à jour automatique : un seul à la fois, tous processus confondus. Distinct du verrou des
+ * opérations, que chaque étape d'un passage prend à son tour.
+ */
+export function maintenanceLock(holder: string): OperationLock {
+  return new OperationLock(join(settingsDir(), 'maintenance.lock'), holder)
+}

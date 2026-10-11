@@ -5,6 +5,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import type { ActionResult, PackSettings, PublishResult, RangerOrders, UpdateChannel } from '../shared/studio'
 import { appUpdateTask } from './appUpdate'
+import { maintenanceTask, registerMaintenanceIpc, stopMaintenance } from './maintenance'
 import { resolveCredential } from '../core/auth'
 import { resolveInstancesDir } from '../core/curseforge'
 import { pathExists } from '../core/fsutil'
@@ -94,7 +95,7 @@ async function action(run: () => Promise<unknown>): Promise<ActionResult> {
  * de la fenêtre, ou celle d'un autre processus (ligne de commande, serveur MCP), que l'installeur fermerait aussi.
  */
 export function studioTask(): string | null {
-  return service?.currentTask ?? service?.otherProcessTask ?? null
+  return service?.currentTask ?? service?.otherProcessTask ?? maintenanceTask()
 }
 
 /** Arrête proprement une publication ou une création de zip en cours (fermeture de la fenêtre). */
@@ -102,6 +103,7 @@ export function stopStudioTasks(): void {
   publishController?.abort()
   zipController?.abort()
   testController?.abort()
+  stopMaintenance()
 }
 
 /** Vue Studio : canaux `studio:*`, images des modpacks et surveillance du dossier des modpacks. */
@@ -125,6 +127,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     ...operationTools('l’application')
   })
   registerCoverProtocol()
+  registerMaintenanceIpc(() => service, getWindow)
   restartWatcher()
   const parent = () => getWindow() ?? undefined
 

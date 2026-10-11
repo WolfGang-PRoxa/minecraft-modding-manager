@@ -137,6 +137,7 @@ export interface PackView {
   /** Publié sur GitHub (faux : modpack seulement sur CurseForge, jamais touché sur GitHub). */
   github: boolean
   curseforge: PackCurseForge | null
+  updates: PackUpdates
   /** Versions numérotées, de la plus récente à la plus ancienne. */
   versions: VersionView[]
   pending: PendingZip[]
@@ -264,6 +265,81 @@ export interface TrialResult {
   applied: AddonUpdate[]
   /** Mises à jour laissées de côté, avec la raison (téléchargement interdit hors de CurseForge…). */
   skipped: Array<{ update: AddonUpdate; reason: string }>
+}
+
+/** Rythme des mises à jour automatiques : `manual` seulement à la demande, `never` jamais (pas même « tous »). */
+export type UpdateFrequency = 'weekly' | 'biweekly' | 'monthly' | 'manual' | 'never'
+
+/** Réglages des mises à jour d'un modpack (pack.json `updates`, écrit seulement s'il change quelque chose). */
+export interface PackUpdates {
+  frequency: UpdateFrequency
+  channel: UpdateChannel
+  /** Projets CurseForge laissés tels quels (mod figé volontairement). */
+  pinned: Array<{ projectId: number; name: string }>
+  /** Une version qui passe les tests est publiée seule ; sinon elle attend d'être validée. */
+  autoPublish: boolean
+}
+
+export const DEFAULT_PACK_UPDATES: PackUpdates = { frequency: 'manual', channel: 'release', pinned: [], autoPublish: false }
+
+/**
+ * Ce qu'a donné le passage d'un modpack : `up-to-date` rien à faire ; `manual` des mises à jour seulement faisables
+ * dans CurseForge ; `ready` essai testé, à valider ; `failed` essai qui échoue aux tests (ou erreur) ; `created`
+ * version créée ; `published` version créée et publiée ; `skipped` passage remis à plus tard (essai en attente…).
+ */
+export type MaintenanceOutcome = 'up-to-date' | 'manual' | 'ready' | 'failed' | 'created' | 'published' | 'skipped'
+
+export interface MaintenanceRecord {
+  packId: string
+  folder: string
+  name: string
+  at: string
+  outcome: MaintenanceOutcome
+  message: string
+  /** Mises à jour essayées, une ligne par projet. */
+  changes: string[]
+  /** Mises à jour à faire dans CurseForge (téléchargement réservé à CurseForge). */
+  manual: string[]
+  profilePath: string | null
+  /** Copie d'essai (`ready`, `failed`). */
+  trialPath: string | null
+  /** Version créée (`created`, `published`). */
+  version: number | null
+  /** Ce que Claude a conclu, s'il a été appelé. */
+  claude: string | null
+}
+
+/** Mises à jour automatiques d'un modpack : réglages, dernier passage et prochain. */
+export interface PackMaintenance {
+  folder: string
+  packId: string
+  name: string
+  updates: PackUpdates
+  /** Dernière recherche de mises à jour (un passage `skipped` ne compte pas). */
+  checkedAt: string | null
+  /** Prochain passage prévu (null : `manual` ou `never`). */
+  dueAt: string | null
+  last: MaintenanceRecord | null
+}
+
+/** La tâche planifiée de Windows qui lance les passages automatiques. */
+export interface MaintenanceTask {
+  installed: boolean
+  /** Heure du passage quotidien, « HH:MM ». */
+  time: string | null
+  /** Réveille le PC en veille. */
+  wake: boolean
+  lastRunAt: string | null
+  nextRunAt: string | null
+  /** Pointe vers une autre installation de l'application (ou une version de développement). */
+  foreign: boolean
+}
+
+export interface MaintenanceStatus {
+  packs: PackMaintenance[]
+  task: MaintenanceTask | null
+  /** Passage en cours dans un processus (null sinon). */
+  running: string | null
 }
 
 /** Ce qu'une vérification a trouvé : `error` empêche le jeu de démarrer, `warning` le risque, `info` est à savoir. */
@@ -469,6 +545,19 @@ export interface StudioApi {
   publishCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; fileId: number } | { ok: false; error: string }>
   onCurseForgeProgress(listener: (text: string) => void): () => void
   curseForgeStatuses(folder: string): Promise<{ ok: true; statuses: Record<string, CurseForgeFileState> } | { ok: false; error: string }>
+  /** Mises à jour automatiques : réglages et derniers passages de chaque modpack, tâche planifiée, Claude. */
+  maintenanceStatus(): Promise<MaintenanceStatus & { claude: boolean }>
+  configureUpdates(folder: string, changes: Partial<PackUpdates>): Promise<{ ok: true; updates: PackUpdates } | { ok: false; error: string }>
+  /** Passage immédiat des modpacks donnés (mises à jour, essai, tests). */
+  runMaintenance(folders: string[]): Promise<{ ok: true; records: MaintenanceRecord[] } | { ok: false; error: string }>
+  cancelMaintenance(): Promise<void>
+  onMaintenanceProgress(listener: (text: string) => void): () => void
+  /** Valide l'essai en attente : version suivante créée, publiée si `publish`. */
+  validateUpdate(folder: string, publish: boolean): Promise<{ ok: true; record: MaintenanceRecord } | { ok: false; error: string }>
+  discardUpdate(folder: string): Promise<{ ok: true; record: MaintenanceRecord } | { ok: false; error: string }>
+  /** Crée (ou remplace) la tâche planifiée, ou la retire (null). */
+  scheduleMaintenance(schedule: { time: string; wake: boolean } | null): Promise<{ ok: true; task: MaintenanceTask } | { ok: false; error: string }>
+  setMaintenanceClaude(enabled: boolean): Promise<void>
   /** Vérifie les fichiers du profil sans lancer le jeu. */
   checkProfile(profilePath: string): Promise<{ ok: true; report: StaticCheckReport } | { ok: false; error: string }>
   /** Démarre un serveur dédié avec les mods du profil (étapes : onTestProgress). */

@@ -8,6 +8,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : **mises à jour automatiques**. Chaque modpack a sa fréquence (chaque semaine, toutes les deux semaines,
+  chaque mois, à la demande ou jamais) : à son tour, ses mods sont mis à jour sur une copie de son profil, testés
+  (fichiers puis serveur), et la nouvelle version attend ta validation sur sa carte, ou se publie seule si tu le
+  permets. Mods figés, versions bêta au choix. Une tâche planifiée de Windows fait les passages chaque jour, en
+  réveillant le PC si tu veux, puis une notification résume ce qui a changé. Claude Code peut analyser les échecs.
+  En commandes : `maintenance run`, `maintenance validate`, `maintenance schedule`…
+
 ## [1.5.0] - 2026-10-11
 
 ### Ajouts
