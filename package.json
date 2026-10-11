@@ -1,7 +1,7 @@
 {
   "name": "minecraft-modpack-downloader",
   "productName": "Modpack Manager",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Installe les modpacks Minecraft publiés sur GitHub dans CurseForge, et aide leurs auteurs à les tenir à jour.",
   "author": "WolfGang-PRoxa",
   "license": "MIT",
