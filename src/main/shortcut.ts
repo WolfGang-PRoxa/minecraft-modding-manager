@@ -15,11 +15,18 @@ export interface ShortcutSpec {
   appUserModelId: string
 }
 
+/**
+ * Identifiant de l'application pour Windows. En développement, un autre : une notification d'Electron non packagé crée
+ * dans le menu Démarrer un raccourci « Electron.lnk » vers electron.exe avec cet identifiant, et Windows en tirerait
+ * l'icône et le nom de l'application installée dans la barre des tâches.
+ */
+export const WINDOWS_APP_ID = app.isPackaged ? APP_USER_MODEL_ID : `${APP_USER_MODEL_ID}.dev`
+
 export const PLAYER_SHORTCUT: ShortcutSpec = {
   name: APP_NAME,
   description: 'Installer et gérer les modpacks Minecraft de CurseForge',
   args: [],
-  appUserModelId: APP_USER_MODEL_ID
+  appUserModelId: WINDOWS_APP_ID
 }
 
 const quote = (arg: string) => (/[\s"]/.test(arg) ? `"${arg.replace(/"/g, '\\"')}"` : arg)

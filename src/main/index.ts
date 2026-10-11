@@ -1,13 +1,13 @@
 import { app, BrowserWindow, Menu, protocol, shell } from 'electron'
 import { join } from 'node:path'
-import { APP_NAME, APP_USER_MODEL_ID, LEGACY_APP_NAME } from '../shared/config'
+import { APP_NAME, LEGACY_APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
 import { useSettingsFile } from '../core/settings'
-import { renameLegacyDesktopShortcut } from './shortcut'
+import { renameLegacyDesktopShortcut, WINDOWS_APP_ID } from './shortcut'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
 import { toggleFullScreen, watchWindowState } from './windowState'
 
@@ -88,7 +88,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
   useSettingsFile(join(app.getPath('userData'), 'settings.json'))
   app.setPath('userData', join(app.getPath('userData'), 'maintenance-session'))
   void app.whenReady().then(() => {
-    app.setAppUserModelId(APP_USER_MODEL_ID)
+    app.setAppUserModelId(WINDOWS_APP_ID)
     return runScheduledMaintenance()
   })
 } else if (!app.requestSingleInstanceLock()) {
@@ -105,7 +105,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
   })
 
   app.whenReady().then(async () => {
-    app.setAppUserModelId(APP_USER_MODEL_ID)
+    app.setAppUserModelId(WINDOWS_APP_ID)
     Menu.setApplicationMenu(null)
     const launch = await noteRunningVersion()
     cleanAppUpdateDownloads()

@@ -438,6 +438,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `.modpack-downloader.json`, les dossiers temporaires, le dépôt GitHub. Les changer casse la mise à jour des apps
   installées. Le raccourci du bureau créé sous l'ancien nom est renommé au lancement (`renameLegacyDesktopShortcut`).
 
+- Une notification d'Electron non packagé (passage `--maintenance` lancé depuis le dépôt) crée dans le menu Démarrer
+  `Electron.lnk` vers `node_modules\electron\dist\electron.exe`, avec l'identifiant Windows de l'app (constaté le
+  2026-10-11) : Windows prenait alors l'icône d'Electron pour l'app installée dans la barre des tâches. D'où
+  `WINDOWS_APP_ID` (`shortcut.ts`) : `APP_USER_MODEL_ID` une fois packagée, suivi de `.dev` en développement. Après
+  un tel essai, mettre `Electron.lnk` à la corbeille.
 - L'extension VS Code définit `ELECTRON_RUN_AS_NODE=1` : Electron démarre alors comme Node et plante
   (`app` undefined). Retirer cette variable pour lancer l'app depuis un outil.
 - npm 11 n'exécute que les scripts d'install listés dans `allowScripts` (package.json). Electron télécharge son binaire
