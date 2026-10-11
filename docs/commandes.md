@@ -70,6 +70,8 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
 | `updates promote` | Reporte l’essai validé dans le profil d’origine, puis met l’essai à la corbeille. |
 | `updates discard` | Abandonne l’essai (corbeille). |
+| `tests check` | Vérifie les fichiers d’un profil sans lancer le jeu : mods en double, dépendances manquantes, mods faits pour un autre chargeur. |
+| `tests server` | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités. |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
@@ -94,6 +96,17 @@ côté : fais-la dans CurseForge. Ensuite :
   Minecraft tourne depuis le profil ou son essai). L’essai part à la corbeille. Crée ensuite la nouvelle version du
   modpack (`versions create`) ;
 - **`updates discard`** met l’essai à la corbeille sans rien changer à ton profil.
+
+Avant de garder un essai ou de publier une version, teste le profil (ou son essai) :
+
+- **`tests check`** lit les mods sans lancer le jeu, en quelques secondes : un mod présent deux fois, une dépendance
+  obligatoire absente, un mod fait pour un autre chargeur (Fabric dans un profil Forge…). Il liste aussi les mods qui
+  ne fonctionnent que dans le jeu.
+- **`tests server`** démarre un vrai serveur Minecraft avec les mods du profil, sans fenêtre ni compte, jusqu’à ce
+  qu’il soit prêt, puis l’arrête. Quelques minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, il
+  télécharge le serveur (gardé ensuite dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu
+  (Sodium, Iris, Oculus…) sont laissés de côté. En cas de plantage, le rapport donne sa cause et les mods suspectés.
+  Ce serveur local accepte pour toi le [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA).
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu

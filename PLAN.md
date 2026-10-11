@@ -232,6 +232,12 @@ modpack (pack.json) restent à brancher dans l'interface (phase 7, avec la fréq
 
 ### Phase 5 — Tests avant publication (1.5.0)
 
+**État : niveaux 1 et 2 faits le 2026-10-11, pas encore publiés.** Vérification des fichiers et serveur dédié, dans le
+détail d'un profil (et de son essai) et en commandes ; validés sur les vrais profils (doublons trouvés : JEI dans
+LMA-26.3, CC: Tweaked dans ATM10 ; serveurs Fabric et Forge démarrés). Le niveau 3 (lancer le jeu) reste à faire :
+il demande un lanceur en ligne de commande et le compte Minecraft du propriétaire ; en attendant, le publieur joue sur
+l'essai.
+
 Trois niveaux, chacun avec son rapport (réussi / échoué, durée, extrait des journaux du jeu) :
 
 1. **Vérifications** (secondes) : dépendances présentes, un seul fichier par mod, versions du jeu et du chargeur

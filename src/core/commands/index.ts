@@ -3,6 +3,7 @@ import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes,
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
 import type { Command } from './registry'
+import { testsCheck, testsServer } from './tests'
 import { updatesApply, updatesChangelog, updatesCheck, updatesDiscard, updatesPromote } from './updates'
 import { versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions'
 
@@ -29,6 +30,8 @@ export const COMMANDS = [
   updatesApply,
   updatesPromote,
   updatesDiscard,
+  testsCheck,
+  testsServer,
   rangerPlan,
   rangerApply,
   publishPlan,

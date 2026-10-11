@@ -11,6 +11,8 @@ import type {
   PublishProgress,
   PublishResult,
   PublisherLibrary,
+  ServerTestReport,
+  StaticCheckReport,
   TrialResult,
   UpdateChannel,
   UpdatePlan,
@@ -30,6 +32,9 @@ import type { CurseForgeClient } from '../curseforgeApi'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
+import { lastReport, saveReport, testServersDir } from '../gameTests/reports'
+import { runServerTest } from '../gameTests/serverTest'
+import { checkProfileFiles } from '../gameTests/staticChecks'
 import { checkUpdates } from '../updates'
 import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, StudioError, type CachedAnalysis } from './analyze'
@@ -652,6 +657,50 @@ export class StudioService {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       await writePackFile(dir, { ...meta, profile: profile ? { guid: profile.guid, name: profile.name } : null })
     })
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Tests d'un profil avant publication
+
+  /** Vérifie les fichiers du profil sans lancer le jeu (quelques secondes). */
+  async checkProfile(profilePath: string): Promise<StaticCheckReport> {
+    const report = await checkProfileFiles((await this.profileAt(profilePath)).path)
+    await saveReport(report.profilePath, 'files', report)
+    return report
+  }
+
+  /** Démarre un serveur dédié avec les mods du profil, jusqu'à « Done » (quelques minutes). */
+  testServer(
+    profilePath: string,
+    onStep: (text: string) => void,
+    options: { signal?: AbortSignal; timeoutMs?: number } = {}
+  ): Promise<ServerTestReport> {
+    return this.exclusive(
+      `le test du serveur de ${basename(profilePath)}`,
+      async () => {
+        const instancesDir = await this.options.getInstancesDir?.()
+        if (!instancesDir) throw new StudioError('Dossier Instances de CurseForge introuvable.')
+        const report = await runServerTest((await this.profileAt(profilePath)).path, {
+          cacheDir: testServersDir(),
+          instancesDir,
+          onStep,
+          signal: options.signal,
+          timeoutMs: options.timeoutMs
+        })
+        await saveReport(report.profilePath, 'server', report)
+        return report
+      },
+      (r) => (r.outcome === 'started' ? { ok: true, detail: r.message } : { ok: false, error: r.message })
+    )
+  }
+
+  /** Derniers rapports de test d'un profil. */
+  async lastTests(profilePath: string): Promise<{ files: StaticCheckReport | null; server: ServerTestReport | null }> {
+    const [files, server] = await Promise.all([
+      lastReport<StaticCheckReport>(profilePath, 'files'),
+      lastReport<ServerTestReport>(profilePath, 'server')
+    ])
+    return { files, server }
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -22,7 +22,10 @@ Méthode :
   importante (changement de version majeure, dépendance ajoutée), lis updates_changelog avant de la conseiller.
   Pour les appliquer : updates_apply crée « <profil> (essai) » avec les mises à jour (le profil d'origine n'est pas
   touché) ; le publieur relance CurseForge et y joue pour tester. S'il valide : updates_promote (reporte dans son profil,
-  ferme et rouvre CurseForge ; demande-lui d'abord de quitter Minecraft), puis versions_create et publish_plan. Sinon :
+  ferme et rouvre CurseForge ; demande-lui d'abord de quitter Minecraft), puis versions_create et publish_plan. Avant de
+  conseiller de garder un essai, teste-le : tests_check (quelques secondes), puis tests_server (quelques minutes) sur
+  le profil d'essai. Si le serveur plante, lis crashReport et logTail : le mod en cause est souvent cité ; propose de
+  refaire l'essai sans sa mise à jour (updates_discard puis updates_apply avec only). Sinon :
   updates_discard. Les mises à jour « skipped » se font à la main dans CurseForge (l'auteur interdit le téléchargement
   ailleurs) : dis-le au publieur.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).

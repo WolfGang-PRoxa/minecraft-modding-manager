@@ -179,6 +179,26 @@ Le détail d’un profil a une partie **Mises à jour des mods**. Elle demande l
 Une seule copie d’essai à la fois par profil : garde-la ou abandonne-la avant d’en créer une autre. Dans la colonne
 de gauche, un flacon marque le profil qui a un essai en cours, et l’essai lui-même.
 
+### Tester un profil
+
+Le détail d’un profil a une partie **Tests**, à lancer avant de garder un essai ou de publier une version. Pour un
+essai, elle teste l’essai lui-même.
+
+- **Vérifier les fichiers** lit les mods sans lancer le jeu, en quelques secondes : un mod présent deux fois, une
+  dépendance obligatoire absente, un mod fait pour un autre chargeur (un mod Fabric dans un profil Forge…). Il liste
+  aussi les mods qui ne fonctionnent que dans le jeu.
+- **Tester sur un serveur** démarre un vrai serveur Minecraft avec les mods et les configurations du profil, sans
+  fenêtre ni compte, jusqu’à ce qu’il soit prêt, puis l’arrête. Il trouve la plupart des incompatibilités entre mods.
+  Compte quelques minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, le serveur est téléchargé
+  (puis gardé dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu (Sodium, Iris, Oculus…)
+  sont laissés de côté. S’il plante, **Fin du journal du serveur** montre le rapport de plantage, avec les mods
+  suspectés. **Arrêter le test** l’interrompt.
+
+Le Java utilisé est celui que CurseForge a installé pour cette version de Minecraft, ou à défaut un Java installé sur
+ton PC. Le serveur de test accepte pour toi le [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA). Le
+résultat de chaque test reste affiché. Ce test ne lance pas le jeu lui-même : joue quelques minutes sur l’essai pour
+vérifier l’affichage et les mods du jeu.
+
 ### Sur la carte du modpack
 
 Le Studio reconnaît aussi, parmi tes profils, ceux qui contiennent une version de tes modpacks : il compare leurs

@@ -26,6 +26,7 @@ let service: StudioService
 let watcher: FSWatcher | null = null
 let publishController: AbortController | null = null
 let zipController: AbortController | null = null
+let testController: AbortController | null = null
 
 function send(channel: string, payload?: unknown): void {
   const window = getWindow()
@@ -99,6 +100,7 @@ export function studioTask(): string | null {
 export function stopStudioTasks(): void {
   publishController?.abort()
   zipController?.abort()
+  testController?.abort()
 }
 
 /** Vue Studio : canaux `studio:*`, images des modpacks et surveillance du dossier des modpacks. */
@@ -234,6 +236,22 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     outcome(async () => ({ promoted: await service.promoteTrial(profilePath) }))
   )
   ipcMain.handle('studio:discardTrial', (_e, profilePath: string) => action(() => service.discardTrial(profilePath)))
+  ipcMain.handle('studio:checkProfile', (_e, profilePath: string) =>
+    outcome(async () => ({ report: await service.checkProfile(profilePath) }))
+  )
+  ipcMain.handle('studio:testServer', (_e, profilePath: string) =>
+    outcome(async () => {
+      testController = new AbortController()
+      try {
+        const report = await service.testServer(profilePath, (text) => send('studio:test-progress', text), { signal: testController.signal })
+        return { report }
+      } finally {
+        testController = null
+      }
+    })
+  )
+  ipcMain.handle('studio:cancelTest', () => testController?.abort())
+  ipcMain.handle('studio:lastTests', (_e, profilePath: string) => service.lastTests(profilePath))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>
     action(() => service.linkProfile(folder, profilePath))
   )

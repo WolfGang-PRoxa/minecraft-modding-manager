@@ -6,6 +6,7 @@ import type { ProfileView, TrialResult, UpdateChannel, UpdatePlan } from '../../
 import { Button } from '../components/Button'
 import { useStore } from '../store'
 import { Modal, ProgressBar, Spinner } from './Modal'
+import { ProfileTests } from './ProfileTests'
 import { useStudio } from './store'
 
 const KIND_LABELS = { mod: 'Mod', resourcepack: 'Pack de textures', shader: 'Shader' } as const
@@ -66,6 +67,7 @@ function TrialPanel({ profile, trialName }: { profile: ProfileView; trialName: s
           </Button>
         </div>
       </div>
+      <ProfileTests profilePath={profile.trialOf ? profile.path : (profile.trialPath ?? profile.path)} label={`l’essai « ${trialName} »`} />
       {confirm && (
         <Modal
           title={confirm === 'promote' ? 'Garder l’essai ?' : 'Abandonner l’essai ?'}
@@ -303,5 +305,10 @@ export function ProfileUpdates({ profile }: { profile: ProfileView }) {
     const trial = library?.folders.flatMap((f) => f.profiles).find((p) => p.path === trialPath)
     return <TrialPanel profile={profile} trialName={trial?.name ?? `${profile.name} (essai)`} />
   }
-  return <UpdateFinder profile={profile} />
+  return (
+    <>
+      <UpdateFinder profile={profile} />
+      <ProfileTests profilePath={profile.path} label="ce profil" />
+    </>
+  )
 }

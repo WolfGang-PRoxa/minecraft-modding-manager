@@ -1,26 +1,10 @@
 import { z } from 'zod'
 import type { AddonUpdate, TrialResult, UpdatePlan } from '../../shared/studio'
 import { CurseForgeClient } from '../curseforgeApi'
-import { StudioError } from '../studio/analyze'
 import { trialPathOf } from '../trialUpdates'
-import { findProfile, packOf } from './refs'
-import { command, type CommandContext } from './registry'
+import { profileFor, target } from './refs'
+import { command } from './registry'
 
-const target = {
-  pack: z.string().min(1).optional().describe('Le modpack : on travaille sur son profil CurseForge source.'),
-  profile: z.string().min(1).optional().describe('Ou directement un profil CurseForge (nom, guid ou dossier).')
-}
-
-/** Le profil visé : celui donné, sinon le profil source du modpack donné. */
-async function profileFor(ctx: CommandContext, pack?: string, profile?: string): Promise<string> {
-  if (!pack === !profile) throw new StudioError('Donne soit pack, soit profile.')
-  if (profile) return (await findProfile(ctx, profile)).path
-  const view = await packOf(ctx, pack!)
-  const library = await ctx.service.library()
-  const source = library.folders.flatMap((f) => f.profiles).find((p) => p.pack?.folder === view.folder)
-  if (!source) throw new StudioError(`${view.folder} n’a pas de profil CurseForge source : lie-le avec « packs link ».`)
-  return source.path
-}
 
 const RELEASE = ['', '', ' (bêta)', ' (alpha)']
 

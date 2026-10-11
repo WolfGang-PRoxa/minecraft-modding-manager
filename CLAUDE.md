@@ -135,6 +135,18 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `curseforge.ts` : fermé, écrit, rouvert ; refusé si Minecraft tourne depuis le profil ou l'essai ; essai à la
     corbeille), `discardTrial`. `TRIAL_PROFILE_SUFFIX` (shared/config) ; `library.ts` marque `trialPath` / `trialOf`,
     et une copie d'essai n'est jamais prise pour la source d'un modpack.
+  - `gameTests/` : tests d'un profil. `modMetadata.ts` (`readModJar` : `fabric.mod.json` / `quilt.mod.json`,
+    `META-INF/mods.toml`, `META-INF/neoforge.mods.toml` ; jar-in-jar Fabric (`jars`, `provides`) et Forge
+    (`META-INF/jarjar/*.jar`) ; `FMLModType` du manifeste = bibliothèque ; jar multi-chargeurs lu selon le chargeur du
+    profil ; `parseToml` minimal). `staticChecks.ts` (`checkProfileFiles` : doublons, dépendances obligatoires absentes,
+    mauvais chargeur ; mods du client = `environment: client`, `clientSideOnly`, ou fichier CurseForge « Client » sans
+    « Server »). `java.ts` (Java de la version : `Install/versions/<v>/<v>.json` `javaVersion`, puis
+    `Install/java/<component>`, puis JDK installés). `serverInstall.ts` (cache par chargeur dans
+    `%LOCALAPPDATA%\Modpack Manager\test-servers` : lanceur Fabric de meta.fabricmc.net, installeurs Forge / NeoForge
+    `--installServer`, puis `@libraries/.../win_args.txt`). `serverTest.ts` (copie mods sans ceux du client + dossiers
+    de configuration, `eula.txt`, `server.properties` sur un port libre, attente de « Done (…s)! », `stop` ; sinon
+    rapport de plantage). `reports.ts` : dernier rapport par profil. Service : `checkProfile`, `testServer` (verrou),
+    `lastTests` ; commandes `tests check`, `tests server` ; interface `studio/ProfileTests.tsx`.
   - `updates.ts` (`checkUpdates`, lecture seule) : pour chaque projet d'`installedAddons`, le fichier le plus récent
     (plus grand id) pour la même version de Minecraft et le même chargeur (`bestFileIndex` ; Quilt accepte Fabric ;
     pack de textures / shader dont le fichier installé ne cite pas la version : dernier fichier toutes versions), puis
@@ -361,6 +373,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   version antérieure) : après relance, CurseForge affiche le profil, la version écrite, et propose la mise à jour ; il
   réécrit `minecraftinstance.json` en gardant nos valeurs (`installedFile`, `isFuzzyMatch: false`) et range la copie
   à part de l'original dans son index.
+- Test du serveur (constaté le 2026-10-11) : Fabric 26.3, 3 mods, 14 s téléchargement compris ; Forge 1.20.1, 55 mods,
+  79 s dont 19 s d'installation de Forge. Forge démarre même avec deux mods de même identifiant (il en garde un) : un
+  doublon est un avertissement, pas une erreur. CurseForge garde les Java de Mojang dans `Install/java/` (gamma 17,
+  delta 21, epsilon 25…).
 - Mod désactivé (constaté sur les profils du PC du propriétaire) : fichier `x.jar.disabled` dans `mods` ; dans
   `installedAddons`, l'entrée du mod a `isEnabled: false`, et son `fileNameOnDisk` et ses `filePaths` prennent
   `.disabled` ; `installedFile.fileName` et `installedFile.fileNameOnDisk` gardent le nom d'origine. Le projet

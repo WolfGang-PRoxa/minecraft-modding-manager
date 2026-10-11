@@ -37,6 +37,23 @@ export async function packOf(ctx: CommandContext, ref: string): Promise<PackView
   return findPack(overview, ref)
 }
 
+/** Paramètres d'une commande qui vise un profil : directement, ou par le modpack qui en vient. */
+export const target = {
+  pack: z.string().min(1).optional().describe('Le modpack : on travaille sur son profil CurseForge source.'),
+  profile: z.string().min(1).optional().describe('Ou directement un profil CurseForge (nom, guid ou dossier).')
+}
+
+/** Le profil visé : celui donné, sinon le profil source du modpack donné. */
+export async function profileFor(ctx: CommandContext, pack?: string, profile?: string): Promise<string> {
+  if (!pack === !profile) throw new StudioError('Donne soit pack, soit profile.')
+  if (profile) return (await findProfile(ctx, profile)).path
+  const view = await packOf(ctx, pack!)
+  const library = await ctx.service.library()
+  const source = library.folders.flatMap((f) => f.profiles).find((p) => p.pack?.folder === view.folder)
+  if (!source) throw new StudioError(`${view.folder} n’a pas de profil CurseForge source : lie-le avec « packs link ».`)
+  return source.path
+}
+
 /** Retrouve un profil CurseForge par son nom, son guid ou son dossier. */
 export async function findProfile(ctx: CommandContext, ref: string): Promise<CurseForgeProfile> {
   if (isAbsolute(ref)) {

@@ -8,6 +8,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : **tests avant publication**, dans le détail d’un profil ou de son essai. **Vérifier les fichiers** trouve
+  en quelques secondes les mods en double, les dépendances manquantes et les mods faits pour un autre chargeur ;
+  **Tester sur un serveur** démarre un vrai serveur Minecraft avec les mods du profil et dit s’il démarre, ou pourquoi
+  il plante. Les mêmes tests en commandes : `tests check` et `tests server`.
+
 ## [1.4.0] - 2026-10-11
 
 ### Ajouts

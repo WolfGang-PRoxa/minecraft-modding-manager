@@ -243,6 +243,43 @@ export interface TrialResult {
   skipped: Array<{ update: AddonUpdate; reason: string }>
 }
 
+/** Ce qu'une vérification a trouvé : `error` empêche le jeu de démarrer, `warning` le risque, `info` est à savoir. */
+export interface CheckFinding {
+  severity: 'error' | 'warning' | 'info'
+  message: string
+  /** Fichiers concernés, dans le dossier mods. */
+  files: string[]
+}
+
+/** Vérification des fichiers d'un profil, sans lancer le jeu. */
+export interface StaticCheckReport {
+  profile: string
+  profilePath: string
+  checkedAt: string
+  jars: number
+  findings: CheckFinding[]
+  /** Mods qui ne fonctionnent que dans le jeu (laissés de côté par le test du serveur). */
+  clientOnly: string[]
+}
+
+/** Démarrage d'un serveur dédié avec les mods du profil. */
+export interface ServerTestReport {
+  profile: string
+  profilePath: string
+  startedAt: string
+  durationMs: number
+  /** `started` : le serveur a fini de démarrer (puis a été arrêté) ; sinon, pourquoi pas. */
+  outcome: 'started' | 'crashed' | 'timeout' | 'failed'
+  message: string
+  minecraftVersion: string
+  modLoader: string | null
+  /** Mods laissés de côté parce qu'ils ne fonctionnent que dans le jeu. */
+  clientOnly: string[]
+  /** Dernières lignes du journal du serveur. */
+  logTail: string[]
+  crashReport: { file: string; description: string | null; suspects: string[]; excerpt: string } | null
+}
+
 /** Un dossier de CurseForge et ses profils ; `id` null : les profils rangés dans aucun dossier. */
 export interface ProfileFolder {
   id: string | null
@@ -399,6 +436,14 @@ export interface StudioApi {
   ): Promise<{ ok: true; result: TrialResult } | { ok: false; error: string }>
   onUpdateProgress(listener: (progress: { done: number; total: number; name: string }) => void): () => void
   promoteTrial(profilePath: string): Promise<{ ok: true; promoted: string[] } | { ok: false; error: string }>
+  /** Vérifie les fichiers du profil sans lancer le jeu. */
+  checkProfile(profilePath: string): Promise<{ ok: true; report: StaticCheckReport } | { ok: false; error: string }>
+  /** Démarre un serveur dédié avec les mods du profil (étapes : onTestProgress). */
+  testServer(profilePath: string): Promise<{ ok: true; report: ServerTestReport } | { ok: false; error: string }>
+  onTestProgress(listener: (text: string) => void): () => void
+  cancelTest(): Promise<void>
+  /** Derniers rapports de test du profil. */
+  lastTests(profilePath: string): Promise<{ files: StaticCheckReport | null; server: ServerTestReport | null }>
   discardTrial(profilePath: string): Promise<ActionResult>
   /** Crée un modpack depuis un profil, et sa v1 : le profil lui est lié. */
   createPackFromProfile(name: string, profilePath: string, includeSaves: boolean): Promise<ActionResult & { folder?: string }>
