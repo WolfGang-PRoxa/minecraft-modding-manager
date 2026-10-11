@@ -109,6 +109,14 @@ export class CurseForgeClient {
     return files
   }
 
+  /** Fichiers d'un projet, du plus récent au plus ancien, pour une version de Minecraft et un chargeur. */
+  getModFiles(modId: number, filter: { gameVersion?: string; modLoaderType?: number | null } = {}): Promise<CfFile[]> {
+    const query = new URLSearchParams({ pageSize: '50' })
+    if (filter.gameVersion) query.set('gameVersion', filter.gameVersion)
+    if (filter.modLoaderType) query.set('modLoaderType', String(filter.modLoaderType))
+    return this.request<CfFile[]>('GET', `/v1/mods/${modId}/files?${query}`)
+  }
+
   /** Notes de version d'un fichier, en HTML. */
   getChangelog(modId: number, fileId: number): Promise<string> {
     return this.request<string>('GET', `/v1/mods/${modId}/files/${fileId}/changelog`)

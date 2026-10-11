@@ -48,7 +48,7 @@ export const journal = command({
       : 'Aucune opération enregistrée.'
 })
 
-const SOURCES = { saved: 'enregistré dans l’application', env: 'variable d’environnement', dotenv: 'fichier .env' } as const
+const SOURCES = { saved: 'dans l’application', env: 'variable d’environnement', dotenv: 'fichier .env' } as const
 
 export const curseforgeStatus = command({
   name: 'curseforge status',

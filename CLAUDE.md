@@ -124,6 +124,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     dernier fichier par version de Minecraft, chargeur et type de version), `POST /v1/mods/files`, changelog (HTML).
     Énumérations : chargeur Forge 1, Fabric 4, Quilt 5, NeoForge 6 ; release 1, beta 2, alpha 3 ; dépendance
     obligatoire 3 ; catégories mod 6, pack de textures 12, shader 6552 ; hash sha1 1, md5 2.
+  - `trialProfile.ts` (`createTrialCopy` : copie à côté de l'original, sans journaux ni marqueur, nouvelle identité,
+    chemins réécrits, jamais lancée) et `addonFiles.ts` (`replaceAddonFile` : téléchargement avec `x-api-key`, SHA-1
+    vérifié avant d'apparaître, ancien fichier retiré, entrée réécrite par `installedFileFrom` ; un mod désactivé le
+    reste ; un fichier sans `downloadUrl` est refusé : son auteur interdit le téléchargement hors de CurseForge).
   - `updates.ts` (`checkUpdates`, lecture seule) : pour chaque projet d'`installedAddons`, le fichier le plus récent
     (plus grand id) pour la même version de Minecraft et le même chargeur (`bestFileIndex` ; Quilt accepte Fabric ;
     pack de textures / shader dont le fichier installé ne cite pas la version : dernier fichier toutes versions), puis
@@ -337,6 +341,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `downloadUrl`, `dependencies`, `packageFingerprint` ; mais `gameVersion` au lieu de `gameVersions` et `hashes`
   `{ type, value }` au lieu de `{ algo, value }`), et `latestFile` (dernier fichier connu de CurseForge, même format).
   Écrire une entrée soi-même (phase 4, appliquer une mise à jour) doit reprendre ce format : à vérifier sur une copie.
+- Identité d'un profil (constaté) : son `guid` est dans `minecraftinstance.json`, dans le `gameInstanceID` de chaque
+  entrée d'`installedAddons`, et dans le fichier caché `.curseclient` (le guid seul, 36 caractères) ; chaque entrée a
+  aussi son `instanceID`. Les zips publiés jusqu'à la 1.3.0 contiennent le `.curseclient` du publieur. `instanceIdentity.ts`
+  (`applyInstanceGuid`, `writeCurseClientFile` : un fichier caché ne s'ouvre pas en `w` sous Windows, réécrit en `r+`)
+  sert à l'installeur et à la copie d'essai ; `.curseclient` est dans `DEFAULT_EXCLUSIONS`. CurseForge ouvert ne voit
+  pas un profil créé ou copié (ni son index `MinecraftGameInstance.json`, ni le fichier du profil ne changent).
 - Mod désactivé (constaté sur les profils du PC du propriétaire) : fichier `x.jar.disabled` dans `mods` ; dans
   `installedAddons`, l'entrée du mod a `isEnabled: false`, et son `fileNameOnDisk` et ses `filePaths` prennent
   `.disabled` ; `installedFile.fileName` et `installedFile.fileNameOnDisk` gardent le nom d'origine. Le projet

@@ -22,6 +22,8 @@ export const DEFAULT_EXCLUSIONS = [
   'usercache.json',
   'usernamecache.json',
   'command_history.txt',
+  // Identité du profil du publieur (son guid) : chaque installation reçoit la sienne.
+  '.curseclient',
   INSTANCE_MARKER_FILE
 ]
 

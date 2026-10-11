@@ -12,6 +12,8 @@ export interface FakeCatalog {
   mods: CfMod[]
   files: CfFile[]
   changelogs: Record<number, string>
+  /** Contenu téléchargeable, par identifiant de fichier (adresse : `<url>/files/<id>`). */
+  downloads: Record<number, Buffer>
 }
 
 export interface FakeCurseForge {
@@ -31,7 +33,7 @@ function readBody(req: IncomingMessage): Promise<Record<string, unknown>> {
 }
 
 export async function startFakeCurseForge(): Promise<FakeCurseForge> {
-  const catalog: FakeCatalog = { mods: [], files: [], changelogs: {} }
+  const catalog: FakeCatalog = { mods: [], files: [], changelogs: {}, downloads: {} }
   const json = (res: ServerResponse, status: number, body: unknown) => {
     res.writeHead(status, { 'Content-Type': 'application/json' })
     res.end(JSON.stringify(body))
@@ -54,6 +56,14 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
         const text = catalog.changelogs[Number(changelog[1])]
         return text === undefined ? json(res, 404, {}) : json(res, 200, { data: text })
       }
+    }
+    // Téléchargements : contenu des fichiers du catalogue (`downloads`), servi sans clé comme le CDN.
+    const download = /^\/files\/(\d+)$/.exec(path)
+    if (download) {
+      const data = catalog.downloads[Number(download[1])]
+      if (!data) return json(res, 404, {})
+      res.writeHead(200, { 'Content-Type': 'application/java-archive' })
+      return void res.end(data)
     }
     if (path.startsWith('/api/')) {
       const token = req.headers['x-api-token']

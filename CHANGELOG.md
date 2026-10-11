@@ -14,6 +14,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui
   manqueraient ; `updates changelog` affiche les notes de version d’une mise à jour.
 
+### Corrections
+
+- Un modpack installé reçoit sa propre identité CurseForge, partout dans le profil : il ne peut plus être confondu
+  avec le profil du publieur d’où vient la version. Les versions créées ensuite ne contiennent plus l’identité du
+  profil du publieur.
+
 ## [1.3.0] - 2026-10-11
 
 ### Ajouts

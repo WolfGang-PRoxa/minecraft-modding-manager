@@ -11,6 +11,7 @@ import type {
   ModpackVersion
 } from '../shared/types'
 import { getCurseForgeStatus, isCurseForgeRunning, isGameRunningFrom, launchCurseForge } from '../core/curseforge'
+import { applyInstanceGuid, writeCurseClientFile } from '../core/instanceIdentity'
 import { downloadFile } from './download'
 import { pathExists, readJson, removeQuietly, renameWithRetry, writeJsonAtomic } from '../core/fsutil'
 import { applyModStates, carryOverConfigs, hashConfigFiles, readModStates } from '../core/playerChoices'
@@ -195,6 +196,8 @@ function rewriteInstance(instance: InstanceJson, targetDir: string, previous: In
     if ('playedCount' in data) data.playedCount = 0
     if ('installDate' in data) data.installDate = new Date().toISOString()
   }
+  // Le guid de ce profil partout (entrées d'installedAddons comprises), jamais celui du profil du publieur.
+  applyInstanceGuid(data, typeof data.guid === 'string' && data.guid ? data.guid : randomUUID())
   return data
 }
 
@@ -319,6 +322,7 @@ export async function installModpack(
       await writeJsonAtomic(pendingInstance, finalInstance)
       await rm(instanceFile, { force: true })
       await writeJsonAtomic(join(stagingDir, INSTANCE_MARKER_FILE), marker)
+      await writeCurseClientFile(stagingDir, finalInstance.guid as string)
       await renameWithRetry(stagingDir, targetDir)
       await placeInstanceFile(pendingInstance, join(targetDir, CURSEFORGE_INSTANCE_FILE))
     }
