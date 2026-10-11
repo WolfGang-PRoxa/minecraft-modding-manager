@@ -1,7 +1,8 @@
 # Le Studio
 
-Le Studio est la vue du publieur. Tu y ranges les zips de chaque version de tes modpacks ; il les numérote et met
-les releases GitHub en accord avec ton dossier, en quelques clics. Il est réservé au rôle de publieur (voir
+Le Studio est la vue du publieur. Il montre tes profils CurseForge, rangés comme dans CurseForge, chacun face au
+modpack qui en vient : tu vois d’un coup d’œil lequel a changé depuis sa dernière version. Tu y crées les versions de
+tes modpacks ; il les numérote et met les releases GitHub en accord avec ton dossier, en quelques clics. Il est réservé au rôle de publieur (voir
 [Devenir publieur](publieur.md)) et s’ouvre avec l’onglet **Studio** de la barre de titre.
 
 ## Le principe : le dossier fait foi
@@ -52,7 +53,10 @@ modpack**) et l’ignore. Les dossiers dont le nom commence par un point sont ig
 
 ## L’écran du Studio
 
-En haut, **Mes modpacks** et le chemin du dossier (un clic l’ouvre dans l’Explorateur), puis les boutons :
+À gauche, l’arborescence de tes [profils CurseForge](#tes-profils-curseforge), avec en tête **Tous mes modpacks**.
+À droite, ce que tu y as choisi : tous tes modpacks, ou un profil et son modpack.
+
+En haut de la partie droite, **Mes modpacks** et le chemin du dossier (un clic l’ouvre dans l’Explorateur), puis les boutons :
 
 - **Guide** ouvre cette page de l’aide ;
 - **Nouveau modpack** crée le dossier d’un nouveau modpack ;
@@ -115,10 +119,47 @@ remplace son image de couverture, et les autres fichiers sont ignorés.
 | **Refusé** | Zip inutilisable (voir [Ce que doit contenir un zip](versions.md#ce-que-doit-contenir-un-zip)). |
 | **Version sur CurseForge** | Cette version est celle de l’un de tes profils CurseForge. |
 
-## Ton CurseForge dans le Studio
+## Tes profils CurseForge
 
-Le Studio reconnaît, parmi tes profils CurseForge, ceux qui contiennent une version de tes modpacks : il compare
-leurs mods (nom et taille de chaque `.jar` du dossier `mods`) à ceux de chaque zip. La carte l’indique :
+La colonne de gauche reprend les dossiers dans lesquels tu ranges tes profils dans CurseForge, puis les profils
+rangés dans aucun dossier (**Sans dossier**). Un clic sur un dossier le replie ; **Chercher un profil…** filtre par
+nom de profil ou de modpack ; la flèche circulaire relit les profils (après un changement dans CurseForge).
+
+Chaque profil indique sa version de Minecraft, son mod loader et, s’il en a un, le modpack qui en vient. Une pastille
+résume son état :
+
+| Pastille | Signification |
+|---|---|
+| Verte | **À jour** : le profil a exactement les mods de la dernière version du modpack. |
+| Bleue | **Changé** : ses mods ne sont ceux d’aucune version. Tu l’as modifié depuis la dernière : de quoi créer la suivante. |
+| Orange | Il a les mods d’une version **plus ancienne** que la dernière. |
+| Grise | Son modpack n’a encore **aucune version**. |
+
+`CF` marque un profil installé depuis un modpack publié sur CurseForge ; une flèche, un profil installé par
+l’application depuis GitHub (la copie d’un joueur, jamais la source d’un modpack).
+
+Un clic sur un profil affiche son détail, l’action qui convient à son état, puis la carte de son modpack :
+
+- **Créer un modpack depuis ce profil** : demande son nom (celui du profil, par défaut), crée le modpack et zippe
+  tout de suite sa v1 ; le profil en devient la source ;
+- **Créer la vN depuis ce profil** : la version suivante, avec ce profil déjà choisi (voir
+  [Créer la version depuis CurseForge](versions.md#créer-la-version-depuis-curseforge)) ;
+- **Lier** : choisir le modpack qui vient de ce profil, s’il existe déjà ;
+- **Confirmer** : le Studio a deviné ce lien (mêmes mods qu’une version, ou même nom) ; le confirmer le garde, même si
+  le profil change ou est renommé ;
+- **Délier** retire le lien ; **Sur CurseForge** ouvre la page du modpack d’un profil installé depuis CurseForge ;
+  **Ouvrir le dossier** ouvre le dossier du profil.
+
+Créer une version depuis un profil le lie au modpack : c’est toujours le profil de la dernière version qui fait foi.
+Les modpacks dont le profil n’est pas (ou plus) dans CurseForge sont listés en bas, sous **Modpacks sans profil**.
+
+> [!NOTE]
+> L’application ne modifie jamais tes profils ni tes dossiers CurseForge : elle les lit seulement.
+
+### Sur la carte du modpack
+
+Le Studio reconnaît aussi, parmi tes profils, ceux qui contiennent une version de tes modpacks : il compare leurs
+mods (nom et taille de chaque `.jar` du dossier `mods`) à ceux de chaque zip. La carte l’indique :
 
 > Ton CurseForge contient la **v3** (profil « Hardcore Endgame »), en ligne sur GitHub.
 

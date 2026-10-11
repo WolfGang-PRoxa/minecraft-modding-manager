@@ -52,13 +52,14 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `status` | État général : dossier des modpacks, connexion GitHub, ce qui attend d’être rangé ou publié. |
 | `packs list` | Les modpacks, avec leur dernière version et son état sur GitHub. |
 | `packs show` | Un modpack en détail : fiche, réglages, versions et notes. |
-| `packs create` | Crée un modpack. |
+| `packs create` | Crée un modpack, éventuellement depuis un profil CurseForge (avec sa v1). |
 | `packs edit` | Change le nom ou la description d’un modpack. |
 | `packs settings` | [Réglages des versions](reglages.md) : fichiers exclus, mods désactivés chez les joueurs, configurations gardées. |
 | `packs notes` | Écrit les notes d’une version. |
 | `packs cover` | Change ou retire l’image d’un modpack. |
+| `packs link` | Lie un modpack au profil CurseForge d’où viennent ses versions, ou retire ce lien. |
 | `packs delete` | Supprime un modpack (dossier à la corbeille, releases retirées de GitHub). |
-| `instances list` | Les profils CurseForge du PC. |
+| `profiles list` | Les profils CurseForge du PC, rangés par dossier comme dans CurseForge, chacun face à son modpack : à jour, ou changé depuis sa dernière version. |
 | `versions create` | Crée la prochaine version d’un modpack depuis un profil CurseForge. |
 | `versions contents` | Les mods et les fichiers d’un zip. |
 | `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
@@ -70,7 +71,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :
-`mpm packs show lma-26.3`. Les paramètres obligatoires peuvent se donner sans leur nom, dans l’ordre.
+`mpm packs show lma-26.3`. Un profil CurseForge, par son nom (celui de son dossier) ou le chemin de son dossier. Les paramètres obligatoires peuvent se donner sans leur nom, dans l’ordre.
 
 **`publish apply`** demande l’empreinte que donne `publish plan` : si le dossier ou GitHub change entre les deux, la
 publication est refusée et il faut refaire l’aperçu. C’est ce qui garantit que ce qui est publié est bien ce que tu

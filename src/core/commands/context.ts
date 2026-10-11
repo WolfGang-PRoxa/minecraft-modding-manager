@@ -23,6 +23,13 @@ export interface ContextOptions {
   onAnalyzing?(fileName: string | null): void
 }
 
+/** Dossier Instances de CurseForge : réglage de l'application, logs de CurseForge, sinon l'emplacement par défaut. */
+async function instancesDir(): Promise<string> {
+  const { dir } = await resolveInstancesDir(await getSettings())
+  if (!existsSync(dir)) throw new StudioError(`Dossier Instances de CurseForge introuvable : ${dir}`)
+  return dir
+}
+
 /** Dossier des modpacks : imposé, sinon celui de l'application, sinon ~/Modpacks s'il existe. */
 async function findWorkspaceDir(forced?: string): Promise<string | null> {
   if (forced) return resolve(forced)
@@ -48,12 +55,8 @@ export async function createCommandRuntime(options: ContextOptions): Promise<{
     getCredential: () => resolveCredential({ dotenvDir: options.dotenvDir }),
     onAnalyzing: options.onAnalyzing,
     trashItem: moveToRecycleBin,
+    getInstancesDir: () => instancesDir(),
     ...operationTools(options.holder)
   })
-  const instancesDir = async () => {
-    const { dir } = await resolveInstancesDir(await getSettings())
-    if (!existsSync(dir)) throw new StudioError(`Dossier Instances de CurseForge introuvable : ${dir}`)
-    return dir
-  }
   return { service, context: (extra) => ({ service, instancesDir, ...extra }) }
 }

@@ -10,6 +10,7 @@ import type {
   PackView,
   PublishProgress,
   PublishResult,
+  PublisherLibrary,
   RangerOrders,
   RangerPlan,
   StudioOverview,
@@ -22,11 +23,13 @@ import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
 import { pathExists } from '../fsutil'
 import type { Journal } from '../journal'
+import { listGroups, listProfiles, readProfile } from '../profiles'
 import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, StudioError, type CachedAnalysis } from './analyze'
 import { findExcludedInZip, stripExcludedFromZip, zipInstance } from './archive'
 import { previewZipEntry, readZipContents } from './contents'
 import { GitHubClient } from './githubApi'
+import { buildLibrary } from './library'
 import { applyPlan, computePlan, fetchRemoteState, highestRemoteNumber, type InternalPlan, type RemoteState } from './sync'
 import {
   applyRanger,
@@ -92,6 +95,8 @@ export interface StudioServiceOptions {
   lock?: OperationLock
   /** Journal des opérations d'écriture. */
   journal?: Journal
+  /** Dossier Instances de CurseForge (profils du publieur). */
+  getInstancesDir?(): Promise<string>
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -330,6 +335,7 @@ export class StudioService {
       name: pack.meta.name,
       description: pack.meta.description,
       coverUrl: this.options.coverUrl?.(pack) ?? null,
+      profile: pack.meta.profile,
       settings: {
         exclude: pack.meta.exclude,
         disabledMods: pack.meta.disabledMods,
@@ -583,6 +589,76 @@ export class StudioService {
     )
   }
 
+  /** Crée un modpack depuis un profil CurseForge, avec sa v1 : le profil devient sa source. */
+  createPackFromProfile(
+    name: string,
+    profilePath: string,
+    includeSaves: boolean,
+    onProgress: (done: number, total: number) => void,
+    signal: AbortSignal
+  ): Promise<{ folder: string; fileName: string }> {
+    return this.exclusive(
+      `la création du modpack ${name.trim()} depuis CurseForge`,
+      async () => {
+        this.requireWorkspace()
+        const profile = await this.profileAt(profilePath)
+        const folder = await createPack((await this.scan())!, name)
+        const fileName = await this.zipNextVersion(folder, profile, includeSaves, onProgress, signal)
+        return { folder, fileName }
+      },
+      ({ folder, fileName }) => ({ ok: true, detail: `${folder}/${fileName}` })
+    )
+  }
+
+  private async profileAt(path: string) {
+    const profile = await readProfile(path)
+    if (!profile) throw new StudioError(`${path} n’est pas un profil CurseForge (minecraftinstance.json absent ou illisible).`)
+    return profile
+  }
+
+  /** Zippe le profil comme prochaine version du modpack, et le retient comme source du modpack. */
+  private async zipNextVersion(
+    folder: string,
+    profile: { path: string; guid: string | null; name: string },
+    includeSaves: boolean,
+    onProgress: (done: number, total: number) => void,
+    signal: AbortSignal
+  ): Promise<string> {
+    const workspace = (await this.scan())!
+    const pack = workspace.packs.find((p) => p.folder === folder)
+    if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
+    if (pack.packFileError) throw new StudioError(pack.packFileError)
+    const number = nextVersionNumber(pack)
+    const fileName = versionFileName(pack.folder, number)
+    await zipInstance(profile.path, join(pack.dir, fileName), { includeSaves, exclude: pack.meta.exclude, onProgress, signal })
+    await writePackFile(pack.dir, { ...pack.meta, lastVersion: number, profile: { guid: profile.guid, name: profile.name } })
+    return fileName
+  }
+
+  /** Lie un modpack au profil CurseForge d'où viennent ses versions, ou retire le lien (null). */
+  async linkProfile(folder: string, profilePath: string | null): Promise<void> {
+    const profile = profilePath ? await this.profileAt(profilePath) : null
+    const label = profile ? `le lien de ${folder} au profil ${profile.name}` : `le retrait du lien de ${folder}`
+    await this.logged(label, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      await writePackFile(dir, { ...meta, profile: profile ? { guid: profile.guid, name: profile.name } : null })
+    })
+  }
+
+  /** Les profils CurseForge du publieur, rangés comme dans CurseForge, face à ses modpacks. */
+  async library(): Promise<PublisherLibrary> {
+    const overview = await this.overview()
+    let instancesDir: string | null = null
+    try {
+      instancesDir = (await this.options.getInstancesDir?.()) ?? null
+    } catch (err) {
+      return { ...buildLibrary(overview.packs, [], [], null), error: describeError(err) }
+    }
+    if (!instancesDir) return buildLibrary(overview.packs, [], [], null)
+    const [profiles, groups] = await Promise.all([listProfiles(instancesDir), listGroups()])
+    return buildLibrary(overview.packs, profiles, groups, instancesDir)
+  }
+
   async updatePackInfo(folder: string, info: { name: string; description: string }): Promise<void> {
     const name = info.name.trim().replace(/\s+/g, ' ')
     if (!name) throw new StudioError('Le nom ne peut pas être vide.')
@@ -634,20 +710,8 @@ export class StudioService {
       `la création d’une version de ${folder}`,
       async () => {
         this.requireWorkspace()
-        const workspace = (await this.scan())!
-        const pack = workspace.packs.find((p) => p.folder === folder)
-        if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
-        if (pack.packFileError) throw new StudioError(pack.packFileError)
-        const number = nextVersionNumber(pack)
-        const fileName = versionFileName(pack.folder, number)
-        await zipInstance(instancePath, join(pack.dir, fileName), {
-          includeSaves,
-          exclude: pack.meta.exclude,
-          onProgress,
-          signal
-        })
-        await writePackFile(pack.dir, { ...pack.meta, lastVersion: number })
-        return fileName
+        const profile = await this.profileAt(instancePath)
+        return this.zipNextVersion(folder, profile, includeSaves, onProgress, signal)
       },
       (fileName) => ({ ok: true, detail: fileName })
     )

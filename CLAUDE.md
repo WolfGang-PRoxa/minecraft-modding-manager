@@ -105,6 +105,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `modsSignature.ts` (Node pur) : empreinte des mods d'une instance (nom et taille de chaque `.jar` posé dans
     `mods`), calculée à l'identique pour un zip (`analyze.ts`) et pour un profil CurseForge (`profiles.ts`,
     `listProfiles`, canal `curseforge:profiles`). Relu à chaque fois : ~30 ms pour 29 profils et 2 800 mods.
+  - `profiles.ts` : seule lecture des profils (`listProfiles`, `readProfile` : nom du dossier, `guid`, `groupId`,
+    version, chargeur, mods actifs et leur empreinte, `projectID` → `curseforgeProjectId`, marqueur de l'app →
+    `installedPack`), champs de `minecraftinstance.json` gardés en cache tant que date et taille ne changent pas (le
+    fichier d'ATM10 pèse 3 Mo). `listGroups` : dossiers de CurseForge (`groups.json`, Minecraft seulement). Lecture
+    seule : l'app n'écrit jamais dans les profils ni dans les fichiers de CurseForge.
   - `zip.ts` (yauzl, protection zip-slip, accepte un zip avec dossier racine), `fsutil.ts`, `powershell.ts`
     (`powershell` : script sans fenêtre, données par stdin ; `moveToRecycleBin`).
   - `lock.ts` (`OperationLock`) et `journal.ts` (`Journal`), créés par `operationTools(holder)` (`operations.ts`) à
@@ -134,6 +139,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     cherchés pour des fichiers exclus (`findExcluded`, mémorisé) : avertissement sur la ligne et dans le plan
     (`annotatePlan`). `settings.ts` : dossier des modpacks (repris une fois de l'ancien
     `%APPDATA%\Modpack Studio\studio-settings.json`).
+  - `library.ts` (`buildLibrary`, pur) : la vue du publieur (`PublisherLibrary`) : dossiers de CurseForge puis « Sans
+    dossier », chaque profil face au modpack qui en vient (`pack.json` `profile` : guid, sinon nom ; à défaut deviné :
+    mêmes mods qu'une version, sinon même nom ; jamais un profil `installedPack`) et son état (`unlinked`,
+    `no-version`, `up-to-date`, `older`, `changed` : empreinte des mods comparée aux versions). Service :
+    `library()`, `linkProfile`, `createPackFromProfile` (modpack + v1, un seul verrou) ; `zipInstance` enregistre le
+    profil zippé comme source (`zipNextVersion`).
 - `src/core/commands/` — registre des commandes (`registry.ts` : `command({ name, summary, description, params: zod,
   kind: read | write | destructive, run, print })`, `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP
   `packs_list`. `context.ts` (`createCommandRuntime`) construit le service hors de la fenêtre : publie d'office en
@@ -168,6 +179,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `PackBadges` affiche « Version sur CurseForge : vN », `CurseForgeNote` la phrase du studio.
   `components/ReportDialog.tsx` : formulaire « Signaler un problème » (bouton de `TitleBar` et de Paramètres → À
   propos), remonté à chaque ouverture.
+  `studio/Profiles.tsx` : arborescence des profils (`ProfilesSidebar`, dossiers repliés gardés en `localStorage`),
+  `ProfileDetail` (état et action : créer le modpack, créer la version suivante, lier, confirmer un lien deviné) et
+  `UnlinkedPackDetail` ; `useStudio.selection` (`all` / `profile` / `pack`), `useStudio.library` relu avec l'aperçu.
+  `StudioView` : deux colonnes, chacune avec son défilement. `FromProfileDialog` (PackDialogs) ; `ImportDialog`
+  accepte un profil déjà choisi.
   `studio/PackSettingsDialog.tsx` : « Réglages des versions » d'un modpack (onglets Fichiers exclus : arborescence du
   zip le plus récent à cocher ; Mods désactivés ; Configurations des joueurs), et `StripDialog` (« Retirer du zip »).
   Le bouton **Réglages** et les pastilles de `SettingsSummary` de `PackCard` l'ouvrent. `studio/fileTree.ts` :
@@ -258,7 +274,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   étapes `delete` du plan correspondant sont appliquées (`applyPlan`).
   Seule exception : un modpack ou une version en erreur n'est jamais touché sur GitHub.
 - Zip rangé : `<Dossier>-v<N>.zip` (N entier). `pack.json` garde l'`id` (figé), le nom, la description, les notes
-  par version et `lastVersion` : un numéro n'est jamais réutilisé. Il garde aussi les réglages des versions : les
+  par version et `lastVersion` : un numéro n'est jamais réutilisé ; `profile` (`guid`, `name`) : le profil CurseForge
+  source, écrit seulement s'il est connu. Il garde aussi les réglages des versions : les
   exclusions s'appliquent aux zips créés ensuite depuis CurseForge (ou nettoyés avec « Retirer du zip »), jamais à
   un zip déjà publié ; les mods désactivés et `keepPlayerConfigs` passent par le `modpack.json` de toutes les versions.
 - Release de modpack : tag `pack-<id>-v<N>`, titre `<nom> v<N>`, fichiers `<id>-<N>.zip` (contenu du dossier
@@ -292,6 +309,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   (d'après les fiches de processus publiées en ligne, pas encore observé sur un PC).
 - Lancer CurseForge alors qu'il tourne déjà remet simplement sa fenêtre au premier plan.
 - UID Overwolf de CurseForge : `cchhcaiapeikjbdbpfplgmpobbcdkdaphclbmkbj`.
+- Dossiers de profils (version Overwolf, constaté) : `%LOCALAPPDATA%\Overwolf\Curse\GameInstances\groups.json`, tableau
+  `{ id, gameId: 432, name, createdAt, updatedAt }`, un seul niveau ; un profil y est rangé par le `groupId` de son
+  `minecraftinstance.json` (absent : aucun dossier). `MinecraftGameInstance.json`, à côté (26 Mo), est l'index de
+  CurseForge : ne jamais y écrire. Chaque profil a un `guid` stable ; `projectID` ≠ 0 = installation d'un modpack de
+  CurseForge. Application autonome : emplacement de `groups.json` supposé (`%APPDATA%\CurseForge\GameInstances`).
 - Mod désactivé (constaté sur les profils du PC du propriétaire) : fichier `x.jar.disabled` dans `mods` ; dans
   `installedAddons`, l'entrée du mod a `isEnabled: false`, et son `fileNameOnDisk` et ses `filePaths` prennent
   `.disabled` ; `installedFile.fileName` et `installedFile.fileNameOnDisk` gardent le nom d'origine. Le projet

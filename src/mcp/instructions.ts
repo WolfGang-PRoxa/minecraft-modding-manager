@@ -7,8 +7,14 @@ Méthode :
 - Commence par status (refresh: true si GitHub compte), puis packs_list.
 - Le dossier des modpacks fait foi : chaque modpack est un dossier (pack.json + zips Dossier-vN.zip). Une release
   GitHub dont le zip n'est plus dans le dossier est supprimée à la publication suivante.
-- Nouvelle version : instances_list (profils CurseForge du PC), versions_create (zippe le profil, sans les mondes ni les
-  fichiers exclus), packs_notes (notes de version en Markdown, en français, pour les joueurs), publish_plan.
+- profiles_list montre les profils CurseForge du PC, rangés par dossier comme dans CurseForge, chacun face au modpack
+  qui en vient : state « changed » = le publieur a modifié le profil depuis la dernière version, il y a une version à
+  créer. Un lien « guessed » se confirme avec packs_link. Les profils marqués modpack CurseForge (curseforgeProjectId)
+  ou installés par l'application (installedPack) ne sont pas des sources : n'en fais pas des modpacks sans demander.
+- Nouvelle version : versions_create (zippe le profil, sans les mondes ni les fichiers exclus ; le profil devient la
+  source du modpack), packs_notes (notes de version en Markdown, en français, pour les joueurs : ce qui a changé depuis
+  la version précédente, d'après versions_contents des deux zips), publish_plan. Nouveau modpack depuis un profil :
+  packs_create avec profile (crée aussi la v1).
 - Publier : publish_plan, montre le plan au publieur (surtout les suppressions), puis publish_apply avec l'empreinte du
   plan, seulement avec son accord ou s'il t'a délégué cette publication. Une empreinte périmée = refaire publish_plan.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).

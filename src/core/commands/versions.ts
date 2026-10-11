@@ -1,57 +1,34 @@
-import { isAbsolute, join } from 'node:path'
 import { z } from 'zod'
-import { pathExists } from '../fsutil'
 import { StudioError } from '../studio/analyze'
-import { listInstances } from '../studio/archive'
-import { packOf, packParam } from './packs'
+import { findProfile, packOf, packParam, profileParam } from './refs'
 import { command } from './registry'
 
 const fileParam = z.string().min(1).describe('Nom du zip dans le dossier du modpack (par exemple Mon_Pack-v3.zip).')
-
-export const instancesList = command({
-  name: 'instances list',
-  summary: 'Liste les profils CurseForge du PC (dossier Instances), le plus récemment joué en premier.',
-  params: z.object({}),
-  kind: 'read',
-  async run(_params, ctx) {
-    const dir = await ctx.instancesDir()
-    return { dir, instances: await listInstances(dir) }
-  },
-  print: ({ dir, instances }) =>
-    [`Dossier Instances : ${dir}`, ...instances.map((i) => `${i.name} — ${i.minecraftVersion ?? '?'} · ${i.modLoader ?? '?'} · ${i.modCount ?? '?'} mods`)].join('\n')
-})
 
 export const versionsCreate = command({
   name: 'versions create',
   summary: 'Crée la prochaine version d’un modpack en zippant un profil CurseForge.',
   description:
     'Les données du joueur (mondes, captures, journaux…) et les fichiers exclus du modpack ne sont pas zippés. ' +
-    'La version reste locale tant qu’elle n’est pas publiée (« publish plan » puis « publish apply »).',
+    'La version reste locale tant qu’elle n’est pas publiée (« publish plan » puis « publish apply »). Le profil ' +
+    'devient la source du modpack (« profiles list » compare ensuite ses mods à ceux des versions).',
   params: z.object({
     pack: packParam,
-    instance: z.string().min(1).describe('Le profil CurseForge : son nom dans le dossier Instances, ou un chemin absolu.'),
+    profile: profileParam,
     includeSaves: z.boolean().optional().describe('Inclure les mondes (dossier saves).')
   }),
   kind: 'write',
-  async run({ pack: ref, instance, includeSaves }, ctx) {
+  async run({ pack: ref, profile: profileRef, includeSaves }, ctx) {
     const pack = await packOf(ctx, ref)
-    let path = instance
-    if (!isAbsolute(instance)) {
-      const dir = await ctx.instancesDir()
-      const found = (await listInstances(dir)).find((i) => i.name.toLowerCase() === instance.trim().toLowerCase())
-      if (!found) throw new StudioError(`Profil CurseForge introuvable dans ${dir} : « ${instance} ».`)
-      path = found.path
-    } else if (!(await pathExists(join(instance, 'minecraftinstance.json')))) {
-      throw new StudioError(`${instance} n’est pas un profil CurseForge (minecraftinstance.json absent).`)
-    }
+    const profile = await findProfile(ctx, profileRef)
     const fileName = await ctx.service.zipInstance(
       pack.folder,
-      path,
+      profile.path,
       includeSaves ?? false,
       (done, total) => ctx.progress('Création du zip', done, total),
       ctx.signal
     )
-    return { folder: pack.folder, file: fileName, instance: path }
+    return { folder: pack.folder, file: fileName, profile: profile.name }
   },
   print: ({ folder, file }) => `${file} créé dans ${folder}.`
 })

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { ActionResult, StudioOverview } from '../../../shared/studio'
+import type { ActionResult, PublisherLibrary, StudioOverview } from '../../../shared/studio'
 import type { ToastItem } from '../components/Toasts'
 import { useStore } from '../store'
 import type { SettingsTab } from './PackSettingsDialog'
@@ -11,7 +11,10 @@ export type Dialog =
   /** Retirer d'un zip les fichiers exclus dans les réglages ; `label` comme pour « contents ». */
   | { kind: 'strip'; folder: string; fileName: string; label: string }
   | { kind: 'notes'; folder: string; version: number }
-  | { kind: 'import'; folder: string }
+  /** Créer la version suivante depuis CurseForge ; `profilePath` : profil déjà choisi. */
+  | { kind: 'import'; folder: string; profilePath?: string }
+  /** Créer un modpack (et sa v1) depuis un profil CurseForge. */
+  | { kind: 'from-profile'; profilePath: string; profileName: string }
   | { kind: 'ranger' }
   | { kind: 'publish' }
   | { kind: 'delete'; target: DeleteTarget }
@@ -24,8 +27,14 @@ export type DeleteTarget =
   | { type: 'pack'; folder: string }
   | { type: 'releases'; name: string; versions: string[]; tags: string[]; orphan: boolean }
 
+/** Ce que montre la vue Studio à côté de l'arborescence : tous les modpacks, un profil CurseForge, ou un modpack. */
+export type Selection = { kind: 'all' } | { kind: 'profile'; path: string } | { kind: 'pack'; folder: string }
+
 interface StudioState {
   overview: StudioOverview | null
+  /** Profils CurseForge du publieur face à ses modpacks (null avant la première lecture). */
+  library: PublisherLibrary | null
+  selection: Selection
   /** Nombre de lectures du dossier en cours. */
   pending: number
   checkingGitHub: boolean
@@ -34,6 +43,7 @@ interface StudioState {
 
   init(): Promise<void>
   refresh(options?: { remote?: boolean }): Promise<void>
+  select(selection: Selection): void
   openDialog(dialog: Dialog): void
   closeDialog(): void
   /** Affiche l'erreur d'une action du studio ; renvoie true si elle a réussi. */
@@ -54,6 +64,8 @@ let initialized = false
 
 export const useStudio = create<StudioState>((set, get) => ({
   overview: null,
+  library: null,
+  selection: { kind: 'all' },
   pending: 0,
   checkingGitHub: false,
   analyzing: null,
@@ -74,12 +86,21 @@ export const useStudio = create<StudioState>((set, get) => ({
     try {
       // Chaque réponse est appliquée à son arrivée : une vérification de GitHub plus lente
       // qu'une simple relecture du dossier apporte quand même le dernier état de GitHub.
+      const library = window.studio.getLibrary().then(
+        (library) => set({ library }),
+        () => {}
+      )
       set({ overview: await window.studio.getOverview({ refreshRemote: remote }) })
+      await library
     } catch (err) {
       get().pushToast({ kind: 'error', title: 'Lecture du dossier impossible', message: errorMessage(err) })
     } finally {
       set((s) => ({ pending: s.pending - 1, checkingGitHub: remote ? false : s.checkingGitHub }))
     }
+  },
+
+  select(selection) {
+    set({ selection })
   },
 
   openDialog(dialog) {

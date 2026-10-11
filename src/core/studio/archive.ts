@@ -4,8 +4,8 @@ import { readdir, stat } from 'node:fs/promises'
 import { extname, join, relative } from 'node:path'
 import { CURSEFORGE_INSTANCE_FILE } from '../../shared/config'
 import { DEFAULT_EXCLUSIONS, exclusionMatcher } from '../../shared/exclusions'
-import type { CurseForgeInstanceInfo, ExcludedInZip } from '../../shared/studio'
-import { readJson, removeQuietly, renameWithRetry } from '../fsutil'
+import type { ExcludedInZip } from '../../shared/studio'
+import { removeQuietly, renameWithRetry } from '../fsutil'
 import { findRootPrefix, openEntry, openZip, readEntries } from '../zip'
 import { MAX_ASSET_SIZE, StudioError } from './analyze'
 
@@ -15,36 +15,6 @@ const STORED_EXTENSIONS = new Set(['.jar', '.zip', '.png', '.jpg', '.jpeg', '.og
 const stored = (path: string) => STORED_EXTENSIONS.has(extname(path).toLowerCase())
 
 const TOO_LARGE = 'Le zip dépasse 2 Go, la limite de GitHub. Retire des fichiers de l’instance (shaders, packs de ressources…).'
-
-async function countJars(dir: string): Promise<number | null> {
-  const names = await readdir(join(dir, 'mods')).catch(() => null)
-  return names ? names.filter((n) => n.toLowerCase().endsWith('.jar')).length : null
-}
-
-/** Instances CurseForge du dossier Instances, la plus récemment jouée en premier. */
-export async function listInstances(instancesDir: string): Promise<CurseForgeInstanceInfo[]> {
-  const entries = await readdir(instancesDir, { withFileTypes: true }).catch(() => [])
-  const instances: CurseForgeInstanceInfo[] = []
-  for (const entry of entries) {
-    if (!entry.isDirectory()) continue
-    const path = join(instancesDir, entry.name)
-    const json = await readJson<Record<string, unknown>>(join(path, CURSEFORGE_INSTANCE_FILE))
-    if (!json) continue
-    const loader = json.baseModLoader as { name?: unknown } | null | undefined
-    const lastPlayed = typeof json.lastPlayed === 'string' && !json.lastPlayed.startsWith('0001') ? json.lastPlayed : null
-    instances.push({
-      name: entry.name,
-      path,
-      minecraftVersion: typeof json.gameVersion === 'string' ? json.gameVersion : null,
-      modLoader: typeof loader?.name === 'string' ? loader.name : null,
-      modCount: await countJars(path),
-      lastPlayed
-    })
-  }
-  return instances.sort(
-    (a, b) => (b.lastPlayed ?? '').localeCompare(a.lastPlayed ?? '') || a.name.localeCompare(b.name, 'fr')
-  )
-}
 
 async function collectFiles(root: string, excludes: string[]): Promise<Array<{ path: string; rel: string; size: number }>> {
   const isExcluded = exclusionMatcher(excludes)

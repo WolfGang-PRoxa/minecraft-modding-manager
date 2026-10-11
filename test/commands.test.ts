@@ -83,8 +83,8 @@ describe('commandes', () => {
     const ctx = runtime.context({ progress: () => {}, signal: new AbortController().signal })
     const run = (name: string, params: Record<string, unknown>) => byName(name).run(byName(name).params.parse(params), ctx)
 
-    assert.deepEqual(await run('packs create', { name: 'Mon Pack' }), { folder: 'Mon_Pack' })
-    const created = (await run('versions create', { pack: 'mon pack', instance: 'mon profil' })) as { file: string }
+    assert.deepEqual(await run('packs create', { name: 'Mon Pack' }), { folder: 'Mon_Pack', file: null })
+    const created = (await run('versions create', { pack: 'mon pack', profile: 'mon profil' })) as { file: string }
     assert.equal(created.file, 'Mon_Pack-v1.zip')
     const settings = (await run('packs settings', { pack: 'Mon_Pack', disabledMods: ['Sodium'] })) as { disabledMods: unknown[] }
     assert.deepEqual(settings.disabledMods, [{ addonId: 394468, file: 'sodium-1.0.jar', name: 'Sodium' }])

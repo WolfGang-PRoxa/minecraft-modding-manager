@@ -241,14 +241,14 @@ function InstanceRow({
   )
 }
 
-export function ImportDialog({ folder }: { folder: string }) {
+export function ImportDialog({ folder, profilePath }: { folder: string; profilePath?: string }) {
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const openDialog = useStudio((s) => s.openDialog)
   const pushToast = useStudio((s) => s.pushToast)
   const refresh = useStudio((s) => s.refresh)
   const [data, setData] = useState<{ dir: string; instances: CurseForgeInstanceInfo[] } | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(profilePath ?? null)
   const [includeSaves, setIncludeSaves] = useState(false)
   const [running, setRunning] = useState(false)
   const [progress, setProgress] = useState<ZipProgress | null>(null)
@@ -371,6 +371,90 @@ export function ImportDialog({ folder }: { folder: string }) {
           </button>
         )}
       </p>
+    </Modal>
+  )
+}
+
+/** Crée un modpack depuis un profil CurseForge : son dossier, sa fiche, sa v1, et le lien vers le profil. */
+export function FromProfileDialog({ profilePath, profileName }: { profilePath: string; profileName: string }) {
+  const close = useStudio((s) => s.closeDialog)
+  const pushToast = useStudio((s) => s.pushToast)
+  const refresh = useStudio((s) => s.refresh)
+  const select = useStudio((s) => s.select)
+  const [name, setName] = useState(profileName.replace(/[~]/g, '').trim())
+  const [includeSaves, setIncludeSaves] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [progress, setProgress] = useState<ZipProgress | null>(null)
+  useEffect(() => window.studio.onZipProgress(setProgress), [])
+
+  async function create() {
+    setRunning(true)
+    setProgress(null)
+    try {
+      const result = await window.studio.createPackFromProfile(name, profilePath, includeSaves)
+      if (result.ok) {
+        pushToast({ kind: 'success', title: `Modpack « ${name.trim()} » créé`, message: 'Sa v1 est prête : ajoute ses notes, puis publie.' })
+        close()
+        select({ kind: 'profile', path: profilePath })
+      } else {
+        pushToast({ kind: 'error', title: 'Modpack non créé', message: result.error })
+      }
+    } catch (err) {
+      pushToast({ kind: 'error', title: 'Modpack non créé', message: errorMessage(err) })
+    } finally {
+      setRunning(false)
+      void refresh()
+    }
+  }
+
+  return (
+    <Modal
+      title="Nouveau modpack depuis CurseForge"
+      subtitle={`Le profil « ${profileName} » devient la source du modpack : sa v1 est zippée tout de suite, sans tes mondes, logs ni captures.`}
+      onClose={close}
+      closable={!running}
+      footer={
+        running ? (
+          <>
+            <div className="flex-1">
+              <div className="mb-1.5 flex justify-between text-xs text-ink-300 tabular-nums">
+                <span>Compression…</span>
+                {progress && progress.total > 0 && (
+                  <span>
+                    {formatBytes(progress.done)} / {formatBytes(progress.total)}
+                  </span>
+                )}
+              </div>
+              <ProgressBar ratio={progress && progress.total ? progress.done / progress.total : 0} />
+            </div>
+            <Button variant="ghost" onClick={() => void window.studio.cancelZip()}>
+              Annuler
+            </Button>
+          </>
+        ) : (
+          <>
+            <label className="flex flex-1 cursor-pointer items-center gap-2.5 text-sm text-ink-200">
+              <input
+                type="checkbox"
+                checked={includeSaves}
+                onChange={(e) => setIncludeSaves(e.target.checked)}
+                className="size-4 accent-grass-400"
+              />
+              Inclure les mondes (saves)
+            </label>
+            <Button variant="ghost" onClick={close}>
+              Annuler
+            </Button>
+            <Button variant="primary" icon={FolderPlus} disabled={!name.trim()} onClick={() => void create()}>
+              Créer le modpack et sa v1
+            </Button>
+          </>
+        )
+      }
+    >
+      <Field label="Nom du modpack" hint="Affiché aux joueurs. Son identifiant publié en est tiré et ne change plus.">
+        <TextInput value={name} onChange={(e) => setName(e.target.value)} autoFocus disabled={running} />
+      </Field>
     </Modal>
   )
 }

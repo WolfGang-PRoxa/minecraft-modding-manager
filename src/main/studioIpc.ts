@@ -11,7 +11,7 @@ import { pathExists } from '../core/fsutil'
 import { operationTools } from '../core/operations'
 import { getSettings } from '../core/settings'
 import { AnalysisCache, describeError, StudioError } from '../core/studio/analyze'
-import { listInstances } from '../core/studio/archive'
+import { listProfiles } from '../core/profiles'
 import { StudioService } from '../core/studio/service'
 import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
 import { COVER_EXTENSIONS, type LocalPack } from '../core/studio/workspace'
@@ -115,6 +115,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     onAnalyzing: (fileName) => send('studio:analyzing', fileName),
     blockedBy: appUpdateTask,
     trashItem: (path) => shell.trashItem(path),
+    getInstancesDir: async () => (await resolveInstancesDir(await getSettings())).dir,
     ...operationTools('l’application')
   })
   registerCoverProtocol()
@@ -202,8 +203,12 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
 
   ipcMain.handle('studio:listInstances', async () => {
     const { dir } = await resolveInstancesDir(await getSettings())
-    return { dir, instances: await listInstances(dir) }
+    return { dir, instances: await listProfiles(dir) }
   })
+  ipcMain.handle('studio:library', () => service.library())
+  ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>
+    action(() => service.linkProfile(folder, profilePath))
+  )
   /** Progression d'une écriture de zip, envoyée au plus toutes les 120 ms. */
   const zipProgress = () => {
     let lastEmit = 0
@@ -219,6 +224,17 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     try {
       const fileName = await service.zipInstance(folder, instancePath, includeSaves, zipProgress(), zipController.signal)
       return { ok: true, fileName }
+    } catch (err) {
+      return { ok: false, error: describeError(err) }
+    } finally {
+      zipController = null
+    }
+  })
+  ipcMain.handle('studio:createPackFromProfile', async (_e, name: string, profilePath: string, includeSaves: boolean) => {
+    zipController = new AbortController()
+    try {
+      const { folder } = await service.createPackFromProfile(name, profilePath, includeSaves, zipProgress(), zipController.signal)
+      return { ok: true, folder }
     } catch (err) {
       return { ok: false, error: describeError(err) }
     } finally {

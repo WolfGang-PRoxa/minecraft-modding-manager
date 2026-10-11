@@ -2,7 +2,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, join, resolve } from 'node:path'
 import { normalizeExclusions } from '../../shared/exclusions'
 import { isValidModpackId, slugify } from '../../shared/releases'
-import type { DisabledMod, PackSettings, RangerOrders, RangerPackPlan, RangerPlan } from '../../shared/studio'
+import type { DisabledMod, PackProfileLink, PackSettings, RangerOrders, RangerPackPlan, RangerPlan } from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
 
@@ -23,6 +23,8 @@ export interface PackFile extends PackSettings {
   lastVersion: number
   /** Notes de version en Markdown, par numéro de version. */
   notes: Record<string, string>
+  /** Profil CurseForge d'où viennent ses versions (écrit seulement s'il est connu). */
+  profile: PackProfileLink | null
 }
 
 export interface LocalFile {
@@ -93,6 +95,7 @@ function defaultPackFile(folder: string): PackFile {
     description: '',
     lastVersion: 0,
     notes: {},
+    profile: null,
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -149,6 +152,7 @@ async function readPackFile(
       description: typeof data.description === 'string' ? data.description : '',
       lastVersion: Number.isInteger(data.lastVersion) && data.lastVersion! > 0 ? data.lastVersion! : 0,
       notes,
+      profile: normalizeProfileLink(data.profile),
       ...normalizePackSettings(data)
     }
     const error = isValidModpackId(meta.id)
@@ -160,8 +164,15 @@ async function readPackFile(
   }
 }
 
+export function normalizeProfileLink(value: unknown): PackProfileLink | null {
+  const link = value as Partial<PackProfileLink> | null | undefined
+  const name = typeof link?.name === 'string' ? link.name.trim() : ''
+  if (!name) return null
+  return { guid: typeof link?.guid === 'string' && link.guid.trim() ? link.guid.trim() : null, name }
+}
+
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { exclude, disabledMods, keepPlayerConfigs, ...info } = meta
+  const { exclude, disabledMods, keepPlayerConfigs, profile, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -170,6 +181,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
   await writeJsonAtomic(join(dir, PACK_FILE), {
     ...info,
     notes,
+    ...(profile ? { profile } : {}),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),
     ...(keepPlayerConfigs ? { keepPlayerConfigs } : {})

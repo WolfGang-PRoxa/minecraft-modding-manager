@@ -24,8 +24,9 @@ import { Spinner } from './Modal'
 import { ContentsDialog } from './ContentsDialog'
 import { DeleteDialog } from './DeleteDialog'
 import { PackCard } from './PackCard'
-import { ImportDialog, NewPackDialog, NotesDialog, PackInfoDialog } from './PackDialogs'
+import { FromProfileDialog, ImportDialog, NewPackDialog, NotesDialog, PackInfoDialog } from './PackDialogs'
 import { PackSettingsDialog, StripDialog } from './PackSettingsDialog'
+import { ProfileDetail, ProfilesSidebar, UnlinkedPackDetail } from './Profiles'
 import { PublishDialog } from './PublishDialog'
 import { RangerDialog } from './RangerDialog'
 import { useStore } from '../store'
@@ -264,9 +265,56 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
   )
 }
 
-function WorkspaceView({ overview }: { overview: StudioOverview }) {
+/** Ce que montre la colonne de droite : tous les modpacks, un profil CurseForge, ou un modpack sans profil. */
+function SelectionContent({ overview }: { overview: StudioOverview }) {
   const openDialog = useStudio((s) => s.openDialog)
-  const { packs, plan, strayZips, orphanPacks, toRange, settings } = overview
+  const selection = useStudio((s) => s.selection)
+  const library = useStudio((s) => s.library)
+  const { packs } = overview
+
+  if (selection.kind === 'profile') {
+    const profile = library?.folders.flatMap((f) => f.profiles).find((p) => p.path === selection.path)
+    if (profile) return <ProfileDetail key={profile.path} profile={profile} />
+  }
+  if (selection.kind === 'pack') {
+    const pack = packs.find((p) => p.folder === selection.folder)
+    if (pack) return <UnlinkedPackDetail pack={pack} />
+  }
+  return packs.length === 0 ? (
+    <div className="rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-white/[0.06]">
+      <h2 className="font-display text-2xl font-bold tracking-tight">Aucun modpack dans ce dossier</h2>
+      <p className="mx-auto mt-2 max-w-lg text-ink-300">
+        Choisis un profil CurseForge à gauche pour en faire un modpack, ou crée un sous-dossier par modpack et dépose-y
+        les zips de ses mises à jour.
+      </p>
+      <FolderTree />
+      <Button className="mt-8" variant="primary" icon={FolderPlus} onClick={() => openDialog({ kind: 'new-pack' })}>
+        Créer mon premier modpack
+      </Button>
+    </div>
+  ) : (
+    <div className="space-y-6">
+      {packs.map((pack, index) => (
+        <PackCard key={pack.folder} pack={pack} index={index} />
+      ))}
+    </div>
+  )
+}
+
+function WorkspaceView({ overview }: { overview: StudioOverview }) {
+  return (
+    <div className="flex h-full">
+      <ProfilesSidebar />
+      <div className="min-w-0 flex-1 overflow-y-auto">
+        <WorkspaceColumn overview={overview} />
+      </div>
+    </div>
+  )
+}
+
+function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
+  const openDialog = useStudio((s) => s.openDialog)
+  const { plan, strayZips, orphanPacks, toRange, settings } = overview
   const changes = plan?.actions.length ?? 0
 
   return (
@@ -375,24 +423,9 @@ function WorkspaceView({ overview }: { overview: StudioOverview }) {
         ))}
       </div>
 
-      {packs.length === 0 ? (
-        <div className="mt-10 rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-white/[0.06]">
-          <h2 className="font-display text-2xl font-bold tracking-tight">Aucun modpack dans ce dossier</h2>
-          <p className="mx-auto mt-2 max-w-lg text-ink-300">
-            Crée un sous-dossier par modpack (par exemple « Hardcore_Endgame »), puis dépose-y les zips de ses mises à jour.
-          </p>
-          <FolderTree />
-          <Button className="mt-8" variant="primary" icon={FolderPlus} onClick={() => openDialog({ kind: 'new-pack' })}>
-            Créer mon premier modpack
-          </Button>
-        </div>
-      ) : (
-        <div className="mt-8 space-y-6">
-          {packs.map((pack, index) => (
-            <PackCard key={pack.folder} pack={pack} index={index} />
-          ))}
-        </div>
-      )}
+      <div className="mt-8">
+        <SelectionContent overview={overview} />
+      </div>
     </div>
   )
 }
@@ -416,7 +449,9 @@ function Dialogs() {
     case 'notes':
       return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'import':
-      return <ImportDialog key={dialog.folder} folder={dialog.folder} />
+      return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />
+    case 'from-profile':
+      return <FromProfileDialog key={dialog.profilePath} profilePath={dialog.profilePath} profileName={dialog.profileName} />
     case 'ranger':
       return <RangerDialog />
     case 'publish':

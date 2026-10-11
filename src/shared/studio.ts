@@ -1,5 +1,5 @@
 // Types du Modpack Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
-import type { CredentialSource, RepoRef, UserRole } from './types'
+import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {
   /** Dossier qui contient un sous-dossier par modpack (null tant qu'il n'a pas été choisi). */
@@ -96,6 +96,14 @@ export interface RemoteOnlyVersion {
   draft: boolean
 }
 
+/** Le profil CurseForge d'où viennent les versions d'un modpack (pack.json). */
+export interface PackProfileLink {
+  /** Identifiant du profil (minecraftinstance.json) ; null si CurseForge n'en donne pas. */
+  guid: string | null
+  /** Nom du profil quand le lien a été fait : retrouve le profil sans guid, et l'affiche s'il a disparu. */
+  name: string
+}
+
 export interface PackView {
   folder: string
   dir: string
@@ -104,6 +112,8 @@ export interface PackView {
   description: string
   coverUrl: string | null
   settings: PackSettings
+  /** Profil CurseForge source, s'il est connu. */
+  profile: PackProfileLink | null
   /** Versions numérotées, de la plus récente à la plus ancienne. */
   versions: VersionView[]
   pending: PendingZip[]
@@ -156,6 +166,42 @@ export interface OrphanPack {
   tags: string[]
 }
 
+/**
+ * Un profil CurseForge face à son modpack :
+ * - `unlinked` : aucun modpack ne vient de ce profil ;
+ * - `no-version` : son modpack n'a encore aucune version ;
+ * - `up-to-date` : il a exactement les mods de la dernière version ;
+ * - `older` : il a les mods d'une version plus ancienne ;
+ * - `changed` : ses mods ne sont ceux d'aucune version, il y a de quoi créer la suivante.
+ */
+export type ProfileState = 'unlinked' | 'no-version' | 'up-to-date' | 'older' | 'changed'
+
+export interface ProfileView extends CurseForgeProfile {
+  pack: { folder: string; id: string; name: string } | null
+  /** `saved` : lien enregistré dans pack.json ; `guessed` : déduit (mêmes mods qu'une version, ou même nom). */
+  link: 'saved' | 'guessed' | null
+  state: ProfileState
+  /** Version dont il a exactement les mods. */
+  matchingVersion: number | null
+}
+
+/** Un dossier de CurseForge et ses profils ; `id` null : les profils rangés dans aucun dossier. */
+export interface ProfileFolder {
+  id: string | null
+  name: string
+  profiles: ProfileView[]
+}
+
+/** La vue du publieur : ses profils CurseForge, rangés comme dans CurseForge, face à ses modpacks. */
+export interface PublisherLibrary {
+  instancesDir: string | null
+  /** Les dossiers de CurseForge par ordre alphabétique, puis les profils hors dossier. */
+  folders: ProfileFolder[]
+  /** Modpacks du dossier dont le profil source n'est pas (ou plus) dans CurseForge. */
+  packsWithoutProfile: string[]
+  error: string | null
+}
+
 export interface StudioOverview {
   settings: StudioSettings
   workspaceExists: boolean
@@ -205,14 +251,7 @@ export type PublishResult =
   | { ok: true; done: number }
   | { ok: false; cancelled: boolean; error: string; done: number }
 
-export interface CurseForgeInstanceInfo {
-  name: string
-  path: string
-  minecraftVersion: string | null
-  modLoader: string | null
-  modCount: number | null
-  lastPlayed: string | null
-}
+export type CurseForgeInstanceInfo = CurseForgeProfile
 
 export interface ZipProgress {
   done: number
@@ -289,6 +328,11 @@ export interface StudioApi {
 
   listInstances(): Promise<{ dir: string; instances: CurseForgeInstanceInfo[] }>
   zipInstance(folder: string, instancePath: string, includeSaves: boolean): Promise<ActionResult & { fileName?: string }>
+  getLibrary(): Promise<PublisherLibrary>
+  /** Lie un modpack à un profil CurseForge (son dossier), ou retire le lien (null). */
+  linkProfile(folder: string, profilePath: string | null): Promise<ActionResult>
+  /** Crée un modpack depuis un profil, et sa v1 : le profil lui est lié. */
+  createPackFromProfile(name: string, profilePath: string, includeSaves: boolean): Promise<ActionResult & { folder?: string }>
   /** Retire d'un zip du modpack les fichiers exclus dans ses réglages (même progression que la création d'un zip). */
   stripExcluded(folder: string, fileName: string): Promise<ActionResult & { removed?: number }>
   cancelZip(): Promise<void>

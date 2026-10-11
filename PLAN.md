@@ -186,6 +186,13 @@ propriétaire une fois la 1.2.0 installée et connectée.)
 
 ### Phase 3 — La vue publieur : profils CurseForge (1.3.0)
 
+**État : faite le 2026-10-11.** Le Studio garde son nom et ses cartes : une colonne de gauche reprend les dossiers de
+CurseForge et leurs profils, chacun avec son état face à son modpack (à jour, changé, version plus ancienne) et
+l'action qui convient. Les installations de modpacks CurseForge sont marquées `CF`, pas masquées : certaines sont
+peut-être celles des projets du propriétaire (à relier en phase 6). Commandes `profiles list` et `packs link`,
+`packs create --profile`. Parcours vérifié dans l'application (créer depuis un profil, détecter le changement, créer
+la v2) et par les tests. Reste pour plus tard : la date de la prochaine mise à jour automatique (phase 7).
+
 - Nouvelle vue « Modpacks » (remplace la vue Studio centrée sur les zips) : arborescence **dossiers CurseForge →
   profils**, plus « Sans dossier ». Les modpacks publics installés depuis CurseForge (`projectID` ≠ 0) sont rangés à
   part ou masqués (filtre).

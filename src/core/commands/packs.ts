@@ -1,34 +1,10 @@
 import { isAbsolute } from 'node:path'
 import { z } from 'zod'
 import { formatLoader } from '../../shared/format'
-import type { DisabledMod, PackView, StudioOverview, VersionView } from '../../shared/studio'
+import type { DisabledMod, PackView, VersionView } from '../../shared/studio'
 import { StudioError } from '../studio/analyze'
+import { findProfile, packOf, packParam } from './refs'
 import { command, type CommandContext } from './registry'
-
-export const packParam = z
-  .string()
-  .min(1)
-  .describe('Le modpack : nom de son dossier, identifiant publié ou nom affiché (la casse est ignorée).')
-
-/** Retrouve un modpack par son dossier, son identifiant ou son nom. */
-export function findPack(overview: StudioOverview, ref: string): PackView {
-  const wanted = ref.trim().toLowerCase()
-  const pack =
-    overview.packs.find((p) => p.folder.toLowerCase() === wanted) ??
-    overview.packs.find((p) => p.id.toLowerCase() === wanted) ??
-    overview.packs.find((p) => p.name.toLowerCase() === wanted)
-  if (!pack) {
-    const known = overview.packs.map((p) => p.folder).join(', ') || 'aucun'
-    throw new StudioError(`Modpack introuvable : « ${ref} ». Modpacks du dossier : ${known}.`)
-  }
-  return pack
-}
-
-export async function packOf(ctx: CommandContext, ref: string): Promise<PackView> {
-  const overview = await ctx.service.overview()
-  if (!overview.settings.workspaceDir) throw new StudioError('Aucun dossier de modpacks : choisis-le dans l’application.')
-  return findPack(overview, ref)
-}
 
 const versionSummary = (v: VersionView) => ({
   number: v.number,
@@ -115,15 +91,29 @@ export const packsShow = command({
 
 export const packsCreate = command({
   name: 'packs create',
-  summary: 'Crée un modpack (son dossier et son pack.json) dans le dossier des modpacks.',
-  description: 'Son identifiant publié est tiré du nom et ne change plus. Ajoute ensuite une version avec « versions create ».',
-  params: z.object({ name: z.string().min(1).describe('Nom affiché du modpack.') }),
+  summary: 'Crée un modpack dans le dossier des modpacks, éventuellement depuis un profil CurseForge (avec sa v1).',
+  description:
+    'Son identifiant publié est tiré du nom et ne change plus. Avec profile, le profil est zippé comme v1 et devient la ' +
+    'source du modpack ; sans, ajoute ensuite une version avec « versions create ».',
+  params: z.object({
+    name: z.string().min(1).describe('Nom affiché du modpack.'),
+    profile: z.string().min(1).optional().describe('Profil CurseForge source (nom, guid ou chemin), zippé comme v1.'),
+    includeSaves: z.boolean().optional().describe('Avec profile : inclure les mondes dans la v1.')
+  }),
   kind: 'write',
-  async run({ name }, ctx) {
-    const folder = await ctx.service.createPack(name)
-    return { folder }
+  async run({ name, profile: profileRef, includeSaves }, ctx) {
+    if (!profileRef) return { folder: await ctx.service.createPack(name), file: null }
+    const profile = await findProfile(ctx, profileRef)
+    const { folder, fileName } = await ctx.service.createPackFromProfile(
+      name,
+      profile.path,
+      includeSaves ?? false,
+      (done, total) => ctx.progress('Création du zip', done, total),
+      ctx.signal
+    )
+    return { folder, file: fileName }
   },
-  print: ({ folder }) => `Modpack créé : ${folder}`
+  print: ({ folder, file }) => `Modpack créé : ${folder}${file ? ` (${file})` : ''}`
 })
 
 export const packsEdit = command({

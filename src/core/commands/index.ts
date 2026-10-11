@@ -1,8 +1,9 @@
 import { journal, status } from './general'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
+import { packsLink, profilesList } from './profiles'
 import type { Command } from './registry'
-import { instancesList, versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions'
+import { versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions'
 
 /** Toutes les commandes, dans l'ordre de l'aide. */
 export const COMMANDS = [
@@ -14,8 +15,9 @@ export const COMMANDS = [
   packsSettings,
   packsNotes,
   packsCover,
+  packsLink,
   packsDelete,
-  instancesList,
+  profilesList,
   versionsCreate,
   versionsContents,
   versionsFile,

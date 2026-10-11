@@ -121,11 +121,33 @@ export interface CurseForgeStatus {
 }
 
 /** Profil du dossier Instances de CurseForge, qu'il ait été créé par l'application ou non. */
+/** Un profil du dossier Instances de CurseForge (son dossier et son minecraftinstance.json). */
 export interface CurseForgeProfile {
+  /** Nom du dossier du profil, celui que CurseForge affiche. */
   name: string
   path: string
   /** Empreinte de ses mods (null s'il n'en a pas), à comparer à celle des versions publiées. */
   modsSignature: string | null
+  /** Identifiant du profil pour CurseForge : il ne change pas si le profil est renommé. */
+  guid: string | null
+  /** Dossier de CurseForge où le profil est rangé (CurseForgeGroup), null s'il n'est dans aucun. */
+  groupId: string | null
+  minecraftVersion: string | null
+  /** Chargeur tel que CurseForge l'écrit (« neoforge-21.1.215 »). */
+  modLoader: string | null
+  /** Mods actifs (.jar du dossier mods). */
+  modCount: number | null
+  lastPlayed: string | null
+  /** Projet CurseForge du modpack dont ce profil est une installation ; null pour un profil personnel. */
+  curseforgeProjectId: number | null
+  /** Version installée par cette application depuis GitHub (marqueur du profil), sinon null. */
+  installedPack: { id: string; version: string } | null
+}
+
+/** Un dossier de CurseForge, dans lequel l'utilisateur range ses profils (un seul niveau). */
+export interface CurseForgeGroup {
+  id: string
+  name: string
 }
 
 export interface RepoRef {

@@ -33,7 +33,9 @@ Un zip accepté peut porter des **avertissements**, affichés sous sa ligne :
 
 ## Créer la version depuis CurseForge
 
-C’est le moyen le plus simple et le plus sûr. Sur la carte du modpack, clique sur **Créer la vN depuis CurseForge** :
+C’est le moyen le plus simple et le plus sûr. Sur la carte du modpack, clique sur **Créer la vN depuis CurseForge**
+(ou, dans le [détail d’un profil](studio.md#tes-profils-curseforge), sur **Créer la vN depuis ce profil**, qui le choisit
+pour toi) :
 
 1. La fenêtre liste les profils de ton dossier `Instances`, le plus récemment joué en premier, avec leur version de
    Minecraft, leur mod loader et leur nombre de mods.
@@ -42,7 +44,8 @@ C’est le moyen le plus simple et le plus sûr. Sur la carte du modpack, clique
 4. Clique sur **Créer `<Dossier>-vN.zip`**. Une barre suit la compression ; **Annuler** l’interrompt sans rien
    laisser derrière.
 
-Le zip est créé directement dans le dossier du modpack, déjà numéroté : pas besoin de le ranger. Les données propres
+Le zip est créé directement dans le dossier du modpack, déjà numéroté : pas besoin de le ranger. Le profil devient
+la source du modpack : le Studio te dira quand il aura changé depuis cette version. Les données propres
 à ta partie sont laissées de côté :
 
 - tes mondes (`saves`), sauf si tu as coché la case ;

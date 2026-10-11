@@ -8,6 +8,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : tes **profils CurseForge**, rangés dans les mêmes dossiers que dans CurseForge, chacun face au modpack qui
+  en vient. Une pastille dit s’il est à jour ou s’il a changé depuis la dernière version, et un clic propose la suite :
+  créer la version suivante, ou créer un modpack depuis un profil (avec sa v1) en une fois.
+
 ## [1.2.0] - 2026-10-11
 
 ### Ajouts

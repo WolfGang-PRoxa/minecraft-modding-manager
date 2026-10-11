@@ -79,6 +79,10 @@ const studio: StudioApi = {
   deleteReleases: (tags) => ipcRenderer.invoke('studio:deleteReleases', tags),
 
   listInstances: () => ipcRenderer.invoke('studio:listInstances'),
+  getLibrary: () => ipcRenderer.invoke('studio:library'),
+  linkProfile: (folder, profilePath) => ipcRenderer.invoke('studio:linkProfile', folder, profilePath),
+  createPackFromProfile: (name, profilePath, includeSaves) =>
+    ipcRenderer.invoke('studio:createPackFromProfile', name, profilePath, includeSaves),
   zipInstance: (folder, instancePath, includeSaves) =>
     ipcRenderer.invoke('studio:zipInstance', folder, instancePath, includeSaves),
   stripExcluded: (folder, fileName) => ipcRenderer.invoke('studio:stripExcluded', folder, fileName),
