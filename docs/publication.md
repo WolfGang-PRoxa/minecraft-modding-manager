@@ -146,11 +146,11 @@ Minecraft, son état de modération et un lien vers sa page. Les packs serveur n
   voient plus ses nouvelles versions, et ses releases GitHub ne sont plus jamais touchées ;
 - **Retirer le lien** avec le projet.
 
-Sur la ligne de la dernière version, si son numéro dépasse le plus haut du projet, **Publier sur CurseForge** montre le nom affiché (`<nom>_V<N>.zip`), les fichiers
-joints et les notes de version, et demande le type (version stable, bêta, alpha). La version est exportée au format de
-CurseForge (la liste des mods et des fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en
-modération : la ligne affiche **En modération**, puis **Sur CurseForge** une fois acceptée (ou **Refusée par
-CurseForge**). La pastille apparaît aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis
+Sur la ligne de la dernière version, si son numéro dépasse le plus haut du projet, **Publier sur CurseForge** montre
+le nom affiché (`<nom>_V<N>.zip`), les fichiers joints, les notes de version et le bilan de ses tests, et demande le
+type (version stable, bêta, alpha). La version est exportée au format de CurseForge (la liste des mods et des
+fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en modération : la ligne affiche **En
+modération**, puis **Publiée sur CurseForge** une fois acceptée (ou **Refusée par CurseForge**). La pastille apparaît aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis
 le site : ce numéro ne s’y publie plus. Une version envoyée ne se retire que depuis le site.
 
 > [!NOTE]

@@ -8,6 +8,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Studio : sur la ligne d’une version, le nom du zip n’est plus coupé. Les pastilles (GitHub, CurseForge, tests)
+  passent sous le nom, et les boutons dessous quand la fenêtre est étroite. La pastille d’une version en ligne sur le
+  site devient **Publiée sur CurseForge**, pour ne plus la confondre avec **Version sur CurseForge** (la version est
+  dans tes profils).
+
 ## [1.8.0] - 2026-10-19
 
 ### Ajouts

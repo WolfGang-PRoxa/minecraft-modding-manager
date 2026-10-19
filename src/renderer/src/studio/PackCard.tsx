@@ -136,10 +136,11 @@ function SettingsSummary({ pack }: { pack: PackView }) {
 
 function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="flex items-start gap-4 rounded-xl px-4 py-3 transition hover:bg-white/[0.03]">
+    <div className="flex flex-wrap items-start gap-x-4 gap-y-2 rounded-xl px-4 py-3 transition hover:bg-white/[0.03]">
       <div className="w-14 shrink-0 pt-0.5">{badge}</div>
-      <div className="min-w-48 flex-1">{children}</div>
-      {aside && <div className="flex flex-wrap items-center justify-end gap-2">{aside}</div>}
+      {/* Le nom garde au moins cette largeur : faute de place, les actions passent dessous. */}
+      <div className="min-w-72 flex-1 basis-72">{children}</div>
+      {aside && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{aside}</div>}
     </div>
   )
 }
@@ -246,21 +247,6 @@ function VersionRow({
       badge={<VersionBadge>v{version.number}</VersionBadge>}
       aside={
         <>
-          {present.length > 0 && (
-            <Pill
-              className="bg-curseforge/15 text-curseforge ring-curseforge/30"
-              title={present.map(describePresence).join('\n')}
-            >
-              Version sur CurseForge
-            </Pill>
-          )}
-          <TestsPill tests={version.tests} showUntested={version.number === pack.versions[0]?.number} />
-          <CurseForgeVersionStatus pack={pack} version={version} curseforge={curseforge} />
-          {pack.github && (
-            <Pill className={status.className} title={version.changes.join('\n') || undefined}>
-              {status.label}
-            </Pill>
-          )}
           <Button
             size="sm"
             variant="ghost"
@@ -290,8 +276,23 @@ function VersionRow({
         </>
       }
     >
-      <p className="truncate font-medium text-ink-100 select-text">{version.fileName}</p>
+      <p className="font-medium break-all text-ink-100 select-text">{version.fileName}</p>
       <p className="mt-0.5 text-xs text-ink-400">{versionMeta(version)}</p>
+      {/* États de la version (GitHub, CurseForge, tests) sous son nom : le nom garde toute la largeur. */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {pack.github && (
+          <Pill className={status.className} title={version.changes.join('\n') || undefined}>
+            {status.label}
+          </Pill>
+        )}
+        <CurseForgeVersionStatus pack={pack} version={version} curseforge={curseforge} />
+        {present.length > 0 && (
+          <Pill className="bg-curseforge/15 text-curseforge ring-curseforge/30" title={present.map(describePresence).join('\n')}>
+            Version sur CurseForge
+          </Pill>
+        )}
+        <TestsPill tests={version.tests} showUntested={version.number === pack.versions[0]?.number} />
+      </div>
       {version.error && <Message tone="error">{version.error}</Message>}
       {version.remote === 'update' &&
         version.changes.map((change) => (
@@ -342,7 +343,7 @@ function PendingRow({ folder, zip, number }: { folder: string; zip: PendingZip; 
         </>
       }
     >
-      <p className="truncate font-medium text-ink-200 select-text">{zip.fileName}</p>
+      <p className="font-medium break-all text-ink-200 select-text">{zip.fileName}</p>
       <p className="mt-0.5 text-xs text-ink-400">
         {formatBytes(zip.size)} · {formatDate(zip.modifiedAt)}
         {number && !zip.error && ` · deviendra la v${number}`}

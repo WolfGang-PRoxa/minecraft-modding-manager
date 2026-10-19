@@ -56,7 +56,7 @@ const STATUS_TONES = {
 
 /** Pastille d'une version sur CurseForge, d'après son FileStatus. */
 function statusPill(status: number): { tone: keyof typeof STATUS_TONES; label: string } {
-  if (status === 4 || status === 10) return { tone: 'live', label: 'Sur CurseForge' }
+  if (status === 4 || status === 10) return { tone: 'live', label: 'Publiée sur CurseForge' }
   if (status === 0) return { tone: 'refused', label: 'Introuvable sur CurseForge' }
   if (status === 7) return { tone: 'refused', label: 'Supprimée' }
   if ([2, 5, 6, 15].includes(status)) return { tone: 'refused', label: 'Refusée par CurseForge' }
