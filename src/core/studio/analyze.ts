@@ -24,8 +24,13 @@ export interface CachedAnalysis extends ZipAnalysis {
   mods: AnalyzedMod[]
 }
 
-/** Limite de GitHub pour un fichier de release. */
+/** Limite de GitHub pour un fichier de release : elle ne vaut que pour les modpacks publiés sur GitHub. */
 export const MAX_ASSET_SIZE = 2 * 1024 ** 3 - 1
+
+/** Erreur d'un zip trop lourd pour GitHub, seulement si le modpack y est publié. */
+export function githubSizeError(size: number, github: boolean): string | null {
+  return github && size > MAX_ASSET_SIZE ? 'Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille.' : null
+}
 
 /** Erreur destinée à l'auteur du modpack : son message est affiché tel quel. */
 export class StudioError extends Error {}
@@ -59,11 +64,7 @@ export async function sha256File(file: string): Promise<string> {
  * Vérifie qu'un zip contient bien une instance CurseForge et en extrait les infos affichées aux joueurs.
  * Le calcul de l'empreinte ne se fait qu'une fois le contenu validé.
  */
-export async function analyzeZip(file: string, size: number): Promise<CachedAnalysis> {
-  if (size > MAX_ASSET_SIZE) {
-    throw new StudioError('Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille.')
-  }
-
+export async function analyzeZip(file: string): Promise<CachedAnalysis> {
   let zip: ZipFile
   let entries: Entry[]
   try {

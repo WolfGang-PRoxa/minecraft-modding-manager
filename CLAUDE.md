@@ -100,7 +100,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `curseforge.ts` : détection (protocole `curseforge://` dans `HKCR`, puis chemins connus Overwolf/autonome),
     lancement, dossier `Instances` (réglage > logs CurseForge > défaut), détection de Minecraft lancé, relance
     (`restartCurseForge`, canal `curseforge:restart` : ses processus fermés poliment puis de force, jamais Overwolf,
-    Minecraft ni ce qui tourne depuis le dossier du jeu ; refusée si Minecraft tourne).
+    Minecraft ni ce qui tourne depuis le dossier du jeu ; refusée si Minecraft tourne). Dans Overwolf récent,
+    CurseForge n'a pas d'exécutable à lui : c'est la page `OverwolfBrowser.exe … --uid=<uid>` (`matchCurseForgeProcess`
+    lit la ligne de commande), qui charge `Curse.Plugin.dll` (surveillance et lecture des profils) ; sa fenêtre
+    appartient à `Overwolf.exe`. Elle est arrêtée de force, puis on vérifie qu'Overwolf ne l'a pas relancée.
   - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
     `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
     Lu aussi par les scripts (`%APPDATA%\Modpack Downloader\settings.json`).
@@ -144,7 +147,9 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `trialUpdates.ts` : `applyToTrial` (copie `<profil> (essai)` + mises à jour choisies ; refusé si un essai existe ;
     sans `downloadUrl` → `skipped`) et `promoteTrial` (reporte dans l'original les entrées dont le fichier diffère :
     fichier copié depuis l'essai, état actif / désactivé de l'original gardé, entrée ajoutée avec le guid de
-    l'original). Service : `checkUpdates`, `applyUpdatesToTrial`, `promoteTrial` (dans `withCurseForgeClosed` de
+    l'original ; tout ou rien : copies dans `<essai>/.report-en-cours`, puis renommages réessayés avec anciens
+    fichiers mis de côté et `journal.json` écrit avant chaque déplacement, `minecraftinstance.json` en dernier ; un
+    échec défait tout, un report interrompu est défait au report suivant). Service : `checkUpdates`, `applyUpdatesToTrial`, `promoteTrial` (dans `withCurseForgeClosed` de
     `curseforge.ts` : fermé, écrit, rouvert ; refusé si Minecraft tourne depuis le profil ou l'essai ; essai à la
     corbeille), `discardTrial`. `TRIAL_PROFILE_SUFFIX` (shared/config) ; `library.ts` marque `trialPath` / `trialOf`,
     et une copie d'essai n'est jamais prise pour la source d'un modpack.
@@ -212,7 +217,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     l'instance, mods nommés d'après `installedAddons` de `minecraftinstance.json`, aperçu d'un fichier (texte coupé à
     256 Ko, image en `data:`, rien pour un binaire). Le service n'ouvre que des zips du dossier des modpacks.
   - `githubApi.ts` : client d'écriture (dépôt configuré), envois en streaming.
-  - `archive.ts` : zip d'une instance (`DEFAULT_EXCLUSIONS` + exclusions du modpack), fichiers exclus trouvés dans
+  - `archive.ts` : zip d'une instance (`DEFAULT_EXCLUSIONS` + exclusions du modpack ; `maxSize` : 2 Go seulement si
+    le modpack est publié sur GitHub, comme `githubSizeError` à l'analyse), fichiers exclus trouvés dans
     un zip (`findExcludedInZip`) et réécriture sans eux (`stripExcludedFromZip`, une entrée à la fois),
     `service.ts` : orchestration, verrou et journal ; les zips qui partiront à la prochaine publication sont
     cherchés pour des fichiers exclus (`findExcluded`, mémorisé) : avertissement sur la ligne et dans le plan

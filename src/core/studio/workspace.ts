@@ -15,7 +15,7 @@ import {
   type UpdateFrequency
 } from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
-import { AnalysisCache, analyzeZip, describeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
+import { AnalysisCache, analyzeZip, describeError, githubSizeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
 
 /** Métadonnées d'un modpack, gérées par le studio dans son dossier. */
 export const PACK_FILE = 'pack.json'
@@ -276,14 +276,18 @@ async function analyze(
   folder: string,
   file: LocalFile,
   cache: AnalysisCache | null,
+  /** Modpack publié sur GitHub : un zip de plus de 2 Go n'y passerait pas. */
+  github: boolean,
   onAnalyze?: (fileName: string | null) => void
 ): Promise<LocalZip> {
+  const tooLarge = githubSizeError(file.size, github)
+  if (tooLarge) return { ...file, analysis: null, error: tooLarge }
   const key = AnalysisCache.key(folder, file.size, file.mtimeMs)
   const cached = cache?.get(key)
   if (cached) return { ...file, analysis: cached, error: null }
   onAnalyze?.(file.fileName)
   try {
-    const analysis = await analyzeZip(file.path, file.size)
+    const analysis = await analyzeZip(file.path)
     cache?.set(key, analysis)
     return { ...file, analysis, error: null }
   } catch (err) {
@@ -317,11 +321,11 @@ async function scanPack(
       errors.push(`Plusieurs zips pour la v${number} (${list.map((f) => f.fileName).join(', ')}) : n’en garde qu’un.`)
       continue
     }
-    versions.push({ ...(await analyze(folder, list[0], cache, onAnalyze)), number })
+    versions.push({ ...(await analyze(folder, list[0], cache, meta.github, onAnalyze)), number })
   }
   // Analysés dès maintenant : le rangement écarte les zips invalides, et l'empreinte reste en cache après renommage.
   const pending: LocalZip[] = []
-  for (const file of unnumbered.sort(byDate)) pending.push(await analyze(folder, file, cache, onAnalyze))
+  for (const file of unnumbered.sort(byDate)) pending.push(await analyze(folder, file, cache, meta.github, onAnalyze))
 
   const coverFile = findCover(files)
   const coverSha = coverFile ? await sha256File(coverFile.path).catch(() => null) : null

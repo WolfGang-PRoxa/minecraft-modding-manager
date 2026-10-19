@@ -14,7 +14,7 @@ Le Studio analyse chaque zip dès qu’il le voit. Un zip est **refusé**, et do
 
 | Message | Cause |
 |---|---|
-| « Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille. » | GitHub limite chaque fichier d’une release à 2 Go. |
+| « Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille. » | GitHub limite chaque fichier d’une release à 2 Go. Seulement pour un modpack publié sur GitHub. |
 | « Zip illisible ou incomplet (copie encore en cours ?). » | Le zip est encore en cours de copie, ou abîmé. Attends la fin de la copie. |
 | « Zip corrompu : son contenu est illisible. » | Le zip est abîmé : recrée-le. |
 | « C’est un export CurseForge (manifest.json)… » | Un export CurseForge (`manifest.json` et `overrides`) ne contient pas les mods eux-mêmes. Zippe le dossier de l’instance, ou utilise **Créer la vN depuis CurseForge**. |
@@ -51,12 +51,17 @@ la source du modpack : le Studio te dira quand il aura changé depuis cette vers
 - tes mondes (`saves`), sauf si tu as coché la case ;
 - `screenshots`, `logs`, `crash-reports`, `backups`, `local`, `downloads`, `.mixin.out` ;
 - les données des cartes JourneyMap (`journeymap/data`) et Xaero’s (`xaero`, `xaerowaypoints`, `xaeroworldmap`) ;
+- le cache de Distant Horizons des serveurs visités (`Distant_Horizons_server_data`, souvent plusieurs Go) ;
+- les données d’Essential (`essential` : ton compte, tes amis), les enregistrements et réglages du micro de Simple
+  Voice Chat (`voicechat_recordings`, `config/voicechat/voicechat-client.properties`) et les données de JEI par monde
+  (`config/jei/world`) ;
 - `usercache.json`, `usernamecache.json`, `command_history.txt` ;
 - les fichiers propres à Modpack Manager (`.modpack-downloader.json`, image du profil) ;
 - les fichiers que tu as exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (tes options du jeu,
   tes shaders…) : la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
 
-Un zip de plus de 2 Go est refusé : retire alors des fichiers lourds du profil (shaders, packs de ressources…).
+Pour un modpack publié sur GitHub, un zip de plus de 2 Go est refusé : retire alors des fichiers lourds du profil
+(shaders, packs de ressources…). Un modpack publié seulement sur CurseForge n’a pas cette limite.
 
 ## Déposer un zip
 

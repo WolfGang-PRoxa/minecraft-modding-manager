@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { exclusionMatcher, normalizeExclusion, normalizeExclusions } from '../src/shared/exclusions'
+import { DEFAULT_EXCLUSIONS, exclusionMatcher, normalizeExclusion, normalizeExclusions } from '../src/shared/exclusions'
 
 describe('exclusions', () => {
   it('normalise un chemin saisi', () => {
@@ -25,6 +25,23 @@ describe('exclusions', () => {
     assert.equal(excluded('shaderpacks/BSL.zip'), 'shaderpacks/BSL.zip')
     assert.equal(excluded('shaderpacks/sous/BSL.zip'), null)
     assert.equal(excluded('options1.txt'), 'options1.txt')
+  })
+
+  it('laisse de côté par défaut les données du joueur connues', () => {
+    const excluded = exclusionMatcher(DEFAULT_EXCLUSIONS)
+    for (const path of [
+      'Distant_Horizons_server_data/serveur/DistantHorizons.sqlite',
+      'essential/microsoft_accounts.json',
+      'local/ftbchunks/data.snbt',
+      'voicechat_recordings/2026-10-19/a.wav',
+      'config/voicechat/voicechat-client.properties',
+      'config/jei/world/client/serveur/bookmarks.ini'
+    ]) {
+      assert.notEqual(excluded(path), null, path)
+    }
+    for (const path of ['config/voicechat/voicechat-server.properties', 'config/jei/jei-client.ini', 'mods/essential-mod.jar']) {
+      assert.equal(excluded(path), null, path)
+    }
   })
 
   it('n’exclut jamais le fichier du profil', () => {

@@ -105,8 +105,9 @@ pour la voir et y jouer. Une mise à jour dont l’auteur interdit le téléchar
 côté : fais-la dans CurseForge. Ensuite :
 
 - **`updates promote`** reporte dans ton profil les fichiers changés ou ajoutés par l’essai ; tes mondes, tes réglages
-  et tes mods désactivés restent les tiens. CurseForge est fermé le temps de l’écriture, puis rouvert (refusé si
-  Minecraft tourne depuis le profil ou son essai). L’essai part à la corbeille. Crée ensuite la nouvelle version du
+  et tes mods désactivés restent les tiens. CurseForge (y compris dans Overwolf) est fermé le temps de l’écriture, puis
+  rouvert (refusé si Minecraft tourne depuis le profil ou son essai). Tout ou rien : si un fichier reste verrouillé, le
+  profil est remis comme avant. L’essai part à la corbeille. Crée ensuite la nouvelle version du
   modpack (`versions create`) ;
 - **`updates discard`** met l’essai à la corbeille sans rien changer à ton profil.
 

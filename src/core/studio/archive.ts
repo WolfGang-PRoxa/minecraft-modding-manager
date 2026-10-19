@@ -7,14 +7,15 @@ import { DEFAULT_EXCLUSIONS, exclusionMatcher } from '../../shared/exclusions'
 import type { ExcludedInZip } from '../../shared/studio'
 import { removeQuietly, renameWithRetry } from '../fsutil'
 import { findRootPrefix, openEntry, openZip, readEntries } from '../zip'
-import { MAX_ASSET_SIZE, StudioError } from './analyze'
+import { StudioError } from './analyze'
 
 /** Fichiers déjà compressés : on les stocke tels quels pour aller plus vite. */
 const STORED_EXTENSIONS = new Set(['.jar', '.zip', '.png', '.jpg', '.jpeg', '.ogg', '.gz', '.7z'])
 
 const stored = (path: string) => STORED_EXTENSIONS.has(extname(path).toLowerCase())
 
-const TOO_LARGE = 'Le zip dépasse 2 Go, la limite de GitHub. Retire des fichiers de l’instance (shaders, packs de ressources…).'
+const TOO_LARGE =
+  'Le zip dépasse 2 Go, la limite de GitHub. Retire des fichiers de l’instance (shaders, packs de ressources…), ou publie ce modpack seulement sur CurseForge.'
 
 async function collectFiles(root: string, excludes: string[]): Promise<Array<{ path: string; rel: string; size: number }>> {
   const isExcluded = exclusionMatcher(excludes)
@@ -39,6 +40,8 @@ export interface ZipInstanceOptions {
   includeSaves: boolean
   /** Fichiers exclus dans les réglages du modpack, en plus des données propres à la partie. */
   exclude: string[]
+  /** Taille maximale du zip (modpack publié sur GitHub : sa limite, `MAX_ASSET_SIZE`) ; aucune par défaut. */
+  maxSize?: number
   onProgress?: (done: number, total: number) => void
   signal?: AbortSignal
 }
@@ -77,8 +80,7 @@ export async function zipInstance(instanceDir: string, destination: string, opti
     }
     await Promise.all([zip.finalize(), finished])
     options.signal?.throwIfAborted()
-    const { size } = await stat(partial)
-    if (size > MAX_ASSET_SIZE) throw new StudioError(TOO_LARGE)
+    if (options.maxSize !== undefined && (await stat(partial)).size > options.maxSize) throw new StudioError(TOO_LARGE)
     await renameWithRetry(partial, destination)
   } catch (err) {
     zip.abort()
@@ -196,8 +198,6 @@ export async function stripExcludedFromZip(file: string, patterns: string[], opt
       await closed
       throw err
     }
-    const { size } = await stat(partial)
-    if (size > MAX_ASSET_SIZE) throw new StudioError(TOO_LARGE)
   } catch (err) {
     await removeQuietly(partial)
     if (options.signal?.aborted) throw new StudioError('Nettoyage du zip annulé.')

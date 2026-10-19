@@ -141,12 +141,34 @@ export async function getCurseForgeStatus(settings: Settings): Promise<CurseForg
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
+interface CurseForgeProcess {
+  pid: number
+  /** Page de l'application dans Overwolf : sans fenêtre à elle (celle qu'on voit appartient à Overwolf.exe). */
+  overwolfPage: boolean
+}
+
 /**
- * Processus de CurseForge : l'application autonome et tout ce qu'elle embarque, ou l'application Overwolf (son
- * processus vit dans `Overwolf\ProcessCache\<version>\<uid>`, ses composants dans `Overwolf\Extensions\<uid>`).
- * Jamais Overwolf lui-même, ni Minecraft, ni ce qui tourne depuis le dossier du jeu (lanceur officiel…).
+ * Reconnaît un processus de CurseForge d'après son exécutable et sa ligne de commande (en minuscules, « \ »).
+ * Application autonome : tout ce qui tourne depuis ses dossiers (`roots`). Application Overwolf : un exécutable de
+ * `Overwolf\ProcessCache\<version>\<uid>` ou de `Overwolf\Extensions\<uid>`, ou, dans les versions récentes
+ * d'Overwolf, la page `OverwolfBrowser.exe … --uid=<uid>` : elle charge le module de CurseForge
+ * (`Curse.Plugin.dll`) qui surveille et lit les fichiers des profils. Jamais Overwolf lui-même (ni ses pages d'autres
+ * applications), ni Minecraft, ni ce qui tourne depuis le dossier du jeu (`gameRoot` : lanceur officiel…).
  */
-async function curseForgeProcesses(instancesDir: string): Promise<number[]> {
+export function matchCurseForgeProcess(
+  path: string,
+  commandLine: string,
+  roots: string[],
+  gameRoot: string
+): Omit<CurseForgeProcess, 'pid'> | null {
+  if (/\\javaw?\.exe$/.test(path) || path.startsWith(gameRoot)) return null
+  if (path.includes(`\\${CURSEFORGE_OVERWOLF_UID}\\`) || roots.some((root) => path.startsWith(root))) return { overwolfPage: false }
+  if (/\\overwolfbrowser\.exe$/.test(path) && commandLine.includes(`--uid=${CURSEFORGE_OVERWOLF_UID}`)) return { overwolfPage: true }
+  return null
+}
+
+/** Processus de CurseForge en cours (voir `matchCurseForgeProcess`). */
+async function curseForgeProcesses(instancesDir: string): Promise<CurseForgeProcess[]> {
   if (process.platform !== 'win32') return []
   const launcher = await findLauncher()
   // Comparés en minuscules, avec des « \ » et un « \ » final : « C:\A\B » ne doit pas couvrir « C:\A\Bis ».
@@ -158,28 +180,28 @@ async function curseForgeProcesses(instancesDir: string): Promise<number[]> {
     ...(launcher?.flavor === 'standalone' ? [dirname(launcher.command)] : [])
   ].map(folder)
   const gameRoot = folder(dirname(instancesDir))
-  const overwolfApp = `\\${CURSEFORGE_OVERWOLF_UID}\\`
   try {
+    // Ligne de commande en dernier : elle peut contenir des « | ».
     const { stdout } = await execFileAsync(
       'powershell.exe',
       [
         '-NoProfile',
         '-NonInteractive',
         '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath } | ForEach-Object { '{0}|{1}' -f $_.ProcessId, $_.ExecutablePath }"
+        "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath } | ForEach-Object { '{0}|{1}|{2}' -f $_.ProcessId, $_.ExecutablePath, $_.CommandLine }"
       ],
-      { windowsHide: true, timeout: 15_000, maxBuffer: 16 * 1024 * 1024 }
+      { windowsHide: true, timeout: 15_000, maxBuffer: 64 * 1024 * 1024 }
     )
-    const pids: number[] = []
+    const found: CurseForgeProcess[] = []
     for (const line of stdout.split(/\r?\n/)) {
-      const separator = line.indexOf('|')
-      const pid = Number(line.slice(0, separator))
-      const path = line.slice(separator + 1).trim().replace(/\//g, '\\').toLowerCase()
-      if (separator < 1 || !pid || pid === process.pid) continue
-      if (/\\javaw?\.exe$/.test(path) || path.startsWith(gameRoot)) continue
-      if (path.includes(overwolfApp) || roots.some((root) => path.startsWith(root))) pids.push(pid)
+      const [id, rawPath, ...rest] = line.split('|')
+      const pid = Number(id)
+      if (!pid || rawPath === undefined || pid === process.pid) continue
+      const path = rawPath.trim().replace(/\//g, '\\').toLowerCase()
+      const match = matchCurseForgeProcess(path, rest.join('|').toLowerCase(), roots, gameRoot)
+      if (match) found.push({ pid, ...match })
     }
-    return pids
+    return found
   } catch {
     return []
   }
@@ -232,18 +254,26 @@ export async function restartCurseForge(instancesDir: string): Promise<CurseForg
 
 /** Ferme CurseForge s'il est ouvert ; `wasRunning` dit s'il faudra le rouvrir. */
 export async function stopCurseForge(instancesDir: string): Promise<{ ok: true; wasRunning: boolean } | { ok: false; error: string }> {
-  const pids = await curseForgeProcesses(instancesDir)
-  if (pids.length === 0) return { ok: true, wasRunning: false }
-  // D'abord comme la croix de sa fenêtre ; s'il reste dans la zone de notification, de force.
-  await taskkill(pids, false)
-  let alive = await waitForExit(pids, 5000)
+  const processes = await curseForgeProcesses(instancesDir)
+  if (processes.length === 0) return { ok: true, wasRunning: false }
+  const notClosed = { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.' } as const
+  // D'abord comme la croix de sa fenêtre ; s'il reste dans la zone de notification, de force. La page de
+  // l'application Overwolf n'a pas de fenêtre à elle : elle est arrêtée de force tout de suite.
+  const windowed = processes.filter((p) => !p.overwolfPage).map((p) => p.pid)
+  if (windowed.length > 0) {
+    await taskkill(windowed, false)
+    await waitForExit(windowed, 5000)
+  }
+  let alive = processes.map((p) => p.pid).filter(isAlive)
   if (alive.length > 0) {
     await taskkill(alive, true)
     alive = await waitForExit(alive, 5000)
   }
-  if (alive.length > 0) return { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.' }
-  // Le temps pour Overwolf de constater la fermeture de l'application avant de la relancer.
+  if (alive.length > 0) return notClosed
+  // Le temps pour Overwolf de constater la fermeture de l'application avant de la relancer ; s'il l'a déjà
+  // relancée d'elle-même, elle surveillerait de nouveau les profils.
   await sleep(1000)
+  if ((await curseForgeProcesses(instancesDir)).length > 0) return notClosed
   return { ok: true, wasRunning: true }
 }
 

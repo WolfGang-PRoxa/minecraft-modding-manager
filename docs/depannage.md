@@ -176,7 +176,12 @@ Voir [Ce que doit contenir un zip](versions.md#ce-que-doit-contenir-un-zip).
 
 **« Le zip dépasse 2 Go, la limite de GitHub. »**\
 Retire du profil les fichiers lourds dont les joueurs n’ont pas besoin (shaders, packs de ressources, mondes…), ou
-exclus-les dans les [réglages du modpack](reglages.md#exclure-des-fichiers), puis recrée la version.
+exclus-les dans les [réglages du modpack](reglages.md#exclure-des-fichiers), puis recrée la version. Cette limite ne
+vaut que pour un modpack publié sur GitHub.
+
+**« « fichier.jar » est utilisé par un autre programme (CurseForge, Minecraft, antivirus ?) : report annulé… »**\
+En gardant un essai, un fichier de ton profil est resté ouvert dans un autre programme plus de quelques secondes. Rien
+n’a été changé dans ton profil : ferme Minecraft (et CurseForge s’il n’a pas été fermé), puis garde l’essai de nouveau.
 
 **« Contient N fichiers exclus dans les réglages (…) : ils seront publiés avec cette version. »**\
 Ce zip a été fait avant l’exclusion, ou préparé à la main. Clique sur **Retirer du zip** pour l’en débarrasser (voir

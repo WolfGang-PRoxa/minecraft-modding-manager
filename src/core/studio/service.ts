@@ -46,7 +46,7 @@ import { runServerTest } from '../gameTests/serverTest'
 import { checkProfileFiles } from '../gameTests/staticChecks'
 import { checkUpdates } from '../updates'
 import type { OperationLock } from '../lock'
-import { AnalysisCache, describeError, StudioError, type CachedAnalysis } from './analyze'
+import { AnalysisCache, describeError, MAX_ASSET_SIZE, StudioError, type CachedAnalysis } from './analyze'
 import { findExcludedInZip, stripExcludedFromZip, zipInstance } from './archive'
 import { previewZipEntry, readZipContents } from './contents'
 import { GitHubClient } from './githubApi'
@@ -716,7 +716,7 @@ export class StudioService {
     if (pack.packFileError) throw new StudioError(pack.packFileError)
     const number = nextVersionNumber(pack)
     const fileName = versionFileName(pack.folder, number)
-    await zipInstance(profile.path, join(pack.dir, fileName), { includeSaves, exclude: pack.meta.exclude, onProgress, signal })
+    await zipInstance(profile.path, join(pack.dir, fileName), { includeSaves, exclude: pack.meta.exclude, maxSize: pack.meta.github ? MAX_ASSET_SIZE : undefined, onProgress, signal })
     await writePackFile(pack.dir, { ...pack.meta, lastVersion: number, profile: { guid: profile.guid, name: profile.name } })
     return fileName
   }

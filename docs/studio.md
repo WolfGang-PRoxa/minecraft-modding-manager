@@ -174,8 +174,10 @@ Le détail d’un profil a une partie **Mises à jour des mods**. Elle demande l
 4. **Relancer CurseForge** : l’essai y apparaît (dans le même dossier que ton profil). Joue dessus pour vérifier que
    tout fonctionne.
 5. **Garder l’essai** reporte dans ton profil les mods, packs de textures et shaders mis à jour ; tes mondes, tes
-   réglages et tes mods désactivés restent les tiens. Ferme Minecraft avant : CurseForge est fermé le temps de
-   l’écriture, puis rouvert. L’essai part à la corbeille. Il ne reste qu’à créer la nouvelle version du modpack.
+   réglages et tes mods désactivés restent les tiens. Ferme Minecraft avant : CurseForge (y compris dans Overwolf) est
+   fermé le temps de l’écriture, puis rouvert. C’est tout ou rien : si un fichier reste utilisé par un autre programme,
+   ton profil est remis comme avant et tu peux réessayer. L’essai part à la corbeille. Il ne reste qu’à créer la
+   nouvelle version du modpack.
    **Abandonner** met l’essai à la corbeille sans rien changer à ton profil.
 
 Une seule copie d’essai à la fois par profil : garde-la ou abandonne-la avant d’en créer une autre. Dans la colonne

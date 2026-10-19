@@ -8,6 +8,19 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Studio : les versions laissent aussi de côté le cache de Distant Horizons des serveurs visités (souvent plusieurs
+  Go), les données d’Essential (compte, amis), les enregistrements et réglages du micro de Simple Voice Chat, et les
+  données de JEI par monde.
+
+### Corrections
+
+- Studio : **Garder l’essai** ferme bien CurseForge quand il tourne dans Overwolf (il restait ouvert, verrouillait des
+  fichiers du profil et pouvait réécrire sa liste de mods). Le report est désormais tout ou rien : si un fichier reste
+  utilisé par un autre programme, ton profil est remis exactement comme avant, au lieu de rester à moitié mis à jour.
+- Studio : un modpack publié seulement sur CurseForge n’est plus limité à 2 Go : cette limite est celle de GitHub.
+
 ## [1.8.1] - 2026-10-19
 
 ### Améliorations

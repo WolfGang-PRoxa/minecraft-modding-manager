@@ -19,6 +19,15 @@ export const DEFAULT_EXCLUSIONS = [
   'xaero',
   'xaerowaypoints',
   'xaeroworldmap',
+  // Cache Distant Horizons des serveurs visités (souvent plusieurs Go).
+  'Distant_Horizons_server_data',
+  // Essential : compte Microsoft, amis, cosmétiques du publieur.
+  'essential',
+  // Simple Voice Chat : enregistrements et réglages du micro (le réglage du serveur, lui, est publié).
+  'voicechat_recordings',
+  'config/voicechat/voicechat-client.properties',
+  // JEI : favoris et données par monde.
+  'config/jei/world',
   'usercache.json',
   'usernamecache.json',
   'command_history.txt',
