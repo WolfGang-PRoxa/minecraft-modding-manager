@@ -61,7 +61,7 @@ export const packsList = command({
 
 export const packsShow = command({
   name: 'packs show',
-  summary: 'Détaille un modpack : fiche, réglages des versions, toutes ses versions et leurs notes.',
+  summary: 'Détaille un modpack : fiche, réglages des versions, toutes ses versions, leurs notes et le bilan de leurs tests.',
   params: z.object({ pack: packParam }),
   kind: 'read',
   async run({ pack: ref }, ctx) {
@@ -80,7 +80,8 @@ export const packsShow = command({
         notes: v.notes,
         warnings: v.analysis?.warnings ?? [],
         changesOnGitHub: v.changes,
-        excludedFilesInside: v.excluded
+        excludedFilesInside: v.excluded,
+        tests: v.tests
       })),
       pendingZips: pack.pending,
       onlyOnGitHub: pack.remoteOnly,

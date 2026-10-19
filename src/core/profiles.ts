@@ -54,7 +54,8 @@ async function instanceFields(dir: string): Promise<InstanceFields | null> {
   return fields
 }
 
-async function modsOf(dir: string): Promise<{ count: number; signature: string | null } | null> {
+/** Nombre de mods du profil et leur empreinte (modsSignature), null sans dossier mods. */
+export async function modsOf(dir: string): Promise<{ count: number; signature: string | null } | null> {
   const modsDir = join(dir, 'mods')
   const entries = await readdir(modsDir, { withFileTypes: true }).catch(() => null)
   if (!entries) return null

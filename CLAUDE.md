@@ -150,16 +150,42 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     et une copie d'essai n'est jamais prise pour la source d'un modpack.
   - `gameTests/` : tests d'un profil. `modMetadata.ts` (`readModJar` : `fabric.mod.json` / `quilt.mod.json`,
     `META-INF/mods.toml`, `META-INF/neoforge.mods.toml` ; jar-in-jar Fabric (`jars`, `provides`) et Forge
-    (`META-INF/jarjar/*.jar`) ; `FMLModType` du manifeste = bibliothèque ; jar multi-chargeurs lu selon le chargeur du
-    profil ; `parseToml` minimal). `staticChecks.ts` (`checkProfileFiles` : doublons, dépendances obligatoires absentes,
-    mauvais chargeur ; mods du client = `environment: client`, `clientSideOnly`, ou fichier CurseForge « Client » sans
-    « Server »). `java.ts` (Java de la version : `Install/versions/<v>/<v>.json` `javaVersion`, puis
-    `Install/java/<component>`, puis JDK installés). `serverInstall.ts` (cache par chargeur dans
+    (`META-INF/jarjar/*.jar` et chemins de `META-INF/jarjar/metadata.json`, souvent `META-INF/jars/`) ; `FMLModType` du
+    manifeste = bibliothèque ; jar multi-chargeurs lu selon le chargeur précis du profil (`LoaderPreference` : Forge lit
+    `mods.toml`, NeoForge `neoforge.mods.toml`) ; `relations` : `required` / `breaks` (Fabric `breaks`, Forge
+    `incompatible`) / `conflicts` (`conflicts`, `discouraged`) avec leurs versions ; `${file.jarVersion}` lu dans
+    `Implementation-Version` ; `parseToml` minimal). `versions.ts` (prédicats Fabric ; portage de `ComparableVersion`
+    de Maven 3.8 et plages Maven pour Forge et NeoForge ; null dans le doute). `staticChecks.ts` (`checkProfileFiles` :
+    jars ignorés par le chargeur (autre chargeur, NeoForge seul dans Forge, Forge seul dans NeoForge ≥ 1.20.5) =
+    avertissement et écartés des autres vérifications ; doublons, dépendances absentes, `versionFindings` (jeu, chargeur,
+    autres mods ; Forge accepte une version voisine du jeu : 1.20 sur 1.20.1 ; un mod présent dans deux jars ou fourni
+    par un autre, comme Indium par Sodium, n'est pas vérifié) ; mods du client = `environment: client`,
+    `clientSideOnly`, ou fichier CurseForge « Client » sans « Server »). Vérifié sur les 29 profils du propriétaire
+    (2 786 mods, le 2026-10-19) : aucun faux positif. `java.ts` (Java de la version : `Install/versions/<v>/<v>.json`
+    `javaVersion`, puis `Install/java/<component>`, puis JDK installés). `serverInstall.ts` (cache par chargeur dans
     `%LOCALAPPDATA%\Modpack Manager\test-servers` : lanceur Fabric de meta.fabricmc.net, installeurs Forge / NeoForge
     `--installServer`, puis `@libraries/.../win_args.txt`). `serverTest.ts` (copie mods sans ceux du client + dossiers
-    de configuration, `eula.txt`, `server.properties` sur un port libre, attente de « Done (…s)! », `stop` ; sinon
-    rapport de plantage). `reports.ts` : dernier rapport par profil. Service : `checkProfile`, `testServer` (verrou),
-    `lastTests` ; commandes `tests check`, `tests server` ; interface `studio/ProfileTests.tsx`.
+    de configuration, `eula.txt`, `server.properties` sur un port libre, hors ligne, sans liste blanche (Minecraft 26
+    l'active), attente de « Done (…s)! », `whileRunning` puis `stop` ; sinon rapport de plantage). `logIssues.ts`
+    (`LogIssueCollector` : lignes `ERROR` / `FATAL`, `WARN` qui parlent d'un échec, exception qui suit, clé sans les
+    nombres ; `newIssues` compare deux tests). `clientLaunch.ts` (`clientArguments` : commande Java du jeu d'après
+    `Install/versions/<id>.json` et ses `inheritsFrom`, règles du lanceur (`has_custom_resolution`,
+    `is_quick_play_multiplayer`), bibliothèques dédoublonnées (celle du chargeur d'abord), jar de la version lancée,
+    joueur hors ligne (`offlineUuid`), `--quickPlayMultiplayer` sinon `--server`/`--port` ; `profileVersionId` : `id` de
+    `baseModLoader.versionJson`). `playerTest.ts` (`runPlayerTest` : serveur, puis clients `Testeur1`… dans
+    `%LOCALAPPDATA%\Modpack Manager\test-clients\<nom>` (mods en liens durs, configurations, `options.txt` allégé, sans
+    shaders), connexion lue dans le journal du serveur (« joined the game », « lost connection » avec ou sans adresse),
+    échec du chargement lu dans celui du client (Forge et Fabric affichent une fenêtre et attendent), `gamemode`,
+    `time set midnight`, `spreadplayers`, puis fin ; `unavailable` si le jeu n'est pas installé ou la mémoire manque ;
+    fenêtres passées derrière celles de l'utilisateur pendant le chargement (`sendWindowsToBack`) ; `stopProcessTrees`
+    arrête aussi les Java orphelins lancés pendant le test, comme celui de Crash Assistant). Essayé le 2026-10-19 avec
+    2 joueurs : Fabric 1.21.8 (86 s), Forge 1.20.1 79 mods (143 s), Fabric 26.3 (65 s). `reports.ts` : dernier rapport
+    par profil et par sorte (`files`, `server`, `players`), chacun avec `modsSignature` : `reportsBySignature` retrouve
+    les tests d'une version (mêmes mods), même faits sur un essai disparu ; `testVerdict` (shared) en fait le bilan
+    `VersionView.tests`, rappelé par `annotatePlan` à la publication. Service : `checkProfile`, `testServer`,
+    `testPlayers`, `testAll` (verrou), `lastTests`, `currentTests` ; commandes `tests check`, `tests server`,
+    `tests players`, `tests all` ; interface `studio/ProfileTests.tsx` (`TestsPill` sur la ligne d'une version et dans
+    la publication CurseForge).
   - `updates.ts` (`checkUpdates`, lecture seule) : pour chaque projet d'`installedAddons`, le fichier le plus récent
     (plus grand id) pour la même version de Minecraft et le même chargeur (`bestFileIndex` ; Quilt accepte Fabric ;
     pack de textures / shader dont le fichier installé ne cite pas la version : dernier fichier toutes versions), puis
@@ -210,7 +236,9 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     dernière version).
 - `src/core/maintenance/` — mises à jour automatiques (Node pur). `pipeline.ts` : `maintainPack` (profil source
   enregistré seulement, pas un lien deviné ; `checkUpdates` avec `pinned` → `applyUpdatesToTrial` → `checkProfile` →
-  `testServer` sur l'essai → `ready`, ou si `autoPublish` `createVersion` : `promoteTrial`, `zipInstance`, notes
+  référence (`currentTests` du profil source, sinon `testPlayers` dessus) → `testPlayers` sur l'essai (`testServer`
+  si `unavailable`) → erreurs nouvelles des journaux (`newIssues`, erreurs seulement) et partie impossible dans
+  `warnings`, qui retiennent `autoPublish` → `ready`, ou si `autoPublish` `createVersion` : `promoteTrial`, `zipInstance`, notes
   (`notes.ts`), `publishPack` (GitHub, ce modpack seul, sans suppression) puis `publishToCurseForge`) ; un échec est un
   résultat (`failed`), jamais une exception. `runMaintenance` (`folders`, `due`, sinon tous sauf `never`),
   `finishPending` / `discardPending` (essai en attente), `maintenanceStatus`, `summarize`. Un passage tient

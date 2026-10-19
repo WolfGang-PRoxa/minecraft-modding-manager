@@ -12,14 +12,21 @@ Un passage traite un modpack à la fois, d’après le **profil CurseForge** d�
 1. il cherche les mises à jour du profil sur CurseForge, pour la même version de Minecraft et le même chargeur
    (voir [Mettre à jour les mods](studio.md#mettre-à-jour-les-mods)) ; sans rien de nouveau, il s’arrête là ;
 2. il crée la copie d’essai `<profil> (essai)` avec ces mises à jour ; ton profil n’est pas touché ;
-3. il teste l’essai : **vérification des fichiers**, puis **test sur un serveur** (voir
-   [Tester un profil](studio.md#tester-un-profil)) ;
-4. si les tests passent, la mise à jour est **prête, à valider** ; s’ils échouent, l’essai reste là pour que tu le
+3. il teste l’essai : **vérification des fichiers**, puis **partie avec des joueurs** : un serveur et deux vrais
+   joueurs qui le rejoignent (voir [Tester un profil](studio.md#tester-un-profil)). Si la partie est impossible sur ce
+   PC (mémoire insuffisante, jeu jamais lancé depuis CurseForge), seul le serveur est testé, et c’est signalé ;
+4. il compare les journaux de l’essai à ceux de ton profil (testé lui aussi, une fois, s’il ne l’a pas encore été) :
+   une erreur qui n’apparaît qu’avec les mises à jour est signalée ;
+5. si les tests passent, la mise à jour est **prête, à valider** ; s’ils échouent, l’essai reste là pour que tu le
    regardes.
 
 Avec **Publier seul quand les tests passent**, le passage continue : l’essai est reporté dans ton profil, la version
 suivante est créée avec ses notes (la liste des mises à jour), puis publiée sur GitHub et sur CurseForge selon les
-cibles du modpack.
+cibles du modpack. Une erreur nouvelle dans les journaux, ou une partie avec des joueurs qui n’a pas pu se faire,
+retient cette publication : la mise à jour attend alors ta validation, avec **À regarder avant de publier**.
+
+Pendant la partie de test, les fenêtres du jeu s’ouvrent derrière les tiennes, puis se ferment seules : la tâche
+planifiée de la nuit les ouvre aussi (le PC doit être allumé ou réveillé, sa session ouverte ou verrouillée).
 
 Il faut la clé de l’API CurseForge (voir [Compte CurseForge](parametres.md#compte-curseforge)), et le jeton d’auteur
 pour publier sur CurseForge. Une mise à jour que l’auteur du mod réserve au téléchargement depuis CurseForge n’est pas

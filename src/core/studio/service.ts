@@ -10,6 +10,10 @@ import {
   type PackSettings,
   type PackUpdates,
   type PackView,
+  type PlayerTestReport,
+  type ProfileTestReports,
+  testVerdict,
+  type VersionTests,
   type PublishProgress,
   type PublishResult,
   type PublisherLibrary,
@@ -34,9 +38,10 @@ import type { CurseForgeClient } from '../curseforgeApi'
 import type { CurseForgeUploader } from '../curseforgeUpload'
 import { exportToFile, inspectProject, projectVersions, publishVersion, resolveProject } from './curseforgePublish'
 import type { Journal } from '../journal'
-import { listGroups, listProfiles, readProfile } from '../profiles'
+import { listGroups, listProfiles, modsOf, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
-import { lastReport, saveReport, testServersDir } from '../gameTests/reports'
+import { runPlayerTest } from '../gameTests/playerTest'
+import { lastReport, reportsBySignature, reportsForSignature, saveReport, testClientsDir, testServersDir } from '../gameTests/reports'
 import { runServerTest } from '../gameTests/serverTest'
 import { checkProfileFiles } from '../gameTests/staticChecks'
 import { checkUpdates } from '../updates'
@@ -61,6 +66,7 @@ import {
   versionFileName,
   writePackFile,
   type LocalPack,
+  type LocalVersion,
   type LocalWorkspace,
   type LocalZip
 } from './workspace'
@@ -82,7 +88,7 @@ export function describeExcluded(excluded: ExcludedInZip): string {
 }
 
 /** Prévient, dans le plan de publication, qu'un zip envoyé contient des fichiers exclus. */
-function annotatePlan(plan: InternalPlan, excluded: ExcludedMap): void {
+function annotatePlan(plan: InternalPlan, excluded: ExcludedMap, tests: TestsMap): void {
   for (const step of plan.steps) {
     if (step.kind === 'delete' || (step.kind === 'update' && !step.archive)) continue
     const found = excluded.get(step.desired.version.path)
@@ -91,7 +97,35 @@ function annotatePlan(plan: InternalPlan, excluded: ExcludedMap): void {
         `Ce zip contient ${describeExcluded(found)} : ils seront publiés. « Retirer du zip », sur la ligne de la version, les enlève.`
       )
     }
+    if (step.kind !== 'create') continue
+    const verdict = versionTestsOf(step.desired.version, tests)
+    if (!verdict) step.action.warnings.push(TESTS_HINT.never)
+    else if (verdict.state === 'failed') step.action.warnings.push(`Ses derniers tests ont échoué : ${verdict.summary}`)
+    else if (verdict.state === 'partial') step.action.warnings.push(`${verdict.summary} ${TESTS_HINT.partial}`)
   }
+}
+
+type TestsMap = Map<string, ProfileTestReports>
+
+const TESTS_HINT = {
+  never: 'Cette version n’a jamais été testée : « Tout tester », dans le détail de son profil, la teste avec de vrais joueurs.',
+  partial: '« Tout tester », dans le détail de son profil, la teste avec de vrais joueurs.'
+}
+
+/** Bilan des derniers tests faits sur les mods d'une version (sur son profil, ou sur l'essai dont elle vient). */
+function versionTestsOf(version: LocalVersion, tests: TestsMap): VersionTests | null {
+  const signature = version.analysis?.modsSignature
+  const reports = signature ? tests.get(signature) : null
+  return reports ? testVerdict(reports) : null
+}
+
+/** Réglages d'une partie de test (testPlayers, testAll). */
+export interface PlayerTestRequest {
+  signal?: AbortSignal
+  /** Nombre de joueurs (1 à 4, 2 par défaut). */
+  players?: number
+  /** Temps de jeu une fois tout le monde connecté. */
+  playMs?: number
 }
 
 export interface StudioServiceOptions {
@@ -293,11 +327,12 @@ export class StudioService {
     const workspace = await this.scan()
     const plan = workspace && this.remote ? computePlan(workspace, this.remote, this.remoteRepo.owner) : null
     const excluded = workspace ? await this.findExcluded(workspace, plan) : new Map()
-    if (plan) annotatePlan(plan, excluded)
+    const tests: TestsMap = workspace ? await reportsBySignature() : new Map()
+    if (plan) annotatePlan(plan, excluded, tests)
     return {
       settings,
       workspaceExists: workspace?.exists ?? false,
-      packs: workspace ? workspace.packs.map((pack) => this.packView(pack, plan, excluded)) : [],
+      packs: workspace ? workspace.packs.map((pack) => this.packView(pack, plan, excluded, tests)) : [],
       strayZips: workspace?.strayZips ?? [],
       orphanPacks: workspace && plan ? this.orphanPacks(workspace, plan) : [],
       toRange: workspace ? planRanger(workspace).total : 0,
@@ -334,7 +369,7 @@ export class StudioService {
     return found
   }
 
-  private packView(pack: LocalPack, plan: InternalPlan | null, excluded: ExcludedMap): PackView {
+  private packView(pack: LocalPack, plan: InternalPlan | null, excluded: ExcludedMap, tests: TestsMap): PackView {
     const blocked = pack.errors.length > 0
     const remoteOnly = plan
       ? plan.steps
@@ -378,7 +413,8 @@ export class StudioService {
           notes: pack.meta.notes[String(v.number)] ?? '',
           remote: blocked || v.error ? 'blocked' : (status?.status ?? 'unknown'),
           changes: status?.changes ?? [],
-          excluded: excluded.get(v.path) ?? null
+          excluded: excluded.get(v.path) ?? null,
+          tests: versionTestsOf(v, tests)
         }
       }),
       pending: pack.pending.map((f) => ({
@@ -441,7 +477,7 @@ export class StudioService {
     const workspace = await this.scan()
     if (!workspace?.exists) throw new StudioError('Le dossier des modpacks est introuvable.')
     const plan = computePlan(workspace, this.remote, this.remoteRepo.owner)
-    annotatePlan(plan, await this.findExcluded(workspace, plan))
+    annotatePlan(plan, await this.findExcluded(workspace, plan), await reportsBySignature())
     return plan
   }
 
@@ -809,11 +845,9 @@ export class StudioService {
     return this.exclusive(
       `le test du serveur de ${basename(profilePath)}`,
       async () => {
-        const instancesDir = await this.options.getInstancesDir?.()
-        if (!instancesDir) throw new StudioError('Dossier Instances de CurseForge introuvable.')
         const report = await runServerTest((await this.profileAt(profilePath)).path, {
           cacheDir: testServersDir(),
-          instancesDir,
+          instancesDir: await this.testInstancesDir(),
           onStep,
           signal: options.signal,
           timeoutMs: options.timeoutMs
@@ -825,13 +859,71 @@ export class StudioService {
     )
   }
 
+  /**
+   * Partie de test : le serveur démarre, puis de vrais clients (hors ligne, tous les mods du profil) le rejoignent et
+   * jouent un moment (quelques minutes). Enregistre aussi le test du serveur qu'elle comprend.
+   */
+  testPlayers(profilePath: string, onStep: (text: string) => void, options: PlayerTestRequest = {}): Promise<PlayerTestReport> {
+    return this.exclusive(
+      `le test avec des joueurs de ${basename(profilePath)}`,
+      () => this.runPlayers(profilePath, onStep, options),
+      (r) => (r.outcome === 'passed' ? { ok: true, detail: r.message } : { ok: false, error: r.message })
+    )
+  }
+
+  /** Tous les tests, dans l'ordre : fichiers, puis partie avec des joueurs (le serveur compris). */
+  testAll(profilePath: string, onStep: (text: string) => void, options: PlayerTestRequest = {}): Promise<ProfileTestReports> {
+    return this.exclusive(
+      `les tests de ${basename(profilePath)}`,
+      async () => {
+        onStep('Vérification des fichiers')
+        const files = await this.checkProfile(profilePath)
+        const players = await this.runPlayers(profilePath, onStep, options)
+        return { files, server: players.server, players }
+      },
+      (r) => {
+        const errors = r.files?.findings.filter((f) => f.severity === 'error').length ?? 0
+        if (errors) return { ok: false, error: `${errors} erreur(s) dans les fichiers. ${r.players?.message ?? ''}`.trim() }
+        return r.players?.outcome === 'passed' ? { ok: true, detail: r.players.message } : { ok: false, error: r.players?.message ?? 'Test incomplet.' }
+      }
+    )
+  }
+
+  private async runPlayers(profilePath: string, onStep: (text: string) => void, options: PlayerTestRequest): Promise<PlayerTestReport> {
+    const report = await runPlayerTest((await this.profileAt(profilePath)).path, {
+      cacheDir: testServersDir(),
+      clientsDir: testClientsDir(),
+      instancesDir: await this.testInstancesDir(),
+      onStep,
+      signal: options.signal,
+      players: options.players,
+      playMs: options.playMs
+    })
+    await saveReport(report.profilePath, 'players', report)
+    if (report.server) await saveReport(report.profilePath, 'server', report.server)
+    return report
+  }
+
+  private async testInstancesDir(): Promise<string> {
+    const instancesDir = await this.options.getInstancesDir?.()
+    if (!instancesDir) throw new StudioError('Dossier Instances de CurseForge introuvable.')
+    return instancesDir
+  }
+
   /** Derniers rapports de test d'un profil. */
-  async lastTests(profilePath: string): Promise<{ files: StaticCheckReport | null; server: ServerTestReport | null }> {
-    const [files, server] = await Promise.all([
+  async lastTests(profilePath: string): Promise<ProfileTestReports> {
+    const [files, server, players] = await Promise.all([
       lastReport<StaticCheckReport>(profilePath, 'files'),
-      lastReport<ServerTestReport>(profilePath, 'server')
+      lastReport<ServerTestReport>(profilePath, 'server'),
+      lastReport<PlayerTestReport>(profilePath, 'players')
     ])
-    return { files, server }
+    return { files, server, players }
+  }
+
+  /** Les derniers tests faits sur les mods actuels d'un profil (sur lui, ou sur un essai qui avait déjà ces mods). */
+  async currentTests(profilePath: string): Promise<ProfileTestReports> {
+    const signature = (await modsOf((await this.profileAt(profilePath)).path))?.signature
+    return signature ? reportsForSignature(signature) : { files: null, server: null, players: null }
   }
 
   // ---------------------------------------------------------------------------------------------

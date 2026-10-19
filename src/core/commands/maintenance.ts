@@ -53,9 +53,11 @@ export const maintenanceStatusCommand = command({
   name: 'maintenance status',
   summary: 'Mises à jour automatiques : réglages de chaque modpack, dernier passage, prochain, et la tâche planifiée.',
   description:
-    'Un passage = recherche des mises à jour du profil source, copie d’essai, vérification des fichiers, test du serveur, ' +
-    'puis version « prête, à valider » (ready) ou, si autoPublish, version créée et publiée. last.outcome failed : ' +
-    'message et trialPath disent quoi regarder (tests check / tests server sur l’essai).',
+    'Un passage = recherche des mises à jour du profil source, copie d’essai, vérification des fichiers, partie avec des ' +
+    'joueurs (serveur puis vrais clients), comparaison des journaux avec le profil d’origine, puis version « prête, à ' +
+    'valider » (ready) ou, si autoPublish, version créée et publiée. last.warnings : points à regarder (erreurs nouvelles ' +
+    'dans les journaux, partie impossible) qui retiennent la publication automatique. last.outcome failed : message et ' +
+    'trialPath disent quoi regarder (tests check / tests players sur l’essai).',
   params: z.object({}),
   kind: 'read',
   async run(_params, ctx) {
@@ -125,7 +127,7 @@ export const maintenanceRun = command({
   summary: 'Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu, ou tous.',
   description:
     'Sans packs ni due : tous les modpacks sauf ceux réglés sur never. Plusieurs minutes par modpack qui a des mises à ' +
-    'jour (test du serveur). Un modpack réglé sur autoPublish est publié s’il passe les tests (irréversible sur ' +
+    'jour (partie de test avec des joueurs, dont les fenêtres du jeu). Un modpack réglé sur autoPublish est publié s’il passe les tests (irréversible sur ' +
     'CurseForge) : préviens le publieur avant. Un modpack dont un essai attend déjà une décision est laissé de côté.',
   params: z.object({
     packs: z.array(z.string().min(1)).optional().describe('Modpacks à passer (dossier, identifiant ou nom).'),

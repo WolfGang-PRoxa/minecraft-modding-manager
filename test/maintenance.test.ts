@@ -1,6 +1,6 @@
 // Mises à jour automatiques, de bout en bout sur un faux CurseForge et un faux GitHub : passage, essai prêt, validation
-// et publication, échec des tests, abandon, publication automatique. Le test du serveur et la fermeture de CurseForge
-// sont remplacés (ils lanceraient Java et fermeraient le vrai CurseForge).
+// et publication, échec des tests, abandon, publication automatique. Les tests du serveur et avec des joueurs, et la
+// fermeture de CurseForge, sont remplacés (ils lanceraient Java et le jeu, et fermeraient le vrai CurseForge).
 import assert from 'node:assert/strict'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -15,17 +15,43 @@ import { maintenanceLock } from '../src/core/operations'
 import { useSettingsFile } from '../src/core/settings'
 import { StudioService } from '../src/core/studio/service'
 import { promoteTrial, trialPathOf } from '../src/core/trialUpdates'
-import { DEFAULT_PACK_UPDATES, type ServerTestReport } from '../src/shared/studio'
+import { DEFAULT_PACK_UPDATES, type LogIssue, type PlayerTestReport, type ProfileTestReports, type ServerTestReport } from '../src/shared/studio'
 import { startFakeCurseForge, VALID_API_KEY, type FakeCurseForge } from './support/fakeCurseForge'
 import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub'
 import { makeInstance, tempDir } from './support/fixtures'
 
-/** Le service, sans Java ni CurseForge réel : le serveur « démarre » selon `serverStarts`. */
+/**
+ * Le service, sans Java ni CurseForge réel : le serveur « démarre » selon `serverStarts`, les joueurs jouent selon
+ * `playersPlay`, et le journal de l'essai contient `trialIssues` (celui du profil d'origine, aucune erreur).
+ */
 class TestService extends StudioService {
   serverStarts = true
+  playersPlay = true
+  trialIssues: LogIssue[] = []
+
+  override async currentTests(): Promise<ProfileTestReports> {
+    return { files: null, server: null, players: await this.testPlayers('profil d’origine') }
+  }
+
+  override async testPlayers(profilePath: string): Promise<PlayerTestReport> {
+    const server = await this.testServer(profilePath)
+    const passed = server.outcome === 'started' && this.playersPlay
+    return {
+      profile: 'essai',
+      profilePath,
+      startedAt: new Date().toISOString(),
+      durationMs: 1,
+      outcome: passed ? 'passed' : 'failed',
+      message: passed ? 'Les 2 joueurs ont joué.' : server.outcome === 'started' ? 'Testeur1 : Le jeu a planté pendant la partie.' : server.message,
+      players: [],
+      server,
+      clientIssues: []
+    }
+  }
 
   override async testServer(profilePath: string): Promise<ServerTestReport> {
     return {
+      logIssues: profilePath.includes('(essai)') ? this.trialIssues : [],
       profile: 'essai',
       profilePath,
       startedAt: new Date().toISOString(),
@@ -195,6 +221,30 @@ describe('mises à jour automatiques', () => {
     assert.equal(record.outcome, 'published', record.message)
     assert.equal(record.version, 3)
     assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v3'))
+  })
+
+  it('une erreur apparue dans les journaux retient la publication automatique', async () => {
+    releaseAlpha()
+    service.trialIssues = [{ level: 'error', source: 'RecipeManager', message: 'Couldn’t load recipe alpha:foo', detail: null, count: 3, key: 'k' }]
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    service.trialIssues = []
+    assert.equal(record.outcome, 'ready', record.message)
+    assert.match(record.message, /Publication automatique retenue/)
+    assert.deepEqual(record.warnings, [
+      '1 nouvelle erreur dans les journaux depuis le profil d’origine :',
+      'Serveur : [RecipeManager] Couldn’t load recipe alpha:foo (×3)'
+    ])
+    await discardPending((await service.overview()).packs[0], options)
+  })
+
+  it('un jeu qui plante pendant la partie fait échouer l’essai', async () => {
+    releaseAlpha()
+    service.playersPlay = false
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    service.playersPlay = true
+    assert.equal(record.outcome, 'failed')
+    assert.equal(record.message, 'Partie de test : Testeur1 : Le jeu a planté pendant la partie.')
+    await discardPending((await service.overview()).packs[0], options)
   })
 
   it('un mod figé n’est plus mis à jour', async () => {

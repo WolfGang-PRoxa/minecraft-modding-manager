@@ -70,8 +70,10 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
 | `updates promote` | Reporte l’essai validé dans le profil d’origine, puis met l’essai à la corbeille. |
 | `updates discard` | Abandonne l’essai (corbeille). |
-| `tests check` | Vérifie les fichiers d’un profil sans lancer le jeu : mods en double, dépendances manquantes, mods faits pour un autre chargeur. |
+| `tests check` | Vérifie les fichiers d’un profil sans lancer le jeu : doublons, dépendances manquantes ou dans une version refusée, incompatibilités, mauvais chargeur. |
 | `tests server` | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités. |
+| `tests players` | Partie de test : le serveur démarre, puis de vrais clients Minecraft le rejoignent et jouent un moment. |
+| `tests all` | Tous les tests d’un profil à la suite : fichiers, puis partie avec des joueurs (serveur compris). |
 | `maintenance status` | Les [mises à jour automatiques](automatique.md) : réglages de chaque modpack, dernier et prochain passage, tâche planifiée. |
 | `maintenance configure` | Règle les mises à jour automatiques d’un modpack : fréquence, bêtas, publication automatique, mods figés. |
 | `maintenance run` | Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu (`--due`), ou tous. |
@@ -111,13 +113,21 @@ côté : fais-la dans CurseForge. Ensuite :
 Avant de garder un essai ou de publier une version, teste le profil (ou son essai) :
 
 - **`tests check`** lit les mods sans lancer le jeu, en quelques secondes : un mod présent deux fois, une dépendance
-  obligatoire absente, un mod fait pour un autre chargeur (Fabric dans un profil Forge…). Il liste aussi les mods qui
-  ne fonctionnent que dans le jeu.
+  obligatoire absente ou dans une version que le mod refuse, un mod fait pour une autre version de Minecraft ou du
+  chargeur, deux mods déclarés incompatibles, un mod fait pour un autre chargeur (Fabric dans un profil Forge…). Il
+  liste aussi les mods qui ne fonctionnent que dans le jeu.
 - **`tests server`** démarre un vrai serveur Minecraft avec les mods du profil, sans fenêtre ni compte, jusqu’à ce
   qu’il soit prêt, puis l’arrête. Quelques minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, il
   télécharge le serveur (gardé ensuite dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu
-  (Sodium, Iris, Oculus…) sont laissés de côté. En cas de plantage, le rapport donne sa cause et les mods suspectés.
-  Ce serveur local accepte pour toi le [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA).
+  (Sodium, Iris, Oculus…) sont laissés de côté. En cas de plantage, le rapport donne sa cause et les mods suspectés ;
+  sinon, `logIssues` relève les erreurs de son journal. Ce serveur local accepte pour toi le
+  [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA).
+- **`tests players`** fait en plus jouer de vrais clients Minecraft sur ce serveur (`--players 1` à `4`, 2 par
+  défaut ; `--play-seconds` pour le temps de jeu) : des jeux hors ligne, sans compte, avec tous les mods du profil.
+  Ils sont dispersés dans le monde, de nuit, puis on vérifie qu’aucun n’a planté ni n’a été déconnecté. `unavailable`
+  dit que le test n’a pas pu se faire ici (profil jamais lancé depuis CurseForge, mémoire insuffisante). Voir
+  [Tester un profil](studio.md#tester-un-profil).
+- **`tests all`** enchaîne `tests check` et `tests players`, comme **Tout tester** dans le Studio.
 
 Pour publier sur CurseForge, le projet doit exister (on le crée une fois sur le site de CurseForge) et ton jeton
 d’auteur être enregistré ([Compte CurseForge](parametres.md#compte-curseforge)) :
@@ -134,7 +144,7 @@ d’auteur être enregistré ([Compte CurseForge](parametres.md#compte-curseforg
   état. Un numéro déjà sur CurseForge ne s’y publie plus. Le pack serveur se joint encore à la main sur le site.
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
-pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests server` sur l’essai, puis laisse la
+pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests players` sur l’essai, puis laisse la
 mise à jour prête (`maintenance validate` ou `maintenance discard` ensuite), ou la publie si le modpack est réglé
 ainsi (`maintenance configure --auto-publish`). `maintenance schedule` ne marche que depuis l’application installée :
 la tâche planifiée lance son exécutable.

@@ -8,6 +8,30 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : **partie de test avec de vrais joueurs**. Dans les tests d’un profil, le serveur de test démarre, puis 1 à 4
+  vrais jeux Minecraft le rejoignent avec tous les mods du profil (ceux du jeu compris) : ils se dispersent dans le
+  monde, de nuit, et l’on vérifie qu’aucun ne plante ni n’est déconnecté. Les joueurs n’ont pas de compte : ce sont des
+  jeux hors ligne qui ne se connectent qu’au serveur de test, sur ton PC. **Tout tester** enchaîne fichiers, serveur et
+  partie. En commandes : `tests players`, `tests all`.
+- Studio : la vérification des fichiers contrôle aussi les **versions demandées** par chaque mod (de Minecraft, du
+  chargeur et des autres mods) et les **incompatibilités déclarées**, comme le fera le jeu au démarrage.
+- Studio : les erreurs des journaux du serveur et du jeu sont relevées, même quand ils démarrent.
+- Studio : chaque version porte le bilan de ses derniers tests (**Testée**, **Testée en partie**, **Tests en échec**,
+  **Pas testée**), rappelé à la publication sur GitHub et sur CurseForge.
+
+### Améliorations
+
+- Mises à jour automatiques : l’essai passe la partie avec des joueurs, et ses journaux sont comparés à ceux de ton
+  profil. Une erreur qui n’apparaît qu’avec les mises à jour est signalée et retient la publication automatique.
+
+### Corrections
+
+- Vérification des fichiers : les mods embarqués par un mod Forge dans `META-INF/jars` sont reconnus (fausses
+  dépendances manquantes, comme ESL pour Create: New Age) ; un jar multi-chargeurs est lu avec la description du
+  chargeur du profil ; un mod fait pour un autre chargeur est signalé comme ignoré par le jeu, plus comme une erreur.
+
 ## [1.7.0] - 2026-10-19
 
 ### Ajouts

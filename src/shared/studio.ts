@@ -75,6 +75,16 @@ export interface VersionView {
   changes: string[]
   /** Fichiers exclus du modpack présents dans un zip qui partira à la prochaine publication. */
   excluded: ExcludedInZip | null
+  /** Ce que disent les derniers tests faits sur ces mods (null : jamais testée). */
+  tests: VersionTests | null
+}
+
+/** Bilan des derniers tests d'une version : `partial` = serveur ou fichiers seulement, pas de partie avec des joueurs. */
+export interface VersionTests {
+  state: 'passed' | 'partial' | 'failed'
+  summary: string
+  /** Date du test le plus récent. */
+  at: string
 }
 
 /** Zip déposé dans le dossier mais pas encore numéroté. */
@@ -320,6 +330,11 @@ export interface MaintenanceRecord {
   version: number | null
   /** Ce que Claude a conclu, s'il a été appelé. */
   claude: string | null
+  /**
+   * À regarder avant de publier, sans que les tests aient échoué : erreurs apparues dans les journaux depuis le profil
+   * d'origine, partie de test impossible… Retient la publication automatique. Absent avant la 1.8.0.
+   */
+  warnings?: string[]
 }
 
 /** Mises à jour automatiques d'un modpack : réglages, dernier passage et prochain. */
@@ -372,6 +387,24 @@ export interface StaticCheckReport {
   findings: CheckFinding[]
   /** Mods qui ne fonctionnent que dans le jeu (laissés de côté par le test du serveur). */
   clientOnly: string[]
+  /** Empreinte des mods testés (modsSignature) : relie le rapport aux versions qui ont ces mods. */
+  modsSignature?: string | null
+}
+
+/**
+ * Une erreur relevée dans un journal du jeu (serveur ou client), même quand il démarre : script ou recette en erreur,
+ * mixin refusé, mod qui échoue à se charger… Les messages identiques (aux nombres près) sont regroupés.
+ */
+export interface LogIssue {
+  level: 'error' | 'warning'
+  /** Ce qui l'a écrit (dernier mot du nom du journal : « ModSorter », « RecipeManager »…). */
+  source: string | null
+  message: string
+  /** Première ligne de l'exception qui suit, s'il y en a une. */
+  detail: string | null
+  count: number
+  /** Identique d'un test à l'autre pour la même erreur : sert à trouver celles qu'une mise à jour fait apparaître. */
+  key: string
 }
 
 /** Démarrage d'un serveur dédié avec les mods du profil. */
@@ -390,6 +423,69 @@ export interface ServerTestReport {
   /** Dernières lignes du journal du serveur. */
   logTail: string[]
   crashReport: { file: string; description: string | null; suspects: string[]; excerpt: string } | null
+  /** Erreurs du journal, du démarrage à l'arrêt (absent dans les rapports d'avant la 1.8.0). */
+  logIssues?: LogIssue[]
+  modsSignature?: string | null
+}
+
+/** Un joueur du test : un vrai client Minecraft, hors ligne, sur le serveur de test. */
+export interface TestPlayer {
+  name: string
+  /**
+   * `played` : il a rejoint et joué jusqu'au bout. `crashed` : son jeu a planté. `kicked` : le serveur l'a déconnecté.
+   * `not-joined` : il n'a pas rejoint à temps.
+   */
+  outcome: 'played' | 'crashed' | 'kicked' | 'not-joined'
+  message: string
+  /** Temps mis pour rejoindre, lancement du jeu compris. */
+  joinedAfterMs: number | null
+  crashReport: { file: string; description: string | null; suspects: string[]; excerpt: string } | null
+  logTail: string[]
+}
+
+/** Partie de test : serveur dédié, puis de vrais clients qui le rejoignent, se dispersent et jouent un moment. */
+export interface PlayerTestReport {
+  profile: string
+  profilePath: string
+  startedAt: string
+  durationMs: number
+  /**
+   * `passed` : tous les joueurs ont joué jusqu'au bout. `failed` : l'un d'eux (ou le serveur) a échoué.
+   * `unavailable` : le test n'a pas pu être lancé (jeu jamais lancé depuis CurseForge, mémoire insuffisante…).
+   */
+  outcome: 'passed' | 'failed' | 'unavailable'
+  message: string
+  players: TestPlayer[]
+  /** Le serveur de la partie (son démarrage et son journal). */
+  server: ServerTestReport | null
+  /** Erreurs du journal du premier client (tous ont les mêmes mods). */
+  clientIssues: LogIssue[]
+  modsSignature?: string | null
+}
+
+/** Derniers tests d'un profil, ou de la version qui a ces mods. */
+export interface ProfileTestReports {
+  files: StaticCheckReport | null
+  server: ServerTestReport | null
+  players: PlayerTestReport | null
+}
+
+/** Le bilan de ces tests, du plus complet au moins complet ; null s'il n'y en a aucun. */
+export function testVerdict({ files, server, players }: ProfileTestReports): VersionTests | null {
+  const dates = [files?.checkedAt, server?.startedAt, players?.startedAt].filter((d): d is string => Boolean(d)).sort()
+  if (!dates.length) return null
+  const at = dates.at(-1)!
+  const errors = files?.findings.filter((f) => f.severity === 'error').length ?? 0
+  if (errors) return { state: 'failed', summary: `${errors} erreur(s) dans les fichiers.`, at }
+  if (players && players.outcome !== 'unavailable') {
+    return players.outcome === 'passed' ? { state: 'passed', summary: players.message, at } : { state: 'failed', summary: players.message, at }
+  }
+  if (server) {
+    return server.outcome === 'started'
+      ? { state: 'partial', summary: 'Le serveur démarre, mais aucune partie avec des joueurs n’a été faite.', at }
+      : { state: 'failed', summary: server.message, at }
+  }
+  return { state: 'partial', summary: 'Seuls les fichiers ont été vérifiés.', at }
 }
 
 /** Un dossier de CurseForge et ses profils ; `id` null : les profils rangés dans aucun dossier. */
@@ -576,10 +672,14 @@ export interface StudioApi {
   checkProfile(profilePath: string): Promise<{ ok: true; report: StaticCheckReport } | { ok: false; error: string }>
   /** Démarre un serveur dédié avec les mods du profil (étapes : onTestProgress). */
   testServer(profilePath: string): Promise<{ ok: true; report: ServerTestReport } | { ok: false; error: string }>
+  /** Partie de test : serveur, puis `players` vrais clients qui le rejoignent et jouent (étapes : onTestProgress). */
+  testPlayers(profilePath: string, players?: number): Promise<{ ok: true; report: PlayerTestReport } | { ok: false; error: string }>
+  /** Tous les tests à la suite : fichiers, puis partie avec des joueurs (serveur compris). */
+  testAll(profilePath: string, players?: number): Promise<{ ok: true; reports: ProfileTestReports } | { ok: false; error: string }>
   onTestProgress(listener: (text: string) => void): () => void
   cancelTest(): Promise<void>
   /** Derniers rapports de test du profil. */
-  lastTests(profilePath: string): Promise<{ files: StaticCheckReport | null; server: ServerTestReport | null }>
+  lastTests(profilePath: string): Promise<ProfileTestReports>
   discardTrial(profilePath: string): Promise<ActionResult>
   /** Crée un modpack depuis un profil, et sa v1 : le profil lui est lié. */
   createPackFromProfile(name: string, profilePath: string, includeSaves: boolean): Promise<ActionResult & { folder?: string }>

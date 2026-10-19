@@ -7,6 +7,7 @@ import { Button, IconButton } from '../components/Button'
 import { Toggle } from '../components/Toggle'
 import { formatDate } from '../lib/format'
 import { Field, Modal, Spinner, TextArea, TextInput } from './Modal'
+import { TestsPill } from './ProfileTests'
 import { openLink, useStudio } from './store'
 
 function usePack(folder: string) {
@@ -400,6 +401,19 @@ export function PublishCurseForgeDialog({ folder, version }: { folder: string; v
             <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{view.notes}</pre>
           ) : (
             <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
+          )}
+        </div>
+        <div>
+          <p className="mb-1.5 flex items-center gap-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">
+            Tests <TestsPill tests={view.tests} showUntested />
+          </p>
+          {view.tests?.state === 'passed' ? (
+            <p className="text-ink-300">{view.tests.summary}</p>
+          ) : (
+            <p className="text-amber-glow">
+              {view.tests ? `${view.tests.summary} ` : 'Cette version n’a jamais été testée. '}
+              Avant de publier, « Tout tester » dans le détail de son profil : les fichiers, un serveur, puis de vrais joueurs.
+            </p>
           )}
         </div>
         <div className="flex items-center gap-3">

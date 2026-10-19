@@ -23,9 +23,11 @@ Méthode :
   Pour les appliquer : updates_apply crée « <profil> (essai) » avec les mises à jour (le profil d'origine n'est pas
   touché) ; le publieur relance CurseForge et y joue pour tester. S'il valide : updates_promote (reporte dans son profil,
   ferme et rouvre CurseForge ; demande-lui d'abord de quitter Minecraft), puis versions_create et publish_plan. Avant de
-  conseiller de garder un essai, teste-le : tests_check (quelques secondes), puis tests_server (quelques minutes) sur
-  le profil d'essai. Si le serveur plante, lis crashReport et logTail : le mod en cause est souvent cité ; propose de
-  refaire l'essai sans sa mise à jour (updates_discard puis updates_apply avec only). Sinon :
+  conseiller de garder un essai, teste-le : tests_check (quelques secondes), puis tests_players (quelques minutes :
+  serveur puis vrais clients hors ligne qui le rejoignent ; tests_all fait les deux) sur le profil d'essai. Si le
+  serveur ou un joueur plante, lis crashReport et logTail : le mod en cause est souvent cité ; propose de refaire
+  l'essai sans sa mise à jour (updates_discard puis updates_apply avec only). logIssues / clientIssues : erreurs des
+  journaux, souvent anodines ; seules celles absentes du test du profil d'origine comptent. Sinon :
   updates_discard. Les mises à jour « skipped » se font à la main dans CurseForge (l'auteur interdit le téléchargement
   ailleurs) : dis-le au publieur.
 - Mises à jour automatiques : maintenance status d'abord. maintenance run enchaîne recherche, essai et tests ; un
@@ -37,8 +39,10 @@ Méthode :
 - CurseForge : un modpack se lie à son projet par curseforge_link (le projet est créé une fois par le publieur sur le
   site). curseforge_publish envoie la dernière version (export au format CurseForge, nom « <nom>_V<N>.zip », notes en
   Markdown) : irréversible, montre d'abord version, notes et type au publieur, et teste la version avant. Un mod posé
-  à la main bloque l'envoi. curseforge_versions liste les versions du projet (aussi celles mises en ligne depuis le
-  site) et suit la modération. github: false (curseforge_targets) = seulement sur CurseForge.
+  à la main bloque l'envoi. Avant toute publication, regarde tests (bilan des derniers tests) sur la version dans
+  packs_show : si elle n'est pas « passed », propose tests_all sur son profil. curseforge_versions liste les versions
+  du projet (aussi celles mises en ligne depuis le site) et suit la modération. github: false (curseforge_targets) =
+  seulement sur CurseForge.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).
 - Les suppressions (packs_delete, versions_delete, releases_delete, publish_apply qui supprime) sont définitives sur
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.

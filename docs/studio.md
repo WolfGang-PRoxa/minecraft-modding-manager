@@ -184,22 +184,42 @@ de gauche, un flacon marque le profil qui a un essai en cours, et l’essai lui-
 ### Tester un profil
 
 Le détail d’un profil a une partie **Tests**, à lancer avant de garder un essai ou de publier une version. Pour un
-essai, elle teste l’essai lui-même.
+essai, elle teste l’essai lui-même. **Tout tester** enchaîne les trois tests ci-dessous ; chacun se lance aussi seul.
 
-- **Vérifier les fichiers** lit les mods sans lancer le jeu, en quelques secondes : un mod présent deux fois, une
-  dépendance obligatoire absente, un mod fait pour un autre chargeur (un mod Fabric dans un profil Forge…). Il liste
-  aussi les mods qui ne fonctionnent que dans le jeu.
-- **Tester sur un serveur** démarre un vrai serveur Minecraft avec les mods et les configurations du profil, sans
-  fenêtre ni compte, jusqu’à ce qu’il soit prêt, puis l’arrête. Il trouve la plupart des incompatibilités entre mods.
-  Compte quelques minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, le serveur est téléchargé
-  (puis gardé dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu (Sodium, Iris, Oculus…)
-  sont laissés de côté. S’il plante, **Fin du journal du serveur** montre le rapport de plantage, avec les mods
-  suspectés. **Arrêter le test** l’interrompt.
+- **Fichiers** lit les mods sans lancer le jeu, en quelques secondes, et vérifie ce que le chargeur vérifiera au
+  démarrage : un mod présent deux fois, une dépendance obligatoire absente, une dépendance dans une version que le mod
+  refuse (« demande Fabric API 0.130 ou plus »), un mod fait pour une autre version de Minecraft ou du chargeur, deux
+  mods déclarés incompatibles, un mod fait pour un autre chargeur (un mod Fabric dans un profil Forge, que le jeu
+  ignore). Il liste aussi les mods qui ne fonctionnent que dans le jeu. Dans le doute (version illisible), il ne
+  signale rien.
+- **Serveur seul** démarre un vrai serveur Minecraft avec les mods et les configurations du profil, sans fenêtre ni
+  compte, jusqu’à ce qu’il soit prêt, puis l’arrête. Il trouve la plupart des incompatibilités entre mods. Compte une
+  à deux minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, le serveur est téléchargé (puis
+  gardé dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu (Sodium, Iris, Oculus…) sont
+  laissés de côté. S’il plante, **Fin du journal du serveur** montre le rapport de plantage, avec les mods suspectés.
+  Même quand il démarre, les erreurs de son journal (recette ou script en erreur, mod qui échoue à se charger…) sont
+  relevées : un modpack en écrit souvent beaucoup sans gravité, elles servent surtout à comparer deux tests.
+- **Partie avec des joueurs** démarre le serveur, puis de 1 à 4 vrais clients Minecraft (choisis le nombre à côté), qui
+  le rejoignent avec tous les mods du profil, ceux du jeu compris. Une fois connectés, les joueurs sont dispersés loin
+  les uns des autres, de nuit, pour charger du terrain neuf et faire apparaître des monstres ; au bout d’une minute et
+  demie, on vérifie qu’aucun jeu n’a planté et que personne n’a été déconnecté (mods différents entre le jeu et le
+  serveur, par exemple). Compte deux à cinq minutes.
+
+> [!NOTE]
+> Les joueurs du test (**Testeur1**, **Testeur2**…) n’ont pas de compte : ce sont des jeux lancés hors ligne, qui ne
+> se connectent qu’au serveur de test, sur ton PC. Un seul compte Minecraft suffit donc, le tien, avec lequel
+> CurseForge a installé le jeu. Le profil doit avoir été lancé une fois depuis CurseForge (pour que le jeu soit
+> installé). Leurs fenêtres s’ouvrent pendant le test, derrière les tiennes, puis se ferment seules. Chaque joueur
+> utilise jusqu’à 8 Go de mémoire : s’il en manque, la partie se fait avec moins de joueurs. Les shaders ne sont pas
+> chargés, pour rester léger.
 
 Le Java utilisé est celui que CurseForge a installé pour cette version de Minecraft, ou à défaut un Java installé sur
 ton PC. Le serveur de test accepte pour toi le [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA). Le
-résultat de chaque test reste affiché. Ce test ne lance pas le jeu lui-même : joue quelques minutes sur l’essai pour
-vérifier l’affichage et les mods du jeu.
+résultat de chaque test reste affiché. **Arrêter le test** l’interrompt.
+
+Les résultats valent pour les mods testés : une version qui a les mêmes mods qu’un profil testé est marquée sur sa
+ligne **Testée**, **Testée en partie** (serveur seul), **Tests en échec**, ou, pour la dernière version, **Pas
+testée**. La publication le rappelle pour toute version qui n’a pas passé la partie avec des joueurs.
 
 ### Sur la carte du modpack
 

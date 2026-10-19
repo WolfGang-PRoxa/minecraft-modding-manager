@@ -7,6 +7,7 @@ import { describeError, StudioError } from '../studio/analyze'
 import type { StudioService } from '../studio/service'
 import { parseVersionNumber } from '../studio/workspace'
 import { pathExists } from '../fsutil'
+import { describeIssue, newIssues } from '../gameTests/logIssues'
 import { changeLine, versionNotes } from './notes'
 import { dueAt, isDue } from './schedule'
 import { readMaintenanceState, saveRecord } from './state'
@@ -43,6 +44,7 @@ function recordFor(pack: PackView, outcome: MaintenanceRecord['outcome'], messag
     trialPath: null,
     version: null,
     claude: null,
+    warnings: [],
     ...extra
   }
 }
@@ -98,17 +100,48 @@ export async function maintainPack(pack: PackView, options: MaintenanceOptions):
     const error = files.findings.find((f) => f.severity === 'error')
     if (error) return recordFor(pack, 'failed', `Vérification des fichiers : ${error.message}`, base)
 
-    step('test du serveur')
-    const server = await service.testServer(trial.trialPath, step, { signal: options.signal })
-    if (server.outcome !== 'started') return recordFor(pack, 'failed', `Test du serveur : ${server.message}`, base)
+    // Référence : les tests du profil d'origine (ses mods actuels), pour ne relever que les erreurs nouvelles.
+    const warnings: string[] = []
+    let reference = await service.currentTests(profile.path)
+    if (!reference.players && !reference.server) {
+      step('test de référence du profil d’origine')
+      const players = await service.testPlayers(profile.path, step, { signal: options.signal })
+      reference = players.outcome === 'unavailable' ? { ...reference, server: await service.testServer(profile.path, step, { signal: options.signal }) } : { ...reference, players, server: players.server }
+    }
+
+    step('partie de test')
+    const players = await service.testPlayers(trial.trialPath, step, { signal: options.signal })
+    let server = players.server
+    let played = `${plural(players.players.length, 'joueur a', 'joueurs ont')} joué`
+    if (players.outcome === 'unavailable') {
+      warnings.push(`Partie avec des joueurs impossible : ${players.message} Seul le serveur a été testé.`)
+      step('test du serveur')
+      server = await service.testServer(trial.trialPath, step, { signal: options.signal })
+      played = 'pas de partie avec des joueurs'
+    }
+    if (!server || server.outcome !== 'started') return recordFor(pack, 'failed', `Test du serveur : ${server?.message ?? players.message}`, base)
+    if (players.outcome === 'failed') return recordFor(pack, 'failed', `Partie de test : ${players.message}`, base)
+
+    // Seules les erreurs comptent : les avertissements changent trop d'un lancement à l'autre.
+    const errorsOnly = (issues: ReturnType<typeof newIssues>) => issues.filter((i) => i.level === 'error')
+    const freshErrors = [
+      ...errorsOnly(newIssues(server.logIssues, reference.players?.server?.logIssues ?? reference.server?.logIssues)).map((i) => `Serveur : ${describeIssue(i)}`),
+      ...(reference.players && players.outcome === 'passed'
+        ? errorsOnly(newIssues(players.clientIssues, reference.players.clientIssues)).map((i) => `Jeu : ${describeIssue(i)}`)
+        : [])
+    ]
+    if (freshErrors.length) {
+      warnings.push(`${plural(freshErrors.length, 'nouvelle erreur', 'nouvelles erreurs')} dans les journaux depuis le profil d’origine :`, ...freshErrors.slice(0, 8))
+    }
 
     const ready = recordFor(
       pack,
       'ready',
-      `${plural(base.changes!.length, 'mise à jour testée', 'mises à jour testées')} : le serveur démarre.`,
-      base
+      `${plural(base.changes!.length, 'mise à jour testée', 'mises à jour testées')} : le serveur démarre, ${played}.`,
+      { ...base, warnings }
     )
     if (!pack.updates.autoPublish) return ready
+    if (warnings.length) return { ...ready, message: `${ready.message} Publication automatique retenue : regarde les points signalés.` }
     await saveRecord(ready)
     return await createVersion(pack, ready, { ...options, publish: true })
   } catch (err) {

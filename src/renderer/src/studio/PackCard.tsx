@@ -29,6 +29,7 @@ import { Cover } from '../components/Cover'
 import { formatBytes, formatDate, formatLoader } from '../lib/format'
 import { useStore } from '../store'
 import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
+import { TestsPill } from './ProfileTests'
 import { UpdatesLine } from './MaintenancePanel'
 import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
 import { errorMessage, openLink, openPath, useStudio } from './store'
@@ -253,6 +254,7 @@ function VersionRow({
               Version sur CurseForge
             </Pill>
           )}
+          <TestsPill tests={version.tests} showUntested={version.number === pack.versions[0]?.number} />
           <CurseForgeVersionStatus pack={pack} version={version} curseforge={curseforge} />
           {pack.github && (
             <Pill className={status.className} title={version.changes.join('\n') || undefined}>

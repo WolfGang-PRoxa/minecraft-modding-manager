@@ -255,6 +255,24 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
       }
     })
   )
+  const withTestSignal = async <T>(run: (signal: AbortSignal) => Promise<T>): Promise<T> => {
+    testController = new AbortController()
+    try {
+      return await run(testController.signal)
+    } finally {
+      testController = null
+    }
+  }
+  ipcMain.handle('studio:testPlayers', (_e, profilePath: string, players?: number) =>
+    outcome(async () =>
+      withTestSignal(async (signal) => ({ report: await service.testPlayers(profilePath, (text) => send('studio:test-progress', text), { signal, players }) }))
+    )
+  )
+  ipcMain.handle('studio:testAll', (_e, profilePath: string, players?: number) =>
+    outcome(async () =>
+      withTestSignal(async (signal) => ({ reports: await service.testAll(profilePath, (text) => send('studio:test-progress', text), { signal, players }) }))
+    )
+  )
   ipcMain.handle('studio:cancelTest', () => testController?.abort())
   ipcMain.handle('studio:lastTests', (_e, profilePath: string) => service.lastTests(profilePath))
   ipcMain.handle('studio:linkCurseForge', (_e, folder: string, ref: string) => outcome(() => service.linkCurseForge(folder, ref)))

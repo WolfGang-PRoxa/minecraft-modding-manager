@@ -58,6 +58,18 @@ function PendingTrial({ pack, record }: { pack: PackView; record: MaintenanceRec
           {record.manual.length} à faire dans CurseForge (téléchargement réservé à CurseForge).
         </p>
       )}
+      {(record.warnings?.length ?? 0) > 0 && (
+        <div className="mt-2 rounded-lg bg-amber-glow/10 p-2.5 text-xs text-amber-glow ring-1 ring-inset ring-amber-glow/25">
+          <p className="font-semibold">À regarder avant de publier</p>
+          <ul className="mt-1 space-y-0.5 text-ink-200">
+            {record.warnings!.map((w) => (
+              <li key={w} className="break-words select-text">
+                {w}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {record.claude && (
         <div className="mt-3 flex gap-2 rounded-lg bg-ink-950/50 p-2.5 text-xs text-ink-200">
           <Bot size={14} className="mt-0.5 shrink-0 text-ink-400" />
