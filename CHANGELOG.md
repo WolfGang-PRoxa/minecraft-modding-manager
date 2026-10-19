@@ -8,6 +8,19 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : la ligne **Publié sur CurseForge** d’un modpack lié à son projet dit combien de versions y sont déjà, et
+  laquelle est la dernière (« 28 versions, dernière : V27 »). Un clic ouvre la liste de toutes ses versions, y compris
+  celles mises en ligne depuis le site : numéro, date, type, versions de Minecraft, état de modération, lien vers la
+  page de chaque fichier. Sur les lignes des versions, la pastille **Sur CurseForge** apparaît aussi pour les numéros
+  déjà en ligne depuis le site. La commande `curseforge versions` donne la même liste.
+
+### Corrections
+
+- Studio : une version dont le numéro est déjà sur CurseForge (mise en ligne depuis le site), ou plus ancienne que la
+  dernière qui s’y trouve, ne propose plus **Publier sur CurseForge**, et son envoi est refusé.
+
 ## [1.6.0] - 2026-10-11
 
 ### Ajouts

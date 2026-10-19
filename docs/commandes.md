@@ -84,7 +84,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `curseforge targets` | Où le modpack est publié (GitHub ou non) et les fichiers joints à son export CurseForge. |
 | `curseforge export` | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier. |
 | `curseforge publish` | Met une version en ligne sur CurseForge (elle passe en modération). |
-| `curseforge versions` | L’état sur CurseForge des versions publiées (en modération, approuvée, refusée…). |
+| `curseforge versions` | Les versions du projet CurseForge, envoyées par l’application ou depuis le site, et leur état (en modération, approuvée, refusée…). |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
 | `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
@@ -130,7 +130,8 @@ d’auteur être enregistré ([Compte CurseForge](parametres.md#compte-curseforg
 - **`curseforge publish`** exporte la version au format de CurseForge (`manifest.json`, `modlist.html`, fichiers
   joints : comme l’export de CurseForge), l’affiche sous le nom `<nom>_V<N>.zip` avec ses notes, et l’envoie. Un mod
   qui ne vient pas de CurseForge bloque l’envoi : la modération le refuserait. La version passe ensuite en modération ;
-  `curseforge versions` suit son état. Le pack serveur se joint encore à la main sur le site.
+  `curseforge versions` liste toutes les versions du projet (aussi celles mises en ligne depuis le site) et suit leur
+  état. Un numéro déjà sur CurseForge ne s’y publie plus. Le pack serveur se joint encore à la main sur le site.
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
 pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests server` sur l’essai, puis laisse la

@@ -32,7 +32,7 @@ import { pathExists } from '../fsutil'
 import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
 import type { CurseForgeClient } from '../curseforgeApi'
 import type { CurseForgeUploader } from '../curseforgeUpload'
-import { exportToFile, inspectProject, publishVersion, resolveProject, versionStatuses } from './curseforgePublish'
+import { exportToFile, inspectProject, projectVersions, publishVersion, resolveProject } from './curseforgePublish'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
@@ -756,6 +756,7 @@ export class StudioService {
         if (!this.options.getCurseForgeUploader) throw new StudioError('Publication sur CurseForge impossible depuis ce programme.')
         const { pack, local, analysis, curseforge } = await this.versionFor(folder, version)
         if (!analysis.minecraftVersion) throw new StudioError('Version de Minecraft inconnue pour ce zip.')
+        const published = await projectVersions(await this.curseForge(), curseforge)
         const fileId = await publishVersion(
           await this.options.getCurseForgeUploader(),
           {
@@ -766,7 +767,8 @@ export class StudioService {
             modLoader: analysis.modLoader,
             notes: pack.meta.notes[String(version)] ?? '',
             releaseType,
-            curseforge
+            curseforge,
+            published
           },
           onStep
         )
@@ -778,11 +780,14 @@ export class StudioService {
     )
   }
 
-  /** État de modération de chaque version publiée sur CurseForge. */
-  async curseForgeStatuses(folder: string) {
+  /**
+   * Versions du projet CurseForge lié, de la plus récente à la plus ancienne, avec leur état de modération : celles que
+   * l'application a envoyées et celles mises en ligne depuis le site.
+   */
+  async curseForgeVersions(folder: string) {
     const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
-    if (!meta.curseforge) return {}
-    return versionStatuses(await this.curseForge(), meta.curseforge)
+    if (!meta.curseforge) return []
+    return projectVersions(await this.curseForge(), meta.curseforge)
   }
 
   // ---------------------------------------------------------------------------------------------

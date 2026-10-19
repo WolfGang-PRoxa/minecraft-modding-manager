@@ -21,14 +21,14 @@ import {
   Upload
 } from 'lucide-react'
 import { findPresentVersions, type PresentVersion } from '../../../shared/presence'
-import type { CurseForgeFileState, ExcludedInZip, PackView, PendingZip, RemoteOnlyVersion, RemoteStatus, VersionView } from '../../../shared/studio'
+import type { ExcludedInZip, PackView, PendingZip, RemoteOnlyVersion, RemoteStatus, VersionView } from '../../../shared/studio'
 import type { CurseForgeProfile } from '../../../shared/types'
 import { describePresence } from '../components/Badges'
 import { Button, IconButton } from '../components/Button'
 import { Cover } from '../components/Cover'
 import { formatBytes, formatDate, formatLoader } from '../lib/format'
 import { useStore } from '../store'
-import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeStatuses } from './CurseForgePanel'
+import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
 import { UpdatesLine } from './MaintenancePanel'
 import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
 import { errorMessage, openLink, openPath, useStudio } from './store'
@@ -236,7 +236,7 @@ function VersionRow({
   pack: PackView
   version: VersionView
   present: PresentVersion[]
-  curseforge: CurseForgeFileState | undefined
+  curseforge: CurseForgeVersions
 }) {
   const openDialog = useStudio((s) => s.openDialog)
   const status = STATUS[version.remote]
@@ -253,7 +253,7 @@ function VersionRow({
               Version sur CurseForge
             </Pill>
           )}
-          <CurseForgeVersionStatus pack={pack} version={version} state={curseforge} />
+          <CurseForgeVersionStatus pack={pack} version={version} curseforge={curseforge} />
           {pack.github && (
             <Pill className={status.className} title={version.changes.join('\n') || undefined}>
               {status.label}
@@ -465,7 +465,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
     return findPresentVersions(known, installed, profiles)
   }, [pack, installed, profiles])
   const { over, handlers } = useFileDrop(pack.folder)
-  const curseforge = useCurseForgeStatuses(pack)
+  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
   const empty = !pack.versions.length && !pack.pending.length && !pack.remoteOnly.length
   let next = pack.nextVersion
 
@@ -503,7 +503,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             <p className="mt-1.5 text-sm text-ink-500 italic">Pas encore de description.</p>
           )}
           <CurseForgeNote pack={pack} present={present} profiles={profiles} />
-          <CurseForgeLine pack={pack} />
+          <CurseForgeLine pack={pack} curseforge={curseforge} />
           <UpdatesLine pack={pack} />
           <SettingsSummary pack={pack} />
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
@@ -551,7 +551,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             pack={pack}
             version={version}
             present={present.filter((p) => p.version === String(version.number))}
-            curseforge={curseforge[String(version.number)]}
+            curseforge={curseforge}
           />
         ))}
         {pack.remoteOnly.map((version) => (

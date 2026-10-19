@@ -131,6 +131,12 @@ l’adresse de la page du projet (ou son numéro) et le lie au modpack. Pour un 
 numérotation continue après la plus haute (après `Mon Pack_V27.zip`, la prochaine version est la v28), et les fichiers
 joints à l’export sont repris de sa dernière version.
 
+Une fois le modpack lié, la ligne dit combien de versions sont sur le projet et laquelle est la dernière (« 28
+versions, dernière : V27 »). Un clic dessus ouvre **Versions sur CurseForge** : toutes les versions du projet, de la
+plus récente à la plus ancienne, qu’elles viennent de l’application ou du site. Chacune avec son numéro (le `_V<N>`
+de son nom affiché ; `—` pour un nom sans numéro entier, comme `_V1.05`), sa date, son type, ses versions de
+Minecraft, son état de modération et un lien vers sa page. Les packs serveur n’y figurent pas.
+
 **Réglages**, sur cette ligne, règle :
 
 - **Fichiers joints à l’export** : un chemin par ligne, depuis la racine du profil (jokers `*` et `?`), comme dans la
@@ -140,11 +146,12 @@ joints à l’export sont repris de sa dernière version.
   voient plus ses nouvelles versions, et ses releases GitHub ne sont plus jamais touchées ;
 - **Retirer le lien** avec le projet.
 
-Sur la ligne de la dernière version, **Publier sur CurseForge** montre le nom affiché (`<nom>_V<N>.zip`), les fichiers
+Sur la ligne de la dernière version, si son numéro dépasse le plus haut du projet, **Publier sur CurseForge** montre le nom affiché (`<nom>_V<N>.zip`), les fichiers
 joints et les notes de version, et demande le type (version stable, bêta, alpha). La version est exportée au format de
 CurseForge (la liste des mods et des fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en
 modération : la ligne affiche **En modération**, puis **Sur CurseForge** une fois acceptée (ou **Refusée par
-CurseForge**). Une version envoyée ne se retire que depuis le site.
+CurseForge**). La pastille apparaît aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis
+le site : ce numéro ne s’y publie plus. Une version envoyée ne se retire que depuis le site.
 
 > [!NOTE]
 > Un mod qui ne vient pas de CurseForge (posé à la main dans `mods`) bloque l’envoi : la modération de CurseForge le

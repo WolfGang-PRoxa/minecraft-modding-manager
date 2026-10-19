@@ -65,8 +65,14 @@ describe('publication sur CurseForge', () => {
 
     // Le projet existe déjà sur CurseForge, avec sa V27 (qui joint les réglages des shaders).
     curseforge.catalog.mods.push({ id: 777, name: 'Mon Pack', slug: 'mon-pack', classId: 4471, isAvailable: true, allowModDistribution: true, links: { websiteUrl: 'https://www.curseforge.com/minecraft/modpacks/mon-pack' }, latestFilesIndexes: [] })
-    curseforge.catalog.files.push({ id: 5000, modId: 777, displayName: 'Mon Pack_V27.zip', fileName: 'Mon Pack.zip', releaseType: 1, fileDate: '2026-01-01T00:00:00Z', fileLength: 10, downloadUrl: null, isAvailable: true, gameVersions: ['1.20.1', 'Forge'], hashes: [], dependencies: [] })
+    curseforge.catalog.files.push({ id: 5000, modId: 777, displayName: 'Mon Pack_V27.zip', fileName: 'Mon Pack.zip', releaseType: 1, fileStatus: 4, fileDate: '2026-01-01T00:00:00Z', fileLength: 10, downloadUrl: null, isAvailable: true, gameVersions: ['1.20.1', 'Forge'], hashes: [], dependencies: [] })
     curseforge.catalog.downloads[5000] = await makeJar({ 'manifest.json': '{}', 'overrides/shaderpacks/BSL.zip.txt': 'ancien' })
+    // Ses versions plus anciennes (V0 à V26, et 30 aux noms d'avant la numérotation entière : plus d'une page), et le
+    // pack serveur de la V27, qui n'est pas une version.
+    const older = (id: number, displayName: string) => ({ ...curseforge.catalog.files[0], id, displayName, fileStatus: 4 })
+    for (let n = 0; n <= 26; n++) curseforge.catalog.files.push(older(4000 + n, `Mon Pack_V${n}.zip`))
+    for (let n = 0; n < 30; n++) curseforge.catalog.files.push(older(3000 + n, `Mon Pack_V1.${String(n).padStart(2, '0')}.zip`))
+    curseforge.catalog.files.push({ ...older(5001, 'Mon Pack (Server Pack)_V27.zip'), isServerPack: true })
 
     service = new StudioService({
       getWorkspaceDir: () => workspace,
@@ -129,9 +135,40 @@ describe('publication sur CurseForge', () => {
     ])
     assert.match(entries.get('modlist.html')!.toString('utf8'), /<li><a href="https:\/\/www\.curseforge\.com\/minecraft\/mc-mods\/alpha">Alpha \(by auteur\)<\/a><\/li>/)
 
-    const statuses = await service.curseForgeStatuses('Mon_Pack')
-    assert.deepEqual(statuses['28'], { fileId, status: 3, label: 'en cours de modération', displayName: 'Mon Pack_V28.zip' })
     await assert.rejects(service.publishToCurseForge('Mon_Pack', 28, 'release', () => {}), /déjà sur CurseForge/)
+  })
+
+  it('liste toutes les versions du projet, envoyées par l’application ou depuis le site', async () => {
+    const versions = await service.curseForgeVersions('Mon_Pack')
+    assert.equal(versions.length, 1 + 1 + 27 + 30, 'V28, V27, V0 à V26 et les anciens noms ; pas le pack serveur')
+    const [v28, v27] = versions
+    // La V28 est en modération : CurseForge ne la liste pas encore, elle vient des fichiers envoyés par l'application.
+    assert.deepEqual(
+      { number: v28.number, status: v28.status, label: v28.label, displayName: v28.displayName, sentByApp: v28.sentByApp },
+      { number: 28, status: 3, label: 'en cours de modération', displayName: 'Mon Pack_V28.zip', sentByApp: true }
+    )
+    assert.deepEqual(v27, {
+      fileId: 5000,
+      number: 27,
+      status: 4,
+      label: 'approuvé',
+      displayName: 'Mon Pack_V27.zip',
+      releaseType: 1,
+      date: '2026-01-01T00:00:00Z',
+      gameVersions: ['1.20.1', 'Forge'],
+      sentByApp: false,
+      url: 'https://www.curseforge.com/minecraft/modpacks/mon-pack/files/5000'
+    })
+    assert.deepEqual(versions.slice(2, 4).map((v) => [v.number, v.label]), [[26, 'approuvé'], [25, 'approuvé']])
+    assert.deepEqual(versions.at(-1)!.number, null)
+  })
+
+  it('refuse un numéro déjà mis en ligne depuis le site', async () => {
+    curseforge.catalog.files.push({ ...curseforge.catalog.files[0], id: 6000, displayName: 'Mon Pack_V29.zip', fileStatus: 4 })
+    assert.equal(await service.zipInstance('Mon_Pack', profile, false, () => {}, new AbortController().signal), 'Mon_Pack-v29.zip')
+    await assert.rejects(service.publishToCurseForge('Mon_Pack', 29, 'release', () => {}), /La v29 est déjà sur CurseForge \(« Mon Pack_V29\.zip »\)/)
+    await assert.rejects(service.publishToCurseForge('Mon_Pack', 28, 'release', () => {}), /déjà sur CurseForge/)
+    assert.equal(curseforge.catalog.uploads.length, 1)
   })
 
   it('un modpack seulement sur CurseForge n’est jamais publié ni retiré sur GitHub', async () => {

@@ -1,8 +1,7 @@
 // Mise en ligne sur CurseForge avec le jeton d'auteur du publieur (API de minecraft.curseforge.com) : un fichier de
-// modpack sur un projet existant, puis suivi de sa modération par l'API de lecture.
+// modpack sur un projet existant (sa modération se suit par l'API de lecture : projectVersions).
 import { openAsBlob } from 'node:fs'
 import { basename } from 'node:path'
-import type { CurseForgeClient } from './curseforgeApi'
 import { curseForgeApis, curseForgeSecret } from './curseforgeAuth'
 import { StudioError } from './studio/analyze'
 
@@ -118,15 +117,4 @@ export class CurseForgeUploader {
     if (!Number.isInteger(id)) throw new StudioError('CurseForge n’a pas renvoyé l’identifiant du fichier envoyé.')
     return id
   }
-}
-
-/** État de modération des fichiers donnés (API de lecture). */
-export async function fileStatuses(client: CurseForgeClient, fileIds: number[]): Promise<Map<number, { status: number; label: string; displayName: string }>> {
-  const files = fileIds.length ? await client.getFiles(fileIds) : []
-  return new Map(
-    files.map((f) => {
-      const status = Number((f as unknown as { fileStatus?: number }).fileStatus ?? 0)
-      return [f.id, { status, label: FILE_STATUS_LABELS[status] ?? `état ${status}`, displayName: f.displayName }]
-    })
-  )
 }

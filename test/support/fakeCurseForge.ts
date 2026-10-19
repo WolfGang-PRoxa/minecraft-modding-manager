@@ -61,8 +61,14 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
       }
       const projectFiles = /^\/v1\/mods\/(\d+)\/files$/.exec(path)
       if (projectFiles) {
-        const list = catalog.files.filter((f) => f.modId === Number(projectFiles[1])).sort((a, b) => b.id - a.id)
-        return json(res, 200, { data: list, pagination: { totalCount: list.length } })
+        // Comme le vrai : par pages (50 au plus), et seulement les fichiers approuvés (pas ceux en modération).
+        const query = new URL(req.url ?? '/', 'http://localhost').searchParams
+        const list = catalog.files
+          .filter((f) => f.modId === Number(projectFiles[1]) && [undefined, 4, 10].includes(f.fileStatus))
+          .sort((a, b) => b.id - a.id)
+        const index = Number(query.get('index') ?? 0)
+        const page = list.slice(index, index + Math.min(Number(query.get('pageSize') ?? 50), 50))
+        return json(res, 200, { data: page, pagination: { index, pageSize: page.length, resultCount: page.length, totalCount: list.length } })
       }
       const changelog = /^\/v1\/mods\/\d+\/files\/(\d+)\/changelog$/.exec(path)
       if (changelog) {
@@ -107,7 +113,7 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
         const id = nextFileId++
         const metadata = JSON.parse(String(form.get('metadata'))) as Record<string, unknown>
         catalog.uploads.push({ projectId: Number(upload[1]), metadata, fileName: file.name, content: Buffer.from(await file.arrayBuffer()), id })
-        catalog.files.push({ ...({ fileStatus: 3 } as object), id, modId: Number(upload[1]), displayName: String(metadata.displayName), fileName: file.name, releaseType: 1, fileDate: new Date().toISOString(), fileLength: file.size, downloadUrl: null, isAvailable: true, gameVersions: [], hashes: [], dependencies: [] } as never)
+        catalog.files.push({ fileStatus: 3, id, modId: Number(upload[1]), displayName: String(metadata.displayName), fileName: file.name, releaseType: 1, fileDate: new Date().toISOString(), fileLength: file.size, downloadUrl: null, isAvailable: true, gameVersions: [], hashes: [], dependencies: [] } as never)
         return json(res, 200, { id })
       }
     }

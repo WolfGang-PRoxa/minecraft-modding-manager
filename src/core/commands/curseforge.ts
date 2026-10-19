@@ -83,17 +83,22 @@ export const curseforgePublish = command({
 
 export const curseforgeVersions = command({
   name: 'curseforge versions',
-  summary: 'État sur CurseForge des versions publiées d’un modpack (en modération, approuvée, refusée…).',
+  summary: 'Versions du projet CurseForge d’un modpack, de la plus récente à la plus ancienne, avec leur état (en modération, approuvée, refusée…).',
+  description:
+    'Toutes les versions du projet lié : celles envoyées par l’application (sentByApp) et celles mises en ligne depuis ' +
+    'le site. number : numéro donné par l’application, sinon le « _V<N> » du nom affiché (null sans numéro). Un numéro ' +
+    'déjà sur CurseForge ne s’y publie plus : la version suivante doit le dépasser. Les packs serveur ne sont pas listés.',
   params: z.object({ pack: packParam }),
   kind: 'read',
   async run({ pack: ref }, ctx) {
     const pack = await packOf(ctx, ref)
-    return { folder: pack.folder, versions: await ctx.service.curseForgeStatuses(pack.folder) }
+    if (!pack.curseforge) throw new StudioError(`${pack.name} n’est lié à aucun projet CurseForge (curseforge link).`)
+    return { folder: pack.folder, versions: await ctx.service.curseForgeVersions(pack.folder) }
   },
   print: (r) =>
-    Object.keys(r.versions).length
-      ? Object.entries(r.versions)
-          .map(([v, s]) => `v${v} : ${s.label}${s.displayName ? ` (${s.displayName})` : ''}`)
+    r.versions.length
+      ? r.versions
+          .map((v) => `${v.number === null ? '—' : `V${v.number}`} : ${v.displayName || `fichier ${v.fileId}`}, ${v.label}${v.date ? `, ${v.date.slice(0, 10)}` : ''}${v.sentByApp ? ' (envoyée par l’application)' : ''}`)
           .join('\n')
-      : `${r.folder} n’a encore aucune version publiée par l’application sur CurseForge.`
+      : `${r.folder} n’a encore aucune version sur CurseForge.`
 })

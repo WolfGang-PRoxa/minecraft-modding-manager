@@ -50,6 +50,10 @@ export interface CfFile {
   gameVersions: string[]
   hashes: Array<{ value: string; algo: number }>
   dependencies: Array<{ modId: number; relationType: number }>
+  /** FileStatus de CurseForge (3 en modération, 4 approuvé, 5 refusé, 10 publié…). */
+  fileStatus?: number
+  /** Pack serveur joint à une version (non listé par l'API publique, d'après les fichiers du propriétaire). */
+  isServerPack?: boolean
 }
 
 export class CurseForgeApiError extends StudioError {
@@ -60,6 +64,10 @@ export class CurseForgeApiError extends StudioError {
     super(message)
   }
 }
+
+/** Taille de page la plus grande acceptée par l'API, et nombre de pages lues au plus (1 000 fichiers). */
+const FILE_PAGE_SIZE = 50
+const MAX_FILE_PAGES = 20
 
 export class CurseForgeClient {
   constructor(private readonly apiKey: string) {}
@@ -74,6 +82,10 @@ export class CurseForgeClient {
   }
 
   private async request<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
+    return (await this.send<{ data: T }>(method, path, body)).data
+  }
+
+  private async send<T>(method: 'GET' | 'POST', path: string, body?: unknown): Promise<T> {
     let res: Response
     try {
       res = await fetch(`${curseForgeApis().core}${path}`, {
@@ -94,7 +106,7 @@ export class CurseForgeClient {
     }
     if (res.status === 404) throw new CurseForgeApiError(`Introuvable sur CurseForge (${method} ${path}).`, 404)
     if (!res.ok) throw new CurseForgeApiError(`CurseForge a répondu ${res.status} (${method} ${path}).`, res.status)
-    return ((await res.json()) as { data: T }).data
+    return (await res.json()) as T
   }
 
   /** Projets, par lots (l'API les accepte en une requête ; on reste raisonnable). */
@@ -126,6 +138,18 @@ export class CurseForgeClient {
     if (filter.gameVersion) query.set('gameVersion', filter.gameVersion)
     if (filter.modLoaderType) query.set('modLoaderType', String(filter.modLoaderType))
     return this.request<CfFile[]>('GET', `/v1/mods/${modId}/files?${query}`)
+  }
+
+  /** Tous les fichiers d'un projet (pages de 50), du plus récent au plus ancien ; pour un modpack, pas pour un mod. */
+  async getAllModFiles(modId: number): Promise<CfFile[]> {
+    const files: CfFile[] = []
+    for (let page = 0; page < MAX_FILE_PAGES; page++) {
+      const query = new URLSearchParams({ pageSize: String(FILE_PAGE_SIZE), index: String(files.length) })
+      const { data, pagination } = await this.send<{ data: CfFile[]; pagination?: { totalCount?: number } }>('GET', `/v1/mods/${modId}/files?${query}`)
+      files.push(...data)
+      if (data.length < FILE_PAGE_SIZE || files.length >= (pagination?.totalCount ?? 0)) break
+    }
+    return files
   }
 
   /** Télécharge un fichier de CurseForge (avec la clé) et vérifie son empreinte. */

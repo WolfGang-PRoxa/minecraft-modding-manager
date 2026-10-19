@@ -277,7 +277,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
       )
     }))
   )
-  ipcMain.handle('studio:curseForgeStatuses', (_e, folder: string) => outcome(async () => ({ statuses: await service.curseForgeStatuses(folder) })))
+  ipcMain.handle('studio:curseForgeVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.curseForgeVersions(folder) })))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>
     action(() => service.linkProfile(folder, profilePath))
   )

@@ -1,10 +1,11 @@
 // Publication d'un modpack sur CurseForge depuis sa carte : lien avec le projet, réglages (fichiers joints à l'export,
-// GitHub ou non), état de chaque version sur CurseForge et mise en ligne d'une version.
-import { useEffect, useState } from 'react'
+// GitHub ou non), versions déjà sur le projet et leur état, et mise en ligne d'une version.
+import { useEffect, useMemo, useState } from 'react'
 import { ExternalLink, Link2, SlidersHorizontal, Upload } from 'lucide-react'
-import type { CurseForgeFileState, PackView, VersionView } from '../../../shared/studio'
-import { Button } from '../components/Button'
+import type { CurseForgeVersion, PackCurseForge, PackView, VersionView } from '../../../shared/studio'
+import { Button, IconButton } from '../components/Button'
 import { Toggle } from '../components/Toggle'
+import { formatDate } from '../lib/format'
 import { Field, Modal, Spinner, TextArea, TextInput } from './Modal'
 import { openLink, useStudio } from './store'
 
@@ -12,49 +13,82 @@ function usePack(folder: string) {
   return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
 }
 
-/** État de chaque version publiée sur CurseForge, relu quand la liste des fichiers change. */
-export function useCurseForgeStatuses(pack: PackView): Record<string, CurseForgeFileState> {
-  const [statuses, setStatuses] = useState<Record<string, CurseForgeFileState>>({})
-  const key = JSON.stringify(pack.curseforge?.files ?? {})
+/** Versions du projet CurseForge lié (null tant qu'elles ne sont pas lues). */
+export interface CurseForgeVersions {
+  versions: CurseForgeVersion[] | null
+  error: string | null
+  /** Version du projet par numéro (la plus récente pour un numéro répété). */
+  byNumber: Map<number, CurseForgeVersion>
+  /** Plus haut numéro sur CurseForge (0 sans version), null tant qu'il n'est pas connu. */
+  highest: number | null
+}
+
+/** Relues quand le lien ou les fichiers envoyés par l'application changent. */
+export function useCurseForgeVersions(folder: string, curseforge: PackCurseForge | null): CurseForgeVersions {
+  const [state, setState] = useState<{ versions: CurseForgeVersion[] | null; error: string | null }>({ versions: null, error: null })
+  const key = curseforge ? JSON.stringify([curseforge.projectId, curseforge.files]) : ''
   useEffect(() => {
-    if (!pack.curseforge || key === '{}') return setStatuses({})
+    setState({ versions: null, error: null })
+    if (!key) return
     let alive = true
-    void window.studio.curseForgeStatuses(pack.folder).then((r) => alive && r.ok && setStatuses(r.statuses))
+    void window.studio
+      .curseForgeVersions(folder)
+      .then((r) => alive && setState(r.ok ? { versions: r.versions, error: null } : { versions: null, error: r.error }))
     return () => {
       alive = false
     }
-  }, [pack.folder, pack.curseforge, key])
-  return statuses
+  }, [folder, key])
+  return useMemo(() => {
+    const byNumber = new Map<number, CurseForgeVersion>()
+    for (const v of state.versions ?? []) if (v.number !== null && !byNumber.has(v.number)) byNumber.set(v.number, v)
+    const highest = state.versions ? Math.max(0, ...byNumber.keys()) : null
+    return { ...state, byNumber, highest }
+  }, [state])
 }
 
-const STATUS_TONES: Record<string, string> = {
+const STATUS_TONES = {
   live: 'bg-curseforge/15 text-curseforge ring-curseforge/30',
   review: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
-  refused: 'bg-red-500/15 text-red-300 ring-red-400/30'
+  refused: 'bg-red-500/15 text-red-300 ring-red-400/30',
+  neutral: 'bg-white/[0.04] text-ink-300 ring-white/10'
 }
 
-/** Sur la ligne d'une version : son état sur CurseForge, ou le bouton pour l'y publier. */
-export function CurseForgeVersionStatus({ pack, version, state }: { pack: PackView; version: VersionView; state: CurseForgeFileState | undefined }) {
+/** Pastille d'une version sur CurseForge, d'après son FileStatus. */
+function statusPill(status: number): { tone: keyof typeof STATUS_TONES; label: string } {
+  if (status === 4 || status === 10) return { tone: 'live', label: 'Sur CurseForge' }
+  if (status === 0) return { tone: 'refused', label: 'Introuvable sur CurseForge' }
+  if (status === 7) return { tone: 'refused', label: 'Supprimée' }
+  if ([2, 5, 6, 15].includes(status)) return { tone: 'refused', label: 'Refusée par CurseForge' }
+  if (status === 8) return { tone: 'neutral', label: 'Archivée' }
+  if (status === 12) return { tone: 'neutral', label: 'Obsolète' }
+  return { tone: 'review', label: 'En modération' }
+}
+
+function CurseForgeStatePill({ state }: { state: CurseForgeVersion }) {
+  const { tone, label } = statusPill(state.status)
+  return (
+    <span
+      title={`CurseForge : ${state.label}${state.displayName ? ` (${state.displayName})` : ''}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ring-1 ring-inset ${STATUS_TONES[tone]}`}
+    >
+      <span className="size-1.5 rounded-full bg-current" />
+      {label}
+    </span>
+  )
+}
+
+/** Sur la ligne d'une version : l'état sur CurseForge de la version de même numéro, ou le bouton pour l'y publier. */
+export function CurseForgeVersionStatus({ pack, version, curseforge }: { pack: PackView; version: VersionView; curseforge: CurseForgeVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
   if (!pack.curseforge) return null
-  if (!state && pack.curseforge.files[String(version.number)]) {
-    return <span className="text-xs text-ink-500">CurseForge…</span>
+  const state = curseforge.byNumber.get(version.number)
+  if (state) return <CurseForgeStatePill state={state} />
+  if (curseforge.highest === null) {
+    return pack.curseforge.files[String(version.number)] && !curseforge.error ? <span className="text-xs text-ink-500">CurseForge…</span> : null
   }
-  if (state) {
-    const tone = state.status === 4 || state.status === 10 ? 'live' : [2, 5, 6, 7, 15].includes(state.status) ? 'refused' : 'review'
-    const label = tone === 'live' ? 'Sur CurseForge' : tone === 'refused' ? 'Refusée par CurseForge' : 'En modération'
-    return (
-      <span
-        title={`CurseForge : ${state.label} (${state.displayName})`}
-        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ring-1 ring-inset ${STATUS_TONES[tone]}`}
-      >
-        <span className="size-1.5 rounded-full bg-current" />
-        {label}
-      </span>
-    )
-  }
-  // Seule la dernière version se publie : une plus ancienne passerait après des versions déjà sur CurseForge.
-  if (version.error || !version.analysis || version.number !== pack.versions[0]?.number) return null
+  // Seule la dernière version se publie, et seulement au-delà de la plus haute du projet : une version plus ancienne
+  // passerait après des versions déjà sur CurseForge.
+  if (version.error || !version.analysis || version.number !== pack.versions[0]?.number || version.number <= curseforge.highest) return null
   return (
     <Button size="sm" variant="ghost" icon={Upload} className="text-curseforge" onClick={() => openDialog({ kind: 'curseforge-publish', folder: pack.folder, version: version.number })}>
       Publier sur CurseForge
@@ -62,9 +96,12 @@ export function CurseForgeVersionStatus({ pack, version, state }: { pack: PackVi
   )
 }
 
-/** Sur la carte : où le modpack est publié. */
-export function CurseForgeLine({ pack }: { pack: PackView }) {
+const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? 's' : ''}`
+
+/** Sur la carte : où le modpack est publié, et les versions de son projet CurseForge. */
+export function CurseForgeLine({ pack, curseforge }: { pack: PackView; curseforge: CurseForgeVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
+  const count = curseforge.versions?.length ?? 0
   return (
     <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
       <span className="size-1.5 shrink-0 rounded-full bg-curseforge" />
@@ -77,6 +114,21 @@ export function CurseForgeLine({ pack }: { pack: PackView }) {
             </button>
             {pack.github ? ' et sur GitHub' : ' seulement'}
           </span>
+          {curseforge.versions ? (
+            <button
+              type="button"
+              className="text-ink-400 hover:text-ink-100 hover:underline"
+              onClick={() => openDialog({ kind: 'curseforge-versions', folder: pack.folder })}
+            >
+              · {count ? `${plural(count, 'version')}${curseforge.byNumber.size ? `, dernière : V${curseforge.highest}` : ''}` : 'aucune version encore'}
+            </button>
+          ) : curseforge.error ? (
+            <span className="text-ink-500" title={curseforge.error}>
+              · versions illisibles
+            </span>
+          ) : (
+            <span className="text-ink-500">· versions…</span>
+          )}
           <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'curseforge', folder: pack.folder })}>
             Réglages
           </button>
@@ -90,6 +142,79 @@ export function CurseForgeLine({ pack }: { pack: PackView }) {
         </>
       )}
     </p>
+  )
+}
+
+const RELEASE_TYPES: Record<number, string> = { 1: 'Version stable', 2: 'Bêta', 3: 'Alpha' }
+
+/** Toutes les versions du projet CurseForge : envoyées par l'application ou mises en ligne depuis le site. */
+export function CurseForgeVersionsDialog({ folder }: { folder: string }) {
+  const pack = usePack(folder)
+  const close = useStudio((s) => s.closeDialog)
+  const { versions, error } = useCurseForgeVersions(folder, pack?.curseforge ?? null)
+  if (!pack) return null
+  const local = new Set(pack.versions.map((v) => v.number))
+
+  return (
+    <Modal
+      title="Versions sur CurseForge"
+      subtitle={
+        versions
+          ? `${plural(versions.length, 'version')} sur le projet de « ${pack.name} », de la plus récente à la plus ancienne. Les packs serveur n’y figurent pas.`
+          : `Projet de « ${pack.name} ».`
+      }
+      onClose={close}
+      width="max-w-3xl"
+      footer={
+        <>
+          {pack.curseforge?.url && (
+            <Button variant="ghost" icon={ExternalLink} onClick={() => openLink(pack.curseforge!.url!)}>
+              Ouvrir la page du projet
+            </Button>
+          )}
+          <div className="flex-1" />
+          <Button variant="primary" onClick={close}>
+            Fermer
+          </Button>
+        </>
+      }
+    >
+      {error ? (
+        <p className="text-sm text-red-300 select-text">{error}</p>
+      ) : !versions ? (
+        <p className="flex items-center gap-2 text-sm text-ink-300">
+          <Spinner /> Lecture de CurseForge…
+        </p>
+      ) : !versions.length ? (
+        <p className="text-sm text-ink-400">Aucune version sur ce projet pour l’instant.</p>
+      ) : (
+        <ul className="divide-y divide-white/[0.05]">
+          {versions.map((v) => (
+            <li key={v.fileId} className="flex items-center gap-4 py-3">
+              <span className="w-14 shrink-0 font-mono text-sm font-semibold text-ink-100">{v.number === null ? '—' : `V${v.number}`}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-ink-100 select-text" title={v.displayName}>
+                  {v.displayName || `Fichier ${v.fileId}`}
+                </p>
+                <p className="mt-0.5 text-xs text-ink-400">
+                  {[
+                    v.date && formatDate(v.date),
+                    RELEASE_TYPES[v.releaseType],
+                    v.gameVersions.join(', '),
+                    v.sentByApp && 'envoyée par l’application',
+                    v.number !== null && local.has(v.number) && `v${v.number} dans ton dossier`
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </p>
+              </div>
+              <CurseForgeStatePill state={v} />
+              {v.url && <IconButton icon={ExternalLink} size={16} label="Ouvrir sur CurseForge" onClick={() => openLink(v.url!)} />}
+            </li>
+          ))}
+        </ul>
+      )}
+    </Modal>
   )
 }
 

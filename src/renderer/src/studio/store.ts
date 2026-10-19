@@ -16,6 +16,7 @@ export type Dialog =
   | { kind: 'import'; folder: string; profilePath?: string }
   /** Lien avec le projet CurseForge et réglages de publication. */
   | { kind: 'curseforge'; folder: string }
+  | { kind: 'curseforge-versions'; folder: string }
   /** Mettre une version en ligne sur CurseForge. */
   | { kind: 'curseforge-publish'; folder: string; version: number }
   /** Réglages des mises à jour automatiques d'un modpack. */

@@ -105,12 +105,25 @@ export interface PackProfileLink {
 }
 
 /** État sur CurseForge d'une version publiée par l'application. */
-export interface CurseForgeFileState {
+/** Une version du projet CurseForge d'un modpack : envoyée par l'application, ou mise en ligne depuis le site. */
+export interface CurseForgeVersion {
   fileId: number
-  /** FileStatus de CurseForge (3 en modération, 4 approuvé, 5 refusé, 10 publié…). */
+  /** Numéro de la version : celui donné par l'application, sinon le « _V<N> » du nom affiché ; null sans numéro. */
+  number: number | null
+  /** FileStatus de CurseForge (3 en modération, 4 approuvé, 5 refusé, 10 publié…), 0 si le fichier est introuvable. */
   status: number
   label: string
   displayName: string
+  /** 1 version stable, 2 bêta, 3 alpha (0 inconnu). */
+  releaseType: number
+  /** Date de mise en ligne (ISO). */
+  date: string | null
+  /** Versions de Minecraft et chargeur, comme CurseForge les affiche. */
+  gameVersions: string[]
+  /** Envoyée par l'application (`curseforge.files` de pack.json). */
+  sentByApp: boolean
+  /** Page du fichier sur CurseForge. */
+  url: string | null
 }
 
 /** Le projet CurseForge d'un modpack (pack.json). */
@@ -544,7 +557,8 @@ export interface StudioApi {
   updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }): Promise<ActionResult>
   publishCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; fileId: number } | { ok: false; error: string }>
   onCurseForgeProgress(listener: (text: string) => void): () => void
-  curseForgeStatuses(folder: string): Promise<{ ok: true; statuses: Record<string, CurseForgeFileState> } | { ok: false; error: string }>
+  /** Toutes les versions du projet CurseForge du modpack, de la plus récente à la plus ancienne. */
+  curseForgeVersions(folder: string): Promise<{ ok: true; versions: CurseForgeVersion[] } | { ok: false; error: string }>
   /** Mises à jour automatiques : réglages et derniers passages de chaque modpack, tâche planifiée, Claude. */
   maintenanceStatus(): Promise<MaintenanceStatus & { claude: boolean }>
   configureUpdates(folder: string, changes: Partial<PackUpdates>): Promise<{ ok: true; updates: PackUpdates } | { ok: false; error: string }>

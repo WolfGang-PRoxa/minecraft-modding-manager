@@ -5,11 +5,11 @@ import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import yauzl from 'yauzl'
-import type { PackCurseForge } from '../../shared/studio'
+import type { CurseForgeVersion, PackCurseForge } from '../../shared/studio'
 import type { CfFile, CurseForgeClient } from '../curseforgeApi'
 import { curseForgeApis } from '../curseforgeAuth'
 import { exportForCurseForge } from '../curseforgeExport'
-import { fileStatuses, type CurseForgeUploader } from '../curseforgeUpload'
+import { FILE_STATUS_LABELS, type CurseForgeUploader } from '../curseforgeUpload'
 import { StudioError } from './analyze'
 import { readEntries } from '../zip'
 
@@ -66,7 +66,7 @@ async function publishedOverrides(file: CfFile): Promise<string[]> {
  * fichiers joints à sa dernière version (même choix pour les suivantes).
  */
 export async function inspectProject(client: CurseForgeClient, projectId: number): Promise<{ highestVersion: number; overrides: string[] }> {
-  const files = (await client.getModFiles(projectId)).filter((f) => !(f as unknown as { isServerPack?: boolean }).isServerPack)
+  const files = (await client.getAllModFiles(projectId)).filter((f) => !f.isServerPack)
   const highestVersion = Math.max(0, ...files.map((f) => versionInDisplayName(f.displayName) ?? 0))
   const latest = files.reduce<CfFile | null>((best, f) => (!best || f.id > best.id ? f : best), null)
   return { highestVersion, overrides: latest ? await publishedOverrides(latest) : [] }
@@ -81,14 +81,19 @@ export interface PublishInput {
   notes: string
   releaseType: 'release' | 'beta' | 'alpha'
   curseforge: PackCurseForge
+  /** Versions déjà sur le projet (projectVersions) : leurs numéros sont pris. */
+  published: CurseForgeVersion[]
 }
 
 /** Exporte la version au format CurseForge et l'envoie ; renvoie l'identifiant du fichier créé. */
 export async function publishVersion(uploader: CurseForgeUploader, input: PublishInput, onStep: (text: string) => void): Promise<number> {
-  if (input.curseforge.files[String(input.version)]) {
-    throw new StudioError(`La v${input.version} est déjà sur CurseForge : crée une nouvelle version pour publier un changement.`)
+  const same = input.published.find((v) => v.number === input.version)
+  if (same || input.curseforge.files[String(input.version)]) {
+    const name = same?.displayName ? ` (« ${same.displayName} »)` : ''
+    throw new StudioError(`La v${input.version} est déjà sur CurseForge${name} : crée une nouvelle version pour publier un changement.`)
   }
-  const newer = Object.keys(input.curseforge.files).map(Number).filter((v) => v > input.version)
+  const taken = [...Object.keys(input.curseforge.files).map(Number), ...input.published.map((v) => v.number ?? 0)]
+  const newer = taken.filter((v) => v > input.version)
   if (newer.length) throw new StudioError(`La v${Math.max(...newer)} est déjà sur CurseForge : une version plus ancienne n’y a plus sa place.`)
   const dir = join(tmpdir(), 'modpack-manager', `curseforge-${Date.now()}`)
   await mkdir(dir, { recursive: true })
@@ -109,15 +114,38 @@ export async function publishVersion(uploader: CurseForgeUploader, input: Publis
   }
 }
 
-/** État sur CurseForge de chaque version publiée, par numéro. */
-export async function versionStatuses(client: CurseForgeClient, curseforge: PackCurseForge) {
-  const statuses = await fileStatuses(client, Object.values(curseforge.files))
-  return Object.fromEntries(
-    Object.entries(curseforge.files).map(([version, fileId]) => [
-      version,
-      { fileId, ...(statuses.get(fileId) ?? { status: 0, label: 'introuvable sur CurseForge', displayName: '' }) }
-    ])
-  )
+/**
+ * Toutes les versions du projet, de la plus récente à la plus ancienne : celles que CurseForge liste (approuvées), puis
+ * celles envoyées par l'application qu'il ne liste pas (en modération, refusées) ou plus (supprimées depuis le site).
+ * Numéro : celui de l'application pour un fichier qu'elle a envoyé, sinon le « _V<N> » du nom affiché.
+ */
+export async function projectVersions(client: CurseForgeClient, curseforge: PackCurseForge): Promise<CurseForgeVersion[]> {
+  const listed = (await client.getAllModFiles(curseforge.projectId)).filter((f) => !f.isServerPack)
+  const known = new Set(listed.map((f) => f.id))
+  const unlisted = Object.values(curseforge.files).filter((id) => !known.has(id))
+  const files = [...listed, ...(unlisted.length ? await client.getFiles(unlisted) : [])]
+  const sent = new Map(Object.entries(curseforge.files).map(([version, fileId]) => [fileId, Number(version)]))
+  const versions = files.map((file): CurseForgeVersion => {
+    const status = Number(file.fileStatus ?? 0)
+    return {
+      fileId: file.id,
+      number: sent.get(file.id) ?? versionInDisplayName(file.displayName),
+      status,
+      label: FILE_STATUS_LABELS[status] ?? `état ${status}`,
+      displayName: file.displayName,
+      releaseType: file.releaseType,
+      date: file.fileDate || null,
+      gameVersions: file.gameVersions ?? [],
+      sentByApp: sent.has(file.id),
+      url: curseforge.url ? `${curseforge.url}/files/${file.id}` : null
+    }
+  })
+  const found = new Set(files.map((f) => f.id))
+  for (const [fileId, version] of sent) {
+    if (found.has(fileId)) continue
+    versions.push({ fileId, number: version, status: 0, label: 'introuvable sur CurseForge', displayName: '', releaseType: 0, date: null, gameVersions: [], sentByApp: true, url: null })
+  }
+  return versions.sort((a, b) => b.fileId - a.fileId)
 }
 
 /** Garde le fichier exporté pour vérification (commande « curseforge export »). */
