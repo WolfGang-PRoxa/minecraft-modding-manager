@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.8.1] - 2026-10-19
+
 ### Améliorations
 
 - Studio : sur la ligne d’une version, le nom du zip n’est plus coupé. Les pastilles (GitHub, CurseForge, tests)
@@ -257,7 +259,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.1...HEAD
+[1.8.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.0...app-v1.8.1
 [1.8.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.7.0...app-v1.8.0
 [1.7.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.6.0...app-v1.7.0
 [1.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...app-v1.6.0
