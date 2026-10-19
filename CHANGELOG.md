@@ -8,6 +8,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Bouton **Offrir un café**, en haut à droite : la page Buy Me a Coffee du développeur, pour soutenir le projet.
+
+### Améliorations
+
+- Menus déroulants aux couleurs de l’application : liste arrondie, choix en cours coché, au clavier comme à la
+  souris. Les cases à cocher et les boutons radio suivent le même style.
+
 ## [1.8.2] - 2026-10-19
 
 ### Améliorations

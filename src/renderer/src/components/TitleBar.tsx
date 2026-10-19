@@ -1,9 +1,9 @@
-import { Bug, CircleArrowUp, CircleHelp, CloudUpload, Copy, Library, Minimize2, Minus, RefreshCw, Settings, Square, X } from 'lucide-react'
+import { Bug, CircleArrowUp, CircleHelp, CloudUpload, Coffee, Copy, Library, Minimize2, Minus, RefreshCw, Settings, Square, X } from 'lucide-react'
 import type { AppView, WindowState } from '../../../shared/types'
 import { useDocs } from '../docs/store'
 import { useStudio } from '../studio/store'
 import { useStore } from '../store'
-import { APP_NAME } from '../../../shared/config'
+import { APP_NAME, SUPPORT_URL } from '../../../shared/config'
 import { IconButton } from './Button'
 import { Logo } from './Logo'
 
@@ -26,6 +26,21 @@ function CurseForgeChip() {
         <span className={`relative size-2 rounded-full ${ok ? 'bg-curseforge' : 'bg-ink-500'}`} />
       </span>
       {ok ? 'CurseForge' : 'CurseForge introuvable'}
+    </button>
+  )
+}
+
+/** Soutenir le développeur : sa page Buy Me a Coffee, dans le navigateur. */
+function CoffeeChip() {
+  return (
+    <button
+      type="button"
+      onClick={() => void window.api.openExternal(SUPPORT_URL)}
+      title="Soutenir le développeur sur Buy Me a Coffee"
+      className="no-drag flex items-center gap-1.5 rounded-full bg-amber-glow/10 py-1.5 pr-3.5 pl-3 text-xs font-semibold text-amber-glow ring-1 ring-inset ring-amber-glow/25 transition hover:bg-amber-glow/20"
+    >
+      <Coffee size={14} strokeWidth={2.5} />
+      Offrir un café
     </button>
   )
 }
@@ -122,6 +137,7 @@ export function TitleBar() {
 
       <div className="no-drag flex items-center gap-1">
         <UpdateChip />
+        <CoffeeChip />
         <CurseForgeChip />
         <div className="mx-2 h-5 w-px bg-white/10" />
         <IconButton

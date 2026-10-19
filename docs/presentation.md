@@ -76,9 +76,10 @@ Aucun compte n’est nécessaire pour jouer.
 La barre de titre, en haut, reste visible dans toutes les vues :
 
 - à gauche, le nom de l’application, et pour un publieur les onglets **Bibliothèque** et **Studio** ;
-- à droite, le rappel **Mise à jour** (quand une mise à jour de l’application a été remise à plus tard), l’état de
-  CurseForge (un clic l’ouvre), puis les boutons **Actualiser**, **Aide**, **Signaler un problème** et
-  **Paramètres**, et enfin les boutons de la fenêtre (réduire, agrandir, fermer).
+- à droite, le rappel **Mise à jour** (quand une mise à jour de l’application a été remise à plus tard),
+  **Offrir un café** (la page Buy Me a Coffee du développeur, pour le soutenir), l’état de CurseForge (un clic
+  l’ouvre), puis les boutons **Actualiser**, **Aide**, **Signaler un problème** et **Paramètres**, et enfin les
+  boutons de la fenêtre (réduire, agrandir, fermer).
 
 Juste en dessous apparaît la barre de mise à jour de l’application quand une nouvelle version est disponible. Le
 reste de la fenêtre affiche la vue en cours : la Bibliothèque, ou le Studio pour un publieur.

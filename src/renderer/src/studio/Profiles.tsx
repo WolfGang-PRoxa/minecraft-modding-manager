@@ -22,6 +22,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { PackView, ProfileState, ProfileView } from '../../../shared/studio'
 import { Button } from '../components/Button'
+import { Select } from '../components/Select'
 import { formatLoader, formatRelative } from '../lib/format'
 import { PackCard } from './PackCard'
 import { ProfileUpdates } from './ProfileUpdates'
@@ -241,18 +242,7 @@ function LinkPicker({ options, onLink }: { options: Array<{ value: string; label
   if (!options.length) return null
   return (
     <div className="flex items-center gap-2">
-      <select
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        className="max-w-56 rounded-lg bg-ink-950/60 px-3 py-1.5 text-sm text-ink-100 ring-1 ring-white/10 outline-none focus:ring-grass-400/50"
-      >
-        <option value="">Choisir…</option>
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      <Select label="À lier" value={value} onChange={setValue} options={options} placeholder="Choisir…" size="sm" className="w-56" />
       <Button size="sm" icon={Link2} disabled={!value} onClick={() => onLink(value)}>
         Lier
       </Button>

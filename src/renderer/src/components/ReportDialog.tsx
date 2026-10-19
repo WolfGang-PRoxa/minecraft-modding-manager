@@ -8,6 +8,7 @@ import { errorMessage } from '../studio/store'
 import { Field, Modal, Spinner, TextArea, TextInput } from '../studio/Modal'
 import { useStore } from '../store'
 import { Button } from './Button'
+import { Select } from './Select'
 import { Avatar } from './GitHubAccount'
 
 const KINDS: Array<{ kind: ReportKind; label: string; icon: typeof Bug; placeholder: string }> = [
@@ -207,18 +208,13 @@ function ReportForm({ onClose }: { onClose: () => void }) {
 
         {modpacks && modpacks.length > 0 && (
           <Field label="Modpack concerné">
-            <select
+            <Select
+              label="Modpack concerné"
               value={modpackId ?? ''}
-              onChange={(e) => setModpackId(e.target.value || null)}
-              className="w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-white/10 outline-none focus:ring-grass-400/60"
-            >
-              <option value="">Aucun en particulier</option>
-              {modpacks.map((modpack) => (
-                <option key={modpack.id} value={modpack.id}>
-                  {modpack.latest.name}
-                </option>
-              ))}
-            </select>
+              onChange={(id) => setModpackId(id || null)}
+              options={[{ value: '', label: 'Aucun en particulier' }, ...modpacks.map((modpack) => ({ value: modpack.id, label: modpack.latest.name }))]}
+              className="w-full"
+            />
           </Field>
         )}
 

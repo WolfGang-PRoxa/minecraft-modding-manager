@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { CircleCheck, CircleX, FileSearch, ListChecks, Server, Square, TriangleAlert, Users } from 'lucide-react'
 import type { LogIssue, PlayerTestReport, ProfileTestReports, ServerTestReport, StaticCheckReport, VersionTests } from '../../../shared/studio'
 import { Button } from '../components/Button'
+import { Select } from '../components/Select'
 import { formatRelative } from '../lib/format'
 import { Spinner } from './Modal'
 import { useStudio } from './store'
@@ -214,21 +215,18 @@ export function ProfileTests({ profilePath, label }: { profilePath: string; labe
         <Button size="sm" variant="ghost" icon={Users} disabled={running !== null} onClick={() => void run('players')}>
           Partie avec des joueurs
         </Button>
-        <label className="flex items-center gap-2 text-xs text-ink-400">
+        <span className="flex items-center gap-2 text-xs text-ink-400">
           Joueurs
-          <select
+          <Select
+            label="Nombre de joueurs"
             value={players}
             disabled={running !== null}
-            onChange={(e) => setPlayers(Number(e.target.value))}
-            className="rounded-md bg-ink-900 px-1.5 py-1 text-ink-100 ring-1 ring-white/10"
-          >
-            {[1, 2, 3, 4].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setPlayers}
+            options={[1, 2, 3, 4].map((n) => ({ value: n, label: String(n) }))}
+            size="xs"
+            className="w-14"
+          />
+        </span>
       </div>
       {long && (
         <p className="mt-3 flex items-center gap-2 text-sm text-ink-300">

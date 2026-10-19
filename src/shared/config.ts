@@ -10,6 +10,9 @@ export const APP_USER_MODEL_ID = 'com.wolfgangproxa.modpackdownloader'
 
 // Dépôt de l'application : ses mises à jour (tags app-v*) en viennent toujours,
 // et c'est la source des modpacks par défaut. Un publieur peut en choisir une autre.
+/** Page de soutien du développeur (bouton « Offrir un café » de la barre de titre). */
+export const SUPPORT_URL = 'https://buymeacoffee.com/wolfgang_proxa'
+
 export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modpack-downloader' }
 export const APP_REPO_URL = `https://github.com/${APP_REPO.owner}/${APP_REPO.name}`
 
