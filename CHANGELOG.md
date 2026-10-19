@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.8.0] - 2026-10-19
+
 ### Ajouts
 
 - Studio : **partie de test avec de vrais joueurs**. Dans les tests d’un profil, le serveur de test démarre, puis 1 à 4
@@ -248,7 +250,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.7.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.0...HEAD
+[1.8.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.7.0...app-v1.8.0
 [1.7.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.6.0...app-v1.7.0
 [1.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...app-v1.6.0
 [1.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.4.0...app-v1.5.0
