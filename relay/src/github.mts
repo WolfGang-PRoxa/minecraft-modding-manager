@@ -132,6 +132,20 @@ export async function toggleLabel(config: RelayConfig, issue: Issue, label: stri
   if (!on && present) await api<void>(config, 'DELETE', `/issues/${issue.number}/labels/${encodeURIComponent(label)}`)
 }
 
+/**
+ * Retire une étiquette de l'issue et dit si elle y était. GitHub ne la retire qu'une fois : de deux appels
+ * simultanés, un seul obtient vrai. Le relais s'en sert pour ne traiter qu'une fois un événement reçu en double.
+ */
+export async function takeLabel(config: RelayConfig, issue: number, label: string): Promise<boolean> {
+  try {
+    await api<unknown>(config, 'DELETE', `/issues/${issue}/labels/${encodeURIComponent(label)}`)
+    return true
+  } catch (err) {
+    if (err instanceof RelayError && err.status === 404) return false
+    throw err
+  }
+}
+
 /** Issues (sans les pull requests) modifiées depuis `since`, ouvertes ou fermées. */
 export async function listRecentIssues(config: RelayConfig, since: string): Promise<Issue[]> {
   const issues = await api<Issue[]>(config, 'GET', `/issues?state=all&since=${encodeURIComponent(since)}&per_page=100`)

@@ -33,6 +33,9 @@ export function issueOfEvaluationBranch(branch: string): number | null {
 /** Étiquette posée sur l'issue tant que son évaluation est attendue (voir `relance.mts`). */
 export const LABEL_EVALUATING = 'evaluation-en-cours'
 
+/** Étiquette d'une évaluation attendue dont le mail est déjà parti sans elle, faute de réponse à temps. */
+export const LABEL_EVALUATION_LATE = 'evaluation-en-retard'
+
 /** L'évaluation écrite dans un message de commit : un objet JSON `{ niveau, resume, points }` dans son corps. */
 export function parseEvaluation(message: string): RiskAssessment {
   const start = message.indexOf('{')

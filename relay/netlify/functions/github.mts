@@ -6,7 +6,7 @@ import {
   issueOfBranch,
   LABEL_PROPOSED,
   setFixLabel,
-  toggleLabel,
+  takeLabel,
   type Issue
 } from '../../src/github.mts'
 import { emptyProposalMail, proposalMail, sendMail } from '../../src/mail.mts'
@@ -16,6 +16,7 @@ import {
   deleteEvaluation,
   issueOfEvaluationBranch,
   LABEL_EVALUATING,
+  LABEL_EVALUATION_LATE,
   parseEvaluation,
   readEvaluation
 } from '../../src/risk.mts'
@@ -75,12 +76,15 @@ async function onIssueOpened(req: Request, event: IssuesEvent): Promise<Response
 
 /** La routine a poussé son évaluation : le mail « nouvelle issue » part, avec elle. */
 async function onEvaluationPushed(config: RelayConfig, number: number, event: PushEvent): Promise<Response> {
+  // Seule une évaluation attendue donne un mail, et une seule fois : GitHub peut livrer le même push deux fois, et
+  // seul le premier à retirer l'étiquette la retire vraiment.
+  const waited = await takeLabel(config, number, LABEL_EVALUATING)
+  const late = !waited && (await takeLabel(config, number, LABEL_EVALUATION_LATE))
+  if (!waited && !late) return json(202, { ignored: 'évaluation déjà envoyée ou non demandée', issue: number })
   const issue = await getIssue(config, number)
-  const waited = issue.labels.some((label) => (typeof label === 'string' ? label : label.name) === LABEL_EVALUATING)
-  await toggleLabel(config, issue, LABEL_EVALUATING, false).catch(() => {})
   const risk = parseEvaluation(event.head_commit?.message ?? '')
   const id = await sendIssueMail(config, issue, risk)
-  return json(200, { mail: 'evaluation', issue: number, id, risk: risk.status === 'ok' ? risk.level : null, waited })
+  return json(200, { mail: 'evaluation', issue: number, id, risk: risk.status === 'ok' ? risk.level : null, late })
 }
 
 async function onPush(req: Request, event: PushEvent): Promise<Response> {

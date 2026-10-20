@@ -64,7 +64,9 @@ export async function fireRoutine(config: RelayConfig, request: RoutineRequest):
   let target: URL
   try {
     target = new URL(url)
-    if (target.protocol !== 'https:') throw new Error('protocole')
+    // http n'est admis que pour un faux serveur local (essais hors ligne).
+    const local = target.hostname === '127.0.0.1' || target.hostname === 'localhost'
+    if (target.protocol !== 'https:' && !(local && target.protocol === 'http:')) throw new Error('protocole')
   } catch {
     // La valeur n'est jamais montrée : un jeton collé par erreur à la place de l'adresse resterait secret.
     const hint = url.startsWith('sk-ant-') ? ' : elle contient un jeton, sans doute inversé avec celui de ' + name + '_TOKEN' : ''
@@ -111,7 +113,12 @@ export async function fireRoutine(config: RelayConfig, request: RoutineRequest):
  */
 export async function startEvaluation(config: RelayConfig, issue: Issue): Promise<{ sessionUrl: string | null }> {
   const signalement = await describeIssue(config, issue)
-  const session = await fireRoutine(config, { action: 'evaluer', issue: issue.number, branche: evaluationBranch(issue.number), signalement })
-  await toggleLabel(config, issue, LABEL_EVALUATING, true).catch(() => {})
-  return session
+  // L'étiquette est posée avant le lancement : c'est elle qui autorise le mail de l'évaluation (voir github.mts).
+  await toggleLabel(config, issue, LABEL_EVALUATING, true)
+  try {
+    return await fireRoutine(config, { action: 'evaluer', issue: issue.number, branche: evaluationBranch(issue.number), signalement })
+  } catch (err) {
+    await toggleLabel(config, { ...issue, labels: [...issue.labels, LABEL_EVALUATING] }, LABEL_EVALUATING, false).catch(() => {})
+    throw err
+  }
 }
