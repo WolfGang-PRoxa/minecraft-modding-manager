@@ -53,12 +53,12 @@ export interface Comparison {
 
 /**
  * Branches poussées par une session de correction : « correction/issue-12 », quel que soit le préfixe, sauf celles de
- * la routine d'évaluation (`evaluation/issue-12`, voir risk.mts).
+ * la routine d'évaluation (`evaluation/issue-12` ou `claude/evaluation-issue-12`, voir risk.mts).
  */
 const FIX_BRANCH = /^[\w.-]+\/issue-(\d+)(?:[-/].*)?$/
 
 export function issueOfBranch(branch: string): number | null {
-  if (branch.startsWith('evaluation/')) return null
+  if (/^(evaluation\/|claude\/evaluation-)/.test(branch)) return null
   const match = FIX_BRANCH.exec(branch)
   return match ? Number(match[1]) : null
 }

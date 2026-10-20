@@ -57,7 +57,8 @@ propriétaire.
 ## L'évaluation du risque
 
 Elle est faite par une session Claude Code, sur l'abonnement du propriétaire, lancée par une **routine à part** :
-ses consignes (`routine-evaluation.md`, à coller sur claude.ai) ne lui permettent que de pousser un commit vide sur
+ses consignes (`routine-evaluation.md`, routine « Modpack Manager : évaluer le risque d'une issue ») ne lui permettent que de
+pousser un commit vide sur
 `evaluation/issue-<N>`, dont le message porte l'évaluation en JSON (`src/risk.mts`). Rien n'entre dans le code du
 dépôt ; ce push réveille le relais, qui envoie le mail. La branche, publique comme l'issue, sert encore au mail de la
 proposition, puis est supprimée quand l'issue est fermée.

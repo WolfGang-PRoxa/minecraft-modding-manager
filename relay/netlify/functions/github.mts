@@ -2,7 +2,6 @@ import { loadConfig, RelayError, type RelayConfig } from '../../src/config.mts'
 import {
   compare,
   compareUrl,
-  deleteBranch,
   getIssue,
   issueOfBranch,
   LABEL_PROPOSED,
@@ -14,7 +13,7 @@ import { emptyProposalMail, proposalMail, sendMail } from '../../src/mail.mts'
 import { sendIssueMail } from '../../src/notify.mts'
 import {
   autoEvaluationAllowed,
-  evaluationBranch,
+  deleteEvaluation,
   issueOfEvaluationBranch,
   LABEL_EVALUATING,
   parseEvaluation,
@@ -135,7 +134,7 @@ export default async (req: Request): Promise<Response> => {
       if (issues.action === 'opened' || issues.action === 'reopened') return await onIssueOpened(req, issues)
       if (issues.action === 'closed') {
         const withToken = loadConfig(req, ['repo', 'githubToken'])
-        await deleteBranch(withToken, evaluationBranch(issues.issue.number)).catch(() => {})
+        await deleteEvaluation(withToken, issues.issue.number)
         return json(200, { closed: issues.issue.number })
       }
     }

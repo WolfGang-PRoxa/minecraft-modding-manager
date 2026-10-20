@@ -1,5 +1,5 @@
 import type { RelayConfig } from './config.mts'
-import { branchHead, getCommit, listRecentIssues, type Issue } from './github.mts'
+import { branchHead, deleteBranch, getCommit, listRecentIssues, type Issue } from './github.mts'
 import { truncate } from './text.mts'
 
 // Évaluation du risque d'une issue, faite par une session Claude Code (la routine « évaluation », sur l'abonnement du
@@ -20,7 +20,10 @@ export type RiskAssessment =
 /** Branche où la routine pousse l'évaluation d'une issue. */
 export const evaluationBranch = (issue: number) => `evaluation/issue-${issue}`
 
-const EVALUATION_BRANCH = /^evaluation\/issue-(\d+)$/
+/** Branches possibles d'une évaluation : la session se replie sur la seconde si la première lui est refusée. */
+const evaluationBranches = (issue: number) => [evaluationBranch(issue), `claude/evaluation-issue-${issue}`]
+
+const EVALUATION_BRANCH = /^(?:evaluation\/|claude\/evaluation-)issue-(\d+)$/
 
 export function issueOfEvaluationBranch(branch: string): number | null {
   const match = EVALUATION_BRANCH.exec(branch)
@@ -48,9 +51,16 @@ export function parseEvaluation(message: string): RiskAssessment {
 
 /** L'évaluation déjà poussée pour une issue, ou la raison de son absence. */
 export async function readEvaluation(config: RelayConfig, issue: number): Promise<RiskAssessment> {
-  const head = await branchHead(config, evaluationBranch(issue)).catch(() => null)
-  if (!head) return { status: 'unavailable', reason: 'aucune évaluation n’a été faite pour cette issue.' }
-  return parseEvaluation((await getCommit(config, head)).message)
+  for (const branch of evaluationBranches(issue)) {
+    const head = await branchHead(config, branch).catch(() => null)
+    if (head) return parseEvaluation((await getCommit(config, head)).message)
+  }
+  return { status: 'unavailable', reason: 'aucune évaluation n’a été faite pour cette issue.' }
+}
+
+/** Retire l'évaluation d'une issue (issue réglée, ou nouvelle évaluation demandée). */
+export async function deleteEvaluation(config: RelayConfig, issue: number): Promise<void> {
+  await Promise.all(evaluationBranches(issue).map((branch) => deleteBranch(config, branch).catch(() => {})))
 }
 
 /**

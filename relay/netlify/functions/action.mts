@@ -16,7 +16,7 @@ import {
 } from '../../src/github.mts'
 import { mergeProposal } from '../../src/merge.mts'
 import { errorPage, formPage, linkTo, quoteBlock, resultPage } from '../../src/pages.mts'
-import { evaluationBranch, LABEL_EVALUATING } from '../../src/risk.mts'
+import { deleteEvaluation, LABEL_EVALUATING } from '../../src/risk.mts'
 import { describeIssue, fireRoutine, startEvaluation } from '../../src/routine.mts'
 import { sensitiveFiles } from '../../src/sensitive.mts'
 import { signLink, verifyLink, type LinkPayload } from '../../src/sign.mts'
@@ -68,7 +68,7 @@ async function showEvaluate(config: RelayConfig, link: LinkPayload, token: strin
 async function runEvaluate(config: RelayConfig, link: LinkPayload): Promise<Response> {
   const issue = await getIssue(config, link.i)
   // Une évaluation précédente est remplacée : la routine repart de la branche principale.
-  await deleteBranch(config, evaluationBranch(issue.number)).catch(() => {})
+  await deleteEvaluation(config, issue.number)
   const session = await startEvaluation(config, issue)
   return resultPage(
     'Évaluation lancée',
@@ -186,7 +186,7 @@ async function runApprove(config: RelayConfig, link: LinkPayload): Promise<Respo
   // La correction est sur la branche principale : le rangement qui suit ne doit pas faire échouer la page.
   await Promise.all([
     deleteBranch(config, link.b!).catch(() => {}),
-    deleteBranch(config, evaluationBranch(link.i)).catch(() => {}),
+    deleteEvaluation(config, link.i),
     closeIssue(config, link.i)
       .then((issue) => setFixLabel(config, issue, null))
       .catch(() => {})
