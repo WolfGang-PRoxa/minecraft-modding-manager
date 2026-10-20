@@ -1,8 +1,8 @@
 # CurseForge
 
 Modpack Manager installe les modpacks comme des profils CurseForge : c’est depuis CurseForge, onglet Minecraft,
-que tu lances une partie. Cette page explique comment l’application trouve CurseForge et son dossier de profils, et
-ce qu’elle fait quand CurseForge est déjà ouvert.
+qu’une partie se lance. Cette page explique comment l’application trouve CurseForge et son dossier de profils, et ce
+qu’elle fait quand CurseForge est déjà ouvert.
 
 ## Détection de CurseForge
 
@@ -17,8 +17,7 @@ La barre de titre indique l’état de CurseForge :
 - **CurseForge introuvable** : un clic ouvre les paramètres.
 
 Sans CurseForge, la Bibliothèque affiche aussi le bandeau **CurseForge n’est pas installé**, avec un bouton
-**Télécharger CurseForge**. Une fois CurseForge installé, reviens sur la fenêtre de l’application : elle le détecte
-aussitôt.
+**Télécharger CurseForge**. Une fois CurseForge installé, l’application le détecte dès le retour sur sa fenêtre.
 
 ## Le dossier des instances
 
@@ -28,23 +27,23 @@ ordre :
 
 1. **Choisi manuellement**, dans [Paramètres → Dossier des instances](parametres.md#dossier-des-instances) ;
 2. **Détecté automatiquement depuis CurseForge** : CurseForge écrit dans ses journaux le dossier qu’il utilise, et
-   l’application le lit à chaque fois. Si tu déplaces ce dossier dans les paramètres de CurseForge, l’application
+   l’application le lit à chaque fois. Si ce dossier est déplacé dans les paramètres de CurseForge, l’application
    suit ;
-3. **Emplacement par défaut de CurseForge** : `C:\Users\<toi>\curseforge\minecraft\Instances`.
+3. **Emplacement par défaut de CurseForge** : `C:\Users\<nom>\curseforge\minecraft\Instances`.
 
 Les paramètres affichent le dossier retenu et son origine. **Modifier…** en choisit un autre, **Ouvrir** l’affiche
 dans l’Explorateur, et **Détection automatique** (visible après un choix manuel) revient à la détection.
 
 > [!TIP]
-> Ne modifie ce dossier que si l’application ne trouve pas tes profils, par exemple après avoir déplacé le dossier
-> d’installation dans les paramètres Minecraft de CurseForge sans avoir relancé CurseForge depuis. Un dossier qui
-> n’existe pas encore est créé à la première installation.
+> Ce dossier n’est à modifier que si l’application ne trouve pas les profils, par exemple après un déplacement du
+> dossier d’installation dans les paramètres Minecraft de CurseForge, sans relance de CurseForge depuis. Un dossier
+> qui n’existe pas encore est créé à la première installation.
 
 ## Ouvrir CurseForge après une installation
 
 Le réglage **Ouvrir CurseForge après une installation** (activé par défaut, dans
 [Paramètres → CurseForge](parametres.md#curseforge)) lance CurseForge à la fin de chaque installation ou mise à
-jour, pour que tu puisses jouer tout de suite.
+jour, pour jouer tout de suite.
 
 S’il est désactivé, la notification de fin d’installation propose un bouton **Ouvrir CurseForge**. Sur la carte d’un
 modpack déjà à jour, le bouton **Ouvrir CurseForge** fait de même.
@@ -77,4 +76,5 @@ Pour ne jamais abîmer une partie en cours :
 - la relance de CurseForge est refusée tant que Minecraft tourne depuis l’un de ses profils (« Minecraft est lancé
   depuis CurseForge : ferme le jeu, puis relance CurseForge. »).
 
-Ferme le jeu, puis recommence. Les autres messages sont expliqués dans [Dépannage](depannage.md#curseforge).
+Il suffit de fermer le jeu, puis de recommencer. Les autres messages sont expliqués dans
+[Dépannage](depannage.md#curseforge).

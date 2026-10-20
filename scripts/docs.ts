@@ -95,7 +95,9 @@ for (const name of exists('docs') ? readdirSync(join(root, 'docs')).sort() : [])
 }
 
 // Titres, HTML et liens de chaque fichier.
-const checked = [SUMMARY, ...pages.keys(), ...(exists('README.md') ? ['README.md'] : [])].filter(exists)
+// Le README du dépôt et ses traductions (README.fr.md…), en plus des pages de docs/.
+const readmes = readdirSync(root).filter((name) => /^README(\.[a-z-]+)?\.md$/i.test(name))
+const checked = [SUMMARY, ...pages.keys(), ...readmes].filter(exists)
 let linkCount = 0
 for (const file of checked) {
   const text = read(file)
@@ -105,7 +107,7 @@ for (const file of checked) {
   const titles = headings.filter((heading) => heading.depth === 1)
   if (titles.length > 1) warnings.push({ file, line: titles[1].line, message: 'plusieurs titres de niveau 1 : la page n’en a qu’un.' })
 
-  if (file !== 'README.md') {
+  if (!readmes.includes(file)) {
     proseLines(text).forEach((line, index) => {
       const prose = line.replace(/`[^`]*`/g, '')
       const tag = /<\/?([a-zA-Z][a-zA-Z0-9-]*)(?:\s[^<>]*)?\/?>/.exec(prose)

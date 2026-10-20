@@ -1,12 +1,12 @@
 # Réglages des versions
 
-Pour chaque modpack, les réglages des versions décident de ce que reçoivent les joueurs : les fichiers de ton
-instance qui ne sont jamais publiés, les mods installés désactivés, et le sort de leurs configurations à chaque mise
-à jour.
+Pour chaque modpack, les réglages des versions décident de ce que reçoivent les joueurs : les fichiers de l’instance
+du publieur qui ne sont jamais publiés, les mods installés désactivés, et le sort de leurs configurations à chaque
+mise à jour.
 
 ## Ouvrir les réglages
 
-Sur la carte du modpack, clique sur **Réglages**. La fenêtre **Réglages des versions** a trois onglets :
+Le bouton **Réglages**, sur la carte du modpack, ouvre la fenêtre **Réglages des versions**. Elle a trois onglets :
 
 - **Fichiers exclus** : ce qui n’est jamais publié ;
 - **Mods désactivés** : les mods que les joueurs reçoivent désactivés ;
@@ -22,11 +22,11 @@ l’onglet correspondant.
 
 ## Exclure des fichiers
 
-Certains fichiers de ton profil CurseForge n’ont rien à faire chez les joueurs : tes options du jeu
-(`options.txt`, avec tes touches et ta distance d’affichage), tes packs de shaders, un mod que tu es seul à utiliser,
-un fichier de configuration personnel…
+Certains fichiers du profil CurseForge du publieur n’ont rien à faire chez les joueurs : ses options du jeu
+(`options.txt`, avec ses touches et sa distance d’affichage), ses packs de shaders, un mod qu’il est seul à
+utiliser, un fichier de configuration personnel…
 
-L’onglet **Fichiers exclus** montre le contenu du zip, dossier par dossier : décoche ce que tu ne veux pas publier.
+L’onglet **Fichiers exclus** montre le contenu du zip, dossier par dossier : décocher ce qui ne doit pas être publié.
 Un dossier décoché est exclu avec tout son contenu ; une case à moitié cochée signale un dossier dont une partie
 seulement est exclue. Un clic sur le nom d’un dossier l’ouvre, le fil d’Ariane permet de remonter.
 
@@ -44,16 +44,15 @@ de l’instance :
 
 La casse ne compte pas : `Shaderpacks` et `shaderpacks` désignent le même dossier.
 
-Les exclusions s’appliquent **aux prochaines versions** : quand tu crées une version avec **Créer la vN depuis
-CurseForge**, les fichiers exclus sont laissés de côté, en plus des données propres à ta partie (mondes, captures,
-journaux, cartes…, voir [Créer la version depuis CurseForge](versions.md#créer-la-version-depuis-curseforge)). Une
-version déjà publiée ne change pas.
+Les exclusions s’appliquent **aux prochaines versions** : une version créée avec **Créer la vN depuis CurseForge**
+laisse de côté les fichiers exclus, en plus des données propres à la partie du publieur (mondes, captures, journaux,
+cartes…, voir [Créer la version depuis CurseForge](versions.md#créer-la-version-depuis-curseforge)). Une version déjà
+publiée ne change pas.
 
 ### Un zip qui contient des fichiers exclus
 
-Un zip que tu as préparé toi-même, ou une version créée avant que tu ajoutes une exclusion, peut contenir des
-fichiers exclus. Tant qu’il doit partir à la prochaine publication (zip à ranger, ou version pas encore publiée), sa
-ligne le signale :
+Un zip préparé à la main, ou une version créée avant l’ajout d’une exclusion, peut contenir des fichiers exclus. Tant
+qu’il doit partir à la prochaine publication (zip à ranger, ou version pas encore publiée), sa ligne le signale :
 
 > Contient 2 fichiers exclus dans les réglages (shaderpacks, options.txt) : ils seront publiés avec cette version.
 > Retirer du zip
@@ -75,8 +74,8 @@ et porte la mention **Désactivé chez les joueurs**. Le champ de recherche filt
 
 - Un mod est reconnu par son **projet CurseForge** : il reste désactivé dans les versions suivantes, même quand son
   fichier change à sa mise à jour. Un mod ajouté à la main, inconnu de CurseForge, est reconnu à son nom de fichier.
-- Un mod déjà désactivé dans ton propre profil (**Désactivé dans ton profil**) l’est aussi chez les joueurs : pour le
-  proposer actif, active-le dans CurseForge, puis crée une nouvelle version.
+- Un mod déjà désactivé dans le profil du publieur (**Désactivé dans ton profil**) l’est aussi chez les joueurs :
+  pour le proposer actif, il faut l’activer dans CurseForge, puis créer une nouvelle version.
 - Les mods désactivés que le zip affiché ne contient plus sont listés sous la liste, avec une croix pour les retirer
   des réglages.
 
@@ -88,8 +87,8 @@ reste désactivé. Un mod dont il n’a pas changé l’état suit la nouvelle v
 ## Garder les configurations des joueurs
 
 Sans cette option, une mise à jour remplace le dossier `config` du joueur en entier par celui de la nouvelle
-version : tes réglages arrivent partout, mais un réglage que le joueur avait changé (sa minicarte, son interface…)
-est perdu.
+version : les réglages du publieur arrivent partout, mais un réglage que le joueur avait changé (sa minicarte, son
+interface…) est perdu.
 
 Avec l’option **Garder les configurations modifiées par les joueurs**, une mise à jour regarde chaque fichier du
 dossier `config` du joueur :
@@ -99,7 +98,7 @@ dossier `config` du joueur :
 | Modifié par le joueur | Il est **gardé** tel quel, même si la nouvelle version en fournit un autre. |
 | Fourni par le modpack, jamais touché par le joueur | Il suit la nouvelle version (ou disparaît si la nouvelle version ne le fournit plus). |
 | Nouveau dans la nouvelle version | Il est ajouté. |
-| Créé chez le joueur (par lui, ou par un mod au premier lancement) | Il est gardé, sauf si la nouvelle version fournit un fichier du même nom : c’est alors le tien. |
+| Créé chez le joueur (par lui, ou par un mod au premier lancement) | Il est gardé, sauf si la nouvelle version fournit un fichier du même nom : c’est alors celui du modpack. |
 
 L’application sait qu’un fichier a été modifié en le comparant à celui que la version installée avait fourni : elle
 note l’empreinte de chaque fichier de configuration à l’installation. Pour un profil installé avant que
@@ -107,9 +106,9 @@ l’application le fasse, la première mise à jour se fie à la date des fichie
 l’installation est gardé.
 
 > [!NOTE]
-> Un réglage que tu changes dans un fichier qu’un joueur a modifié ne lui arrive donc pas. Pour qu’un changement
-> important arrive chez tout le monde, mets-le dans un nouveau fichier, ou demande aux joueurs concernés de supprimer
-> leur fichier avant la mise à jour.
+> Un réglage changé par le publieur dans un fichier qu’un joueur a modifié n’arrive donc pas chez ce joueur. Pour
+> qu’un changement important arrive chez tout le monde, le mettre dans un nouveau fichier, ou demander aux joueurs
+> concernés de supprimer leur fichier avant la mise à jour.
 
 Avec ou sans cette option, les options du jeu (`options.txt`…), les mondes, les cartes et l’état des mods sont
 toujours gardés (voir [Mettre à jour un modpack](bibliotheque.md#mettre-à-jour-un-modpack)).
@@ -118,7 +117,7 @@ toujours gardés (voir [Mettre à jour un modpack](bibliotheque.md#mettre-à-jou
 
 | Réglage | Ce qui change sur GitHub |
 |---|---|
-| Fichiers exclus | Rien tout de suite : ils s’appliquent aux prochaines versions créées depuis CurseForge, ou aux zips que tu nettoies avec **Retirer du zip**. |
+| Fichiers exclus | Rien tout de suite : ils s’appliquent aux prochaines versions créées depuis CurseForge, ou aux zips nettoyés avec **Retirer du zip**. |
 | Mods désactivés, configurations | À la prochaine publication, le `modpack.json` de **toutes les versions** du modpack est renvoyé (le zip n’est pas renvoyé). L’aperçu le détaille, version par version. |
 
 Les mods désactivés et les configurations gardées demandent aux joueurs une version récente de Modpack Manager ;

@@ -24,7 +24,7 @@ Cette documentation est aussi intégrée à l’application : bouton **Aide** de
   gardées.
 - [Publier et supprimer](publication.md) : mettre les releases GitHub en accord avec le dossier.
 - [Mises à jour automatiques](automatique.md) : mettre à jour, tester et publier les modpacks seuls, à leur rythme.
-- [Claude Code et commandes](commandes.md) : laisser Claude Code gérer tes modpacks, ou les gérer depuis un
+- [Claude Code et commandes](commandes.md) : confier la gestion des modpacks à Claude Code, ou les gérer depuis un
   terminal.
 
 ## L’application

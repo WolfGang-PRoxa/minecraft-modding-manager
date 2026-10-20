@@ -1,83 +1,89 @@
 # Modpack Manager
 
-Application Windows pour installer en un clic les modpacks Minecraft publiés sur GitHub. Le modpack apparaît
-directement dans CurseForge, prêt à être lancé, et se met à jour sans perdre tes mondes. Les auteurs de modpacks les
-publient avec le Studio, dans la même application.
+[![English](https://img.shields.io/badge/lang-English-2ea44f)](README.md)
+[![Français](https://img.shields.io/badge/langue-Fran%C3%A7ais-0366d6)](README.fr.md)
 
-**[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest)**
-· [Documentation](docs/README.md) · [Nouveautés](CHANGELOG.md)
+Windows application that installs Minecraft modpacks published on GitHub in one click. Each modpack appears directly
+in CurseForge, ready to play, and updates without losing worlds or settings. Modpack authors publish their modpacks
+with the Studio, in the same application.
 
-## Fonctionnalités
+**[Download the latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest)**
+· [Documentation (French)](docs/README.md) · [Changelog (French)](CHANGELOG.md)
 
-- **Installation en un clic** dans CurseForge (version Overwolf ou application autonome), avec vérification de
-  l'empreinte de chaque téléchargement.
-- **Mises à jour sur place** : mondes, options, captures d'écran, packs de ressources et réglages du profil sont
-  conservés.
-- **Ce que tu as déjà** : l'application reconnaît les versions présentes dans ton CurseForge, même installées à la
-  main, et ne modifie jamais un profil qu'elle n'a pas installé.
-- **Studio** pour les auteurs : un dossier par modpack, numérotation des versions, notes, image, contenu des zips, et
-  publication qui met les releases GitHub en accord avec le dossier, et aussi sur **CurseForge** (export au format de
-  CurseForge, suivi de la modération).
-- **Mises à jour des mods** d'un profil, essayées sur une copie avant d'être gardées, et **tests avant publication** :
-  vérification des fichiers (dépendances, versions, incompatibilités), serveur de test, puis partie avec de vrais
-  joueurs hors ligne. Les **mises à jour automatiques** enchaînent le tout, à la fréquence choisie.
-- **Claude Code** peut piloter le Studio (serveur MCP) ; les mêmes opérations existent en ligne de commande (`mpm`).
-- **Mises à jour de l'application** proposées en haut de la fenêtre, avec leurs nouveautés, et installées en un clic.
-- **Aide intégrée** (`F1`) : toute la documentation et l'historique des versions, avec une recherche.
-- **Signalement d'un problème** depuis l'application, transmis au mainteneur.
+## Features
+
+- **One-click installation** into CurseForge (Overwolf version or standalone application), with a SHA-256 check of
+  every download.
+- **In-place updates**: worlds, options, screenshots, resource packs and profile settings are kept.
+- **Existing profiles recognized**: the application detects the modpack versions already present in CurseForge, even
+  installed by hand, and never modifies a profile it did not install.
+- **Studio** for authors: one folder per modpack, version numbering, release notes, cover image, zip contents, and
+  publishing that keeps the GitHub releases in sync with the folder, as well as on **CurseForge** (export in the
+  CurseForge format, moderation tracking).
+- **Mod updates** for a profile, tried on a copy before being kept, and **tests before publishing**: file checks
+  (dependencies, versions, incompatibilities), a test server, then a test session with real offline game clients.
+  **Automatic updates** chain all of this at the chosen frequency.
+- **Claude Code** can drive the Studio (MCP server); the same operations are available on the command line (`mpm`).
+- **Application updates** offered at the top of the window, with their release notes, and installed in one click.
+- **Built-in help** (`F1`): the whole documentation and the version history, with search.
+- **Problem reports** sent from the application to the maintainer.
+
+The application and its documentation are in French.
 
 ## Installation
 
-1. Installe [CurseForge](https://www.curseforge.com/download/app) si ce n'est pas déjà fait.
-2. Télécharge **Modpack-Manager-Setup-x.y.z.exe** depuis la
-   [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) et lance-le.
-   Les installeurs signés indiquent l'éditeur **SignPath Foundation** (voir
-   [Politique de signature du code](#politique-de-signature-du-code)). Si Windows affiche « Windows a protégé votre
-   ordinateur », clique sur **Informations complémentaires**, puis **Exécuter quand même** : cet avertissement
-   apparaît pour un installeur non signé, et parfois pour une nouvelle version signée, le temps que Microsoft la
-   connaisse.
-3. Au premier lancement, choisis **Récepteur** (le choix par défaut) : tu reçois les modpacks publiés sur ce dépôt.
-4. Dans la bibliothèque, clique sur **Installer** : le modpack est dans CurseForge, onglet Minecraft.
+1. Install [CurseForge](https://www.curseforge.com/download/app) if it is not installed yet.
+2. Download **Modpack-Manager-Setup-x.y.z.exe** from the
+   [latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) and run it. Signed
+   installers show the publisher **SignPath Foundation** (see [Code signing policy](#code-signing-policy)). If
+   Windows shows "Windows protected your PC", click **More info**, then **Run anyway**: this warning appears for an
+   unsigned installer, and sometimes for a new signed version until Microsoft knows it.
+3. On first launch, choose **Récepteur** (receiver, the default choice) to receive the modpacks published on this
+   repository.
+4. In the library, click **Installer**: the modpack appears in CurseForge, in the Minecraft tab.
 
-L'application s'installe pour ton compte Windows, sans droits d'administrateur. Le détail est dans
-[Installation et premier lancement](docs/installation.md) ; en cas de souci, voir le [Dépannage](docs/depannage.md).
+The application installs for the current Windows account, without administrator rights. Details are in
+[Installation et premier lancement](docs/installation.md); for problems, see [Dépannage](docs/depannage.md).
+Uninstalling is done from Windows settings (**Apps → Installed apps → Modpack Manager → Uninstall**).
 
 ## Documentation
 
-La documentation est intégrée à l'application (bouton **Aide** de la barre de titre, ou `F1`) et se lit aussi ici :
+The documentation is built into the application (**Aide** button of the title bar, or `F1`) and can also be read
+here, in French:
 
-- **Bien démarrer** : [Présentation](docs/presentation.md) · [Installation et premier lancement](docs/installation.md)
-- **Jouer** : [La bibliothèque](docs/bibliotheque.md) · [CurseForge](docs/curseforge.md)
-- **Publier** : [Devenir publieur](docs/publieur.md) · [Le Studio](docs/studio.md) ·
+- **Getting started**: [Présentation](docs/presentation.md) · [Installation et premier lancement](docs/installation.md)
+- **Playing**: [La bibliothèque](docs/bibliotheque.md) · [CurseForge](docs/curseforge.md)
+- **Publishing**: [Devenir publieur](docs/publieur.md) · [Le Studio](docs/studio.md) ·
   [Préparer une version](docs/versions.md) · [Publier et supprimer](docs/publication.md) ·
   [Claude Code et commandes](docs/commandes.md)
-- **L'application** : [Paramètres](docs/parametres.md) · [Mises à jour](docs/mises-a-jour.md) ·
+- **The application**: [Paramètres](docs/parametres.md) · [Mises à jour](docs/mises-a-jour.md) ·
   [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.md)
-- **Référence** : [Dépannage](docs/depannage.md) · [Fichiers et dossiers](docs/fichiers.md) ·
+- **Reference**: [Dépannage](docs/depannage.md) · [Fichiers et dossiers](docs/fichiers.md) ·
   [Confidentialité et sécurité](docs/confidentialite.md) · [Glossaire](docs/glossaire.md)
-- **Développement** : [architecture, commandes, suivi des changements](docs/developpement.md)
+- **Development**: [architecture, commands, change tracking](docs/developpement.md)
 
-## Développement
+## Development
 
 ```bash
 npm install
-npm run dev              # lance l'application avec rechargement à chaud
-npm run studio           # même chose, ouverte sur la vue Studio (option --studio)
+npm run dev              # runs the application with hot reload
+npm run studio           # same, opened on the Studio view (--studio option)
 npm run typecheck
-npm run docs:verifier    # documentation et historique des versions
-npm run changelog        # changements pas encore mentionnés dans l'historique
-npm run build:win        # installeur local dans dist/
+npm run docs:verifier    # documentation and version history
+npm test
+npm run changelog        # changes not mentioned in the version history yet
+npm run build:win        # local installer in dist/
 ```
 
-L'organisation du code, les règles de la documentation, le suivi des changements et les moyens de tester sans
-risque sont décrits dans [docs/developpement.md](docs/developpement.md).
+The code layout, the documentation rules, change tracking and the ways to test without risk are described in
+[docs/developpement.md](docs/developpement.md).
 
-### Publier une nouvelle version de l'application
+### Releasing a new version of the application
 
-1. `npm run changelog` : vérifie que chaque changement visible est mentionné dans la section « Non publié » de
+1. `npm run changelog` checks that every visible change is mentioned in the « Non publié » section of
    [CHANGELOG.md](CHANGELOG.md).
-2. `npm run changelog -- --version 1.1.0` : cette section devient la version 1.1.0, et `package.json` passe en 1.1.0.
-3. Committer, puis pousser un tag `app-v1.1.0` :
+2. `npm run changelog -- --version 1.1.0` turns this section into version 1.1.0 and sets `package.json` to 1.1.0.
+3. Commit, then push an `app-v1.1.0` tag:
 
    ```bash
    git commit -am "chore: version 1.1.0"
@@ -85,77 +91,75 @@ risque sont décrits dans [docs/developpement.md](docs/developpement.md).
    git push origin main app-v1.1.0
    ```
 
-GitHub Actions vérifie que la version figure dans l'historique, construit l'installeur, le fait signer (voir
-ci-dessous) et crée la release, avec les notes de la version tirées de `CHANGELOG.md`. Les applications déjà
-installées proposent alors la nouvelle version en haut de leur fenêtre, avec ses nouveautés, et se mettent à jour en
-un clic.
+GitHub Actions checks that the version is in the history, builds the installer, has it signed (see below) and creates
+the release, with the release notes taken from `CHANGELOG.md`. Installed applications then offer the new version at
+the top of their window, with its release notes, and update in one click.
 
-### Suivi des signalements (mainteneur)
+### Problem report tracking (maintainer)
 
-Le dossier [`relay/`](relay/README.md) contient un petit service, hébergé sur Netlify, qui prévient le propriétaire
-du dépôt par mail à chaque issue et lui permet, depuis les boutons de ses mails, de faire corriger l'issue puis de
-valider ou d'invalider la correction proposée. Rien n'est fusionné sur la branche principale sans sa validation.
+The [`relay/`](relay/README.md) folder contains a small service, hosted on Netlify, that emails the repository owner
+for each issue and lets the owner, from the buttons of those emails, have the issue fixed, then approve or reject the
+proposed fix. Nothing is merged into the main branch without the owner's approval.
 
-### Signature du code (mainteneur)
+### Code signing (maintainer)
 
-L'installeur est signé gratuitement par [SignPath Foundation](https://signpath.org), réservé aux projets open source.
-Tant que la signature n'est pas configurée, la CI publie l'installeur sans signature.
+The installer is signed for free by [SignPath Foundation](https://signpath.org), a service reserved for open source
+projects. Until signing is set up, the CI publishes the installer unsigned.
 
-Mise en place, une seule fois :
+One-time setup:
 
-1. Prérequis de SignPath Foundation : licence open source ([MIT](LICENSE)), double authentification activée sur
-   GitHub et sur SignPath, et une première release de l'application déjà publiée (`app-v1.0.0`, non signée).
-2. Candidater sur [signpath.org](https://signpath.org/apply) avec l'adresse du dépôt.
-3. Une fois le projet créé chez SignPath : installer l'application GitHub de SignPath sur le dépôt, lier le
-   *Trusted Build System* « GitHub.com » au projet, définir comme configuration d'artefact par défaut le contenu de
-   [`.github/signpath/artifact-configuration.xml`](.github/signpath/artifact-configuration.xml), et créer un jeton d'API
-   pour un utilisateur autorisé à soumettre des demandes.
-4. Dans GitHub → *Settings* → *Secrets and variables* → *Actions* : le secret `SIGNPATH_API_TOKEN` et les variables
-   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG` et `SIGNPATH_SIGNING_POLICY_SLUG` (en général
+1. SignPath Foundation prerequisites: an open source license ([MIT](LICENSE)), two-factor authentication on GitHub and
+   SignPath, and a first release of the application already published (`app-v1.0.0`, unsigned).
+2. Apply on [signpath.org](https://signpath.org/apply) with the repository address.
+3. Once the project is created at SignPath: install the SignPath GitHub application on the repository, link the
+   *Trusted Build System* "GitHub.com" to the project, set the content of
+   [`.github/signpath/artifact-configuration.xml`](.github/signpath/artifact-configuration.xml) as the default
+   artifact configuration, and create an API token for a user allowed to submit signing requests.
+4. In GitHub → *Settings* → *Secrets and variables* → *Actions*: the secret `SIGNPATH_API_TOKEN` and the variables
+   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG` and `SIGNPATH_SIGNING_POLICY_SLUG` (usually
    `release-signing`).
 
-À chaque tag `app-v*`, la CI envoie l'installeur à SignPath et attend : approuve la demande sur signpath.io (un e-mail
-te prévient). L'installeur signé est ensuite vérifié puis publié. Seul l'installeur est signé : c'est le fichier que
-Windows contrôle au téléchargement.
+For each `app-v*` tag, the CI sends the installer to SignPath and waits for the signing request to be approved on
+signpath.io (an email announces it). The signed installer is then verified and published. Only the installer is
+signed: it is the file Windows checks on download.
 
-## Politique de signature du code
+## Code signing policy
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
 [SignPath Foundation](https://signpath.org).
-(Signature gratuite fournie par SignPath.io, certificat de la SignPath Foundation.)
 
-Rôles :
+Team roles:
 
-- **Auteurs** (modifient le code sans relecture) : [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
-- **Relecteurs** (relisent les contributions extérieures) : [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
-- **Approbateurs** (autorisent la signature de chaque version) : [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
+- **Committers and reviewers** (modify the code, review outside contributions):
+  [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
+- **Approvers** (approve the signing of each release): [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
 
-Seuls les installeurs construits par GitHub Actions à partir de ce dépôt sont signés, après approbation manuelle.
+Only installers built by GitHub Actions from this repository are signed, after manual approval.
 
-### Confidentialité
+### Privacy
 
-Modpack Manager ne collecte aucune donnée, ne contient ni statistiques d'utilisation ni publicité, et n'envoie rien
-à ses auteurs de lui-même. Il ne transmet d'informations qu'aux services nécessaires à ce que tu lui demandes :
+Modpack Manager collects no data, contains no usage statistics or advertising, and sends nothing to its authors on
+its own. It only transmits information to the services needed for what the user asks it to do:
 
-- **GitHub** (`api.github.com`, `github.com` et ses serveurs de fichiers), pour tous : lister les modpacks et les
-  mises à jour du dépôt suivi, télécharger les fichiers que tu choisis d'installer, afficher les avatars des comptes.
-  En mode publieur, ta connexion GitHub (jeton) reste chiffrée sur ton PC et n'est envoyée qu'à GitHub, pour publier
-  sur le dépôt choisi.
-- **CurseForge** (`api.curseforge.com`, `minecraft.curseforge.com`, `edge.forgecdn.net`), en mode publieur et avec la
-  clé ou le jeton que tu y as enregistrés : chercher et télécharger les mises à jour des mods, publier tes versions.
-- **Les serveurs de Minecraft et de ses chargeurs** (Mojang, Fabric, Forge, NeoForge), en mode publieur, quand tu
-  testes un profil : télécharger le serveur de test, une fois par version. Les jeux de la partie de test se lancent
-  hors ligne, sans compte, et ne se connectent qu'au serveur de test sur ton PC.
-- **Claude Code**, seulement si tu l'as connecté : quand tu actives **Confier les échecs à Claude Code** (désactivé
-  par défaut), le résumé d'une mise à jour automatique qui a échoué lui est envoyé, et il le transmet à Anthropic
-  avec ton compte Claude.
+- **GitHub** (`api.github.com`, `github.com` and its file servers), for everyone: listing the modpacks and updates of
+  the followed repository, downloading the files the user chooses to install, showing account avatars. In publisher
+  mode, the GitHub connection (token) stays encrypted on the PC and is only sent to GitHub, to publish on the chosen
+  repository.
+- **CurseForge** (`api.curseforge.com`, `minecraft.curseforge.com`, `edge.forgecdn.net`), in publisher mode and with
+  the key or token saved by the user: looking for and downloading mod updates, publishing versions.
+- **Minecraft and mod loader servers** (Mojang, Fabric, Forge, NeoForge), in publisher mode, when a profile is tested:
+  downloading the test server, once per version. The game clients of the test session run offline, without an
+  account, and only connect to the test server on the same PC.
+- **Claude Code**, only if it has been connected: when **Confier les échecs à Claude Code** is enabled (off by
+  default), the summary of a failed automatic update is sent to it, and it forwards it to Anthropic with the user's
+  Claude account.
 
-Un signalement n'est envoyé que si tu remplis et valides le formulaire « Signaler un problème » : il devient alors
-une issue publique de ce dépôt, avec ce que tu as écrit et, si tu les joins, les informations techniques affichées
-dans le formulaire. Le bouton « Offrir un café » ouvre seulement une page dans ton navigateur.
+A problem report is only sent when the user fills in and submits the « Signaler un problème » form: it then becomes a
+public issue of this repository, with what was written and, if attached, the technical information shown in the form.
+The « Offrir un café » button only opens a page in the browser.
 
-Aucune autre information n'est transmise à un autre système. L'application ne change rien à la configuration de ton
-PC sans que tu le demandes (raccourci, tâche planifiée des mises à jour automatiques, connexion de Claude Code). Le
-détail est dans [Confidentialité et sécurité](docs/confidentialite.md).
+No other information is transmitted to any other system. The application changes nothing in the PC configuration
+unless asked to (shortcut, scheduled task for automatic updates, Claude Code connection). Details (in French) are in
+[Confidentialité et sécurité](docs/confidentialite.md).
 
-Licence : [MIT](LICENSE).
+License: [MIT](LICENSE).

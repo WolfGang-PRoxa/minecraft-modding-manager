@@ -327,8 +327,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `docs.ts` : sommaire, titres et ancres calculées comme GitHub, liens (`resolveRepoPath`, chemins depuis la racine).
   `changelog.ts` : lecture et vérification de `CHANGELOG.md` (Keep a Changelog en français), notes d'une version,
   lecture des notes d'une release GitHub (`parseReleaseNotes` : tout ce qui précède le premier `---`).
-- `docs/` — la documentation (Markdown lu sur GitHub et dans l'app). Une page = un `# Titre` puis un paragraphe
-  d'introduction ; liens relatifs `page.md#ancre` ; pas de HTML (non affiché : chevrons entre accents graves) ; saut de
+- `README.md` (anglais, affiché par défaut sur GitHub) et ses traductions `README.<langue>.md` (`README.fr.md`),
+  chacune avec les boutons des langues en tête : un changement se reporte dans toutes. Liens et ancres vérifiés par
+  `docs:verifier` (le HTML y est permis).
+- `docs/` — la documentation (Markdown lu sur GitHub et dans l'app). **Ton impersonnel**, comme les README : ni
+  tutoiement ni impératif (« Cliquer sur… », « le joueur », « le publieur ») ; seuls les libellés et messages de
+  l'interface, qui tutoient, sont cités tels quels. Une page = un `# Titre` puis un paragraphe d'introduction ; liens relatifs `page.md#ancre` ; pas de HTML (non affiché : chevrons entre accents graves) ; saut de
   ligne par `\` en fin de ligne. Toute page doit figurer dans `docs/README.md`.
 - `CHANGELOG.md` — historique des versions de l'app : `## [Non publié]` en tête, puis `## [x.y.z] - AAAA-MM-JJ`,
   rubriques `###`, liens de comparaison en fin de fichier. Un commentaire `<!-- 1a2b3c4 -->` cite un commit.

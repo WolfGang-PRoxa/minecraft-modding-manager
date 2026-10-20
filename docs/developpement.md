@@ -21,7 +21,7 @@ d’Electron est donc téléchargé au premier lancement. S’il manque, `node -
 
 > [!WARNING]
 > Le terminal intégré de VS Code définit `ELECTRON_RUN_AS_NODE=1` : Electron démarre alors comme Node et l’application
-> plante au lancement. Retire cette variable avant `npm run dev`.
+> plante au lancement. Retirer cette variable avant `npm run dev`.
 
 ## Commandes
 
@@ -78,7 +78,7 @@ l’intègre à la compilation : bouton **Aide** de la barre de titre, ou `F1`.
 - **Les encadrés** utilisent la syntaxe de GitHub : `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`,
   `> [!CAUTION]`.
 - **Pas de HTML** : il n’est pas affiché dans l’application. Les chemins et noms qui contiennent des chevrons
-  (`C:\Users\<toi>`) vont entre accents graves.
+  (`C:\Users\<utilisateur>`) vont entre accents graves.
 - Les tableaux, listes, blocs de code et la mise en forme courante de Markdown sont pris en charge.
 
 `npm run docs:verifier` contrôle le sommaire (chaque page existe et y figure), les titres, les liens (fichier et
@@ -119,21 +119,21 @@ npm run changelog -- --notes 1.2.0      # affiche le texte de la release GitHub 
   `refactor`…) sont ignorés.
 - **`--brouillon`** ajoute une entrée pour chaque commit non mentionné, dans la rubrique qui correspond à son type
   (`feat` → Ajouts, `fix` → Corrections, `perf` → Améliorations), à partir de son message et suivie de son empreinte en
-  commentaire. Reformule ensuite ces entrées pour les utilisateurs.
+  commentaire. Ces entrées sont ensuite à reformuler pour les utilisateurs.
 - **`--version`** transforme « Non publié » en version datée du jour, recrée une section « Non publié » vide, met à
   jour les liens de comparaison en bas du fichier et la version de `package.json` et `package-lock.json`. Elle ne
   crée ni commit ni tag.
 - **`--notes`** écrit le texte de la release : les rubriques de la version, puis le mode d’emploi de l’installeur.
 
-Pour qu’un commit qui ne concerne pas les utilisateurs ne soit plus signalé, cite son empreinte dans un commentaire,
+Pour qu’un commit qui ne concerne pas les utilisateurs ne soit plus signalé, citer son empreinte dans un commentaire,
 par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publié ».
 
 ## Publier une nouvelle version
 
-1. `npm run changelog` : vérifie que tous les changements sont mentionnés, et relis la section « Non publié ».
+1. `npm run changelog` : vérifier que tous les changements sont mentionnés, et relire la section « Non publié ».
 2. `npm run changelog -- --version 1.2.0` : la section devient la version 1.2.0, et `package.json` passe en 1.2.0.
-3. Commite : `git commit -am "chore: version 1.2.0"`.
-4. Pousse le commit et le tag :
+3. Committer : `git commit -am "chore: version 1.2.0"`.
+4. Pousser le commit et le tag :
 
    ```bash
    git tag app-v1.2.0
@@ -146,7 +146,7 @@ par SignPath (approbation manuelle sur signpath.io) et publie la release. Les ap
 alors en haut de leur fenêtre, avec ses nouveautés.
 
 > [!CAUTION]
-> Un tag `app-v*` publie une version pour tous les utilisateurs : ne le pousse qu’une fois la version prête.
+> Un tag `app-v*` publie une version pour tous les utilisateurs : ne le pousser qu’une fois la version prête.
 
 ## Tester sans risque
 
@@ -154,19 +154,23 @@ alors en haut de leur fenêtre, avec ses nouveautés.
   (avec `GITHUB_TOKEN=x` pour le Studio et les scripts) remplacent l’API de GitHub. Cette variable est ignorée par
   l’application installée.
 - **Données isolées** : `--user-data-dir=<dossier>` donne à l’application d’autres réglages, une autre connexion et
-  un autre cache ; `APPDATA=<dossier>` fait de même pour les scripts. Choisis aussi un dossier `Instances` de test
-  pour ne pas toucher à ton CurseForge.
-- **Installeur** : compile-le sous une autre identité (`-c.appId`, `-c.productName`…) pour ne pas remplacer
-  l’installation réelle, puis désinstalle-le avec `/S`. Relancé, il montre la fenêtre **Déjà installé** ; une
+  un autre cache ; `APPDATA=<dossier>` fait de même pour les scripts. Choisir aussi un dossier `Instances` de
+  test pour ne pas toucher au vrai CurseForge.
+- **Installeur** : le compiler sous une autre identité (`-c.appId`, `-c.productName`…) pour ne pas remplacer
+  l’installation réelle, puis le désinstaller avec `/S`. Relancé, il montre la fenêtre **Déjà installé** ; une
   version plus ancienne (`-c.extraMetadata.version=…`) donne les fenêtres de mise à jour et de retour en arrière, et
   l’application de test laissée ouverte, la fenêtre **Application ouverte**.
-- **Mise à jour de l’application** : ne clique jamais sur **Mettre à jour** dans une version de test branchée sur le
+- **Mise à jour de l’application** : ne jamais cliquer sur **Mettre à jour** dans une version de test branchée sur le
   vrai GitHub, elle lancerait le vrai installeur.
 
 ## Conventions
 
-- Interface, messages et documentation en français, en tutoyant l’utilisateur.
+- Interface et messages en français, en tutoyant l’utilisateur.
+- Documentation et README sur un ton impersonnel : infinitifs, tournures passives, « le joueur », « le publieur »
+  (les libellés de l’interface cités restent tels quels). Le README est en anglais (`README.md`, affiché par défaut),
+  ses traductions s’appellent `README.<langue>.md` (`README.fr.md`) et chaque version porte en tête les boutons
+  des langues.
 - Messages de commit en français, au format conventionnel : `feat: …`, `fix: …`, `docs: …`, `chore: …`.
-- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager#politique-de-signature-du-code)
-  est exigée par SignPath : garde-la à jour dans le README.
+- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/blob/main/README.fr.md#politique-de-signature-du-code)
+  est exigée par SignPath : la garder à jour dans chaque version du README.
 - Licence : [MIT](../LICENSE).

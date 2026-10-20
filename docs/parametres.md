@@ -1,7 +1,7 @@
 # Paramètres
 
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
-clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès que tu le modifies.
+clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès qu’il est modifié.
 
 Les sections **Dossier des modpacks**, **Compte CurseForge** et **Claude Code et terminal** n’apparaissent qu’en mode
 publieur.
@@ -19,17 +19,17 @@ permet d’en suivre un autre (voir
 - **Dépôt GitHub des modpacks**, avec **Changer** pour en choisir un autre (le compte connecté doit pouvoir y
   publier) ;
 - **Compte GitHub** : le compte utilisé pour publier, et d’où vient la connexion (voir
-  [Connecter ton compte GitHub](publieur.md#connecter-ton-compte-github)) ;
+  [Connecter le compte GitHub](publieur.md#connecter-le-compte-github)) ;
 - **Aller au Studio**.
 
-Pour **passer en publieur**, clique sur l’onglet **Publieur** : le formulaire demande le dépôt et le compte GitHub
-(voir [Devenir publieur](publieur.md)). Pour **revenir en récepteur**, clique sur l’onglet **Récepteur** : l’onglet
-Studio disparaît, la Bibliothèque s’affiche. Ton dossier des modpacks, ta connexion GitHub et tes releases ne sont
-pas touchés : repasser en publieur les retrouve.
+Pour **passer en publieur**, cliquer sur l’onglet **Publieur** : le formulaire demande le dépôt et le compte GitHub
+(voir [Devenir publieur](publieur.md)). Pour **revenir en récepteur**, cliquer sur l’onglet **Récepteur** : l’onglet
+Studio disparaît, la Bibliothèque s’affiche. Le dossier des modpacks, la connexion GitHub et les releases ne sont pas
+touchés : repasser en publieur les retrouve.
 
 ## Dossier des modpacks
 
-Réservé aux publieurs : le dossier où le Studio range tes modpacks, un sous-dossier par modpack. **Changer…** en
+Réservé aux publieurs : le dossier où le Studio range les modpacks, un sous-dossier par modpack. **Changer…** en
 choisit un autre, **Ouvrir** l’affiche dans l’Explorateur. Voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks).
 
 ## CurseForge
@@ -51,16 +51,16 @@ Le dossier `Instances` de CurseForge, où les modpacks sont installés, et la fa
 - **Ouvrir** l’affiche dans l’Explorateur ;
 - **Détection automatique** (après un choix manuel) revient à la détection.
 
-À ne modifier que si tu as changé le dossier d’installation dans les paramètres Minecraft de CurseForge et que
-l’application ne trouve pas tes profils. Voir [Le dossier des instances](curseforge.md#le-dossier-des-instances).
+À ne modifier que si le dossier d’installation a été changé dans les paramètres Minecraft de CurseForge et que
+l’application ne trouve pas les profils. Voir [Le dossier des instances](curseforge.md#le-dossier-des-instances).
 
 ## Raccourci
 
-Indique si Modpack Manager a un raccourci sur ton bureau.
+Indique si Modpack Manager a un raccourci sur le bureau.
 
 - **Ajouter au bureau** (ou **Recréer sur le bureau**) crée le raccourci sur le bureau, ou le remplace. Le recréer
   répare aussi une icône restée vide.
-- **Autre emplacement…** crée un raccourci à l’endroit de ton choix.
+- **Autre emplacement…** crée un raccourci à l’endroit choisi.
 
 ## Compte CurseForge
 
@@ -68,13 +68,13 @@ Réservé aux publieurs : ce qu’il faut pour travailler avec CurseForge.
 
 - **Clé de l’API CurseForge** : sert à chercher les mises à jour des mods, packs de textures et shaders. Elle se crée
   sur [console.curseforge.com](https://console.curseforge.com/) (**Profile API key**).
-- **Jeton d’auteur** : sert à mettre tes modpacks en ligne sur tes projets CurseForge. Il se crée sur
+- **Jeton d’auteur** : sert à mettre les modpacks en ligne sur les projets CurseForge du publieur. Il se crée sur
   [authors.curseforge.com](https://authors.curseforge.com/account/api-tokens) (**API Tokens**).
 
-Colle la clé ou le jeton dans son champ, puis **Vérifier et enregistrer** : CurseForge doit l’accepter, sinon rien
-n’est enregistré. L’état indique s’il est enregistré et accepté. **Retirer** le supprime de l’application. Les deux
-sont chiffrés par Windows pour ton compte (comme ta connexion GitHub) ; ni l’application, ni le terminal, ni Claude
-ne les affichent.
+Coller la clé ou le jeton dans son champ, puis cliquer sur **Vérifier et enregistrer** : CurseForge doit l’accepter,
+sinon rien n’est enregistré. L’état indique s’il est enregistré et accepté. **Retirer** le supprime de
+l’application. Les deux sont chiffrés par Windows pour le compte en cours (comme la connexion GitHub) ; ni
+l’application, ni le terminal, ni Claude ne les affichent.
 
 ## Mises à jour automatiques
 
@@ -86,9 +86,9 @@ fait analyser par Claude Code une mise à jour qui échoue aux tests. Voir [Mise
 ## Claude Code et terminal
 
 Réservé aux publieurs. Indique si [Claude Code](https://claude.com/claude-code) est installé sur ce PC et s’il est
-connecté à tes modpacks. **Connecter** (ou **Reconnecter**) inscrit l’application dans Claude Code : il peut alors
-créer, régler et publier tes modpacks à ta demande. Rappelle aussi que les mêmes opérations existent dans un terminal
-(`mpm.cmd`). Voir [Claude Code et commandes](commandes.md).
+connecté aux modpacks. **Connecter** (ou **Reconnecter**) inscrit l’application dans Claude Code : il peut alors
+créer, régler et publier les modpacks à la demande du publieur. La section rappelle aussi que les mêmes opérations
+existent dans un terminal (`mpm.cmd`). Voir [Claude Code et commandes](commandes.md).
 
 ## À propos
 
@@ -99,7 +99,7 @@ Le numéro de la version installée et sa date de publication.
 - **Nouveautés** ouvre l’historique des versions de l’application.
 - **Documentation** ouvre cette aide.
 - **Signaler un problème** ouvre le formulaire de signalement (voir [Signaler un problème](signalement.md)).
-- **Dépôt GitHub** ouvre la page du projet dans ton navigateur.
+- **Dépôt GitHub** ouvre la page du projet dans le navigateur.
 
 ## La fenêtre
 

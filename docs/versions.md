@@ -15,9 +15,9 @@ Le Studio analyse chaque zip dès qu’il le voit. Un zip est **refusé**, et do
 | Message | Cause |
 |---|---|
 | « Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille. » | GitHub limite chaque fichier d’une release à 2 Go. Seulement pour un modpack publié sur GitHub. |
-| « Zip illisible ou incomplet (copie encore en cours ?). » | Le zip est encore en cours de copie, ou abîmé. Attends la fin de la copie. |
-| « Zip corrompu : son contenu est illisible. » | Le zip est abîmé : recrée-le. |
-| « C’est un export CurseForge (manifest.json)… » | Un export CurseForge (`manifest.json` et `overrides`) ne contient pas les mods eux-mêmes. Zippe le dossier de l’instance, ou utilise **Créer la vN depuis CurseForge**. |
+| « Zip illisible ou incomplet (copie encore en cours ?). » | Le zip est encore en cours de copie, ou abîmé. Il suffit d’attendre la fin de la copie. |
+| « Zip corrompu : son contenu est illisible. » | Le zip est abîmé : il est à recréer. |
+| « C’est un export CurseForge (manifest.json)… » | Un export CurseForge (`manifest.json` et `overrides`) ne contient pas les mods eux-mêmes. Zipper le dossier de l’instance, ou utiliser **Créer la vN depuis CurseForge**. |
 | « minecraftinstance.json introuvable : ce zip ne contient pas une instance CurseForge. » | Le zip ne contient pas de dossier d’instance. |
 | « minecraftinstance.json est illisible dans ce zip. » | Le fichier de l’instance est abîmé. |
 
@@ -33,39 +33,39 @@ Un zip accepté peut porter des **avertissements**, affichés sous sa ligne :
 
 ## Créer la version depuis CurseForge
 
-C’est le moyen le plus simple et le plus sûr. Sur la carte du modpack, clique sur **Créer la vN depuis CurseForge**
-(ou, dans le [détail d’un profil](studio.md#tes-profils-curseforge), sur **Créer la vN depuis ce profil**, qui le choisit
-pour toi) :
+C’est le moyen le plus simple et le plus sûr : **Créer la vN depuis CurseForge**, sur la carte du modpack (ou, dans
+le [détail d’un profil](studio.md#les-profils-curseforge), **Créer la vN depuis ce profil**, qui choisit ce profil
+d’office) :
 
-1. La fenêtre liste les profils de ton dossier `Instances`, le plus récemment joué en premier, avec leur version de
+1. La fenêtre liste les profils du dossier `Instances`, le plus récemment joué en premier, avec leur version de
    Minecraft, leur mod loader et leur nombre de mods.
-2. Choisis le profil à publier.
-3. Coche **Inclure les mondes (saves)** seulement si les joueurs doivent recevoir tes mondes.
-4. Clique sur **Créer `<Dossier>-vN.zip`**. Une barre suit la compression ; **Annuler** l’interrompt sans rien
+2. Choisir le profil à publier.
+3. Cocher **Inclure les mondes (saves)** seulement si les joueurs doivent recevoir les mondes.
+4. Cliquer sur **Créer `<Dossier>-vN.zip`**. Une barre suit la compression ; **Annuler** l’interrompt sans rien
    laisser derrière.
 
 Le zip est créé directement dans le dossier du modpack, déjà numéroté : pas besoin de le ranger. Le profil devient
-la source du modpack : le Studio te dira quand il aura changé depuis cette version. Les données propres
-à ta partie sont laissées de côté :
+la source du modpack : le Studio signalera quand il aura changé depuis cette version. Les données propres à la
+partie du publieur sont laissées de côté :
 
-- tes mondes (`saves`), sauf si tu as coché la case ;
+- les mondes (`saves`), sauf si la case a été cochée ;
 - `screenshots`, `logs`, `crash-reports`, `backups`, `local`, `downloads`, `.mixin.out` ;
 - les données des cartes JourneyMap (`journeymap/data`) et Xaero’s (`xaero`, `xaerowaypoints`, `xaeroworldmap`) ;
 - le cache de Distant Horizons des serveurs visités (`Distant_Horizons_server_data`, souvent plusieurs Go) ;
-- les données d’Essential (`essential` : ton compte, tes amis), les enregistrements et réglages du micro de Simple
-  Voice Chat (`voicechat_recordings`, `config/voicechat/voicechat-client.properties`) et les données de JEI par monde
+- les données d’Essential (`essential` : compte, amis), les enregistrements et réglages du micro de Simple Voice
+  Chat (`voicechat_recordings`, `config/voicechat/voicechat-client.properties`) et les données de JEI par monde
   (`config/jei/world`) ;
 - `usercache.json`, `usernamecache.json`, `command_history.txt` ;
 - les fichiers propres à Modpack Manager (`.modpack-manager.json`, image du profil) ;
-- les fichiers que tu as exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (tes options du jeu,
-  tes shaders…) : la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
+- les fichiers exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (options du jeu, shaders…) :
+  la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
 
-Pour un modpack publié sur GitHub, un zip de plus de 2 Go est refusé : retire alors des fichiers lourds du profil
-(shaders, packs de ressources…). Un modpack publié seulement sur CurseForge n’a pas cette limite.
+Pour un modpack publié sur GitHub, un zip de plus de 2 Go est refusé : il faut alors retirer des fichiers lourds du
+profil (shaders, packs de ressources…). Un modpack publié seulement sur CurseForge n’a pas cette limite.
 
 ## Déposer un zip
 
-Tu peux aussi préparer le zip toi-même, puis le déposer dans le dossier du modpack :
+Le zip peut aussi être préparé à la main, puis déposé dans le dossier du modpack :
 
 - avec l’Explorateur (**Ouvrir le dossier** sur la carte du modpack) ;
 - ou en le glissant sur la carte du modpack dans le Studio : il y est copié.
@@ -74,7 +74,7 @@ Le zip apparaît en tête de la carte avec le statut **À ranger**, et le numér
 bouton **Contenu** permet déjà d’en vérifier le contenu.
 
 > [!WARNING]
-> Attends la fin de la copie d’un gros zip avant de le ranger : un zip incomplet est refusé (« Zip illisible ou
+> Attendre la fin de la copie d’un gros zip avant de le ranger : un zip incomplet est refusé (« Zip illisible ou
 > incomplet »). Le Studio le réanalyse de lui-même une fois la copie terminée.
 
 ## Ranger les zips
@@ -98,12 +98,12 @@ Les règles de numérotation :
   numéro attribué (dans `pack.json`) et tient compte de ceux déjà publiés sur GitHub.
 - Un zip déjà nommé `Hardcore_Endgame-v7.zip` est pris tel quel comme v7.
 - Deux zips ne peuvent pas porter le même numéro : le modpack est alors en erreur (« Plusieurs zips pour la v3… :
-  n’en garde qu’un ») jusqu’à ce que tu en retires un.
+  n’en garde qu’un ») jusqu’au retrait de l’un d’eux.
 
 ## Les notes de version
 
-Les notes disent aux joueurs ce qui change dans une version. Sur la ligne de la version, clique sur **Ajouter des
-notes** (ou **Notes** si elles existent déjà) :
+Les notes disent aux joueurs ce qui change dans une version. Elles s’écrivent depuis la ligne de la version, avec
+**Ajouter des notes** (ou **Notes** si elles existent déjà) :
 
 - l’onglet **Écrire** reçoit le texte, en Markdown : `## Titre`, `- liste`, `**gras**`, `[lien](https://…)` ;
 - l’onglet **Aperçu** montre le rendu, tel que les joueurs le verront ;
@@ -156,5 +156,5 @@ sous-titre indique la place qu’il occupera une fois installé.
 
 Le champ de recherche filtre les mods, ou cherche un fichier dans tout le zip.
 
-Vérifie le contenu avant de publier : c’est le meilleur moyen de repérer un monde inclus par erreur, un mod oublié ou
-un fichier personnel.
+Vérifier le contenu avant de publier est le meilleur moyen de repérer un monde inclus par erreur, un mod oublié ou un
+fichier personnel.

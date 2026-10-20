@@ -11,11 +11,10 @@ recommencer à chaque mise à jour en espérant ne pas perdre ses mondes) :
 
 - elle liste les modpacks publiés, avec leur description, leurs notes de version et l’historique de leurs versions ;
 - elle installe un modpack directement comme profil CurseForge, après avoir vérifié l’intégrité du téléchargement ;
-- elle le met à jour sur place quand une nouvelle version sort, en conservant tes mondes, tes options, tes captures
-  d’écran, tes packs de ressources, les mods que tu as activés ou désactivés et les réglages du profil (et tes
+- elle le met à jour sur place quand une nouvelle version sort, en conservant les mondes, les options, les captures
+  d’écran, les packs de ressources, les mods activés ou désactivés par le joueur et les réglages du profil (et les
   configurations modifiées, si le publieur l’a choisi) ;
-- elle indique quelle version de chaque modpack se trouve déjà dans ton CurseForge, même si tu l’as installée
-  autrement.
+- elle indique quelle version de chaque modpack se trouve déjà dans CurseForge, même installée autrement.
 
 **Pour les auteurs de modpacks**, le Studio range les zips de chaque mise à jour, les numérote, et met les releases
 GitHub en accord avec le dossier en quelques clics : nouvelle version, notes, image, suppression. Ses réglages
@@ -23,10 +22,10 @@ décident de ce que reçoivent les joueurs : fichiers jamais publiés, mods livr
 
 ## Deux rôles
 
-Au premier lancement, tu choisis comment tu utilises l’application. Ce choix se change à tout moment dans
+Au premier lancement, l’application demande comment elle sera utilisée. Ce choix se change à tout moment dans
 [Paramètres → Utilisation](parametres.md#utilisation), sans réinstaller ni redémarrer.
 
-| Rôle | Pour qui | Ce que tu vois |
+| Rôle | Pour qui | Ce qui s’affiche |
 |---|---|---|
 | **Récepteur** (par défaut) | Les joueurs | La **Bibliothèque** : les modpacks publiés, à installer et à mettre à jour. |
 | **Publieur** | Les auteurs de modpacks | La Bibliothèque et le **Studio**, avec des onglets pour passer de l’un à l’autre. |
@@ -58,7 +57,7 @@ Les mises à jour de l’application elle-même viennent toujours de son propre 
 ([WolfGang-PRoxa/minecraft-modpack-manager](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager)),
 quel que soit le dépôt de modpacks suivi. Voir [Mises à jour de l’application](mises-a-jour.md).
 
-## Ce dont tu as besoin
+## Configuration requise
 
 - **Windows 10 ou 11**, en 64 bits.
 - **[CurseForge](https://www.curseforge.com/download/app)**, pour jouer aux modpacks : la version Overwolf comme
@@ -87,6 +86,6 @@ reste de la fenêtre affiche la vue en cours : la Bibliothèque, ou le Studio po
 ## Pour aller plus loin
 
 - [Installation et premier lancement](installation.md)
-- [La bibliothèque](bibliotheque.md) : installer son premier modpack.
+- [La bibliothèque](bibliotheque.md) : installer un premier modpack.
 - [Le Studio](studio.md) : publier ses modpacks.
 - [Dépannage](depannage.md) : quand quelque chose ne se passe pas comme prévu.

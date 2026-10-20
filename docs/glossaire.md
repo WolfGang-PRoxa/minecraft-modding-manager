@@ -44,7 +44,7 @@ Le dossier d’un profil CurseForge : ses mods, ses configurations, ses mondes e
 Un sujet de discussion public sur GitHub, ouvert pour signaler un problème ou proposer une idée.
 
 **Jeton** (GitHub)\
-Une clé d’accès créée sur GitHub, qui permet à l’application de publier en ton nom sur un dépôt précis. Voir
+Une clé d’accès créée sur GitHub, qui permet à l’application de publier au nom d’un compte sur un dépôt précis. Voir
 [Créer un jeton GitHub](publieur.md#créer-un-jeton-github).
 
 **Marqueur**\

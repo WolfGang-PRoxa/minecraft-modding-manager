@@ -2,12 +2,12 @@
 
 Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment sont faites les releases qu’il lit.
 
-## Sur ton PC
+## Sur le PC
 
 | Emplacement | Contenu |
 |---|---|
 | `%LOCALAPPDATA%\Programs\minecraft-modpack-manager` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
-| `%APPDATA%\Modpack Manager\settings.json` | Tes réglages (voir ci-dessous). |
+| `%APPDATA%\Modpack Manager\settings.json` | Les réglages (voir ci-dessous). |
 | `%APPDATA%\Modpack Manager\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
 | `%APPDATA%\Modpack Manager\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
 | `%APPDATA%\Modpack Manager\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
@@ -21,7 +21,7 @@ Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment 
 | `%LOCALAPPDATA%\Modpack Manager\test-reports` | Publieurs : le dernier résultat de chaque test, par profil. |
 | Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
 | `.modpack-manager`, à côté du dossier `Instances` | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre). |
-| Dossier des modpacks (publieurs) | Tes modpacks, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks). |
+| Dossier des modpacks (publieurs) | Les modpacks du publieur, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks). |
 
 `%APPDATA%\Modpack Manager` contient aussi les fichiers internes de la fenêtre de l’application (cache du
 navigateur intégré…). Tout ce dossier est conservé lors d’une mise à jour ou d’une désinstallation.
@@ -33,8 +33,8 @@ Jusqu’à la 1.8, ces noms étaient ceux de l’ancien nom de l’application, 
 
 ## Le fichier settings.json
 
-Les réglages de l’application, partagés avec les [commandes](commandes.md). Modifie-les plutôt
-depuis les paramètres ; pour les modifier à la main, ferme d’abord l’application.
+Les réglages de l’application, partagés avec les [commandes](commandes.md). Mieux vaut les modifier
+depuis les paramètres ; pour les modifier à la main, fermer d’abord l’application.
 
 | Champ | Contenu |
 |---|---|
@@ -54,14 +54,14 @@ L’application ajoute deux fichiers à chaque profil qu’elle installe :
 
 - **`.modpack-manager.json`**, le marqueur : l’identifiant du modpack, sa version, son tag, la date
   d’installation et la liste des éléments fournis par le modpack (`managedEntries`), qui sert à savoir quoi
-  remplacer lors d’une mise à jour. Il note aussi ce que la version a installé, pour reconnaître ensuite ce que tu as
-  changé : l’empreinte de chaque fichier du dossier `config` (`configFiles`) et les mods installés désactivés
+  remplacer lors d’une mise à jour. Il note aussi ce que la version a installé, pour reconnaître ensuite ce que le
+  joueur a changé : l’empreinte de chaque fichier du dossier `config` (`configFiles`) et les mods installés désactivés
   (`disabledByDefault`). C’est la seule preuve qu’un profil a été installé par l’application : sans lui, le profil
   n’est plus mis à jour sur place, seulement reconnu à ses mods ;
 - **`.modpack-cover.png`** (ou `.jpg`, `.webp`) : l’image du modpack, utilisée comme image du profil dans
   CurseForge.
 
-Le fichier `minecraftinstance.json` du profil est celui du publieur, avec les chemins adaptés à ton PC. Lors d’une
+Le fichier `minecraftinstance.json` du profil est celui du publieur, avec les chemins adaptés au PC du joueur. Lors d’une
 mise à jour, ses réglages propres au joueur sont conservés : identifiant du profil, date d’installation, date de
 dernière partie, nombre de parties, mémoire allouée, arguments Java et image du profil.
 

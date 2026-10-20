@@ -1,36 +1,38 @@
 # Publier et supprimer
 
-Publier met les releases GitHub en accord avec ton dossier des modpacks : nouvelles versions, mises à jour et
-suppressions, en une seule opération que tu valides après en avoir vu le détail.
+Publier met les releases GitHub en accord avec le dossier des modpacks : nouvelles versions, mises à jour et
+suppressions, en une seule opération, validée après en avoir vu le détail.
 
 ## Publier sur GitHub
 
-1. Clique sur **Publier sur GitHub** (ou **Voir et publier** dans l’encart des changements). Le Studio relit GitHub
+1. Cliquer sur **Publier sur GitHub** (ou **Voir et publier** dans l’encart des changements). Le Studio relit GitHub
    pour partir d’un état tout frais : « Comparaison du dossier avec GitHub… ».
 2. L’aperçu liste les changements, regroupés en **Nouvelles versions**, **Mises à jour** et **Suppressions**, avec le
    détail de chacun et la quantité de données à envoyer.
-3. Lis les avertissements, puis clique sur **Publier N changements**. Le bouton est rouge quand l’opération supprime
-   des releases.
-4. Chaque étape s’affiche avec sa progression : envoi de chaque fichier, débit, étape en cours. Garde le Studio
+3. Lire les avertissements, puis cliquer sur **Publier N changements**. Le bouton est rouge quand l’opération
+   supprime des releases.
+4. Chaque étape s’affiche avec sa progression : envoi de chaque fichier, débit, étape en cours. Le Studio doit rester
    ouvert jusqu’à la fin.
-5. « GitHub correspond maintenant à ton dossier. » : la Bibliothèque est rechargée aussitôt pour te montrer le
-   résultat, et tes joueurs le verront à leur prochaine actualisation.
+5. « GitHub correspond maintenant à ton dossier. » : la Bibliothèque est rechargée aussitôt pour montrer le
+   résultat, et les joueurs le verront à leur prochaine actualisation.
 
 **Arrêter** interrompt la publication proprement : l’étape en cours est annulée sans laisser de release incomplète,
-et ce qui a déjà été fait est conservé. Relance **Publier** pour terminer.
+et ce qui a déjà été fait est conservé. Relancer **Publier** pour terminer.
 
-Si ton dossier ou GitHub a changé entre l’aperçu et ton clic, rien n’est fait : « Le dossier ou GitHub a changé
-depuis l’aperçu : vérifie la nouvelle liste puis relance. »
+Si le dossier ou GitHub a changé entre l’aperçu et le clic, rien n’est fait : « Le dossier ou GitHub a changé depuis
+l’aperçu : vérifie la nouvelle liste puis relance. »
 
 L’aperçu peut afficher ces avertissements :
 
-- des zips ne sont **pas encore rangés** : ils seront ignorés. Ferme l’aperçu et range-les d’abord ;
+- des zips ne sont **pas encore rangés** : ils seront ignorés. Fermer l’aperçu et les ranger d’abord ;
 - un modpack **en erreur** est ignoré tant que ses erreurs ne sont pas corrigées ;
 - un modpack **n’aura plus aucune version** : il disparaîtra de l’application des joueurs ;
-- une version contient des **fichiers exclus** dans les réglages du modpack : ils partiraient avec elle. Ferme
-  l’aperçu et utilise **Retirer du zip** sur la ligne de la version (voir
+- une version contient des **fichiers exclus** dans les réglages du modpack : ils partiraient avec elle. Fermer
+  l’aperçu et utiliser **Retirer du zip** sur la ligne de la version (voir
   [Un zip qui contient des fichiers exclus](reglages.md#un-zip-qui-contient-des-fichiers-exclus)) ;
-- le dossier **ne contient aucun modpack** alors que GitHub en a : publier supprimerait tout. Vérifie que le dossier
+- une version **n’a pas été testée**, ou ses derniers tests ont échoué (voir
+  [Tester un profil](studio.md#tester-un-profil)) ;
+- le dossier **ne contient aucun modpack** alors que GitHub en a : publier supprimerait tout. Vérifier que le dossier
   choisi est le bon.
 
 ## Ce que contient une release
@@ -71,7 +73,7 @@ Les versions publiées avant que l’application sache reconnaître un modpack �
 
 > [!WARNING]
 > Remplacer le contenu d’un zip déjà publié met bien la release à jour, mais les joueurs qui ont déjà cette version
-> **ne sont pas prévenus** : pour eux, rien n’a changé. Pour une mise à jour, dépose plutôt un nouveau zip : il
+> **ne sont pas prévenus** : pour eux, rien n’a changé. Pour une mise à jour, mieux vaut déposer un nouveau zip : il
 > deviendra une nouvelle version, proposée à tous.
 
 ## Supprimer une version ou un modpack
@@ -85,7 +87,7 @@ de supprimer tout de suite, après une confirmation qui dit exactement ce qui va
 - **la corbeille de la carte d’un modpack** (« Supprimer le modpack ») : son dossier part à la corbeille (zips,
   image, notes, réglages) et toutes ses releases sont retirées ;
 - **Retirer maintenant**, sur un modpack dont le dossier n’existe plus, ou **la corbeille** d’une version
-  « Sera retirée » : ses releases sont retirées sans rien toucher sur ton PC.
+  « Sera retirée » : ses releases sont retirées sans rien toucher sur le PC.
 
 Ce sont exactement les suppressions qu’une publication ferait. Elles demandent le rôle de publieur et un compte
 GitHub connecté qui peut publier sur le dépôt : GitHub est vérifié avant de toucher au dossier. Si GitHub refuse la
@@ -99,8 +101,8 @@ suppression après coup, le dossier est déjà à jour : la release sera retiré
 - **Un zip restauré** depuis la corbeille de Windows est republié à la publication suivante, sous son numéro.
 
 > [!CAUTION]
-> Une suppression sur GitHub est définitive : la release et son tag disparaissent. Seul le zip, sur ton PC, peut
-> être récupéré dans la corbeille.
+> Une suppression sur GitHub est définitive : la release et son tag disparaissent. Seul le zip, sur le PC, peut être
+> récupéré dans la corbeille.
 
 ## Une opération à la fois
 
@@ -113,18 +115,18 @@ Fermer la fenêtre pendant une publication l’interrompt : les étapes terminé
 
 ## Bonnes pratiques
 
-- **Une mise à jour = un nouveau zip.** Ne remplace jamais le contenu d’une version publiée.
-- **Vérifie le contenu** avec le bouton **Contenu** avant de publier : pas de monde, de journaux ni de fichier
+- **Une mise à jour = un nouveau zip.** Ne jamais remplacer le contenu d’une version publiée.
+- **Vérifier le contenu** avec le bouton **Contenu** avant de publier : pas de monde, de journaux ni de fichier
   personnel par erreur.
-- **Écris les notes** avant de publier : c’est ce que les joueurs lisent en premier.
-- **Teste chez un joueur** : après la publication, installe la nouvelle version depuis la Bibliothèque, comme le
-  ferait un joueur.
-- **Garde le dépôt public**, sinon tes joueurs ne voient plus rien.
+- **Tester la version** (**Tout tester**, dans le détail de son profil) avant de la publier.
+- **Écrire les notes** avant de publier : c’est ce que les joueurs lisent en premier.
+- **Essayer comme un joueur** : après la publication, installer la nouvelle version depuis la Bibliothèque.
+- **Garder le dépôt public**, sinon les joueurs ne voient plus rien.
 
 ## Publier sur CurseForge
 
 Un modpack peut être publié sur GitHub, sur CurseForge, ou les deux. Il faut d’abord créer son projet une fois sur le
-site de CurseForge, et enregistrer ton jeton d’auteur ([Compte CurseForge](parametres.md#compte-curseforge)).
+site de CurseForge, et enregistrer le jeton d’auteur ([Compte CurseForge](parametres.md#compte-curseforge)).
 
 Sur la carte du modpack, la ligne **Publié sur…** dit où il est publié. **Publier aussi sur CurseForge** demande
 l’adresse de la page du projet (ou son numéro) et le lie au modpack. Pour un projet qui a déjà des versions, la
@@ -150,10 +152,11 @@ Sur la ligne de la dernière version, si son numéro dépasse le plus haut du pr
 le nom affiché (`<nom>_V<N>.zip`), les fichiers joints, les notes de version et le bilan de ses tests, et demande le
 type (version stable, bêta, alpha). La version est exportée au format de CurseForge (la liste des mods et des
 fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en modération : la ligne affiche **En
-modération**, puis **Publiée sur CurseForge** une fois acceptée (ou **Refusée par CurseForge**). La pastille apparaît aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis
-le site : ce numéro ne s’y publie plus. Une version envoyée ne se retire que depuis le site.
+modération**, puis **Publiée sur CurseForge** une fois acceptée (ou **Refusée par CurseForge**). La pastille apparaît
+aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis le site : ce numéro ne s’y publie
+plus. Une version envoyée ne se retire que depuis le site.
 
 > [!NOTE]
 > Un mod qui ne vient pas de CurseForge (posé à la main dans `mods`) bloque l’envoi : la modération de CurseForge le
-> refuserait. Installe-le depuis CurseForge, ou retire-le du profil. Le pack serveur se joint encore à la main sur le
-> site.
+> refuserait. Il faut l’installer depuis CurseForge, ou le retirer du profil. Le pack serveur se joint encore à la
+> main sur le site.

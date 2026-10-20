@@ -8,6 +8,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- L’aide est réécrite sur un ton neutre, sans tutoiement, et plusieurs pages sont précisées (tests d’une version
+  avant publication, raccourci recréé après le passage à la 1.9.0).
+- La présentation du projet sur GitHub existe désormais en anglais (affichée par défaut) et en français.
+
 ## [1.9.0] - 2026-10-20
 
 ### Améliorations
