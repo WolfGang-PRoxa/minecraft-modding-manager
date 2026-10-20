@@ -61,9 +61,18 @@ export async function fireRoutine(config: RelayConfig, request: RoutineRequest):
       ? [config.evalRoutineUrl, config.evalRoutineToken, 'EVAL_ROUTINE']
       : [config.routineUrl, config.routineToken, 'ROUTINE']
   if (!url || !token) throw new RelayError(`${name}_FIRE_URL et ${name}_TOKEN sont à renseigner dans Netlify.`, 503)
+  let target: URL
+  try {
+    target = new URL(url)
+    if (target.protocol !== 'https:') throw new Error('protocole')
+  } catch {
+    // La valeur n'est jamais montrée : un jeton collé par erreur à la place de l'adresse resterait secret.
+    const hint = url.startsWith('sk-ant-') ? ' : elle contient un jeton, sans doute inversé avec celui de ' + name + '_TOKEN' : ''
+    throw new RelayError(`${name}_FIRE_URL n’est pas une adresse https valide${hint}.`, 503)
+  }
   let res: Response
   try {
-    res = await fetch(url, {
+    res = await fetch(target, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -74,8 +83,13 @@ export async function fireRoutine(config: RelayConfig, request: RoutineRequest):
       body: JSON.stringify({ text: serializeRequest(request) }),
       signal: AbortSignal.timeout(20_000)
     })
-  } catch {
-    throw new RelayError('La routine ne répond pas. La session a peut-être démarré : vérifie tes sessions avant de relancer.', 502)
+  } catch (err) {
+    if (err instanceof Error && err.name === 'TimeoutError') {
+      throw new RelayError('La routine ne répond pas. La session a peut-être démarré : vérifie tes sessions avant de relancer.', 502)
+    }
+    // Nom de serveur introuvable, connexion refusée… : la cause dit si l'adresse est en tort.
+    const cause = err instanceof Error && err.cause instanceof Error ? (err.cause as Error & { code?: string }).code ?? err.cause.message : ''
+    throw new RelayError(`Impossible de joindre ${target.host}${cause ? ` (${cause})` : ''} : vérifie ${name}_FIRE_URL.`, 502)
   }
   if (res.status === 401) throw new RelayError(`La routine refuse le jeton (${name}_TOKEN) : génère-en un nouveau.`, 502)
   if (res.status === 404) throw new RelayError(`Routine introuvable : vérifie ${name}_FIRE_URL.`, 502)
