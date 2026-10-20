@@ -20,9 +20,6 @@
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     Delete "$DESKTOP\${SHORTCUT_NAME}.lnk"
-    ; Raccourci créé sous l'ancien nom de l'application (Modpack Downloader), qu'elle n'a pas encore renommé : c'est
-    ; aussi le nom de l'exécutable, gardé exprès (executableName dans electron-builder.yml).
-    Delete "$DESKTOP\${PRODUCT_FILENAME}.lnk"
   ${endIf}
   ; Pas de page de fin : la fenêtre se ferme d'elle-même.
   SetAutoClose true
@@ -53,53 +50,18 @@
 ; normale d'abord (comme la croix de la fenêtre), forcée au bout de 3 s ; une application qui résiste encore (lancée en
 ; administrateur) est à fermer à la main.
 !macro customCheckAppRunning
-  StrCpy $0 0
-  Call ${MPD_FN}mpdAppProcesses
-  ${If} $0 == 1
-  ${AndIf} ${isUpdated}
-    StrCpy $R1 0
-    ${DoWhile} $R1 < 12
-      Sleep 250
-      StrCpy $0 0
-      Call ${MPD_FN}mpdAppProcesses
-      ${If} $0 == 0
-        ${Break}
-      ${EndIf}
-      IntOp $R1 $R1 + 1
-    ${Loop}
-  ${EndIf}
-  ${If} $0 == 1
-    ${If} $mpd.statusLabel != ""
-      SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:Fermeture de l’application…"
+  StrCpy $mpd.procPath ""
+  Call ${MPD_FN}mpdCloseApp
+  !ifndef BUILD_UNINSTALLER
+    ; Ancienne identité de l'application (avant la 1.9.0) : elle est fermée et désinstallée avant que la nouvelle ne
+    ; pose ses fichiers et ses raccourcis (voir mpdFindPrevious).
+    ${If} $mpd.previousExe != ""
+      StrCpy $mpd.procPath $mpd.previousExe
+      Call mpdCloseApp
+      StrCpy $mpd.procPath ""
+      Call mpdUninstallPrevious
     ${EndIf}
-    ReadEnvStr $R2 USERNAME
-    nsExec::Exec `"$SYSDIR\taskkill.exe" /IM "${APP_EXECUTABLE_FILENAME}" /FI "USERNAME eq $R2"`
-    Pop $R2
-    StrCpy $R1 0
-    ${Do}
-      Sleep 250
-      IntOp $R1 $R1 + 1
-      ; $0 = 1 : arrêt forcé.
-      ${If} $R1 >= 12
-        StrCpy $0 1
-      ${Else}
-        StrCpy $0 0
-      ${EndIf}
-      Call ${MPD_FN}mpdAppProcesses
-      ${If} $0 == 0
-        ${Break}
-      ${EndIf}
-      ${If} $R1 >= 24
-        MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(appCannotBeClosed)" /SD IDCANCEL IDRETRY mpdCloseRetry
-        Quit
-        mpdCloseRetry:
-        StrCpy $R1 12
-      ${EndIf}
-    ${Loop}
-    ${If} $mpd.statusLabel != ""
-      SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:$mpd.status"
-    ${EndIf}
-  ${EndIf}
+  !endif
 !macroend
 
 ; Au lancement de l'installeur, on regarde si l'application est déjà installée (et intacte) :
@@ -124,6 +86,11 @@
     ${ElseIf} $R1 == 1
       StrCpy $mpd.mode newer
     ${Else}
+      StrCpy $mpd.mode update
+    ${EndIf}
+  ${Else}
+    Call mpdFindPrevious
+    ${If} $mpd.previousExe != ""
       StrCpy $mpd.mode update
     ${EndIf}
   ${EndIf}
@@ -221,10 +188,18 @@ Var mpd.secondary
 Var mpd.cancel
 Var mpd.hovered
 Var mpd.choice
+; Exécutable dont les processus sont cherchés par mpdAppProcesses (vide : celui de $INSTDIR).
+Var mpd.procPath
 !ifndef BUILD_UNINSTALLER
   ; install | same | newer | update, puis reinstall ou downgrade selon le choix fait sur la page « déjà installé »
   Var mpd.mode
   Var mpd.installed
+  ; Ancienne identité de l'application trouvée par mpdFindPrevious : clé de désinstallation, exécutable, désinstalleur
+  ; et dossier.
+  Var mpd.previousKey
+  Var mpd.previousExe
+  Var mpd.previousUninstaller
+  Var mpd.previousDir
 !endif
 
 ; Pixels à l'échelle de l'affichage.
@@ -436,9 +411,10 @@ Var mpd.choice
     ${EndIf}
   FunctionEnd
 
-  ; Processus de l'application installée, c'est-à-dire lancés depuis $INSTDIR\<exécutable> : ni ceux d'un autre compte
-  ; (qui bloqueraient l'installeur sans raison), ni ceux d'une autre copie. Entrée : $0 = 1 pour les arrêter de force.
-  ; Sortie : $0 = 1 si au moins un tournait. Structure PROCESSENTRY32W de l'installeur 32 bits : 556 octets.
+  ; Processus de l'application installée, c'est-à-dire lancés depuis $INSTDIR\<exécutable> (ou depuis $mpd.procPath) :
+  ; ni ceux d'un autre compte (qui bloqueraient l'installeur sans raison), ni ceux d'une autre copie. Entrée : $0 = 1
+  ; pour les arrêter de force. Sortie : $0 = 1 si au moins un tournait. Structure PROCESSENTRY32W de l'installeur
+  ; 32 bits : 556 octets.
   !if ${NSIS_PTR_SIZE} != 4
     !error "mpdAppProcesses suppose un installeur 32 bits (PROCESSENTRY32W)."
   !endif
@@ -450,6 +426,13 @@ Var mpd.choice
     Push $5
     Push $6
     Push $7
+    Push $8
+    Push $9
+    StrCpy $9 $mpd.procPath
+    ${If} $9 == ""
+      StrCpy $9 "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+    ${EndIf}
+    ${GetFileName} $9 $8
     StrCpy $7 $0
     StrCpy $0 0
     System::Call 'kernel32::CreateToolhelp32Snapshot(i 2, i 0) p .r1'
@@ -457,13 +440,13 @@ Var mpd.choice
     System::Call 'kernel32::Process32FirstW(p r1, p r2) i .r3'
     ${DoWhile} $3 <> 0
       System::Call '*$2(i, i, i .r4, p, i, i, i, i, i, &w260 .r5)'
-      ${If} $5 == "${APP_EXECUTABLE_FILENAME}"
+      ${If} $5 == $8
         ; PROCESS_QUERY_LIMITED_INFORMATION : autorisé même sur une application lancée en administrateur.
         System::Call 'kernel32::OpenProcess(i 0x1000, i 0, i r4) p .r6'
         ${If} $6 <> 0
           System::Call 'kernel32::QueryFullProcessImageNameW(p r6, i 0, w .r5, *i ${NSIS_MAX_STRLEN}) i'
           System::Call 'kernel32::CloseHandle(p r6)'
-          ${If} $5 == "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+          ${If} $5 == $9
             StrCpy $0 1
             ${If} $7 == 1
               System::Call 'kernel32::OpenProcess(i 0x0001, i 0, i r4) p .r6'
@@ -479,6 +462,8 @@ Var mpd.choice
     ${Loop}
     System::Free $2
     System::Call 'kernel32::CloseHandle(p r1)'
+    Pop $9
+    Pop $8
     Pop $7
     Pop $6
     Pop $5
@@ -486,6 +471,64 @@ Var mpd.choice
     Pop $3
     Pop $2
     Pop $1
+  FunctionEnd
+
+  ; Ferme l'application (l'exécutable de $mpd.procPath, sinon celui de $INSTDIR) : normalement d'abord, comme la croix
+  ; de la fenêtre, de force au bout de 3 s. Lors d'une mise à jour lancée par l'application, elle a d'abord 3 s pour se
+  ; fermer d'elle-même.
+  Function ${MPD_FN}mpdCloseApp
+    StrCpy $0 0
+    Call ${MPD_FN}mpdAppProcesses
+    ${If} $0 == 1
+    ${AndIf} ${isUpdated}
+      StrCpy $R1 0
+      ${DoWhile} $R1 < 12
+        Sleep 250
+        StrCpy $0 0
+        Call ${MPD_FN}mpdAppProcesses
+        ${If} $0 == 0
+          ${Break}
+        ${EndIf}
+        IntOp $R1 $R1 + 1
+      ${Loop}
+    ${EndIf}
+    ${If} $0 == 1
+      ${If} $mpd.statusLabel != ""
+        SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:Fermeture de l’application…"
+      ${EndIf}
+      StrCpy $R3 $mpd.procPath
+      ${If} $R3 == ""
+        StrCpy $R3 "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
+      ${EndIf}
+      ${GetFileName} $R3 $R3
+      ReadEnvStr $R2 USERNAME
+      nsExec::Exec `"$SYSDIR\taskkill.exe" /IM "$R3" /FI "USERNAME eq $R2"`
+      Pop $R2
+      StrCpy $R1 0
+      ${Do}
+        Sleep 250
+        IntOp $R1 $R1 + 1
+        ; $0 = 1 : arrêt forcé.
+        ${If} $R1 >= 12
+          StrCpy $0 1
+        ${Else}
+          StrCpy $0 0
+        ${EndIf}
+        Call ${MPD_FN}mpdAppProcesses
+        ${If} $0 == 0
+          ${Break}
+        ${EndIf}
+        ${If} $R1 >= 24
+          MessageBox MB_RETRYCANCEL|MB_ICONEXCLAMATION "$(appCannotBeClosed)" /SD IDCANCEL IDRETRY mpdCloseRetry
+          Quit
+          mpdCloseRetry:
+          StrCpy $R1 12
+        ${EndIf}
+      ${Loop}
+      ${If} $mpd.statusLabel != ""
+        SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:$mpd.status"
+      ${EndIf}
+    ${EndIf}
   FunctionEnd
 
   ; Page de progression : en-tête, barre plate de la couleur d'accent, ligne d'état. Les contrôles de la page de NSIS
@@ -553,6 +596,85 @@ Var mpd.choice
       ${EndIf}
     FunctionEnd
 
+    ; Ancienne identité de l'application (avant la 1.9.0 : autre appId, donc autre clé de désinstallation, autre dossier
+    ; et autre exécutable) : une entrée de « Applications installées » du même éditeur, au nom du même produit (« Modpack
+    ; Manager 1.8.3 »), dont l'exécutable et le désinstalleur existent encore. Elle compte comme une mise à jour, de sa
+    ; version à celle-ci. À retirer avec src/shared/previousIdentity.ts.
+    Function mpdFindPrevious
+      Push $1
+      Push $2
+      Push $3
+      Push $4
+      StrCpy $mpd.previousExe ""
+      StrLen $4 "${PRODUCT_NAME} "
+      StrCpy $1 0
+      ${Do}
+        EnumRegKey $2 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall" $1
+        ${If} $2 == ""
+          ${Break}
+        ${EndIf}
+        IntOp $1 $1 + 1
+        ${If} $2 == "${UNINSTALL_APP_KEY}"
+          ${Continue}
+        ${EndIf}
+        ReadRegStr $3 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "Publisher"
+        ${If} $3 != "${COMPANY_NAME}"
+          ${Continue}
+        ${EndIf}
+        ReadRegStr $3 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "DisplayName"
+        StrCpy $3 $3 $4
+        ${If} $3 != "${PRODUCT_NAME} "
+          ${Continue}
+        ${EndIf}
+        ; DisplayIcon : « <exécutable>,0 ».
+        ReadRegStr $3 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "DisplayIcon"
+        StrCpy $mpd.previousExe $3 -2
+        ; UninstallString : « "<désinstalleur>" /currentuser ».
+        ReadRegStr $3 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "UninstallString"
+        ${WordFind} $3 '"' "+1" $mpd.previousUninstaller
+        ReadRegStr $mpd.installed HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "DisplayVersion"
+        ${GetParent} $mpd.previousUninstaller $mpd.previousDir
+        StrCpy $mpd.previousKey $2
+        ${If} ${FileExists} "$mpd.previousExe"
+        ${AndIf} ${FileExists} "$mpd.previousUninstaller"
+        ${AndIf} $mpd.previousDir != ""
+          ${Break}
+        ${EndIf}
+        StrCpy $mpd.previousExe ""
+        StrCpy $mpd.installed ""
+      ${Loop}
+      Pop $4
+      Pop $3
+      Pop $2
+      Pop $1
+    FunctionEnd
+
+    ; Désinstalle l'ancienne identité comme lors d'une mise à jour (--updated) : elle garde les données et le raccourci
+    ; du bureau, que l'application reprend à son premier lancement. Le désinstalleur se recopie dans %TEMP% et s'y
+    ; relance (lancé depuis son dossier, il ne pourrait pas le déplacer, et s'arrêterait sans retirer son entrée) :
+    ; ExecWait rend donc la main tout de suite, et l'on attend que son entrée disparaisse des « Applications
+    ; installées » (60 s au plus). Ce qui resterait de son dossier part ensuite.
+    Function mpdUninstallPrevious
+      ${If} $mpd.statusLabel != ""
+        SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:Retrait de l’ancienne version…"
+      ${EndIf}
+      ExecWait '"$mpd.previousUninstaller" /currentuser /S --updated'
+      StrCpy $R1 0
+      ${Do}
+        ReadRegStr $R2 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$mpd.previousKey" "DisplayName"
+        ${If} $R2 == ""
+        ${OrIf} $R1 >= 240
+          ${Break}
+        ${EndIf}
+        Sleep 250
+        IntOp $R1 $R1 + 1
+      ${Loop}
+      RMDir /r "$mpd.previousDir"
+      ${If} $mpd.statusLabel != ""
+        SendMessage $mpd.statusLabel ${WM_SETTEXT} 0 "STR:$mpd.status"
+      ${EndIf}
+    FunctionEnd
+
     ; Ce que fait l'installeur, selon $mpd.mode : surtitre, couleur d'accent, titre, sous-titre, ligne d'état et titre
     ; de la fenêtre. Une mise à jour a sa propre fenêtre, en bleu, avec l'ancienne et la nouvelle version.
     Function mpdDescribe
@@ -592,6 +714,12 @@ Var mpd.choice
       ${EndIf}
       StrCpy $0 0
       Call mpdAppProcesses
+      ${If} $0 == 0
+      ${AndIf} $mpd.previousExe != ""
+        StrCpy $mpd.procPath $mpd.previousExe
+        Call mpdAppProcesses
+        StrCpy $mpd.procPath ""
+      ${EndIf}
       ${If} $0 == 0
         Abort
       ${EndIf}

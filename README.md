@@ -4,7 +4,7 @@ Application Windows pour installer en un clic les modpacks Minecraft publiés su
 directement dans CurseForge, prêt à être lancé, et se met à jour sans perdre tes mondes. Les auteurs de modpacks les
 publient avec le Studio, dans la même application.
 
-**[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/latest)**
+**[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest)**
 · [Documentation](docs/README.md) · [Nouveautés](CHANGELOG.md)
 
 ## Fonctionnalités
@@ -16,8 +16,12 @@ publient avec le Studio, dans la même application.
 - **Ce que tu as déjà** : l'application reconnaît les versions présentes dans ton CurseForge, même installées à la
   main, et ne modifie jamais un profil qu'elle n'a pas installé.
 - **Studio** pour les auteurs : un dossier par modpack, numérotation des versions, notes, image, contenu des zips, et
-  publication qui met les releases GitHub en accord avec le dossier. Les mêmes opérations existent en ligne de
-  commande.
+  publication qui met les releases GitHub en accord avec le dossier, et aussi sur **CurseForge** (export au format de
+  CurseForge, suivi de la modération).
+- **Mises à jour des mods** d'un profil, essayées sur une copie avant d'être gardées, et **tests avant publication** :
+  vérification des fichiers (dépendances, versions, incompatibilités), serveur de test, puis partie avec de vrais
+  joueurs hors ligne. Les **mises à jour automatiques** enchaînent le tout, à la fréquence choisie.
+- **Claude Code** peut piloter le Studio (serveur MCP) ; les mêmes opérations existent en ligne de commande (`mpm`).
 - **Mises à jour de l'application** proposées en haut de la fenêtre, avec leurs nouveautés, et installées en un clic.
 - **Aide intégrée** (`F1`) : toute la documentation et l'historique des versions, avec une recherche.
 - **Signalement d'un problème** depuis l'application, transmis au mainteneur.
@@ -26,7 +30,7 @@ publient avec le Studio, dans la même application.
 
 1. Installe [CurseForge](https://www.curseforge.com/download/app) si ce n'est pas déjà fait.
 2. Télécharge **Modpack-Manager-Setup-x.y.z.exe** depuis la
-   [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/latest) et lance-le.
+   [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) et lance-le.
    Les installeurs signés indiquent l'éditeur **SignPath Foundation** (voir
    [Politique de signature du code](#politique-de-signature-du-code)). Si Windows affiche « Windows a protégé votre
    ordinateur », clique sur **Informations complémentaires**, puis **Exécuter quand même** : cet avertissement
@@ -130,14 +134,28 @@ Seuls les installeurs construits par GitHub Actions à partir de ce dépôt sont
 
 ### Confidentialité
 
-Modpack Manager ne collecte aucune donnée et n'envoie rien à ses auteurs de lui-même. Il ne contacte que GitHub
-(`api.github.com`, `github.com` et ses serveurs de fichiers) : pour lister les modpacks et les mises à jour du dépôt
-suivi, télécharger les fichiers que tu choisis d'installer et afficher les avatars des comptes. En mode publieur, la
-connexion GitHub (jeton) reste chiffrée sur ton PC et n'est envoyée qu'à GitHub, pour publier sur le dépôt choisi.
+Modpack Manager ne collecte aucune donnée, ne contient ni statistiques d'utilisation ni publicité, et n'envoie rien
+à ses auteurs de lui-même. Il ne transmet d'informations qu'aux services nécessaires à ce que tu lui demandes :
+
+- **GitHub** (`api.github.com`, `github.com` et ses serveurs de fichiers), pour tous : lister les modpacks et les
+  mises à jour du dépôt suivi, télécharger les fichiers que tu choisis d'installer, afficher les avatars des comptes.
+  En mode publieur, ta connexion GitHub (jeton) reste chiffrée sur ton PC et n'est envoyée qu'à GitHub, pour publier
+  sur le dépôt choisi.
+- **CurseForge** (`api.curseforge.com`, `minecraft.curseforge.com`, `edge.forgecdn.net`), en mode publieur et avec la
+  clé ou le jeton que tu y as enregistrés : chercher et télécharger les mises à jour des mods, publier tes versions.
+- **Les serveurs de Minecraft et de ses chargeurs** (Mojang, Fabric, Forge, NeoForge), en mode publieur, quand tu
+  testes un profil : télécharger le serveur de test, une fois par version. Les jeux de la partie de test se lancent
+  hors ligne, sans compte, et ne se connectent qu'au serveur de test sur ton PC.
+- **Claude Code**, seulement si tu l'as connecté : quand tu actives **Confier les échecs à Claude Code** (désactivé
+  par défaut), le résumé d'une mise à jour automatique qui a échoué lui est envoyé, et il le transmet à Anthropic
+  avec ton compte Claude.
+
 Un signalement n'est envoyé que si tu remplis et valides le formulaire « Signaler un problème » : il devient alors
 une issue publique de ce dépôt, avec ce que tu as écrit et, si tu les joins, les informations techniques affichées
-dans le formulaire.
-Aucune autre information n'est transmise à un autre système. Le détail est dans
-[Confidentialité et sécurité](docs/confidentialite.md).
+dans le formulaire. Le bouton « Offrir un café » ouvre seulement une page dans ton navigateur.
+
+Aucune autre information n'est transmise à un autre système. L'application ne change rien à la configuration de ton
+PC sans que tu le demandes (raccourci, tâche planifiée des mises à jour automatiques, connexion de Claude Code). Le
+détail est dans [Confidentialité et sécurité](docs/confidentialite.md).
 
 Licence : [MIT](LICENSE).

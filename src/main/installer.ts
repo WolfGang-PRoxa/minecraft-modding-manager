@@ -14,6 +14,7 @@ import { getCurseForgeStatus, isCurseForgeRunning, isGameRunningFrom, launchCurs
 import { applyInstanceGuid, writeCurseClientFile } from '../core/instanceIdentity'
 import { downloadFile } from './download'
 import { pathExists, readJson, removeQuietly, renameWithRetry, writeJsonAtomic } from '../core/fsutil'
+import { readInstanceMarker } from '../core/previousIdentity'
 import { applyModStates, carryOverConfigs, hashConfigFiles, readModStates } from '../core/playerChoices'
 import { getSettings } from '../core/settings'
 import { extractZip } from '../core/zip'
@@ -100,7 +101,7 @@ export async function listInstalled(instancesDir: string): Promise<InstalledModp
   for (const entry of entries) {
     if (!entry.isDirectory()) continue
     const instancePath = join(instancesDir, entry.name)
-    const marker = await readJson<InstanceMarker>(join(instancePath, INSTANCE_MARKER_FILE))
+    const marker = await readInstanceMarker<InstanceMarker>(instancePath)
     if (marker && typeof marker.id === 'string' && typeof marker.version === 'string') {
       installed.push(installedFrom(marker, instancePath))
     }
@@ -246,7 +247,7 @@ export async function installModpack(
 
   let workDir: string | null = null
   let keepWorkDir = false
-  const zipPath = join(app.getPath('temp'), 'modpack-downloader', `${version.id}-${Date.now()}.zip`)
+  const zipPath = join(app.getPath('temp'), 'modpack-manager', `${version.id}-${Date.now()}.zip`)
 
   try {
     report('preparing')
@@ -265,7 +266,7 @@ export async function installModpack(
 
     // Le dossier de travail est sur le même disque que les instances : le basculement final
     // est un simple renommage, et CurseForge ne voit jamais d'instance à moitié extraite.
-    workDir = join(dirname(instancesDir), '.modpack-downloader', `${version.id}-${Date.now()}`)
+    workDir = join(dirname(instancesDir), '.modpack-manager', `${version.id}-${Date.now()}`)
     const stagingDir = join(workDir, 'new')
 
     const { sha256 } = await downloadFile({
@@ -331,7 +332,7 @@ export async function installModpack(
     if (previous) {
       targetDir = previous.instancePath
       const previousInstance = await readJson<InstanceJson>(join(targetDir, CURSEFORGE_INSTANCE_FILE))
-      const previousMarker = await readJson<InstanceMarker>(join(targetDir, INSTANCE_MARKER_FILE))
+      const previousMarker = await readInstanceMarker<InstanceMarker>(targetDir)
       // 1. On met l'ancienne instance de côté d'un seul renommage : s'il échoue, rien n'a bougé.
       const oldDir = join(workDir, 'old')
       await renameWithRetry(targetDir, oldDir)

@@ -63,6 +63,12 @@ export async function readMaintenanceTask(launcher: MaintenanceLauncher | null, 
   }
 }
 
+/** Le programme que lance la tâche, tel que Windows l'a enregistré (null sans tâche). */
+export async function maintenanceTaskExecutable(name = MAINTENANCE_TASK_NAME): Promise<string | null> {
+  const raw = JSON.parse((await powershell(READ, name)) || 'null') as { execute?: string } | null
+  return raw?.execute ?? null
+}
+
 /** Crée (ou remplace) la tâche : un passage par jour à `time` (« HH:MM »). */
 export async function installMaintenanceTask(
   launcher: MaintenanceLauncher,

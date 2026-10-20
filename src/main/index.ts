@@ -1,13 +1,15 @@
 import { app, BrowserWindow, Menu, protocol, shell } from 'electron'
 import { join } from 'node:path'
-import { APP_NAME, LEGACY_APP_NAME } from '../shared/config'
+import { APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
 import { useSettingsFile } from '../core/settings'
-import { renameLegacyDesktopShortcut, WINDOWS_APP_ID } from './shortcut'
+import { enablePreviousIdentityMigration, migrateDataDir } from '../core/previousIdentity'
+import { migratePreviousInstallation } from './previousIdentity'
+import { WINDOWS_APP_ID } from './shortcut'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
 import { toggleFullScreen, watchWindowState } from './windowState'
 
@@ -76,10 +78,11 @@ setCurseForgeApiOverride(app.isPackaged ? null : process.env.MPD_CURSEFORGE_API)
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 
-// Les données restent dans le dossier de l'ancien nom (%APPDATA%\Modpack Downloader), que les scripts lisent aussi :
-// par défaut, Electron le tirerait de productName. --user-data-dir (tests) garde la priorité.
+// Données dans %APPDATA%\Modpack Manager, que les commandes lisent aussi, repris au besoin du dossier de l'ancien nom
+// (previousIdentity.ts). --user-data-dir (tests) garde la priorité.
+enablePreviousIdentityMigration(app.isPackaged)
 if (!app.commandLine.hasSwitch('user-data-dir')) {
-  app.setPath('userData', join(app.getPath('appData'), LEGACY_APP_NAME))
+  app.setPath('userData', migrateDataDir(app.getPath('appData')))
 }
 
 if (process.argv.includes(MAINTENANCE_SWITCH)) {
@@ -109,7 +112,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     Menu.setApplicationMenu(null)
     const launch = await noteRunningVersion()
     cleanAppUpdateDownloads()
-    renameLegacyDesktopShortcut()
+    void migratePreviousInstallation()
     registerIpc(() => mainWindow, launch)
     await registerStudio(() => mainWindow)
     createWindow()

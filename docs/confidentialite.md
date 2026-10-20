@@ -6,8 +6,8 @@ transite sur le réseau, ce qui reste sur ton PC, et comment l’application pro
 ## Ce qui est envoyé, et à qui
 
 L’application contacte GitHub : `api.github.com`, `github.com` et ses serveurs de fichiers. En mode publieur, elle
-contacte aussi CurseForge, avec la clé et le jeton que tu lui as donnés. Elle ne contient ni statistiques
-d’utilisation ni publicité.
+contacte aussi CurseForge, avec la clé et le jeton que tu lui as donnés, et, pour les tests, les serveurs de Minecraft
+et de ses chargeurs. Elle ne contient ni statistiques d’utilisation ni publicité.
 
 | Quand | Ce qui est demandé à GitHub |
 |---|---|
@@ -18,17 +18,30 @@ d’utilisation ni publicité.
 | En mode publieur | Avec ton jeton : la vérification de tes droits sur le dépôt, puis la publication de tes releases. |
 | Quand tu envoies un signalement | Ce que tu as écrit, et les informations techniques si tu les joins. |
 
-| Quand | Ce qui est demandé à CurseForge (publieurs) |
+| Quand | Ce qui est demandé à CurseForge (publieurs), avec ta clé ou ton jeton |
 |---|---|
 | Quand tu enregistres ta clé ou ton jeton | Une requête qui vérifie que CurseForge l’accepte. |
+| Quand tu cherches les mises à jour des mods | Les fichiers disponibles pour les mods de ton profil, et leurs notes de version. |
+| Quand tu appliques des mises à jour | Les fichiers des mods choisis (`edge.forgecdn.net`). |
+| Quand tu lies un modpack à son projet, ou ouvres ses versions | Le projet et ses versions, et les fichiers joints à sa dernière version. |
+| Quand tu publies une version sur CurseForge | L’export de la version (liste des mods, fichiers joints), ses notes et son type. |
 
-Comme tout site web, GitHub et CurseForge voient l’adresse IP de ton PC lors de ces échanges. Aucune autre information n’est
+| Quand | Ce qui est demandé ailleurs (publieurs) |
+|---|---|
+| La première fois que tu testes un profil sur un serveur | Le serveur de son chargeur : `meta.fabricmc.net` (Fabric), `maven.minecraftforge.net` (Forge) ou `maven.neoforged.net` (NeoForge), puis le serveur de Minecraft et ses bibliothèques (`piston-data.mojang.com`, `libraries.minecraft.net`, et `maven.fabricmc.net` pour Fabric). |
+| Pendant un test (serveur ou partie avec des joueurs) | Le serveur et les jeux de test ne se connectent qu’entre eux, sur ton PC, sans compte. Comme quand tu joues, Minecraft et certains mods peuvent contacter leurs propres services (vérification de mises à jour, par exemple). |
+| Avec **Confier les échecs à Claude Code** activé | Le résumé d’un passage des mises à jour automatiques qui a échoué (nom du modpack, mises à jour essayées, message des tests) est envoyé à Claude Code, installé sur ton PC, qui le transmet à Anthropic avec ton compte Claude. Désactivé par défaut. |
+
+Le bouton **Offrir un café** n’envoie rien : il ouvre la page Buy Me a Coffee du développeur dans ton navigateur.
+
+Comme tout site web, ces services voient l’adresse IP de ton PC lors de ces échanges. Aucune autre information n’est
 transmise à un autre système.
 
 ## Ce qui reste sur ton PC
 
-- **Tes réglages** et la **liste mise en cache**, dans `%APPDATA%\Modpack Downloader` (voir
-  [Fichiers et dossiers](fichiers.md)).
+- **Tes réglages** et la **liste mise en cache**, dans `%APPDATA%\Modpack Manager` (voir
+  [Fichiers et dossiers](fichiers.md)), et pour un publieur les serveurs, jeux et résultats des tests, dans
+  `%LOCALAPPDATA%\Modpack Manager`.
 - **Ta connexion GitHub** : le jeton est chiffré par Windows (DPAPI), avec une clé liée à ta session Windows. Un
   autre compte Windows, ou une copie du fichier sur un autre PC, ne peut pas le relire. **Se déconnecter** le
   supprime.
@@ -37,6 +50,8 @@ transmise à un autre système.
 - **Ce que l’application lit pour fonctionner**, sans jamais l’envoyer : l’emplacement de CurseForge (dans le
   registre de Windows), le dossier de ses profils (dans ses journaux), la liste des profils et de leurs mods, et la
   liste des programmes en cours (pour savoir si CurseForge ou Minecraft tournent).
+- **Ce qu’elle change sur ton PC, seulement si tu le demandes** : un raccourci (bureau ou emplacement choisi), la
+  tâche planifiée des mises à jour automatiques (publieurs), la connexion de Claude Code à l’application.
 
 ## Intégrité des téléchargements
 
@@ -50,11 +65,12 @@ transmise à un autre système.
 
 ## Signature de l’installeur
 
-L’installeur est signé gratuitement par [SignPath Foundation](https://signpath.org), qui réserve ce service aux
-projets open source : les propriétés du fichier indiquent l’éditeur **SignPath Foundation**. Seuls les installeurs
-construits par GitHub Actions à partir du dépôt public sont signés, après une approbation manuelle du mainteneur. La
-politique de signature complète est dans le
-[README du dépôt](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader#politique-de-signature-du-code).
+L’installeur sera signé gratuitement par [SignPath Foundation](https://signpath.org), qui réserve ce service aux
+projets open source : les propriétés du fichier indiqueront l’éditeur **SignPath Foundation**. Seuls les installeurs
+construits par GitHub Actions à partir du dépôt public seront signés, après une approbation manuelle du mainteneur.
+Tant que la signature n’est pas en place, l’installeur n’est pas signé : Windows peut afficher « Windows a protégé
+votre ordinateur » (voir [Installation](installation.md)). La politique de signature complète est dans le
+[README du dépôt](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager#politique-de-signature-du-code).
 
 ## Protection de l’application
 

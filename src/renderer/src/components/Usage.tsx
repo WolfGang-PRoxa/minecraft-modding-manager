@@ -123,7 +123,7 @@ function PublisherForm({ ctx, initialRepo, submitLabel, onDone, onCancel }: Publ
         <Label>Dépôt GitHub des modpacks</Label>
         <RepoField value={repoInput} onChange={setRepoInput} onSubmit={() => void submit()} />
         <p className="mt-2 text-xs leading-relaxed text-ink-400">
-          L’application y lit les modpacks, et le Modpack Studio y publie leurs releases. Les récepteurs suivent par défaut{' '}
+          L’application y lit les modpacks, et le Studio y publie leurs releases. Les récepteurs suivent par défaut{' '}
           {repoSlug(APP_REPO)} ; si tu publies ailleurs, tes joueurs choisiront ton dépôt dans leurs paramètres.
         </p>
       </div>
@@ -272,7 +272,7 @@ export function SetupView() {
           </span>
         </RoleCard>
         <RoleCard icon={CloudUpload} title="Publieur" selected={role === 'publisher'} onSelect={() => setRole('publisher')}>
-          Je crée des modpacks et je les publie sur mon dépôt GitHub avec le Modpack Studio. Je peux aussi les installer
+          Je crée des modpacks et je les publie sur mon dépôt GitHub avec le Studio. Je peux aussi les installer
           comme un récepteur.
         </RoleCard>
       </div>

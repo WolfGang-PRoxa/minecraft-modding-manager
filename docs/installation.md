@@ -8,12 +8,12 @@ désinstaller l’application proprement.
 1. Installe [CurseForge](https://www.curseforge.com/download/app) si ce n’est pas déjà fait : c’est depuis
    CurseForge que tu lanceras les modpacks.
 2. Télécharge **Modpack-Manager-Setup-x.y.z.exe** depuis la
-   [dernière version publiée](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/latest).
+   [dernière version publiée](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest).
 3. Lance le fichier téléchargé. Une petite fenêtre aux couleurs de l’application montre la progression :
    l’installation prend quelques secondes, sans aucune question, puis l’application s’ouvre.
 
 L’application s’installe pour ton compte Windows seulement, **sans droits d’administrateur**, dans
-`%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` (soit `C:\Users\<toi>\AppData\Local\Programs\…`). Un raccourci
+`%LOCALAPPDATA%\Programs\minecraft-modpack-manager` (soit `C:\Users\<toi>\AppData\Local\Programs\…`). Un raccourci
 **Modpack Manager** est ajouté au menu Démarrer.
 
 > [!NOTE]
@@ -27,7 +27,7 @@ L’application s’installe pour ton compte Windows seulement, **sans droits d�
 L’écran **Bienvenue dans Modpack Manager** te demande comment tu vas utiliser l’application :
 
 - **Récepteur** (le choix par défaut) : tu installes les modpacks publiés et tu joues. Clique sur **Continuer** : la
-  Bibliothèque s’affiche, avec les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-downloader`.
+  Bibliothèque s’affiche, avec les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-manager`.
 - **Publieur** : tu crées des modpacks et tu les publies sur ton dépôt GitHub. Indique ce dépôt et connecte ton
   compte GitHub, puis clique sur **Devenir publieur** : le Studio s’affiche. Tout est détaillé dans
   [Devenir publieur](publieur.md).
@@ -95,7 +95,7 @@ l’application (un raccourci créé ailleurs reste à supprimer à la main).
 La désinstallation laisse en place :
 
 - **tes modpacks** : ce sont des profils CurseForge comme les autres, toujours jouables ;
-- **tes réglages et ta connexion GitHub**, dans `%APPDATA%\Modpack Downloader` : supprime ce dossier pour ne rien
+- **tes réglages et ta connexion GitHub**, dans `%APPDATA%\Modpack Manager` : supprime ce dossier pour ne rien
   laisser derrière toi (et pour effacer le jeton GitHub enregistré) ;
 - pour un publieur, **le dossier des modpacks** et les releases publiées sur GitHub.
 

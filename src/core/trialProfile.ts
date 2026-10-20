@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { cp, readFile } from 'node:fs/promises'
 import { basename, dirname, join, relative, sep } from 'node:path'
 import { CURSEFORGE_INSTANCE_FILE, INSTANCE_MARKER_FILE } from '../shared/config'
+import { PREVIOUS_IDENTITY } from '../shared/previousIdentity'
 import { pathExists, writeJsonAtomic } from './fsutil'
 import { applyInstanceGuid, writeCurseClientFile } from './instanceIdentity'
 import { StudioError } from './studio/analyze'
@@ -11,7 +12,7 @@ import { StudioError } from './studio/analyze'
 type Json = Record<string, unknown>
 
 /** Données de partie inutiles à un essai (journaux, plantages, captures). */
-const SKIPPED = new Set(['logs', 'crash-reports', 'screenshots', INSTANCE_MARKER_FILE])
+const SKIPPED = new Set(['logs', 'crash-reports', 'screenshots', INSTANCE_MARKER_FILE, PREVIOUS_IDENTITY.instanceMarker])
 
 /** CurseForge écrit le dossier d'un profil avec une barre finale. */
 const asInstallPath = (dir: string) => (dir.endsWith(sep) ? dir : dir + sep)

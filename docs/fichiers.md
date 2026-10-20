@@ -6,27 +6,30 @@ Où Modpack Manager range ce qu’il installe et ce qu’il retient, et comment 
 
 | Emplacement | Contenu |
 |---|---|
-| `%LOCALAPPDATA%\Programs\minecraft-modpack-downloader` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
-| `%APPDATA%\Modpack Downloader\settings.json` | Tes réglages (voir ci-dessous). |
-| `%APPDATA%\Modpack Downloader\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
-| `%APPDATA%\Modpack Downloader\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
-| `%APPDATA%\Modpack Downloader\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
-| `%APPDATA%\Modpack Downloader\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
-| `%APPDATA%\Modpack Downloader\maintenance.json` | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente). |
-| `%APPDATA%\Modpack Downloader\maintenance.lock` | Présent pendant un passage des mises à jour automatiques. |
-| `%APPDATA%\Modpack Downloader\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
-| `%TEMP%\modpack-downloader` | Les téléchargements en cours (zips de modpack, installeurs de l’application). Vidé automatiquement. |
+| `%LOCALAPPDATA%\Programs\minecraft-modpack-manager` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
+| `%APPDATA%\Modpack Manager\settings.json` | Tes réglages (voir ci-dessous). |
+| `%APPDATA%\Modpack Manager\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
+| `%APPDATA%\Modpack Manager\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
+| `%APPDATA%\Modpack Manager\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
+| `%APPDATA%\Modpack Manager\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
+| `%APPDATA%\Modpack Manager\maintenance.json` | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente). |
+| `%APPDATA%\Modpack Manager\maintenance.lock` | Présent pendant un passage des mises à jour automatiques. |
+| `%APPDATA%\Modpack Manager\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
+| `%TEMP%\modpack-manager` | Les téléchargements en cours (zips de modpack, installeurs de l’application). Vidé automatiquement. |
+| `%LOCALAPPDATA%\Modpack Manager\test-servers` | Publieurs : les serveurs Minecraft des [tests](studio.md#tester-un-profil), un par chargeur et par version, téléchargés une fois. |
+| `%LOCALAPPDATA%\Modpack Manager\test-clients` | Publieurs : les dossiers de jeu des joueurs de la partie de test, vidés à chaque test. |
+| `%LOCALAPPDATA%\Modpack Manager\test-reports` | Publieurs : le dernier résultat de chaque test, par profil. |
 | Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
-| `.modpack-downloader`, à côté du dossier `Instances` | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre). |
+| `.modpack-manager`, à côté du dossier `Instances` | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre). |
 | Dossier des modpacks (publieurs) | Tes modpacks, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks). |
 
-`%APPDATA%\Modpack Downloader` contient aussi les fichiers internes de la fenêtre de l’application (cache du
+`%APPDATA%\Modpack Manager` contient aussi les fichiers internes de la fenêtre de l’application (cache du
 navigateur intégré…). Tout ce dossier est conservé lors d’une mise à jour ou d’une désinstallation.
 
-Plusieurs de ces noms viennent de l’ancien nom de l’application, **Modpack Downloader** : le dossier des données,
-celui de l’application, l’exécutable (`Modpack Downloader.exe`), les dossiers temporaires et le marqueur des profils.
-Ils sont gardés exprès : c’est grâce à eux qu’une mise à jour retrouve tes réglages, ta connexion GitHub, tes modpacks
-installés et tes raccourcis.
+Jusqu’à la 1.8, ces noms étaient ceux de l’ancien nom de l’application, **Modpack Downloader**
+(`%APPDATA%\Modpack Downloader`, `Programs\minecraft-modpack-downloader`, `Modpack Downloader.exe`,
+`.modpack-downloader.json`). La mise à jour vers la 1.9.0 les reprend une fois : voir
+[Passage à la 1.9.0](mises-a-jour.md#passage-à-la-190).
 
 ## Le fichier settings.json
 
@@ -49,7 +52,7 @@ depuis les paramètres ; pour les modifier à la main, ferme d’abord l’appli
 
 L’application ajoute deux fichiers à chaque profil qu’elle installe :
 
-- **`.modpack-downloader.json`**, le marqueur : l’identifiant du modpack, sa version, son tag, la date
+- **`.modpack-manager.json`**, le marqueur : l’identifiant du modpack, sa version, son tag, la date
   d’installation et la liste des éléments fournis par le modpack (`managedEntries`), qui sert à savoir quoi
   remplacer lors d’une mise à jour. Il note aussi ce que la version a installé, pour reconnaître ensuite ce que tu as
   changé : l’empreinte de chaque fichier du dossier `config` (`configFiles`) et les mods installés désactivés
@@ -113,7 +116,7 @@ il prend quelques dizaines de millisecondes, même pour des milliers de mods.
 | `--studio` | Ouvre l’application sur le Studio (publieurs). Relancée ainsi alors qu’elle tourne déjà, elle passe sur le Studio. |
 | `--updated` | Passée par l’installeur après une mise à jour : l’application annonce sa nouvelle version. |
 | `--maintenance` | Passée par la tâche planifiée : l’application fait, sans fenêtre, les [mises à jour automatiques](automatique.md) dont le tour est venu, puis se ferme. |
-| `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modpack Downloader` (tests). |
+| `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modpack Manager` (tests). |
 
 L’installeur accepte `/S` (installation silencieuse : ni question ni fenêtre) et `--updated` (mise à jour lancée
 par l’application : la fenêtre **Mise à jour** s’affiche, puis l’application est relancée avec `--updated`).

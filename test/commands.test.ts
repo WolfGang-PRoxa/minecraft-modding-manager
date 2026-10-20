@@ -56,9 +56,9 @@ describe('commandes', () => {
     const appData = join(root.dir, 'AppData')
     const instances = join(root.dir, 'Instances')
     const workspace = join(root.dir, 'Modpacks')
-    await mkdir(join(appData, 'Modpack Downloader'), { recursive: true })
+    await mkdir(join(appData, 'Modpack Manager'), { recursive: true })
     await mkdir(workspace)
-    const settings = join(appData, 'Modpack Downloader', 'settings.json')
+    const settings = join(appData, 'Modpack Manager', 'settings.json')
     await writeFile(settings, JSON.stringify({ instancesDir: instances, workspaceDir: workspace, repo: { owner: 'o', name: 'r' } }))
     useSettingsFile(settings)
     await makeInstance(instances, 'Mon Profil', {

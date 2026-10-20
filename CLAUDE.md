@@ -1,9 +1,9 @@
 # CLAUDE.md
 
-Le projet devient **Modpack Manager** (anciennement Modpack Downloader) : feuille de route dans `PLAN.md`.
+Le projet s'appelle **Modpack Manager** (Modpack Downloader jusqu'à la 1.0.5).
 
 Application Windows (Electron) qui affiche les modpacks Minecraft publiés en releases sur
-`WolfGang-PRoxa/minecraft-modpack-downloader` et les installe directement comme profils CurseForge.
+`WolfGang-PRoxa/minecraft-modpack-manager` et les installe directement comme profils CurseForge.
 Une seule fenêtre, deux vues : la **Bibliothèque** (installer les modpacks) et le **Studio** (ranger ses zips et
 publier les releases), réservé aux publieurs. Au premier lancement, l'utilisateur choisit son rôle : **récepteur** (par
 défaut) ou **publieur** (dépôt GitHub + compte qui a le droit d'y publier). Changer de rôle change la vue, jamais de
@@ -67,7 +67,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `shortcut.ts` : raccourci `.lnk` de l'app (bureau ou emplacement choisi). Non packagée : cible
     `electron.exe "<projet>"` et icône `.ico` générée depuis `build/icon.png`.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
-    fenêtre), télécharge l'installeur dans `%TEMP%\modpack-downloader`, compare son SHA-256 au `digest` publié par
+    fenêtre), télécharge l'installeur dans `%TEMP%\modpack-manager`, compare son SHA-256 au `digest` publié par
     GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec `--updated`.
     Refusée pendant une installation de modpack ou une opération du studio (`busyWith`) ; à l'inverse, tant qu'elle
     est en cours (`appUpdateTask`), `install:start` et le verrou du studio (`blockedBy`) refusent de démarrer.
@@ -106,7 +106,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     appartient à `Overwolf.exe`. Elle est arrêtée de force, puis on vérifie qu'Overwolf ne l'a pas relancée.
   - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
     `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
-    Lu aussi par les scripts (`%APPDATA%\Modpack Downloader\settings.json`).
+    Lu aussi par les scripts (`%APPDATA%\Modpack Manager\settings.json`).
   - `auth.ts` : connexion GitHub partagée app / commandes. Jeton chiffré par DPAPI via PowerShell
     (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
     `GITHUB_TOKEN` > `.env` (scripts) > `gh auth token`. Vérifie le droit de publier (`permissions.push`) et gère la
@@ -222,8 +222,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     un zip (`findExcludedInZip`) et réécriture sans eux (`stripExcludedFromZip`, une entrée à la fois),
     `service.ts` : orchestration, verrou et journal ; les zips qui partiront à la prochaine publication sont
     cherchés pour des fichiers exclus (`findExcluded`, mémorisé) : avertissement sur la ligne et dans le plan
-    (`annotatePlan`). `settings.ts` : dossier des modpacks (repris une fois de l'ancien
-    `%APPDATA%\Modpack Studio\studio-settings.json`).
+    (`annotatePlan`). `settings.ts` : dossier des modpacks.
   - `library.ts` (`buildLibrary`, pur) : la vue du publieur (`PublisherLibrary`) : dossiers de CurseForge puis « Sans
     dossier », chaque profil face au modpack qui en vient (`pack.json` `profile` : guid, sinon nom ; à défaut deviné :
     mêmes mods qu'une version, sinon même nom ; jamais un profil `installedPack`) et son état (`unlinked`,
@@ -406,7 +405,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - Release de l'app : tag `app-v<version>` = version de `package.json`, avec l'installeur `.exe`. Préparer la version
   avec `npm run changelog -- --version <version>` ; le texte de la release (notes, `---`, mode d'emploi) est relu par
   les apps installées pour présenter la mise à jour.
-- Chaque instance installée contient `.modpack-downloader.json` (id, version, `managedEntries`, et depuis la 1.0.5
+- Chaque instance installée contient `.modpack-manager.json` (id, version, `managedEntries`, et depuis la 1.0.5
   `configFiles` et `disabledByDefault`, que `listInstalled` ne transmet pas à la fenêtre) : c'est la source
   de vérité pour savoir ce qui est installé, et la seule qui autorise une mise à jour sur place. Un profil sans
   marqueur reconnu à ses mods (profil d'origine du publieur, zip importé à la main) est seulement signalé : l'app
@@ -464,13 +463,23 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 
 ## Pièges connus
 
-- **Ancien nom gardé exprès** (Modpack Downloader → Modpack Manager en 1.1.0) : seuls les noms affichés ont changé
-  (`APP_NAME`, `productName`, `shortcutName`, installeur `Modpack-Manager-Setup-*.exe`). Restent à l'ancien nom :
-  `appId` et `APP_USER_MODEL_ID`, le paquet (`Programs\minecraft-modpack-downloader`), l'exécutable
-  (`executableName` : les installeurs repèrent l'app installée et ouverte à ce nom, les épingles pointent vers lui),
-  `userData` (`LEGACY_APP_NAME`, fixé dans `index.ts`, sinon Electron le tirerait de `productName`), le marqueur
-  `.modpack-downloader.json`, les dossiers temporaires, le dépôt GitHub. Les changer casse la mise à jour des apps
-  installées. Le raccourci du bureau créé sous l'ancien nom est renommé au lancement (`renameLegacyDesktopShortcut`).
+- **Changement d'identité en 1.9.0** (avant : « Modpack Downloader ») : `appId` et `APP_USER_MODEL_ID`
+  `com.wolfgangproxa.modpackmanager` (avant `…modpackdownloader`), paquet et dossier d'installation
+  `Programs\minecraft-modpack-manager`, exécutable `Modpack Manager.exe`, `userData` `%APPDATA%\Modpack Manager`
+  (fixé dans `index.ts`), marqueur `.modpack-manager.json`, dossiers temporaires `modpack-manager`, dépôt
+  `minecraft-modpack-manager` (GitHub redirige l'ancienne adresse, que les apps d'avant la 1.9.0 lisent encore).
+  L'ancienne identité est décrite dans `src/shared/previousIdentity.ts` et reprise une fois : l'installeur trouve
+  l'ancienne app (`mpdFindPrevious` : entrée « Applications installées » du même éditeur au nom du même produit, autre
+  clé), la ferme et la désinstalle sur place avec `--updated` (`mpdUninstallPrevious`) avant de poser ses fichiers ;
+  au lancement, `migrateDataDir` (core) déplace le dossier des données (aussi pour les commandes), `readInstanceMarker`
+  renomme le marqueur d'un profil en le lisant, `currentRepoName` remplace l'ancien nom du dépôt dans les réglages, et
+  `migratePreviousInstallation` (main, une fois : `previous-identity.done`) redirige raccourcis, épingles, tâche
+  planifiée et connexion de Claude Code. Déplacements et renommages seulement depuis l'app installée
+  (`enablePreviousIdentityMigration(app.isPackaged)`, ou `app.asar` pour les commandes) : en développement, l'app
+  installée, peut-être encore ancienne, se sert des mêmes fichiers, et l'ancien nom est seulement lu. Tout cela est à
+  retirer en 2.0. Ne jamais tester ces migrations avec les vrais noms : compiler sous une identité de test avec
+  `PREVIOUS_IDENTITY` et `APP_NAME` modifiés le temps du build (sinon le vrai dossier des données et les vrais
+  raccourcis seraient déplacés).
 
 - Une notification d'Electron non packagé (passage `--maintenance` lancé depuis le dépôt) crée dans le menu Démarrer
   `Electron.lnk` vers `node_modules\electron\dist\electron.exe`, avec l'identifiant Windows de l'app (constaté le
@@ -504,8 +513,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   (`npx electron-builder --win --publish never -c.appId=com.wolfgangproxa.mpdtest -c.productName="MPD Test"
   -c.extraMetadata.name=mpd-test -c.extraMetadata.productName="MPD Test" -c.nsis.shortcutName="MPD Test"
   -c.directories.output=<dossier>`, plus `-c.extraMetadata.version=1.0.1` pour une autre version) : autre dossier
-  d'installation (`Programs\mpd-test`), autres clés de registre, autre `userData` (`%APPDATA%\MPD Test`, à supprimer
-  après). Désinstaller ensuite avec `"Uninstall MPD Test.exe" /currentuser /S`. Depuis PowerShell, mettre chaque
+  d'installation (`Programs\mpd-test`), autres clés de registre. Le `userData` vient d'`APP_NAME`, pas du nom du
+  produit : pour ne pas toucher au vrai `%APPDATA%\Modpack Manager`, changer `APP_NAME` le temps du build (et
+  `-c.executableName` pour ne pas viser les vrais raccourcis), puis supprimer son dossier. Désinstaller ensuite avec
+  `"Uninstall <exécutable>.exe" /currentuser /S`. Depuis PowerShell, mettre chaque
   argument `-c.…` entier entre guillemets (`"-c.productName=MPD Test"`), sinon il est coupé au premier point.
   Les boutons des pages (textes nsDialogs) se cliquent en envoyant `WM_COMMAND` (`STN_CLICKED`, identifiant du texte)
   à leur dialogue ; les captures se font par `PrintWindow`. Le désinstalleur se recopie dans `%TEMP%` et s'y relance :

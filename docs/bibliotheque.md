@@ -58,7 +58,7 @@ Ce qui se passe pendant l’installation :
 - l’image du modpack devient l’image du profil dans CurseForge ;
 - les mods que le publieur propose en option sont installés **désactivés** : CurseForge les affiche dans le profil,
   active ceux que tu veux d’un clic ;
-- un petit fichier `.modpack-downloader.json` est ajouté au profil : c’est ce qui permet à l’application de le
+- un petit fichier `.modpack-manager.json` est ajouté au profil : c’est ce qui permet à l’application de le
   reconnaître et de le mettre à jour plus tard.
 
 > [!TIP]
@@ -163,7 +163,7 @@ aussitôt de l’application.
 
 ## Suivre les modpacks d’un autre publieur
 
-Par défaut, la Bibliothèque affiche les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-downloader`. Pour suivre
+Par défaut, la Bibliothèque affiche les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-manager`. Pour suivre
 ceux d’un autre publieur :
 
 1. Ouvre **Paramètres → Utilisation**.
@@ -172,5 +172,5 @@ ceux d’un autre publieur :
 4. Clique sur **Enregistrer** : l’application vérifie que le dépôt existe et qu’il est public, puis recharge la
    liste.
 
-**Revenir à WolfGang-PRoxa/minecraft-modpack-downloader** rétablit le dépôt par défaut. Les modpacks déjà installés
+**Revenir à WolfGang-PRoxa/minecraft-modpack-manager** rétablit le dépôt par défaut. Les modpacks déjà installés
 restent dans CurseForge quel que soit le dépôt suivi.

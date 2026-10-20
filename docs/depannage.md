@@ -8,7 +8,7 @@ recherche de l’aide (`Ctrl` + `K`) avec quelques mots du message.
 **« Windows a protégé votre ordinateur »**\
 SmartScreen ne connaît pas encore cet installeur. Clique sur **Informations complémentaires**, puis **Exécuter
 quand même**. Télécharge toujours l’installeur depuis la
-[page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases).
+[page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
 
 **L’installeur affiche « Version plus récente installée »**\
 Tu lances un installeur plus ancien que la version installée. **Ouvrir la …** ouvre la version installée ;

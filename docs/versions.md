@@ -56,7 +56,7 @@ la source du modpack : le Studio te dira quand il aura changé depuis cette vers
   Voice Chat (`voicechat_recordings`, `config/voicechat/voicechat-client.properties`) et les données de JEI par monde
   (`config/jei/world`) ;
 - `usercache.json`, `usernamecache.json`, `command_history.txt` ;
-- les fichiers propres à Modpack Manager (`.modpack-downloader.json`, image du profil) ;
+- les fichiers propres à Modpack Manager (`.modpack-manager.json`, image du profil) ;
 - les fichiers que tu as exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (tes options du jeu,
   tes shaders…) : la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
 

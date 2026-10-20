@@ -1,19 +1,17 @@
 import type { RepoRef } from './types'
 
-// Nom de l'application, affiché partout (aussi dans package.json et electron-builder.yml).
+// Nom de l'application, affiché partout (aussi dans package.json et electron-builder.yml), et nom de son dossier de
+// données (%APPDATA%\Modpack Manager) et de son exécutable. L'identité d'avant la 1.9.0 est dans previousIdentity.ts.
 export const APP_NAME = 'Modpack Manager'
-// Ancien nom (jusqu'à la 1.0.5), gardé là où les versions installées et Windows le connaissent déjà : dossier des
-// données (%APPDATA%\Modpack Downloader), nom de l'exécutable (electron-builder.yml), raccourci du bureau à renommer.
-export const LEGACY_APP_NAME = 'Modpack Downloader'
-// Identifiant de l'application pour Windows (barre des tâches, raccourcis), à ne jamais changer.
-export const APP_USER_MODEL_ID = 'com.wolfgangproxa.modpackdownloader'
+// Identifiant de l'application pour Windows (barre des tâches, raccourcis, notifications) : l'appId d'electron-builder.yml.
+export const APP_USER_MODEL_ID = 'com.wolfgangproxa.modpackmanager'
 
-// Dépôt de l'application : ses mises à jour (tags app-v*) en viennent toujours,
-// et c'est la source des modpacks par défaut. Un publieur peut en choisir une autre.
 /** Page de soutien du développeur (bouton « Offrir un café » de la barre de titre). */
 export const SUPPORT_URL = 'https://buymeacoffee.com/wolfgang_proxa'
 
-export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modpack-downloader' }
+// Dépôt de l'application : ses mises à jour (tags app-v*) en viennent toujours,
+// et c'est la source des modpacks par défaut. Un publieur peut en choisir une autre.
+export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modpack-manager' }
 export const APP_REPO_URL = `https://github.com/${APP_REPO.owner}/${APP_REPO.name}`
 
 // Conventions de tags :
@@ -22,11 +20,11 @@ export const APP_REPO_URL = `https://github.com/${APP_REPO.owner}/${APP_REPO.nam
 export const MODPACK_TAG_PREFIX = 'pack-'
 export const APP_TAG_PREFIX = 'app-v'
 
-// Asset décrivant un modpack dans chaque release (généré par le Modpack Studio).
+// Asset décrivant un modpack dans chaque release (généré par le Studio).
 export const MODPACK_MANIFEST_ASSET = 'modpack.json'
 
 // Fichier déposé dans chaque instance installée par l'application.
-export const INSTANCE_MARKER_FILE = '.modpack-downloader.json'
+export const INSTANCE_MARKER_FILE = '.modpack-manager.json'
 
 // Suffixe de la copie d'essai d'un profil, où les mises à jour sont appliquées et testées.
 export const TRIAL_PROFILE_SUFFIX = ' (essai)'

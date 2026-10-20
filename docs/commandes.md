@@ -30,7 +30,7 @@ installé.
 L’application installée contient `mpm.cmd`, à côté de son exécutable :
 
 ```bash
-%LOCALAPPDATA%\Programs\minecraft-modpack-downloader\mpm.cmd status
+%LOCALAPPDATA%\Programs\minecraft-modpack-manager\mpm.cmd status
 ```
 
 Sans argument, `mpm` liste ses commandes ; `mpm <commande> --help` détaille une commande. Depuis le code source de

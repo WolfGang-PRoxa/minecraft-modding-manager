@@ -155,7 +155,7 @@ export interface RepoRef {
   name: string
 }
 
-/** Récepteur : installe les modpacks. Publieur : les publie aussi, avec le Modpack Studio. */
+/** Récepteur : installe les modpacks. Publieur : les publie aussi, avec le Studio. */
 export type UserRole = 'receiver' | 'publisher'
 
 /** Vues de la fenêtre : la bibliothèque (tout le monde) et le studio (publieurs). */

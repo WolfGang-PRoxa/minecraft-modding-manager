@@ -1,8 +1,8 @@
-appId: com.wolfgangproxa.modpackdownloader
+# Identité depuis la 1.9.0 (avant : com.wolfgangproxa.modpackdownloader, « Modpack Downloader.exe », dossier
+# Programs\minecraft-modpack-downloader) : le nouvel installeur désinstalle l'ancienne application (build/installer.nsh).
+appId: com.wolfgangproxa.modpackmanager
 productName: Modpack Manager
-# Nom de l'exécutable gardé de l'ancien nom de l'application (Modpack Downloader) : les installeurs repèrent l'application
-# installée et ouverte à ce nom (build/installer.nsh), et les épingles de la barre des tâches pointent vers lui.
-executableName: Modpack Downloader
+executableName: Modpack Manager
 directories:
   buildResources: build
   output: dist

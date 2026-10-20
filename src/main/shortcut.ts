@@ -1,9 +1,9 @@
 import { app, dialog, nativeImage, shell, type BrowserWindow } from 'electron'
 import { execFile } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { mkdir, rename, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { APP_NAME, APP_USER_MODEL_ID, LEGACY_APP_NAME } from '../shared/config'
+import { APP_NAME, APP_USER_MODEL_ID } from '../shared/config'
 import type { ShortcutLocation, ShortcutResult, ShortcutStatus } from '../shared/types'
 
 export interface ShortcutSpec {
@@ -58,19 +58,6 @@ export function desktopShortcutPath(spec: ShortcutSpec): string {
   return join(app.getPath('desktop'), `${spec.name}.lnk`)
 }
 
-/**
- * Le raccourci du bureau créé par une version d'avant le changement de nom prend le nouveau nom. Il pointe vers le
- * même exécutable : un simple renommage suffit. Rien n'est fait si le nouveau existe déjà, ni en développement (le
- * raccourci est alors celui de l'application installée).
- */
-export function renameLegacyDesktopShortcut(): void {
-  if (!app.isPackaged) return
-  const legacy = desktopShortcutPath({ ...PLAYER_SHORTCUT, name: LEGACY_APP_NAME })
-  const current = desktopShortcutPath(PLAYER_SHORTCUT)
-  if (!existsSync(legacy) || existsSync(current)) return
-  rename(legacy, current).catch(() => {})
-}
-
 export function shortcutStatus(spec: ShortcutSpec): ShortcutStatus {
   const desktopPath = desktopShortcutPath(spec)
   return { desktopPath, onDesktop: existsSync(desktopPath) }
@@ -117,7 +104,7 @@ export async function createShortcut(
  * garde en mémoire l'icône d'un exécutable : sans cela, un raccourci recréé après une mise à jour peut reprendre
  * une icône vide, mémorisée pendant que l'exécutable était absent.
  */
-function refreshShellIcons(): void {
+export function refreshShellIcons(): void {
   const script =
     'Add-Type -Namespace Mpd -Name Shell -MemberDefinition \'[DllImport("shell32.dll")] public static extern void SHChangeNotify(int e, uint f, IntPtr a, IntPtr b);\';' +
     ' [Mpd.Shell]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)'

@@ -8,6 +8,16 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- L’application prend partout le nom **Modpack Manager** : exécutable `Modpack Manager.exe`, installée dans
+  `Programs\minecraft-modpack-manager`, données dans `%APPDATA%\Modpack Manager`, dépôt
+  `WolfGang-PRoxa/minecraft-modpack-manager`. La mise à jour reprend tout d’elle-même : l’ancienne application est
+  retirée, tes réglages, ta connexion GitHub et tes modpacks installés sont gardés, et tes raccourcis, tes épingles de
+  la barre des tâches, la tâche planifiée et la connexion à Claude Code lancent la nouvelle (voir
+  [Passage à la 1.9.0](docs/mises-a-jour.md#passage-à-la-190)).
+- La page **Confidentialité et sécurité** de l’aide liste tous les services que l’application contacte, et quand.
+
 ## [1.8.3] - 2026-10-19
 
 ### Ajouts
@@ -285,21 +295,21 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.3...HEAD
-[1.8.3]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.2...app-v1.8.3
-[1.8.2]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.1...app-v1.8.2
-[1.8.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.8.0...app-v1.8.1
-[1.8.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.7.0...app-v1.8.0
-[1.7.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.6.0...app-v1.7.0
-[1.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.5.0...app-v1.6.0
-[1.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.4.0...app-v1.5.0
-[1.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.3.0...app-v1.4.0
-[1.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.2.0...app-v1.3.0
-[1.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.1.0...app-v1.2.0
-[1.1.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.5...app-v1.1.0
-[1.0.5]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.4...app-v1.0.5
-[1.0.4]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.3...app-v1.0.4
-[1.0.3]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.2...app-v1.0.3
-[1.0.2]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.1...app-v1.0.2
-[1.0.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/compare/app-v1.0.0...app-v1.0.1
-[1.0.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases/tag/app-v1.0.0
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.3...HEAD
+[1.8.3]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.2...app-v1.8.3
+[1.8.2]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.1...app-v1.8.2
+[1.8.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.0...app-v1.8.1
+[1.8.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.7.0...app-v1.8.0
+[1.7.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.6.0...app-v1.7.0
+[1.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.5.0...app-v1.6.0
+[1.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.4.0...app-v1.5.0
+[1.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.3.0...app-v1.4.0
+[1.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.2.0...app-v1.3.0
+[1.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.1.0...app-v1.2.0
+[1.1.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.5...app-v1.1.0
+[1.0.5]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.4...app-v1.0.5
+[1.0.4]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.3...app-v1.0.4
+[1.0.3]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.2...app-v1.0.3
+[1.0.2]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.1...app-v1.0.2
+[1.0.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.0.0...app-v1.0.1
+[1.0.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/tag/app-v1.0.0

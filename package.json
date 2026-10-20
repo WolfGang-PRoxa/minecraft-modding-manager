@@ -1,5 +1,5 @@
 {
-  "name": "minecraft-modpack-downloader",
+  "name": "minecraft-modpack-manager",
   "productName": "Modpack Manager",
   "version": "1.8.3",
   "description": "Installe les modpacks Minecraft publiés sur GitHub dans CurseForge, et aide leurs auteurs à les tenir à jour.",

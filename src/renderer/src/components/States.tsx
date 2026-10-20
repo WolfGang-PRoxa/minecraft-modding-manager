@@ -45,7 +45,7 @@ export function EmptyView() {
       <h2 className="mt-8 font-display text-3xl font-bold tracking-tight">Aucun modpack pour le moment</h2>
       <p className="mt-3 max-w-md text-ink-300">
         {publisher
-          ? 'Ton dépôt ne contient encore aucun modpack. Publie le premier avec le Modpack Studio.'
+          ? 'Ton dépôt ne contient encore aucun modpack. Publie le premier avec le Studio.'
           : 'Dès qu’un nouveau modpack sera publié, il apparaîtra ici. Tu pourras l’installer en un clic.'}
       </p>
       <div className="mt-8 flex gap-3">

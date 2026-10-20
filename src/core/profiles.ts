@@ -4,9 +4,10 @@
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, join } from 'node:path'
-import { CURSEFORGE_INSTANCE_FILE, INSTANCE_MARKER_FILE } from '../shared/config'
+import { CURSEFORGE_INSTANCE_FILE } from '../shared/config'
 import type { CurseForgeGroup, CurseForgeProfile } from '../shared/types'
 import { readJson } from './fsutil'
+import { readInstanceMarker } from './previousIdentity'
 import { isModJar, modsSignature } from './modsSignature'
 
 /** Identifiant de Minecraft chez CurseForge (champ gameId des dossiers). */
@@ -72,7 +73,7 @@ export async function modsOf(dir: string): Promise<{ count: number; signature: s
 }
 
 async function installedPack(dir: string): Promise<CurseForgeProfile['installedPack']> {
-  const marker = await readJson<{ id?: unknown; version?: unknown }>(join(dir, INSTANCE_MARKER_FILE))
+  const marker = await readInstanceMarker<{ id?: unknown; version?: unknown }>(dir)
   return typeof marker?.id === 'string' && typeof marker.version === 'string' ? { id: marker.id, version: marker.version } : null
 }
 

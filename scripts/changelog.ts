@@ -371,7 +371,7 @@ function releaseNotes(version: string): void {
   const body = [
     releaseNotesMarkdown(release),
     '---',
-    `Télécharge **${installer}** ci-dessous et lance-le. Si Modpack Manager (ou Modpack Downloader) est déjà installé, il propose lui-même cette mise à jour en haut de sa fenêtre.`,
+    `Télécharge **${installer}** ci-dessous et lance-le. Si Modpack Manager est déjà installé, il propose lui-même cette mise à jour en haut de sa fenêtre.`,
     'Windows peut afficher « Windows a protégé votre ordinateur » : clique sur **Informations complémentaires**, puis **Exécuter quand même**.',
     `[Historique complet des versions](${APP_REPO_URL}/blob/${APP_TAG_PREFIX}${version}/${CHANGELOG})`
   ].join('\n\n')

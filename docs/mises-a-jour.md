@@ -49,10 +49,30 @@ depuis **Paramètres → À propos → Nouveautés**. Pour chaque version : sa d
 ## Quelles versions sont proposées
 
 - Seules les versions **stables** publiées sur le dépôt de l’application
-  ([WolfGang-PRoxa/minecraft-modpack-downloader](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader/releases))
+  ([WolfGang-PRoxa/minecraft-modpack-manager](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases))
   sont proposées, quel que soit le dépôt de modpacks que tu suis.
 - Une version n’est proposée qu’une fois son installeur en ligne, et seulement si elle est **plus récente** que la
   tienne : l’application ne revient jamais en arrière d’elle-même.
+
+## Passage à la 1.9.0
+
+Jusqu’à la 1.8, l’application gardait des noms de l’époque où elle s’appelait **Modpack Downloader**. La 1.9.0 prend
+partout le nom **Modpack Manager**. La mise à jour s’en charge, sans rien te demander :
+
+- l’installeur retire l’ancienne application (`Programs\minecraft-modpack-downloader`) et installe la nouvelle dans
+  `%LOCALAPPDATA%\Programs\minecraft-modpack-manager` ;
+- au premier lancement, tes réglages, ta connexion GitHub, ta clé CurseForge et ton historique passent de
+  `%APPDATA%\Modpack Downloader` à `%APPDATA%\Modpack Manager` ;
+- ton raccourci du bureau, ceux du menu Démarrer et tes épingles de la barre des tâches lancent la nouvelle
+  application ; pour un publieur, la tâche planifiée des mises à jour automatiques et la connexion à Claude Code
+  aussi ;
+- chaque modpack installé garde son lien avec l’application : son marqueur devient `.modpack-manager.json` la
+  première fois qu’elle le lit.
+
+> [!NOTE]
+> Un raccourci que tu avais créé ailleurs que sur le bureau (avec **Choisir l’emplacement**) n’est pas retrouvé :
+> recrée-le depuis **Paramètres → Utilisation**. Si une épingle de la barre des tâches ne s’ouvre plus, détache-la et
+> épingle de nouveau l’application.
 
 ## En cas de problème
 

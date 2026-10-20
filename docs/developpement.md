@@ -10,8 +10,8 @@ suivi des changements et publication d’une nouvelle version.
 - de préférence CurseForge, pour essayer les installations.
 
 ```bash
-git clone https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader.git
-cd minecraft-modpack-downloader
+git clone https://github.com/WolfGang-PRoxa/minecraft-modpack-manager.git
+cd minecraft-modpack-manager
 npm install
 npm run dev
 ```
@@ -167,6 +167,6 @@ alors en haut de leur fenêtre, avec ses nouveautés.
 
 - Interface, messages et documentation en français, en tutoyant l’utilisateur.
 - Messages de commit en français, au format conventionnel : `feat: …`, `fix: …`, `docs: …`, `chore: …`.
-- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modpack-downloader#politique-de-signature-du-code)
+- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager#politique-de-signature-du-code)
   est exigée par SignPath : garde-la à jour dans le README.
 - Licence : [MIT](../LICENSE).

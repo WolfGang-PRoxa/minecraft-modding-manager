@@ -1,4 +1,4 @@
-// Types du Modpack Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
+// Types du Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
 import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {

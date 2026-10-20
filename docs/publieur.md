@@ -71,7 +71,7 @@ reconnecte-toi. ») : crée-en un nouveau et colle-le à la place.
 
 ## Tes joueurs
 
-Les récepteurs suivent par défaut le dépôt `WolfGang-PRoxa/minecraft-modpack-downloader`. Si tu publies sur un autre
+Les récepteurs suivent par défaut le dépôt `WolfGang-PRoxa/minecraft-modpack-manager`. Si tu publies sur un autre
 dépôt, donne son nom à tes joueurs : ils le choisissent dans **Paramètres → Utilisation → Modpacks de** (voir
 [Suivre les modpacks d’un autre publieur](bibliotheque.md#suivre-les-modpacks-dun-autre-publieur)).
 

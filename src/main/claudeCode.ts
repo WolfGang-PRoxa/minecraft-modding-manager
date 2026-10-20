@@ -77,6 +77,17 @@ async function connect(): Promise<{ ok: true } | { ok: false; error: string }> {
 }
 
 /**
+ * Connexion faite par une installation qui a changé d'emplacement (l'ancien exécutable figure dans la commande
+ * enregistrée) : elle est refaite vers celle-ci. Sans effet si Claude Code n'est pas connecté, ou l'est à celle-ci.
+ */
+export async function reconnectIfMoved(previousExecutable: string): Promise<void> {
+  const claude = await findClaude()
+  if (!claude) return
+  const { code, output } = await runClaude(claude, ['mcp', 'get', MCP_SERVER_NAME])
+  if (code === 0 && output.toLowerCase().includes(previousExecutable.toLowerCase())) await connect()
+}
+
+/**
  * Pose une question à Claude Code sans fenêtre (`claude -p`, demande par l'entrée standard) avec, pour seuls outils,
  * ceux donnés du serveur MCP de cette installation : ni fichiers, ni commandes, ni autres serveurs. Renvoie sa
  * réponse, ou null si Claude Code est absent ou n'a pas répondu à temps.
