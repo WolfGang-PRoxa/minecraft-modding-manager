@@ -6,7 +6,7 @@ de l’aide (`Ctrl` + `K`) retrouve un message à partir de quelques-uns de ses 
 ## Installation de l’application
 
 **« Windows a protégé votre ordinateur »**\
-SmartScreen ne connaît pas encore cet installeur. Cliquer sur **Informations complémentaires**, puis **Exécuter
+L’installeur n’est pas signé pour l’instant, et SmartScreen ne le connaît pas. Cliquer sur **Informations complémentaires**, puis **Exécuter
 quand même**. L’installeur se télécharge toujours depuis la
 [page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
 

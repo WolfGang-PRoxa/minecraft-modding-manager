@@ -34,11 +34,10 @@ modpacks les publient avec le Studio, dans la même application.
 1. Installer [CurseForge](https://www.curseforge.com/download/app) s'il ne l'est pas déjà.
 2. Télécharger **Modpack-Manager-Setup-x.y.z.exe** depuis la
    [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest), puis le lancer.
-   Les installeurs signés indiquent l'éditeur **SignPath Foundation** (voir
-   [Politique de signature du code](#politique-de-signature-du-code)). Si Windows affiche « Windows a protégé votre
-   ordinateur », cliquer sur **Informations complémentaires**, puis **Exécuter quand même** : cet avertissement
-   apparaît pour un installeur non signé, et parfois pour une nouvelle version signée, le temps que Microsoft la
-   connaisse.
+   L'installeur n'est pas signé pour l'instant (voir
+   [Politique de signature du code](#politique-de-signature-du-code)) : Windows affiche « Windows a protégé votre
+   ordinateur ». Cliquer sur **Informations complémentaires**, puis **Exécuter quand même**. L'installeur ne se
+   télécharge que depuis cette page.
 3. Au premier lancement, choisir **Récepteur** (le choix par défaut), pour recevoir les modpacks publiés sur ce dépôt.
 4. Dans la bibliothèque, cliquer sur **Installer** : le modpack apparaît dans CurseForge, onglet Minecraft.
 
@@ -104,8 +103,10 @@ valider ou d'invalider la correction proposée. Rien n'est fusionné sur la bran
 
 ### Signature du code (mainteneur)
 
-L'installeur est signé gratuitement par [SignPath Foundation](https://signpath.org), réservé aux projets open source.
-Tant que la signature n'est pas configurée, la CI publie l'installeur sans signature.
+L'installeur n'est pas signé pour l'instant. La signature par [SignPath Foundation](https://signpath.org), gratuite
+pour les projets open source, demande un projet déjà visible publiquement (étoiles, forks, références extérieures) :
+la candidature sera renouvelée quand le projet sera plus connu. D'ici là, la CI publie l'installeur sans signature ;
+elle est prête à le faire signer dès que le secret de SignPath existe.
 
 Mise en place, une seule fois :
 
@@ -126,9 +127,12 @@ fichier que Windows contrôle au téléchargement.
 
 ## Politique de signature du code
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
-[SignPath Foundation](https://signpath.org).
-(Signature gratuite fournie par SignPath.io, certificat de la SignPath Foundation.)
+L'installeur n'est **pas signé** pour l'instant. Son intégrité reste vérifiée : chaque mise à jour téléchargée par
+l'application est comparée à l'empreinte SHA-256 que GitHub calcule pour le fichier publié.
+
+Une fois la signature en place, elle sera fournie gratuitement par [SignPath.io](https://about.signpath.io), avec un
+certificat de la [SignPath Foundation](https://signpath.org), et l'installeur indiquera l'éditeur **SignPath
+Foundation**.
 
 Rôles :
 
@@ -136,7 +140,7 @@ Rôles :
   [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
 - **Approbateurs** (autorisent la signature de chaque version) : [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
 
-Seuls les installeurs construits par GitHub Actions à partir de ce dépôt sont signés, après approbation manuelle.
+Seuls les installeurs construits par GitHub Actions à partir de ce dépôt seront signés, après approbation manuelle.
 
 ### Confidentialité
 

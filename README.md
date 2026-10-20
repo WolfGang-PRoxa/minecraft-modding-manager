@@ -34,10 +34,9 @@ The application and its documentation are in French.
 
 1. Install [CurseForge](https://www.curseforge.com/download/app) if it is not installed yet.
 2. Download **Modpack-Manager-Setup-x.y.z.exe** from the
-   [latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) and run it. Signed
-   installers show the publisher **SignPath Foundation** (see [Code signing policy](#code-signing-policy)). If
-   Windows shows "Windows protected your PC", click **More info**, then **Run anyway**: this warning appears for an
-   unsigned installer, and sometimes for a new signed version until Microsoft knows it.
+   [latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) and run it. The
+   installer is not code-signed for now (see [Code signing policy](#code-signing-policy)): Windows shows "Windows
+   protected your PC". Click **More info**, then **Run anyway**. Only download the installer from this page.
 3. On first launch, choose **Récepteur** (receiver, the default choice) to receive the modpacks published on this
    repository.
 4. In the library, click **Installer**: the modpack appears in CurseForge, in the Minecraft tab.
@@ -91,7 +90,8 @@ The code layout, the documentation rules, change tracking and the ways to test w
    git push origin main app-v1.1.0
    ```
 
-GitHub Actions checks that the version is in the history, builds the installer, has it signed (see below) and creates
+GitHub Actions checks that the version is in the history, builds the installer, has it signed once signing is set
+up (see below) and creates
 the release, with the release notes taken from `CHANGELOG.md`. Installed applications then offer the new version at
 the top of their window, with its release notes, and update in one click.
 
@@ -103,8 +103,10 @@ proposed fix. Nothing is merged into the main branch without the owner's approva
 
 ### Code signing (maintainer)
 
-The installer is signed for free by [SignPath Foundation](https://signpath.org), a service reserved for open source
-projects. Until signing is set up, the CI publishes the installer unsigned.
+The installer is not signed for now. Signing by [SignPath Foundation](https://signpath.org), free for open source
+projects, requires a project that already has some public visibility (stars, forks, external references): the
+application will be submitted again once the project is better known. Until then, the CI publishes the installer
+unsigned; it is ready to sign as soon as the SignPath secret exists.
 
 One-time setup:
 
@@ -125,8 +127,12 @@ signed: it is the file Windows checks on download.
 
 ## Code signing policy
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
-[SignPath Foundation](https://signpath.org).
+The installer is currently **not signed**. Its integrity is still checked: each update downloaded by the
+application is compared to the SHA-256 digest GitHub computes for the published file.
+
+Once signing is set up, free code signing will be provided by [SignPath.io](https://about.signpath.io), with a
+certificate by [SignPath Foundation](https://signpath.org), and the installer will show the publisher **SignPath
+Foundation**.
 
 Team roles:
 
@@ -134,7 +140,7 @@ Team roles:
   [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
 - **Approvers** (approve the signing of each release): [WolfGang-PRoxa](https://github.com/WolfGang-PRoxa)
 
-Only installers built by GitHub Actions from this repository are signed, after manual approval.
+Only installers built by GitHub Actions from this repository will be signed, after manual approval.
 
 ### Privacy
 

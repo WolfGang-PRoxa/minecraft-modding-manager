@@ -71,11 +71,15 @@ transmise à un autre système.
 
 ## Signature de l’installeur
 
-L’installeur sera signé gratuitement par [SignPath Foundation](https://signpath.org), qui réserve ce service aux
-projets open source : les propriétés du fichier indiqueront l’éditeur **SignPath Foundation**. Seuls les installeurs
-construits par GitHub Actions à partir du dépôt public seront signés, après une approbation manuelle du mainteneur.
-Tant que la signature n’est pas en place, l’installeur n’est pas signé : Windows peut afficher « Windows a protégé
-votre ordinateur » (voir [Installation](installation.md)). La politique de signature complète est dans le
+L’installeur n’est pas signé pour l’instant : Windows affiche « Windows a protégé votre ordinateur » (voir
+[Installation](installation.md)). Son intégrité reste vérifiée : une mise à jour téléchargée par l’application est
+comparée à l’empreinte SHA-256 que GitHub calcule pour le fichier publié. Un installeur téléchargé à la main ne se
+prend que sur la [page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
+
+La signature gratuite de [SignPath Foundation](https://signpath.org), réservée aux projets open source, demande un
+projet déjà connu du public : elle sera demandée de nouveau plus tard. Une fois en place, les propriétés du fichier
+indiqueront l’éditeur **SignPath Foundation**, et seuls les installeurs construits par GitHub Actions à partir du
+dépôt public seront signés, après une approbation manuelle du mainteneur. La politique de signature complète est dans le
 [README du dépôt](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/blob/main/README.fr.md#politique-de-signature-du-code).
 
 ## Protection de l’application

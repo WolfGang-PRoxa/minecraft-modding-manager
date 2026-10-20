@@ -17,10 +17,10 @@ L’application s’installe pour le compte Windows en cours seulement, **sans d
 raccourci **Modpack Manager** est ajouté au menu Démarrer.
 
 > [!NOTE]
-> Windows peut afficher « Windows a protégé votre ordinateur » : cliquer sur **Informations complémentaires**, puis
-> **Exécuter quand même**. Cet avertissement de SmartScreen apparaît pour un installeur non signé, et parfois pour
-> une nouvelle version signée, le temps que Microsoft la connaisse. Les installeurs signés indiquent l’éditeur
-> **SignPath Foundation** (voir [Confidentialité et sécurité](confidentialite.md#signature-de-linstalleur)).
+> Windows affiche « Windows a protégé votre ordinateur » : cliquer sur **Informations complémentaires**, puis
+> **Exécuter quand même**. Cet avertissement de SmartScreen apparaît parce que l’installeur n’est pas signé pour
+> l’instant (voir [Confidentialité et sécurité](confidentialite.md#signature-de-linstalleur)) ; il ne se télécharge
+> que depuis la [page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
 
 ## Le premier lancement
 

@@ -142,7 +142,8 @@ par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publi
 
 Le workflow [`release-app.yml`](../.github/workflows/release-app.yml) vérifie que le tag correspond à `package.json`,
 tire les notes de `CHANGELOG.md` (il s’arrête si la version n’y figure pas), construit l’installeur, le fait signer
-par SignPath (approbation manuelle sur signpath.io) et publie la release. Les applications installées la proposent
+par SignPath si la signature est configurée (pas encore le cas : approbation manuelle sur signpath.io) et publie la
+release. Les applications installées la proposent
 alors en haut de leur fenêtre, avec ses nouveautés.
 
 Le workflow tient en deux jobs : `build` (lecture seule du dépôt) construit et fait signer, puis `publish`, seul à

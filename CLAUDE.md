@@ -368,7 +368,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `publish` (seul `contents: write`, n'exécute pas le code du dépôt) ; actions figées par commit, version en
   commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z`, dont le texte vient de
   `CHANGELOG.md` (`changelog.ts --notes`, la CI s'arrête si la version n'y figure pas). Signature par SignPath
-  Foundation (gratuite, open source, licence MIT) si le secret `SIGNPATH_API_TOKEN` existe : envoi de l'installeur
+  Foundation (gratuite, open source, licence MIT) si le secret `SIGNPATH_API_TOKEN` existe (candidature refusée le
+  2026-10-20 faute de visibilité publique du projet, à renouveler plus tard ; installeur non signé d'ici là) : envoi de l'installeur
   (artefact), approbation manuelle sur signpath.io, vérification `Get-AuthenticodeSignature`, puis publication.
   Variables `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG` ; configuration
   d'artefact dans `.github/signpath/`. Seul l'installeur est signé (éditeur affiché : SignPath Foundation). La section
