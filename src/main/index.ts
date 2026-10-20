@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, protocol, shell } from 'electron'
+import { app, BrowserWindow, Menu, protocol, session, shell, type Session } from 'electron'
 import { join } from 'node:path'
 import { APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
@@ -14,6 +14,16 @@ import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
 import { toggleFullScreen, watchWindowState } from './windowState'
 
 let mainWindow: BrowserWindow | null = null
+
+// Seule permission dont la page a besoin : écrire dans le presse-papiers (bouton « Copier » du code de connexion
+// GitHub). Caméra, micro, position, notifications de la page, accès aux périphériques… sont tous refusés.
+const ALLOWED_PERMISSIONS = new Set(['clipboard-sanitized-write'])
+
+function restrictPermissions(target: Session): void {
+  target.setPermissionRequestHandler((_contents, permission, callback) => callback(ALLOWED_PERMISSIONS.has(permission)))
+  target.setPermissionCheckHandler((_contents, permission) => ALLOWED_PERMISSIONS.has(permission))
+  target.setDevicePermissionHandler(() => false)
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -110,6 +120,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
   app.whenReady().then(async () => {
     app.setAppUserModelId(WINDOWS_APP_ID)
     Menu.setApplicationMenu(null)
+    restrictPermissions(session.defaultSession)
     const launch = await noteRunningVersion()
     cleanAppUpdateDownloads()
     void migratePreviousInstallation()

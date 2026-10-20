@@ -8,6 +8,7 @@ import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurs
 import { getCatalog } from './github'
 import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
 import { listProfiles } from '../core/profiles'
+import { openFolder } from './openFolder'
 import { openReportInBrowser, reportInfo, submitReport } from './report'
 import { registerRoleIpc } from './roleIpc'
 import { getSettings, updateSettings } from '../core/settings'
@@ -102,9 +103,7 @@ export function registerIpc(
     return result
   })
 
-  ipcMain.handle('shell:openPath', async (_e, path: string) => {
-    await shell.openPath(path)
-  })
+  ipcMain.handle('shell:openPath', (_e, path: unknown) => openFolder(path))
   ipcMain.handle('shell:openExternal', async (_e, url: string) => {
     if (/^https:\/\//i.test(url)) await shell.openExternal(url)
   })

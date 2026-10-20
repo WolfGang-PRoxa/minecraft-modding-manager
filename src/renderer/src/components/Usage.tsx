@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { CloudUpload, Download, LoaderCircle, PencilLine } from 'lucide-react'
+import { CloudUpload, Download, LoaderCircle, PencilLine, TriangleAlert } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { APP_REPO } from '../../../shared/config'
 import { parseRepo, repoSlug, sameRepo } from '../../../shared/repo'
@@ -303,6 +303,25 @@ export function SetupView() {
   )
 }
 
+/**
+ * Rappel avant de suivre un autre dépôt que celui de l'application : un modpack, ce sont des mods, du code qui
+ * s'exécute quand on joue. L'app vérifie que les fichiers reçus sont bien ceux publiés, pas ce qu'ils font.
+ */
+function OtherRepoWarning({ value }: { value: string }) {
+  const repo = parseRepo(value)
+  if (!repo || sameRepo(repo, APP_REPO)) return null
+  return (
+    <div className="mt-3 flex gap-2.5 rounded-xl bg-amber-glow/10 px-3.5 py-3 text-xs leading-relaxed text-amber-glow ring-1 ring-inset ring-amber-glow/25">
+      <TriangleAlert size={16} className="mt-0.5 shrink-0" />
+      <p>
+        Les modpacks de ce dépôt sont publiés par <strong className="font-semibold">{repo.owner}</strong>, pas par{' '}
+        {repoSlug(APP_REPO)}. Un modpack contient des mods, c’est-à-dire du code qui s’exécute sur ton PC quand tu
+        joues : ne suis que le dépôt d’une personne en qui tu as confiance.
+      </p>
+    </div>
+  )
+}
+
 /** Section « Utilisation » des paramètres : rôle, dépôt et compte GitHub (application et studio). */
 export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: Pick<Settings, 'role' | 'repo'> }) {
   const [editing, setEditing] = useState<'publisher' | 'source' | null>(null)
@@ -391,6 +410,7 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
         <div>
           <Label>Suivre les modpacks du dépôt</Label>
           <RepoField value={source} onChange={setSource} onSubmit={() => void becomeReceiver(source)} />
+          <OtherRepoWarning value={source} />
           <div className="mt-3 flex flex-wrap justify-end gap-2">
             {!sameRepo(settings.repo, APP_REPO) && (
               <Button size="sm" variant="ghost" disabled={busy} onClick={() => void becomeReceiver(repoSlug(APP_REPO))}>

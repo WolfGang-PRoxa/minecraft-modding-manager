@@ -62,6 +62,9 @@ Actualiser la liste, puis réessayer.
 La connexion a été coupée pendant le téléchargement. Vérifier la connexion, puis réessayer : l’installation repart
 du début, sans rien laisser derrière elle.
 
+**« Ce modpack ne peut pas être vérifié (empreinte absente de sa release) : installation refusée. Signale-le à son publieur. »**Ni le `modpack.json` de la version, ni GitHub ne donnent l’empreinte du zip : rien ne prouverait que le fichier reçu
+est celui publié. Le publieur doit republier la version depuis le Studio, qui écrit toujours cette empreinte.
+
 **« Téléchargement impossible (HTTP 404). »**\
 La version a été retirée ou remplacée sur GitHub depuis la dernière lecture de la liste. Cliquer sur **Actualiser**,
 puis réessayer.
@@ -132,6 +135,9 @@ Une installation de modpack ou une opération du Studio est en cours. Attendre s
 **« L’installeur téléchargé ne correspond pas à celui publié sur GitHub. Réessaie. »**\
 Le téléchargement a été abîmé : l’installeur n’est pas lancé. Réessayer.
 
+**« Cette mise à jour ne peut pas être vérifiée (empreinte absente sur GitHub)… »**GitHub ne donne pas l’empreinte de l’installeur publié : il n’est pas téléchargé. **Télécharger depuis GitHub** ouvre
+la page de la version, d’où l’installeur peut être lancé à la main.
+
 **« Espace disque insuffisant pour télécharger la mise à jour. »**\
 Libérer de la place sur le disque de Windows, puis réessayer.
 
@@ -184,6 +190,12 @@ ne vaut que pour un modpack publié sur GitHub.
 Pendant le report d’un essai, un fichier du profil est resté ouvert dans un autre programme plus de quelques
 secondes. Rien n’a été changé dans le profil : fermer Minecraft (et CurseForge s’il n’a pas été fermé), puis garder
 l’essai de nouveau.
+
+**« … ne correspond pas à l’empreinte publiée : installation refusée. »** (test du serveur)L’installeur de Forge ou de NeoForge reçu diffère de celui que publie son site : téléchargement abîmé, ou fichier
+modifié en chemin. Relancer le test ; si le message revient, attendre avant de réessayer.
+
+**« … n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge. »**CurseForge ne donne pas d’empreinte pour ce fichier : le Studio ne peut pas vérifier ce qu’il recevrait, et le laisse
+de côté. La mise à jour de ce mod se fait dans CurseForge.
 
 **« Contient N fichiers exclus dans les réglages (…) : ils seront publiés avec cette version. »**\
 Ce zip a été fait avant l’exclusion, ou préparé à la main. **Retirer du zip** l’en débarrasse (voir

@@ -269,6 +269,10 @@ export async function installModpack(
     workDir = join(dirname(instancesDir), '.modpack-manager', `${version.id}-${Date.now()}`)
     const stagingDir = join(workDir, 'new')
 
+    // Sans empreinte, rien ne prouverait que le zip reçu est celui publié.
+    if (!version.archiveSha256) {
+      throw new UserError('Ce modpack ne peut pas être vérifié (empreinte absente de sa release) : installation refusée. Signale-le à son publieur.')
+    }
     const { sha256 } = await downloadFile({
       url: version.archiveUrl,
       destination: zipPath,
@@ -278,7 +282,7 @@ export async function installModpack(
     })
 
     report('verifying')
-    if (version.archiveSha256 && version.archiveSha256.toLowerCase() !== sha256) {
+    if (version.archiveSha256.toLowerCase() !== sha256) {
       throw new UserError("Le fichier téléchargé est corrompu (empreinte SHA-256 différente). Réessaie.")
     }
 

@@ -2,6 +2,7 @@
 // et publication, échec des tests, abandon, publication automatique. Les tests du serveur et avec des joueurs, et la
 // fermeture de CurseForge, sont remplacés (ils lanceraient Java et le jeu, et fermeraient le vrai CurseForge).
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
@@ -85,6 +86,7 @@ describe('mises à jour automatiques', () => {
   /** Publie sur le faux CurseForge un fichier plus récent d'Alpha. */
   function releaseAlpha(): CfFile {
     const id = nextFile++
+    const content = Buffer.from(`alpha ${id}`)
     const file: CfFile = {
       id,
       modId: 11,
@@ -96,11 +98,11 @@ describe('mises à jour automatiques', () => {
       downloadUrl: `${curseforge.url}/files/${id}`,
       isAvailable: true,
       gameVersions: ['1.20.1', 'Forge'],
-      hashes: [],
+      hashes: [{ value: createHash('sha1').update(content).digest('hex'), algo: 1 }],
       dependencies: []
     }
     curseforge.catalog.files.push(file)
-    curseforge.catalog.downloads[id] = Buffer.from(`alpha ${id}`)
+    curseforge.catalog.downloads[id] = content
     curseforge.catalog.mods[0].latestFilesIndexes = [{ gameVersion: '1.20.1', fileId: id, filename: file.fileName, releaseType: 1, modLoader: 1 }]
     return file
   }

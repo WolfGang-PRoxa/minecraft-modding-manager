@@ -55,10 +55,16 @@ transmise à un autre système.
 
 ## Intégrité des téléchargements
 
-- **Modpacks** : l’empreinte SHA-256 de chaque zip téléchargé est comparée à celle publiée dans son `modpack.json`,
-  et sa taille à celle annoncée. Un fichier abîmé ou modifié est refusé avant toute installation.
+- **Modpacks** : l’empreinte SHA-256 de chaque zip téléchargé est comparée à celle publiée dans son `modpack.json`
+  (à défaut, à celle que GitHub calcule pour le zip), et sa taille à celle annoncée. Un fichier abîmé ou modifié est
+  refusé avant toute installation, et un modpack sans empreinte connue n’est pas installé.
 - **Mises à jour de l’application** : l’empreinte SHA-256 de l’installeur téléchargé est comparée à celle que GitHub
-  calcule pour le fichier publié. L’adresse et la version viennent des releases relues par l’application elle-même.
+  calcule pour le fichier publié ; sans elle, la mise à jour n’est pas téléchargée. L’adresse et la version viennent
+  des releases relues par l’application elle-même.
+- **Mods mis à jour par le Studio** (publieurs) : l’empreinte SHA-1 publiée par CurseForge est vérifiée avant que le
+  fichier n’arrive dans le profil ; un fichier sans empreinte est laissé à mettre à jour dans CurseForge.
+- **Serveurs de test** (publieurs) : les installeurs de Forge et de NeoForge sont comparés à l’empreinte SHA-256
+  publiée à côté d’eux. Fabric n’en publie pas pour son lanceur de serveur : seul le HTTPS le protège.
 - **Extraction** : un zip qui contiendrait un chemin sortant du dossier du profil est refusé.
 - **Mise à jour d’un modpack** : l’ancienne version est mise de côté avant d’être remplacée ; en cas d’échec, rien
   n’est supprimé.
@@ -75,7 +81,11 @@ votre ordinateur » (voir [Installation](installation.md)). La politique de sign
 ## Protection de l’application
 
 - La fenêtre de l’application est isolée du système : elle n’accède aux fichiers du PC qu’à travers les fonctions
-  prévues par l’application, et n’affiche que son propre contenu.
+  prévues par l’application, et n’affiche que son propre contenu. Elle n’exécute aucun script écrit dans la page et
+  n’ouvre aucune connexion : tout passe par l’application.
+- Caméra, micro, position et autres permissions sont refusés à la fenêtre ; seule l’écriture dans le presse-papiers
+  (bouton **Copier** du code de connexion GitHub) est permise.
+- Les boutons **Ouvrir** n’ouvrent que des dossiers dans l’Explorateur, jamais un fichier ou un programme.
 - Les liens s’ouvrent dans le navigateur, et seulement s’ils sont en `https`.
 - Le Studio n’ouvre que les zips du dossier des modpacks.
 - Une seule installation de modpack, et une seule opération du Studio, se font à la fois ; la mise à jour de
@@ -87,3 +97,8 @@ Un signalement devient une issue **publique** du dépôt de l’application. Il 
 sont jointes, les informations techniques affichées dans le formulaire avant l’envoi : versions de l’application et
 de Windows, rôle, dépôt suivi, état de CurseForge et modpacks installés. Elles ne contiennent ni chemin de dossier,
 ni nom de compte. Voir [Signaler un problème](signalement.md).
+
+Le mainteneur est prévenu par un service à lui, qui transmet le texte de l’issue (titre, description, derniers
+commentaires, nom du compte GitHub de son auteur) à une session Claude Code de son compte Anthropic, pour en évaluer
+le risque avant toute correction automatique. Comme l’issue elle-même, ce texte est public, et l’évaluation l’est
+aussi (sur une branche du dépôt, le temps que l’issue soit réglée).

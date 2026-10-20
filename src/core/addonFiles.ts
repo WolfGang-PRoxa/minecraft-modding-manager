@@ -60,6 +60,8 @@ export async function downloadCurseForgeFile(file: CfFile, destination: string, 
     throw new StudioError(`${file.fileName} : son auteur n’autorise pas le téléchargement hors de CurseForge. Mets-le à jour dans CurseForge.`)
   }
   const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase()
+  // Sans empreinte, rien ne permettrait de savoir si le fichier reçu est bien celui publié.
+  if (!expected) throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`)
   const part = `${destination}.part`
   let res: Response
   try {
@@ -80,7 +82,7 @@ export async function downloadCurseForgeFile(file: CfFile, destination: string, 
       },
       createWriteStream(part)
     )
-    if (expected && hash.digest('hex') !== expected) throw new StudioError(`${file.fileName} est arrivé abîmé (empreinte différente).`)
+    if (hash.digest('hex') !== expected) throw new StudioError(`${file.fileName} est arrivé abîmé (empreinte différente).`)
     await rename(part, destination)
   } catch (err) {
     await rm(part, { force: true })

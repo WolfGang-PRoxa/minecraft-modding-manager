@@ -49,6 +49,7 @@ d’autre (un mod qui plante, une quête bloquée), mieux vaut prévenir aussi s
 
 ## Après l’envoi
 
-Le mainteneur est prévenu dès que l’issue est créée. Il peut poser des questions dans l’issue : GitHub envoie une
+Le mainteneur est prévenu dès que l’issue est créée, avec une évaluation automatique de son contenu par Claude
+(voir [Confidentialité](confidentialite.md#les-signalements)). Il peut poser des questions dans l’issue : GitHub envoie une
 notification à l’auteur de l’issue, si elle a été créée avec son compte. Une correction validée est publiée dans une
 prochaine version de l’application, et apparaît dans les [Nouveautés](../CHANGELOG.md).

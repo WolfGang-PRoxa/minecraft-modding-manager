@@ -8,6 +8,24 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+<!-- relais du mainteneur, sans effet dans l’application : b983e05 -->
+
+### Ajouts
+
+- Un avertissement rappelle, au moment de suivre un autre dépôt que celui par défaut, qu’un modpack contient du code
+  qui s’exécute pendant une partie : ne suivre que le dépôt d’une personne de confiance.
+
+### Sécurité
+
+- Un modpack dont l’empreinte n’est pas connue n’est plus installé, et une mise à jour de l’application dont GitHub
+  ne donne pas l’empreinte n’est plus téléchargée : rien ne prouverait que le fichier reçu est celui publié.
+- Les boutons **Ouvrir** n’ouvrent plus que des dossiers, jamais un fichier ou un programme.
+- La fenêtre de l’application refuse caméra, micro, position et autres permissions (seule la copie dans le
+  presse-papiers reste permise), et n’exécute plus aucun script écrit dans la page.
+- Studio : les installeurs de Forge et de NeoForge des tests de serveur sont comparés à l’empreinte publiée par leur
+  site, et un mod sans empreinte sur CurseForge n’est plus mis à jour par l’application.
+- Mise à jour du SDK MCP utilisé par la connexion à Claude Code.
+
 ## [1.9.1] - 2026-10-20
 
 ### Améliorations

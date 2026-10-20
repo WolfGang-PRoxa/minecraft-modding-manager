@@ -105,6 +105,10 @@ export async function installAppUpdate(options: {
     if (!update) return failed('L’application est déjà à jour.')
     signal.throwIfAborted()
 
+    // Sans l'empreinte publiée par GitHub, l'installeur ne pourrait pas être vérifié : il n'est pas téléchargé.
+    if (!update.installerSha256) {
+      return failed('Cette mise à jour ne peut pas être vérifiée (empreinte absente sur GitHub). Le bouton « Télécharger depuis GitHub » permet de l’installer à la main.')
+    }
     // Le numéro de version vient du tag de la release : on n'en garde que ce qui convient à un nom de fichier.
     const destination = join(downloadDir(), `${INSTALLER_PREFIX}${update.version.replace(/[^\w.+-]/g, '_')}.exe`)
     const { sha256, size } = await downloadFile({
@@ -114,7 +118,7 @@ export async function installAppUpdate(options: {
       signal,
       onProgress: ({ done, total }) => options.onProgress({ phase: 'downloading', done, total })
     })
-    if (update.installerSha256 && sha256 !== update.installerSha256) {
+    if (sha256 !== update.installerSha256) {
       await removeQuietly(destination)
       return failed('L’installeur téléchargé ne correspond pas à celui publié sur GitHub. Réessaie.')
     }

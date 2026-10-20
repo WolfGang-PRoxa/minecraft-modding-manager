@@ -92,7 +92,13 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `studioIpc.ts` : canaux `studio:*` (appellent `StudioService`), images via `studio-media://cover/`, surveillance du
     dossier des modpacks (un changement fait par `mpm` ou Claude rafraîchit la vue). `studioTask` compte aussi
     l'opération d'un autre processus (verrou partagé) : la mise à jour de l'app l'attend.
-  - `download.ts`, `ipc.ts`, `authIpc.ts` (canaux `auth:*`), `roleIpc.ts` (canaux `role:*`).
+  - `download.ts`, `ipc.ts`, `authIpc.ts` (canaux `auth:*`), `roleIpc.ts` (canaux `role:*`). `openFolder.ts` :
+    `shell:openPath` et `studio:openPath` n'ouvrent qu'un dossier existant (un fichier serait lancé). `index.ts`
+    refuse toute permission à la page sauf `clipboard-sanitized-write` (`restrictPermissions`).
+  - Empreintes obligatoires : `installer.ts` refuse un modpack sans `archiveSha256` (celle de `modpack.json`, sinon
+    le `digest` GitHub du zip : `sha256FromDigest`, shared/releases), `appUpdate.ts` une mise à jour sans `digest`,
+    `addonFiles.ts` un fichier CurseForge sans SHA-1 (`skipped`), `serverInstall.ts` un installeur Forge / NeoForge
+    qui ne correspond pas à son `<url>.sha256`.
 - `src/core/` — le moteur, Node pur : **jamais d'import d'Electron** (test `architecture`). Réutilisé par la fenêtre,
   `mpm` et le serveur MCP.
   - `playerChoices.ts` et `instanceAddons.ts` (Node pur, testables avec tsx) : reprise des choix du joueur ; lecture
@@ -348,8 +354,19 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   précédent de la branche principale : **ni pull request ni fusion par GitHub**, dont les commits (y compris le
   commit d'essai de chaque pull request ouverte) portent l'adresse du compte, donc l'adresse personnelle du
   propriétaire tant qu'elle n'est pas masquée dans ses réglages GitHub.
+  Chaque mail porte le message d'origine de l'issue et une évaluation de son risque, faite par une session Claude
+  Code sur l'abonnement du propriétaire (pas l'API, payante à part) : routine à part (`routine-evaluation.md`,
+  `EVAL_ROUTINE_FIRE_URL` / `EVAL_ROUTINE_TOKEN`), qui pousse un commit vide sur `evaluation/issue-<N>` dont le message
+  porte l'évaluation en JSON (`src/risk.mts`) ; ce push envoie le mail de l'issue (`issueOfBranch` ignore ces
+  branches). `EVAL_DAILY_MAX` (3) issues évaluées d'office par 24 h, les autres par le bouton du mail (action
+  `evaluer`) ; `relance.mts` (planifiée) envoie le mail sans évaluation au bout de 20 min (étiquette
+  `evaluation-en-cours`). Une proposition qui touche un fichier sensible
+  (`src/sensitive.mts` : CI, build, scripts, dépendances, relais, consignes de Claude) ne se valide pas depuis le mail
+  (`mergeBlocker` dans `action.mts`, revérifié sur GitHub au clic).
   Voir `relay/README.md` pour les variables et le déploiement.
-- `.github/workflows/release-app.yml` — build de l'installeur et release sur tag `app-vX.Y.Z`, dont le texte vient de
+- `.github/workflows/release-app.yml` — deux jobs : `build` (`contents: read`, `actions: read` pour SignPath) puis
+  `publish` (seul `contents: write`, n'exécute pas le code du dépôt) ; actions figées par commit, version en
+  commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z`, dont le texte vient de
   `CHANGELOG.md` (`changelog.ts --notes`, la CI s'arrête si la version n'y figure pas). Signature par SignPath
   Foundation (gratuite, open source, licence MIT) si le secret `SIGNPATH_API_TOKEN` existe : envoi de l'installeur
   (artefact), approbation manuelle sur signpath.io, vérification `Get-AuthenticodeSignature`, puis publication.
@@ -490,6 +507,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   2026-10-11) : Windows prenait alors l'icône d'Electron pour l'app installée dans la barre des tâches. D'où
   `WINDOWS_APP_ID` (`shortcut.ts`) : `APP_USER_MODEL_ID` une fois packagée, suivi de `.dev` en développement. Après
   un tel essai, mettre `Electron.lnk` à la corbeille.
+- Politique de sécurité (CSP) : celle de `src/renderer/index.html` est celle de l'app compilée (`script-src 'self'`,
+  `connect-src 'self'`, images `https:`, `data:`, `studio-media:`) ; le plugin `devContentSecurityPolicy`
+  (`electron.vite.config.ts`) l'assouplit pour le seul serveur de développement. Dans `out/`, une image d'un faux
+  serveur `http://` ne s'affiche donc pas.
 - L'extension VS Code définit `ELECTRON_RUN_AS_NODE=1` : Electron démarre alors comme Node et plante
   (`app` undefined). Retirer cette variable pour lancer l'app depuis un outil.
 - npm 11 n'exécute que les scripts d'install listés dans `allowScripts` (package.json). Electron télécharge son binaire

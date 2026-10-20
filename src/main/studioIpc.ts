@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import type { ActionResult, PackSettings, PublishResult, RangerOrders, UpdateChannel } from '../shared/studio'
 import { appUpdateTask } from './appUpdate'
 import { maintenanceTask, registerMaintenanceIpc, stopMaintenance } from './maintenance'
+import { openFolder, OpenFolderError } from './openFolder'
 import { resolveCredential } from '../core/auth'
 import { resolveInstancesDir } from '../core/curseforge'
 import { pathExists } from '../core/fsutil'
@@ -349,8 +350,12 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     service.previewZipEntry(folder, fileName, path)
   )
 
-  ipcMain.handle('studio:openPath', async (_e, path: string) => {
-    if (!(await pathExists(path))) throw new StudioError('Ce dossier n’existe plus.')
-    await shell.openPath(path)
+  ipcMain.handle('studio:openPath', async (_e, path: unknown) => {
+    try {
+      await openFolder(path)
+    } catch (err) {
+      // Message montré tel quel par la vue Studio.
+      throw err instanceof OpenFolderError ? new StudioError(err.message) : err
+    }
   })
 }

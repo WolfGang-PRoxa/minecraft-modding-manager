@@ -145,6 +145,11 @@ tire les notes de `CHANGELOG.md` (il s’arrête si la version n’y figure pas)
 par SignPath (approbation manuelle sur signpath.io) et publie la release. Les applications installées la proposent
 alors en haut de leur fenêtre, avec ses nouveautés.
 
+Le workflow tient en deux jobs : `build` (lecture seule du dépôt) construit et fait signer, puis `publish`, seul à
+pouvoir écrire sur le dépôt, publie l’installeur sans exécuter ni le code du dépôt ni ses dépendances. Chaque action
+externe est figée sur un commit, sa version en commentaire (`# v5.1.0`) : la mettre à jour, c’est remplacer le commit
+et le commentaire, après lecture des changements de l’action.
+
 > [!CAUTION]
 > Un tag `app-v*` publie une version pour tous les utilisateurs : ne le pousser qu’une fois la version prête.
 
@@ -153,6 +158,10 @@ alors en haut de leur fenêtre, avec ses nouveautés.
 - **Sans GitHub** : un faux serveur de releases local et la variable `MPD_GITHUB_API=http://localhost:<port>/repos/o/r`
   (avec `GITHUB_TOKEN=x` pour le Studio et les scripts) remplacent l’API de GitHub. Cette variable est ignorée par
   l’application installée.
+- **Politique de sécurité de la page** : `src/renderer/index.html` porte celle de l’application compilée (aucun script
+  écrit dans la page, aucune connexion, images en `https`). Le serveur de développement l’assouplit lui seul
+  (`electron.vite.config.ts`) : une image servie par un faux serveur local `http://` s’affiche donc avec `npm run dev`,
+  pas dans l’application compilée (`out/`).
 - **Données isolées** : `--user-data-dir=<dossier>` donne à l’application d’autres réglages, une autre connexion et
   un autre cache ; `APPDATA=<dossier>` fait de même pour les scripts. Choisir aussi un dossier `Instances` de
   test pour ne pas toucher au vrai CurseForge.

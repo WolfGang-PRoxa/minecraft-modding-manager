@@ -1,27 +1,38 @@
 # Construit l'installeur Windows, le fait signer par SignPath (si c'est configuré) et le publie
 # quand un tag app-vX.Y.Z est poussé.
+#
+# Chaque action externe est figée sur un commit (la version en commentaire) : une étiquette comme « v5 » peut être
+# déplacée par son auteur, ou par quiconque prendrait son compte. Le droit d'écrire sur le dépôt n'est donné qu'au
+# second job, qui publie, et qui n'exécute ni le code du dépôt ni ses dépendances.
 name: Publier l'application
 
 on:
   push:
     tags: ['app-v*']
 
-permissions:
-  contents: write
-  actions: read
+permissions: {}
 
 jobs:
-  release:
+  build:
     runs-on: windows-latest
     # La signature attend l'approbation manuelle de la demande sur signpath.io.
     timeout-minutes: 300
+    permissions:
+      contents: read
+      # SignPath récupère l'installeur à signer parmi les artefacts du workflow.
+      actions: read
     env:
       # La signature s'active dès que le secret SIGNPATH_API_TOKEN existe (README, « Signature du code »).
       SIGNPATH_ENABLED: ${{ secrets.SIGNPATH_API_TOKEN != '' }}
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      installer: ${{ steps.version.outputs.installer }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version: 24
           cache: npm
@@ -53,7 +64,7 @@ jobs:
       - name: Préparer l'installeur à signer
         id: unsigned
         if: env.SIGNPATH_ENABLED == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: installeur-non-signe
           path: dist/${{ steps.version.outputs.installer }}
@@ -62,7 +73,7 @@ jobs:
 
       - name: Signer avec SignPath (approuver la demande sur signpath.io)
         if: env.SIGNPATH_ENABLED == 'true'
-        uses: signpath/github-action-submit-signing-request@v3
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3.0
         with:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
@@ -85,9 +96,30 @@ jobs:
           if ($signature.Status -ne 'Valid') { throw "Signature invalide : $($signature.StatusMessage)" }
           Write-Host "Signé par : $($signature.SignerCertificate.Subject)"
 
-      - uses: softprops/action-gh-release@v2
+      - name: Transmettre l'installeur et les notes au job de publication
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: Modpack Manager ${{ steps.version.outputs.version }}
-          files: dist/${{ steps.version.outputs.installer }}
+          name: release
+          path: |
+            dist/${{ steps.version.outputs.installer }}
+            release-notes.md
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release
+          path: release
+
+      - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          name: Modpack Manager ${{ needs.build.outputs.version }}
+          files: release/dist/${{ needs.build.outputs.installer }}
           make_latest: true
-          body_path: release-notes.md
+          body_path: release/release-notes.md

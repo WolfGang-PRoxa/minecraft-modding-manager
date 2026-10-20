@@ -28,6 +28,12 @@ export interface GhRelease {
   assets: GhAsset[]
 }
 
+/** Empreinte SHA-256 en hexadécimal tirée du `digest` d'un fichier de release, ou null. */
+export function sha256FromDigest(digest: string | null | undefined): string | null {
+  const match = /^sha256:([0-9a-f]{64})$/i.exec(digest ?? '')
+  return match ? match[1].toLowerCase() : null
+}
+
 export function modpackTag(id: string, version: string): string {
   return `${MODPACK_TAG_PREFIX}${id}-v${version}`
 }
@@ -132,7 +138,8 @@ export function modpackVersionFromRelease(
     publishedAt: release.published_at ?? release.created_at,
     archiveUrl: archive.browser_download_url,
     archiveSize: archive.size,
-    archiveSha256: manifest?.archiveSha256 ?? null,
+    // Sans modpack.json (ou s'il n'en donne pas), l'empreinte que GitHub calcule pour le zip.
+    archiveSha256: manifest?.archiveSha256 ?? sha256FromDigest(archive.digest),
     modsSignature: typeof manifest?.modsSignature === 'string' ? manifest.modsSignature : null,
     disabledMods: Array.isArray(manifest?.disabledMods)
       ? manifest.disabledMods.filter((file): file is string => typeof file === 'string' && file.length > 0)

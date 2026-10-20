@@ -172,5 +172,10 @@ ceux d’un autre publieur :
 4. Cliquer sur **Enregistrer** : l’application vérifie que le dépôt existe et qu’il est public, puis recharge la
    liste.
 
+> [!WARNING]
+> Un modpack contient des mods, c’est-à-dire du code qui s’exécute sur le PC pendant une partie. L’application vérifie
+> que les fichiers reçus sont bien ceux que le publieur a mis en ligne, pas ce qu’ils font : suivre un dépôt, c’est
+> faire confiance à son auteur. Un avertissement le rappelle dès qu’un autre dépôt que celui par défaut est saisi.
+
 **Revenir à WolfGang-PRoxa/minecraft-modpack-manager** rétablit le dépôt par défaut. Les modpacks déjà installés
 restent dans CurseForge quel que soit le dépôt suivi.

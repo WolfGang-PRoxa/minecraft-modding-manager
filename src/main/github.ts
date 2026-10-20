@@ -7,6 +7,7 @@ import {
   groupModpacks,
   isModpackManifest,
   modpackVersionFromRelease,
+  sha256FromDigest,
   type GhAsset,
   type GhRelease
 } from '../shared/releases'
@@ -131,11 +132,6 @@ async function buildModpackVersions(releases: GhRelease[], offline: boolean): Pr
     })
   )
   return versions.filter((v): v is ModpackVersion => v !== null)
-}
-
-function sha256FromDigest(digest: string | null | undefined): string | null {
-  const match = /^sha256:([0-9a-f]{64})$/i.exec(digest ?? '')
-  return match ? match[1].toLowerCase() : null
 }
 
 /** Version la plus récente de l'application, si elle est plus récente que celle qui tourne. */

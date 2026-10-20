@@ -2,6 +2,7 @@
 // dossier de cache, avec ses bibliothèques, puis réutilisé à chaque test. Seuls les outils officiels des chargeurs
 // sont utilisés (lanceur de serveur Fabric, installeurs Forge et NeoForge en mode serveur).
 import { spawn } from 'node:child_process'
+import { createHash } from 'node:crypto'
 import { createWriteStream } from 'node:fs'
 import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -29,17 +30,52 @@ export const serverKey = (loader: LoaderSpec) => `${loader.kind}-${loader.minecr
 
 const INSTALLED_MARK = '.mpm-installed'
 
-async function download(url: string, destination: string): Promise<void> {
+async function get(url: string, timeoutMs: number): Promise<Response> {
   let res: Response
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(300_000) })
+    res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
   } catch {
     throw new StudioError(`Téléchargement impossible (${new URL(url).host}) : vérifie ta connexion internet.`)
   }
   if (!res.ok || !res.body) throw new StudioError(`Téléchargement refusé (${res.status}) : ${url}`)
+  return res
+}
+
+/** Empreinte SHA-256 publiée à côté d'un fichier (`<fichier>.sha256`), comme le font les dépôts de Forge et NeoForge. */
+async function publishedSha256(url: string): Promise<string> {
+  const text = await (await get(`${url}.sha256`, 30_000)).text()
+  const hash = /^\s*([0-9a-f]{64})\b/i.exec(text)?.[1]
+  if (!hash) throw new StudioError(`Empreinte illisible pour ${url.split('/').pop()} : installation refusée.`)
+  return hash.toLowerCase()
+}
+
+/**
+ * Télécharge un fichier ; avec `sha256`, il n'apparaît que si son empreinte correspond. Le lanceur de Fabric n'a pas
+ * d'empreinte publiée : seul le HTTPS le protège.
+ */
+async function download(url: string, destination: string, sha256?: string): Promise<void> {
+  const res = await get(url, 300_000)
   const part = `${destination}.part`
-  await pipeline(Readable.fromWeb(res.body as never), createWriteStream(part))
-  await rename(part, destination)
+  const hash = createHash('sha256')
+  try {
+    await pipeline(
+      Readable.fromWeb(res.body as never),
+      async function* (source) {
+        for await (const chunk of source) {
+          hash.update(chunk as Buffer)
+          yield chunk
+        }
+      },
+      createWriteStream(part)
+    )
+    if (sha256 && hash.digest('hex') !== sha256) {
+      throw new StudioError(`${url.split('/').pop()} ne correspond pas à l’empreinte publiée : installation refusée.`)
+    }
+    await rename(part, destination)
+  } catch (err) {
+    await rm(part, { force: true })
+    throw err
+  }
 }
 
 /** Lance une commande et attend sa fin ; renvoie la fin de sa sortie pour expliquer un échec. */
@@ -102,7 +138,8 @@ export async function ensureServer(cacheDir: string, loader: LoaderSpec, java: s
   if (!installed) {
     onStep(`Installation du serveur ${kind === 'forge' ? 'Forge' : 'NeoForge'} ${version} (une seule fois)`)
     const installer = join(dir, 'installer.jar')
-    await download(`${group}/${full}/${name}-${full}-installer.jar`, installer)
+    const url = `${group}/${full}/${name}-${full}-installer.jar`
+    await download(url, installer, await publishedSha256(url))
     const { code, tail } = await run(java, ['-jar', 'installer.jar', '--installServer'], dir)
     await rm(installer, { force: true })
     if (code !== 0) throw new StudioError(`L’installeur du serveur a échoué (code ${code}) : ${tail.trim().split('\n').slice(-3).join(' ')}`)
