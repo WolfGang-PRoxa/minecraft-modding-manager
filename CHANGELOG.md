@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [1.9.2] - 2026-10-20
+
 <!-- relais du mainteneur, sans effet dans l’application : b983e05 -->
 
 ### Ajouts
@@ -323,7 +325,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.9.1...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.9.2...HEAD
+[1.9.2]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.9.1...app-v1.9.2
 [1.9.1]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.9.0...app-v1.9.1
 [1.9.0]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.3...app-v1.9.0
 [1.8.3]: https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/compare/app-v1.8.2...app-v1.8.3
