@@ -217,6 +217,40 @@ describe('mises à jour automatiques', () => {
     service.serverStarts = true
   })
 
+  it('un essai reporté ou abandonné en dehors des mises à jour automatiques n’attend plus de décision', async () => {
+    const pack = async () => (await service.overview()).packs[0]
+    const status = async () => (await maintenanceStatus(service, options.lock, null)).packs[0].last
+    releaseAlpha()
+    service.serverStarts = false
+    after(() => {
+      service.serverStarts = true
+    })
+    // L'essai disparaît sans passer par les mises à jour automatiques (report à la main, dossier supprimé…).
+    const [failed] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    assert.equal(failed.outcome, 'failed')
+    await rm(failed.trialPath!, { recursive: true, force: true })
+    assert.equal((await status())?.outcome, 'skipped')
+    assert.equal((await status())?.trialPath, null)
+    // « Abandonner » retire la section au lieu d'échouer faute d'essai ; ensuite, plus rien n'attend.
+    const cleared = await discardPending(await pack(), options)
+    assert.equal(cleared.trialPath, null)
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null)
+    await assert.rejects(finishPending(await pack(), false, options), /n’a pas d’essai/)
+
+    // « Valider quand même » sur un essai disparu : refusé, mais la section est retirée aussi.
+    const [lost] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    await rm(lost.trialPath!, { recursive: true, force: true })
+    await assert.rejects(finishPending(await pack(), false, options), /n’existe plus/)
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null)
+
+    // L'essai est abandonné depuis les mises à jour du profil : le passage en attente est retiré aussitôt.
+    const [again] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    assert.equal(again.outcome, 'failed')
+    await service.discardTrial(profile)
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.outcome, 'skipped')
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.message, 'Essai abandonné.')
+  })
+
   it('publie seul quand le modpack le permet', async () => {
     await service.updatePackUpdates('Mon_Pack', { autoPublish: true })
     const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)

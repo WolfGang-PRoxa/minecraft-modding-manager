@@ -10,6 +10,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 <!-- relais du mainteneur, sans effet dans l’application : aa93f74 2f35a2d 2d8faaf -->
 
+### Corrections
+
+- Studio, mises à jour automatiques : une mise à jour en attente dont l’essai a été gardé ou abandonné ailleurs
+  (mises à jour du profil, terminal, Claude) ne reste plus affichée sur la carte du modpack. Avant, sa section ne
+  pouvait plus être retirée : **Abandonner** et **Valider quand même** échouaient faute d’essai.
+
 ## [1.9.2] - 2026-10-20
 
 <!-- relais du mainteneur, sans effet dans l’application : b983e05 -->

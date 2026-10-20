@@ -10,7 +10,7 @@ import { pathExists } from '../fsutil'
 import { describeIssue, newIssues } from '../gameTests/logIssues'
 import { changeLine, versionNotes } from './notes'
 import { dueAt, isDue } from './schedule'
-import { readMaintenanceState, saveRecord } from './state'
+import { currentRecord, readMaintenanceState, saveRecord } from './state'
 
 export interface MaintenanceOptions {
   service: StudioService
@@ -225,13 +225,21 @@ export function runMaintenance(request: MaintenanceRequest, options: Maintenance
   })
 }
 
-/** L'essai prêt d'un modpack : le dernier passage, s'il attend encore une décision. */
-async function pendingTrial(pack: PackView): Promise<MaintenanceRecord> {
+/**
+ * L'essai prêt d'un modpack : le dernier passage, s'il attend encore une décision. Un passage en attente dont l'essai a
+ * disparu (reporté ou supprimé à côté) est retiré au passage, et renvoyé dans `cleared`.
+ */
+async function pendingTrial(pack: PackView): Promise<{ pending: MaintenanceRecord } | { cleared: MaintenanceRecord }> {
   const last = (await readMaintenanceState())[pack.id]?.last ?? null
-  if (!last?.trialPath || (last.outcome !== 'ready' && last.outcome !== 'failed') || !(await pathExists(last.trialPath))) {
+  const current = await currentRecord(last)
+  if (last && current && current !== last) {
+    await saveRecord(current, { replace: true })
+    return { cleared: current }
+  }
+  if (!last?.trialPath || (last.outcome !== 'ready' && last.outcome !== 'failed')) {
     throw new StudioError(`${pack.name} n’a pas d’essai des mises à jour en attente.`)
   }
-  return last
+  return { pending: last }
 }
 
 /**
@@ -240,7 +248,9 @@ async function pendingTrial(pack: PackView): Promise<MaintenanceRecord> {
  */
 export function finishPending(pack: PackView, publish: boolean, options: MaintenanceOptions): Promise<MaintenanceRecord> {
   return withRunLock(options, async () => {
-    const pending = await pendingTrial(pack)
+    const found = await pendingTrial(pack)
+    if ('cleared' in found) throw new StudioError(`L’essai de ${pack.name} n’existe plus : la mise à jour en attente est retirée.`)
+    const pending = found.pending
     let record: MaintenanceRecord
     try {
       record = await createVersion(pack, pending, { ...options, publish })
@@ -257,7 +267,10 @@ export function finishPending(pack: PackView, publish: boolean, options: Mainten
 /** Abandonne l'essai en attente d'un modpack (corbeille). */
 export function discardPending(pack: PackView, options: MaintenanceOptions): Promise<MaintenanceRecord> {
   return withRunLock(options, async () => {
-    const pending = await pendingTrial(pack)
+    const found = await pendingTrial(pack)
+    // Plus d'essai sur le disque : il n'y a plus rien à abandonner, la section disparaît.
+    if ('cleared' in found) return found.cleared
+    const pending = found.pending
     await options.service.discardTrial(pending.profilePath!)
     const record: MaintenanceRecord = { ...pending, at: new Date().toISOString(), outcome: 'skipped', message: 'Essai abandonné.', trialPath: null }
     await saveRecord(record, { replace: true })
@@ -269,6 +282,8 @@ export function discardPending(pack: PackView, options: MaintenanceOptions): Pro
 export async function maintenanceStatus(service: StudioService, lock: OperationLock, task: MaintenanceTask | null): Promise<MaintenanceStatus> {
   const [overview, state] = await Promise.all([service.overview(), readMaintenanceState()])
   const running = lock.currentSync()
+  // Un essai en attente dont le dossier a disparu ne s'affiche plus comme tel.
+  const lasts = new Map(await Promise.all(overview.packs.map(async (pack) => [pack.id, await currentRecord(state[pack.id]?.last ?? null)] as const)))
   return {
     packs: overview.packs.map((pack) => {
       const stored = state[pack.id]
@@ -280,7 +295,7 @@ export async function maintenanceStatus(service: StudioService, lock: OperationL
         updates: pack.updates,
         checkedAt: stored?.checkedAt ?? null,
         dueAt: due?.toISOString() ?? null,
-        last: stored?.last ?? null
+        last: lasts.get(pack.id) ?? null
       }
     }),
     task,

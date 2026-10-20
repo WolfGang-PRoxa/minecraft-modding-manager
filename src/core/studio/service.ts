@@ -33,6 +33,7 @@ import {
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
 import { pathExists } from '../fsutil'
+import { forgetTrial } from '../maintenance/state'
 import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
 import type { CurseForgeClient } from '../curseforgeApi'
 import type { CurseForgeUploader } from '../curseforgeUpload'
@@ -977,6 +978,8 @@ export class StudioService {
         return withCurseForgeClosed(instancesDir, async () => {
           const changed = await promoteTrial(profilePath)
           await this.trash(trialPath)
+          // Un passage des mises à jour automatiques qui attendait cet essai n'attend plus rien.
+          await forgetTrial(trialPath, 'Essai reporté dans le profil en dehors des mises à jour automatiques : aucune version créée.')
           return changed
         })
       },
@@ -991,6 +994,7 @@ export class StudioService {
       if (!(await pathExists(trialPath))) throw new StudioError(`Pas d’essai pour ${basename(profilePath)}.`)
       if (await isGameRunningFrom(trialPath)) throw new StudioError('Minecraft tourne depuis l’essai : ferme le jeu, puis recommence.')
       await this.trash(trialPath)
+      await forgetTrial(trialPath, 'Essai abandonné.')
     })
   }
 

@@ -65,6 +65,10 @@ l’essai.
 
 Tant qu’un essai attend une décision, les passages suivants laissent ce modpack de côté.
 
+Un essai gardé ou abandonné ailleurs (depuis les mises à jour du profil, dans un terminal ou par Claude) retire aussi
+la mise à jour en attente de la carte. Si le dossier de l’essai a disparu autrement, la carte cesse de la montrer, et
+**Abandonner** la retire.
+
 ## La tâche planifiée
 
 Pour que les passages se fassent seuls, activer la tâche planifiée dans
