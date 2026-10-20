@@ -8,7 +8,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
-<!-- relais du mainteneur, sans effet dans l’application : aa93f74 -->
+<!-- relais du mainteneur, sans effet dans l’application : aa93f74 2f35a2d -->
 
 ## [1.9.2] - 2026-10-20
 
