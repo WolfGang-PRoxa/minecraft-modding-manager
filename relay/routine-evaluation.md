@@ -49,9 +49,13 @@ Aucun fichier du dépôt n'est modifié, ajouté ni supprimé, et rien n'est fai
 ```bash
 git fetch origin main
 git switch -C "<branche>" origin/main
+export GIT_AUTHOR_NAME="$(git log -1 --format=%an origin/main)" GIT_AUTHOR_EMAIL="$(git log -1 --format=%ae origin/main)"
+export GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME" GIT_COMMITTER_EMAIL="$GIT_AUTHOR_EMAIL"
 git commit --allow-empty -F /tmp/evaluation.txt
 git push --force origin "HEAD:<branche>"
 ```
+
+Le commit reprend ainsi l'identité du dernier commit de `main` : aucun nom d'outil ni d'IA n'apparaît sur GitHub.
 
 Si ce nom de branche est refusé, pousser sur `claude/evaluation-issue-<numéro>` à la place.
 
