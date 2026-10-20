@@ -5,7 +5,11 @@ export interface Issue {
   title: string
   body: string | null
   state: 'open' | 'closed'
+  created_at: string
+  updated_at: string
   html_url: string
+  /** Présent quand « l'issue » est en fait une pull request. */
+  pull_request?: unknown
   user: { login: string } | null
   labels: Array<{ name: string } | string>
 }
@@ -47,10 +51,14 @@ export interface Comparison {
   complete: boolean
 }
 
-/** Branches poussées par une session de correction : « correction/issue-12 », quel que soit le préfixe. */
+/**
+ * Branches poussées par une session de correction : « correction/issue-12 », quel que soit le préfixe, sauf celles de
+ * la routine d'évaluation (`evaluation/issue-12`, voir risk.mts).
+ */
 const FIX_BRANCH = /^[\w.-]+\/issue-(\d+)(?:[-/].*)?$/
 
 export function issueOfBranch(branch: string): number | null {
+  if (branch.startsWith('evaluation/')) return null
   const match = FIX_BRANCH.exec(branch)
   return match ? Number(match[1]) : null
 }
@@ -115,6 +123,25 @@ export async function setFixLabel(config: RelayConfig, issue: Issue, label: stri
     }
   }
   if (label && !current.includes(label)) await api<unknown>(config, 'POST', `/issues/${issue.number}/labels`, { labels: [label] })
+}
+
+/** Ajoute ou retire une étiquette de l'issue. */
+export async function toggleLabel(config: RelayConfig, issue: Issue, label: string, on: boolean): Promise<void> {
+  const present = hasLabel(issue, label)
+  if (on && !present) await api<unknown>(config, 'POST', `/issues/${issue.number}/labels`, { labels: [label] })
+  if (!on && present) await api<void>(config, 'DELETE', `/issues/${issue.number}/labels/${encodeURIComponent(label)}`)
+}
+
+/** Issues (sans les pull requests) modifiées depuis `since`, ouvertes ou fermées. */
+export async function listRecentIssues(config: RelayConfig, since: string): Promise<Issue[]> {
+  const issues = await api<Issue[]>(config, 'GET', `/issues?state=all&since=${encodeURIComponent(since)}&per_page=100`)
+  return issues.filter((issue) => !issue.pull_request)
+}
+
+/** Issues ouvertes qui portent une étiquette. */
+export async function listLabeledIssues(config: RelayConfig, label: string): Promise<Issue[]> {
+  const issues = await api<Issue[]>(config, 'GET', `/issues?state=open&labels=${encodeURIComponent(label)}&per_page=100`)
+  return issues.filter((issue) => !issue.pull_request)
 }
 
 export const hasLabel = (issue: Issue, label: string) => issue.labels.some((l) => (typeof l === 'string' ? l : l.name) === label)

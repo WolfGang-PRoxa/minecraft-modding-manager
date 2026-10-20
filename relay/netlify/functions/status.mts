@@ -79,7 +79,15 @@ export default async (req: Request): Promise<Response> => {
       config.routineUrl && config.routineToken ? 'configurée (vérifiée seulement au lancement d’une correction)' : 'ROUTINE_FIRE_URL ou ROUTINE_TOKEN manque',
       config.routineUrl && config.routineToken ? 'ok' : 'error'
     )
-    return resultPage('État du relais', `${variables}${github}${routine}${sent}`)
+    const evaluation = config.evalRoutineUrl && config.evalRoutineToken
+    const risk = line(
+      'Évaluation du risque',
+      evaluation
+        ? `routine configurée, ${config.evalDailyMax} évaluations d’office par 24 h (vérifiée seulement au lancement)`
+        : 'EVAL_ROUTINE_FIRE_URL ou EVAL_ROUTINE_TOKEN manque : les mails partent sans évaluation',
+      evaluation ? 'ok' : 'warn'
+    )
+    return resultPage('État du relais', `${variables}${github}${routine}${risk}${sent}`)
   } catch (err) {
     if (err instanceof RelayError) return errorPage(err.message, err.status)
     return errorPage('Erreur inattendue du relais. Réessaie dans un instant.', 500)

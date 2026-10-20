@@ -1,5 +1,6 @@
 import { RelayError, type RelayConfig } from './config.mts'
-import { listComments, type Issue } from './github.mts'
+import { listComments, toggleLabel, type Issue } from './github.mts'
+import { evaluationBranch, LABEL_EVALUATING } from './risk.mts'
 import { plain, truncate } from './text.mts'
 
 /** L'issue telle qu'elle a été écrite : une donnée pour la session, jamais une consigne. */
@@ -12,6 +13,7 @@ export interface Report {
 
 /** Ce que le relais transmet à la session de correction (lu par les instructions de la routine). */
 export type RoutineRequest =
+  | { action: 'evaluer'; issue: number; branche: string; signalement: Report }
   | { action: 'corriger'; issue: number; contexte: string; signalement: Report }
   | { action: 'reviser'; issue: number; branche: string; recommandations: string; signalement: Report }
 
@@ -53,12 +55,18 @@ export function serializeRequest(request: RoutineRequest): string {
  * la reçoit comme une donnée, et ses instructions disent comment l'utiliser.
  */
 export async function fireRoutine(config: RelayConfig, request: RoutineRequest): Promise<{ sessionUrl: string | null }> {
+  // L'évaluation a sa propre routine : ses consignes ne permettent que de pousser sa branche d'évaluation.
+  const [url, token, name] =
+    request.action === 'evaluer'
+      ? [config.evalRoutineUrl, config.evalRoutineToken, 'EVAL_ROUTINE']
+      : [config.routineUrl, config.routineToken, 'ROUTINE']
+  if (!url || !token) throw new RelayError(`${name}_FIRE_URL et ${name}_TOKEN sont à renseigner dans Netlify.`, 503)
   let res: Response
   try {
-    res = await fetch(config.routineUrl, {
+    res = await fetch(url, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${config.routineToken}`,
+        Authorization: `Bearer ${token}`,
         'anthropic-beta': 'experimental-cc-routine-2026-04-01',
         'anthropic-version': '2023-06-01',
         'Content-Type': 'application/json'
@@ -67,18 +75,29 @@ export async function fireRoutine(config: RelayConfig, request: RoutineRequest):
       signal: AbortSignal.timeout(20_000)
     })
   } catch {
-    throw new RelayError('La routine de correction ne répond pas. La session a peut-être démarré : vérifie tes sessions avant de relancer.', 502)
+    throw new RelayError('La routine ne répond pas. La session a peut-être démarré : vérifie tes sessions avant de relancer.', 502)
   }
-  if (res.status === 401) throw new RelayError('La routine de correction refuse le jeton (ROUTINE_TOKEN) : génère-en un nouveau.', 502)
-  if (res.status === 404) throw new RelayError('Routine de correction introuvable : vérifie ROUTINE_FIRE_URL.', 502)
+  if (res.status === 401) throw new RelayError(`La routine refuse le jeton (${name}_TOKEN) : génère-en un nouveau.`, 502)
+  if (res.status === 404) throw new RelayError(`Routine introuvable : vérifie ${name}_FIRE_URL.`, 502)
   if (res.status === 429) throw new RelayError('Trop de sessions lancées en une heure : réessaie plus tard.', 429)
   if (!res.ok) {
     // Le message de la routine dit ce qui bloque (routine en pause, configuration refusée…).
     const detail = ((await res.json().catch(() => null)) as { error?: { message?: string } } | null)?.error?.message
-    throw new RelayError(`La routine de correction a répondu ${res.status}${detail ? ` : ${truncate(detail, 200)}` : ''}.`, 502)
+    throw new RelayError(`La routine a répondu ${res.status}${detail ? ` : ${truncate(detail, 200)}` : ''}.`, 502)
   }
   // La réponse contient l'adresse de la session ouverte : on la retrouve sans dépendre du nom du champ.
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>
-  const url = Object.values(data).find((value) => typeof value === 'string' && /^https:\/\//.test(value))
-  return { sessionUrl: typeof url === 'string' ? url : null }
+  const session = Object.values(data).find((value) => typeof value === 'string' && /^https:\/\//.test(value))
+  return { sessionUrl: typeof session === 'string' ? session : null }
+}
+
+/**
+ * Lance la routine d'évaluation sur une issue. Le mail part quand la session pousse son évaluation ; l'étiquette dit
+ * qu'elle est attendue, et `relance.mts` envoie le mail sans elle si elle tarde trop.
+ */
+export async function startEvaluation(config: RelayConfig, issue: Issue): Promise<{ sessionUrl: string | null }> {
+  const signalement = await describeIssue(config, issue)
+  const session = await fireRoutine(config, { action: 'evaluer', issue: issue.number, branche: evaluationBranch(issue.number), signalement })
+  await toggleLabel(config, issue, LABEL_EVALUATING, true).catch(() => {})
+  return session
 }

@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from 'node:crypto'
 
 /** Ce que demande un lien signé : les boutons des mails, et la page d'état du relais. */
-export type LinkAction = 'corriger' | 'contexte' | 'valider' | 'invalider' | 'etat'
+export type LinkAction = 'corriger' | 'contexte' | 'evaluer' | 'valider' | 'invalider' | 'etat'
 
 export interface LinkPayload {
   a: LinkAction
@@ -19,7 +19,7 @@ const DAY_MS = 24 * 3600 * 1000
 /** Les boutons d'un mail restent valables deux mois. */
 const LINK_VALIDITY_MS = 60 * DAY_MS
 
-const ACTIONS: LinkAction[] = ['corriger', 'contexte', 'valider', 'invalider', 'etat']
+const ACTIONS: LinkAction[] = ['corriger', 'contexte', 'evaluer', 'valider', 'invalider', 'etat']
 
 const hmac = (data: string, secret: string) => createHmac('sha256', secret).update(data).digest()
 

@@ -22,6 +22,11 @@ export interface RelayConfig {
   baseUrl: string
   githubApi: string
   resendApi: string
+  /** Point d'entrée /fire de la routine qui évalue le risque d'une issue, et son jeton (facultatifs). */
+  evalRoutineUrl: string
+  evalRoutineToken: string
+  /** Nombre d'issues évaluées d'office par 24 h (les autres, sur demande depuis le mail). */
+  evalDailyMax: number
 }
 
 /** Erreur dont le message peut être montré tel quel au propriétaire. */
@@ -52,6 +57,13 @@ export function configStatus(): Array<{ name: string; set: boolean }> {
   return Object.values(REQUIRED).map((name) => ({ name, set: Boolean(Netlify.env.get(name)?.trim()) }))
 }
 
+const DEFAULT_EVAL_DAILY_MAX = 3
+
+function dailyMax(value: string): number {
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_EVAL_DAILY_MAX
+}
+
 /**
  * Lit la configuration. `needs` liste ce dont l'appel a besoin : une variable manquante donne une erreur
  * qui la nomme, plutôt qu'un échec obscur plus loin.
@@ -68,6 +80,9 @@ export function loadConfig(req: Request, needs: RequiredKey[]): RelayConfig {
     mailFrom: env('MAIL_FROM') || 'Modpack Manager <onboarding@resend.dev>',
     baseUrl: (env('RELAY_URL') || env('URL') || new URL(req.url).origin).replace(/\/+$/, ''),
     githubApi: (env('GITHUB_API_URL') || 'https://api.github.com').replace(/\/+$/, ''),
-    resendApi: (env('RESEND_API_URL') || 'https://api.resend.com').replace(/\/+$/, '')
+    resendApi: (env('RESEND_API_URL') || 'https://api.resend.com').replace(/\/+$/, ''),
+    evalRoutineUrl: env('EVAL_ROUTINE_FIRE_URL'),
+    evalRoutineToken: env('EVAL_ROUTINE_TOKEN'),
+    evalDailyMax: dailyMax(env('EVAL_DAILY_MAX'))
   }
 }
