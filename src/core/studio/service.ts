@@ -62,6 +62,7 @@ import {
   normalizePackSettings,
   normalizePackUpdates,
   planRanger,
+  requireModpack,
   scanWorkspace,
   setCover,
   versionFileName,
@@ -389,6 +390,7 @@ export class StudioService {
       folder: pack.folder,
       dir: pack.dir,
       id: pack.meta.id,
+      type: pack.meta.type,
       name: pack.meta.name,
       description: pack.meta.description,
       coverUrl: this.options.coverUrl?.(pack) ?? null,
@@ -715,6 +717,7 @@ export class StudioService {
     const pack = workspace.packs.find((p) => p.folder === folder)
     if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
     if (pack.packFileError) throw new StudioError(pack.packFileError)
+    requireModpack(pack.meta, folder)
     const number = nextVersionNumber(pack)
     const fileName = versionFileName(pack.folder, number)
     await zipInstance(profile.path, join(pack.dir, fileName), { includeSaves, exclude: pack.meta.exclude, maxSize: pack.meta.github ? MAX_ASSET_SIZE : undefined, onProgress, signal })
@@ -728,6 +731,7 @@ export class StudioService {
     const label = profile ? `le lien de ${folder} au profil ${profile.name}` : `le retrait du lien de ${folder}`
     await this.logged(label, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      requireModpack(meta, folder)
       await writePackFile(dir, { ...meta, profile: profile ? { guid: profile.guid, name: profile.name } : null })
     })
   }
@@ -745,6 +749,7 @@ export class StudioService {
     const { highestVersion, overrides } = await inspectProject(client, project.id)
     await this.logged(`le lien de ${folder} au projet CurseForge ${project.name}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      requireModpack(meta, folder)
       const files = meta.curseforge?.projectId === project.id ? meta.curseforge.files : {}
       await writePackFile(dir, {
         ...meta,
@@ -771,6 +776,7 @@ export class StudioService {
     const workspace = (await this.scan())!
     const pack = workspace.packs.find((p) => p.folder === folder)
     if (!pack) throw new StudioError(`Le modpack ${folder} est introuvable.`)
+    requireModpack(pack.meta, folder)
     if (!pack.meta.curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)
     const local = pack.versions.find((v) => v.number === version)
     if (!local || !local.analysis) throw new StudioError(`${pack.meta.name} n’a pas de v${version} utilisable.`)
@@ -1025,6 +1031,7 @@ export class StudioService {
   async updatePackSettings(folder: string, settings: PackSettings): Promise<void> {
     await this.logged(`les réglages des versions de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      requireModpack(meta, folder)
       await writePackFile(dir, { ...meta, ...normalizePackSettings(settings) })
     })
   }
@@ -1034,6 +1041,7 @@ export class StudioService {
     let next = DEFAULT_PACK_UPDATES
     await this.logged(`les mises à jour automatiques de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      requireModpack(meta, folder)
       next = normalizePackUpdates({ ...meta.updates, ...updates })
       if (next.autoPublish && !meta.github && !meta.curseforge) throw new StudioError('Ce modpack n’est publié nulle part.')
       await writePackFile(dir, { ...meta, updates: next })

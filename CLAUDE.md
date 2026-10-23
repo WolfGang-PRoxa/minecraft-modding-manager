@@ -210,7 +210,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - `src/core/studio/` — le Studio. `StudioService` (`service.ts`) est l'unique point d'entrée de la fenêtre et des
   commandes ; ses options injectent ce qui dépend de l'hôte (`trashItem`, `lock`, `journal`, `blockedBy`, `coverUrl`).
   - `workspace.ts` : lecture du dossier (un sous-dossier par modpack, `pack.json`, `cover.*`), rangement
-    (`planRanger`/`applyRanger`). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
+    (`planRanger`/`applyRanger`). `pack.json` `type` (`ContentKind` de `shared/content.ts`, absent = modpack) : un
+    type pas encore pris en charge (`supported: false`) est montré avec une erreur, sans analyse ni publication ;
+    `requireModpack` refuse les opérations propres aux modpacks (profil source, zips, CurseForge, réglages, mises à
+    jour), `buildLibrary` et la maintenance ne voient que les modpacks. `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
     `keepPlayerConfigs`, écrits seulement s'ils servent ; `normalizePackSettings`).
   - `analyze.ts` : validation d'un zip (instance CurseForge, refus des exports `manifest.json`), SHA-256, empreinte
     des mods, liste des mods avec leur projet CurseForge (`CachedAnalysis.mods`, gardée dans le processus principal),
@@ -328,6 +331,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `F1` et `Échap` de l'aide ignorent une fenêtre ouverte par-dessus : toute fenêtre de dialogue porte
   `aria-modal="true"` (`Modal`, `SettingsDialog`).
 - `src/shared/` — config (`APP_REPO`…), types, dépôts (`repo.ts`), parsing des releases.
+  `content.ts` : types de contenu (modpack, mod, pack de ressources, shader, plugin) et, pour chacun, préfixe de tag
+  (`pack-`, `mod-`, `rp-`, `shader-`, `plugin-`), manifeste (`modpack.json` ou `content.json`) et numérotation (`vN`
+  ou numéro déclaré par le fichier). Jamais `pack-` ni `modpack.json` hors modpack : les apps installées (≤ 1.9.3)
+  prennent pour un modpack toute release qui porte l'un ou l'autre. `computePlan` ne traite que `pack-`.
 - `build/icon.png` — le logo (PNG RVBA 1024 × 1024), seule source : `Logo` (renderer) l'importe, electron-builder en
   tire l'icône de l'exécutable et de l'installeur, `shortcut.ts` celle du raccourci en développement,
   `scripts/generate-installer-images.ts` les images des fenêtres de l'installeur (lecture PNG : `scripts/png.ts`, sans

@@ -1,5 +1,6 @@
 import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
 import { basename, dirname, extname, join, resolve } from 'node:path'
+import { CONTENT_KINDS, CONTENT_KIND_IDS, isContentKind, type ContentKind } from '../../shared/content'
 import { normalizeExclusions } from '../../shared/exclusions'
 import { isValidModpackId, slugify } from '../../shared/releases'
 import {
@@ -28,6 +29,8 @@ const NUMBERED_ZIP = /^(.*)-v(\d{1,6})\.zip$/i
 export interface PackFile extends PackSettings {
   /** Identifiant publié (tags GitHub, suivi des installations) : ne change plus une fois créé. */
   id: string
+  /** Ce que contient le dossier (écrit seulement pour un autre type que le modpack). */
+  type: ContentKind
   name: string
   description: string
   /** Plus grand numéro déjà attribué : un numéro n'est jamais réutilisé, même si son zip est supprimé. */
@@ -108,6 +111,7 @@ function defaultPackFile(folder: string): PackFile {
   const name = folder.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || folder
   return {
     id: slugify(name).slice(0, 64).replace(/-+$/, '') || 'modpack',
+    type: 'modpack',
     name,
     description: '',
     lastVersion: 0,
@@ -168,6 +172,7 @@ async function readPackFile(
     }
     const meta: PackFile = {
       id: typeof data.id === 'string' && data.id ? data.id : defaults.id,
+      type: isContentKind(data.type) ? data.type : 'modpack',
       name: typeof data.name === 'string' && data.name.trim() ? data.name.trim() : defaults.name,
       description: typeof data.description === 'string' ? data.description : '',
       lastVersion: Number.isInteger(data.lastVersion) && data.lastVersion! > 0 ? data.lastVersion! : 0,
@@ -178,9 +183,12 @@ async function readPackFile(
       updates: normalizePackUpdates(data.updates),
       ...normalizePackSettings(data)
     }
-    const error = isValidModpackId(meta.id)
-      ? null
-      : `Identifiant « ${meta.id} » invalide dans pack.json (lettres minuscules, chiffres et tirets).`
+    const error =
+      data.type !== undefined && !isContentKind(data.type)
+        ? `Type « ${String(data.type)} » inconnu dans pack.json (${CONTENT_KIND_IDS.join(', ')}).`
+        : isValidModpackId(meta.id)
+          ? null
+          : `Identifiant « ${meta.id} » invalide dans pack.json (lettres minuscules, chiffres et tirets).`
     return { meta, exists: true, error }
   } catch {
     return { meta: defaults, exists: true, error: 'pack.json est illisible (JSON invalide) : corrige-le ou supprime-le.' }
@@ -231,13 +239,14 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
       .sort(([a], [b]) => Number(a) - Number(b))
   )
   await writeJsonAtomic(join(dir, PACK_FILE), {
+    ...(type === 'modpack' ? {} : { type }),
     ...info,
     notes,
     ...(profile ? { profile } : {}),
@@ -305,6 +314,15 @@ async function scanPack(
   const { meta, exists, error } = await readPackFile(dir, folder)
   const errors = error ? [error] : []
   const files = await listFiles(dir)
+  const coverFile = findCover(files)
+  const coverSha = coverFile ? await sha256File(coverFile.path).catch(() => null) : null
+  const cover = coverFile && coverSha ? { ...coverFile, sha256: coverSha } : null
+
+  // Type que le Studio ne sait pas encore lire : le dossier est montré, ses fichiers ne sont ni analysés ni publiés.
+  if (!CONTENT_KINDS[meta.type].supported) {
+    errors.push(`Les ${CONTENT_KINDS[meta.type].plural} ne sont pas encore pris en charge par le Studio : ce dossier est ignoré.`)
+    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], maxNumber: 0, errors }
+  }
 
   const byNumber = new Map<number, LocalFile[]>()
   const unnumbered: LocalFile[] = []
@@ -327,16 +345,13 @@ async function scanPack(
   const pending: LocalZip[] = []
   for (const file of unnumbered.sort(byDate)) pending.push(await analyze(folder, file, cache, meta.github, onAnalyze))
 
-  const coverFile = findCover(files)
-  const coverSha = coverFile ? await sha256File(coverFile.path).catch(() => null) : null
-
   return {
     folder,
     dir,
     meta,
     hasPackFile: exists,
     packFileError: error,
-    cover: coverFile && coverSha ? { ...coverFile, sha256: coverSha } : null,
+    cover,
     versions,
     pending,
     maxNumber: Math.max(0, ...byNumber.keys()),
@@ -469,6 +484,11 @@ export async function loadPackMeta(root: string, folder: string): Promise<{ dir:
   const { meta, error, exists } = await readPackFile(dir, folder)
   if (exists && error) throw new StudioError(error)
   return { dir, meta }
+}
+
+/** Refuse une opération propre aux modpacks (profil source, zips d'instance, CurseForge…) sur un autre contenu. */
+export function requireModpack(meta: PackFile, folder: string): void {
+  if (meta.type !== 'modpack') throw new StudioError(`${folder} contient des ${CONTENT_KINDS[meta.type].plural}, pas un modpack.`)
 }
 
 function folderNameFor(name: string): string {

@@ -1,4 +1,5 @@
 // Types du Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
+import type { ContentKind } from './content'
 import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {
@@ -151,6 +152,8 @@ export interface PackView {
   folder: string
   dir: string
   id: string
+  /** Ce que contient le dossier : un modpack, ou un autre contenu (mods, packs de ressources…). */
+  type: ContentKind
   name: string
   description: string
   coverUrl: string | null

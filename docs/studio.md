@@ -255,6 +255,7 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 | Champ | Contenu |
 |---|---|
 | `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
+| `type` | Ce que contient le dossier. Absent pour un modpack. Les autres types (`mod`, `resourcepack`, `shader`, `plugin`) sont réservés aux prochaines versions : un dossier qui en déclare un est affiché, mais ignoré à la publication. |
 | `name` | Le nom affiché aux joueurs. |
 | `description` | La description courte. |
 | `lastVersion` | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé. |

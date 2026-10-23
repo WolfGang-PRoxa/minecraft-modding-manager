@@ -210,6 +210,7 @@ export function runMaintenance(request: MaintenanceRequest, options: Maintenance
     const state = await readMaintenanceState()
     const now = new Date()
     const packs = overview.packs.filter((pack) => {
+      if (pack.type !== 'modpack') return false
       if (request.folders) return request.folders.includes(pack.folder)
       if (request.due) return isDue(pack.updates, state[pack.id]?.checkedAt ?? null, now)
       return pack.updates.frequency !== 'never'
@@ -285,7 +286,7 @@ export async function maintenanceStatus(service: StudioService, lock: OperationL
   // Un essai en attente dont le dossier a disparu ne s'affiche plus comme tel.
   const lasts = new Map(await Promise.all(overview.packs.map(async (pack) => [pack.id, await currentRecord(state[pack.id]?.last ?? null)] as const)))
   return {
-    packs: overview.packs.map((pack) => {
+    packs: overview.packs.filter((pack) => pack.type === 'modpack').map((pack) => {
       const stored = state[pack.id]
       const due = dueAt(pack.updates, stored?.checkedAt ?? null)
       return {

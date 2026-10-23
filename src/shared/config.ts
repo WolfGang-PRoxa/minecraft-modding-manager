@@ -15,13 +15,17 @@ export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-mod
 export const APP_REPO_URL = `https://github.com/${APP_REPO.owner}/${APP_REPO.name}`
 
 // Conventions de tags :
-//  - modpack : pack-<id>-v<version>  (ex. pack-create-plus-v1.2.0)
+//  - modpack : pack-<id>-v<version>  (ex. pack-create-plus-v12)
+//  - autres contenus (mod-, rp-, shader-, plugin-) : voir shared/content.ts
 //  - application : app-v<version>     (ex. app-v1.0.0)
 export const MODPACK_TAG_PREFIX = 'pack-'
 export const APP_TAG_PREFIX = 'app-v'
 
 // Asset décrivant un modpack dans chaque release (généré par le Studio).
 export const MODPACK_MANIFEST_ASSET = 'modpack.json'
+// Asset décrivant un autre contenu (mod, pack de ressources, shader, plugin) : jamais modpack.json, que les
+// applications installées prendraient pour un modpack.
+export const CONTENT_MANIFEST_ASSET = 'content.json'
 
 // Fichier déposé dans chaque instance installée par l'application.
 export const INSTANCE_MARKER_FILE = '.modpack-manager.json'

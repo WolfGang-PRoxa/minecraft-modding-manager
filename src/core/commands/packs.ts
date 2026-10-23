@@ -1,5 +1,6 @@
 import { isAbsolute } from 'node:path'
 import { z } from 'zod'
+import { CONTENT_KINDS } from '../../shared/content'
 import { formatLoader } from '../../shared/format'
 import type { DisabledMod, PackView, VersionView } from '../../shared/studio'
 import { StudioError } from '../studio/analyze'
@@ -35,6 +36,7 @@ export const packsList = command({
     return overview.packs.map((pack) => ({
       folder: pack.folder,
       id: pack.id,
+      type: pack.type,
       name: pack.name,
       versions: pack.versions.length,
       latest: pack.versions[0] ? versionSummary(pack.versions[0]) : null,
@@ -53,7 +55,8 @@ export const packsList = command({
               ? `v${p.latest.number} · ${p.latest.minecraftVersion ?? '?'} · ${p.latest.modLoader ?? '?'} · ${p.latest.modCount ?? '?'} mods · ${p.latest.github}`
               : 'aucune version'
             const extra = [p.pendingZips ? `${p.pendingZips} zip(s) à ranger` : '', ...p.errors].filter(Boolean)
-            return `${p.name} (${p.folder}) — ${latest}${extra.length ? `\n  ⚠ ${extra.join('\n  ⚠ ')}` : ''}`
+            const kind = p.type === 'modpack' ? '' : ` [${CONTENT_KINDS[p.type].label}]`
+            return `${p.name}${kind} (${p.folder}) — ${latest}${extra.length ? `\n  ⚠ ${extra.join('\n  ⚠ ')}` : ''}`
           })
           .join('\n')
       : 'Aucun modpack dans le dossier.'

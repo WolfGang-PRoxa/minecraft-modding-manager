@@ -55,8 +55,9 @@ export function buildLibrary(
 ): PublisherLibrary {
   const packOf = new Map<string, { pack: PackView; link: 'saved' | 'guessed' }>()
   const packsWithoutProfile: string[] = []
-  // Les liens enregistrés d'abord : un lien deviné ne prend jamais le profil d'un autre modpack.
-  const ordered = [...packs].sort((a, b) => Number(Boolean(b.profile)) - Number(Boolean(a.profile)))
+  // Les liens enregistrés d'abord : un lien deviné ne prend jamais le profil d'un autre modpack. Seul un modpack vient
+  // d'un profil (pas un dossier de mods ou de packs de ressources).
+  const ordered = packs.filter((p) => p.type === 'modpack').sort((a, b) => Number(Boolean(b.profile)) - Number(Boolean(a.profile)))
   for (const pack of ordered) {
     // Une copie d'essai est un brouillon : jamais la source d'un modpack.
     const source = sourceOf(pack, profiles.filter((p) => !packOf.has(p.path) && !isTrial(p, profiles)))

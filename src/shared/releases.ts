@@ -1,4 +1,5 @@
-import { MODPACK_MANIFEST_ASSET, MODPACK_TAG_PREFIX } from './config'
+import { MODPACK_MANIFEST_ASSET } from './config'
+import { contentTag, parseContentTag } from './content'
 import type { Modpack, ModpackManifest, ModpackVersion } from './types'
 
 /** Sous-ensemble de la réponse de l'API GitHub pour une release. */
@@ -35,12 +36,12 @@ export function sha256FromDigest(digest: string | null | undefined): string | nu
 }
 
 export function modpackTag(id: string, version: string): string {
-  return `${MODPACK_TAG_PREFIX}${id}-v${version}`
+  return contentTag('modpack', id, version)
 }
 
 export function parseModpackTag(tag: string): { id: string; version: string } | null {
-  const match = new RegExp(`^${MODPACK_TAG_PREFIX}(.+)-v(\\d[\\w.+-]*)$`).exec(tag)
-  return match ? { id: match[1], version: match[2] } : null
+  const parsed = parseContentTag(tag)
+  return parsed?.kind === 'modpack' ? { id: parsed.id, version: parsed.version } : null
 }
 
 export function slugify(name: string): string {
