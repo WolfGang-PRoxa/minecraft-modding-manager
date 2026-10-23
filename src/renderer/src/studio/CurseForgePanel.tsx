@@ -262,7 +262,11 @@ export function CurseForgeDialog({ folder }: { folder: string }) {
   return (
     <Modal
       title="Publication sur CurseForge"
-      subtitle={pack.curseforge ? `« ${pack.name} » est lié à son projet CurseForge.` : 'Lie ce modpack au projet que tu as créé sur CurseForge.'}
+      subtitle={
+        pack.curseforge
+          ? `« ${pack.name} » est lié à son projet CurseForge.`
+          : `Lie ce ${pack.type === 'mod' ? 'mod' : 'modpack'} au projet que tu as créé sur CurseForge.`
+      }
       onClose={close}
       closable={!busy}
       footer={
@@ -290,9 +294,18 @@ export function CurseForgeDialog({ folder }: { folder: string }) {
         <div className="space-y-4">
           <Field
             label="Projet CurseForge"
-            hint="L’adresse de sa page (curseforge.com/minecraft/modpacks/…), ou son numéro. Pour un projet qui a déjà des versions, la numérotation continue après la plus haute, et les fichiers joints sont ceux de sa dernière version."
+            hint={
+              pack.type === 'mod'
+                ? 'L’adresse de sa page (curseforge.com/minecraft/mc-mods/…), ou son numéro. Les versions déjà mises en ligne depuis le site sont reconnues au nom de leur fichier.'
+                : 'L’adresse de sa page (curseforge.com/minecraft/modpacks/…), ou son numéro. Pour un projet qui a déjà des versions, la numérotation continue après la plus haute, et les fichiers joints sont ceux de sa dernière version.'
+            }
           >
-            <TextInput value={ref} onChange={(e) => setRef(e.target.value)} placeholder="https://www.curseforge.com/minecraft/modpacks/…" autoFocus />
+            <TextInput
+              value={ref}
+              onChange={(e) => setRef(e.target.value)}
+              placeholder={`https://www.curseforge.com/minecraft/${pack.type === 'mod' ? 'mc-mods' : 'modpacks'}/…`}
+              autoFocus
+            />
           </Field>
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => openLink('https://authors.curseforge.com/')}>
@@ -310,18 +323,20 @@ export function CurseForgeDialog({ folder }: { folder: string }) {
               Ouvrir la page du projet
             </Button>
           )}
+          {pack.type === 'modpack' && (
           <Field
             label="Fichiers joints à l’export"
             hint="Un chemin par ligne, depuis la racine du profil (jokers * et ?) : packs de textures, réglages des shaders… comme dans la fenêtre d’export de CurseForge. Les mods n’y vont jamais : CurseForge les installe lui-même."
           >
             <TextArea rows={5} value={overrides} onChange={(e) => setOverrides(e.target.value)} className="font-mono text-[13px]" />
           </Field>
+          )}
           <div className="flex items-center justify-between gap-6">
             <div>
               <div className="text-sm font-medium text-ink-100">Publier aussi sur GitHub</div>
               <div className="mt-0.5 text-xs text-ink-400">
-                Désactivé : seulement sur CurseForge. Les joueurs de l’application ne voient plus ses nouvelles versions, et ses
-                releases GitHub ne sont plus touchées.
+                Désactivé : seulement sur CurseForge. Ses releases GitHub ne sont plus touchées
+                {pack.type === 'modpack' ? ', et les joueurs de l’application ne voient plus ses nouvelles versions' : ''}.
               </div>
             </div>
             <Toggle label="Publier aussi sur GitHub" checked={github} onChange={setGithub} />

@@ -213,7 +213,17 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     (`planRanger`/`applyRanger`). `pack.json` `type` (`ContentKind` de `shared/content.ts`, absent = modpack) : un
     type pas encore pris en charge (`supported: false`) est montré avec une erreur, sans analyse ni publication ;
     `requireModpack` refuse les opérations propres aux modpacks (profil source, zips, CurseForge, réglages, mises à
-    jour), `buildLibrary` et la maintenance ne voient que les modpacks. `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
+    jour), `buildLibrary` et la maintenance ne voient que les modpacks.
+  - `mods.ts` : les mods (`type: 'mod'`). Le dossier contient les jars ; une version = les jars de même version
+    déclarée (`analyzeJar` : `readModJar` de gameTests, chargeurs d'après les fichiers de métadonnées présents,
+    `minecraftVersionsOf` ne garde que des versions précises, SHA-256 et SHA-1). `pack.json` `source` : dossier où le
+    projet du mod dépose ses builds (`sourceVersions` : une copie sous un autre nom, `lma-latest.jar`, comptée une
+    fois). Service : `createModFromSource` (nom, id, description et icône du jar → `cover.*`), `availableModVersions`,
+    `importModVersions`, `linkModSource`, `deleteModVersion`, `publishModToCurseForge` (`publishModVersion` de
+    `curseforgePublish.ts` : nom affiché = jar sans `.jar`, versions `Client` / `Server` selon le côté, dépendances
+    par slug = id du mod, `searchBySlug` classe 6). `computePlan` : étapes `create-content` / `update-content`
+    (`mod-<id>-v<version>`, jars + image + `content.json`), retrait des releases `mod-` sous la même règle que `pack-`
+    (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx` ; commandes `mods *` (`commands/mods.ts`). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
     `keepPlayerConfigs`, écrits seulement s'ils servent ; `normalizePackSettings`).
   - `analyze.ts` : validation d'un zip (instance CurseForge, refus des exports `manifest.json`), SHA-256, empreinte
     des mods, liste des mods avec leur projet CurseForge (`CachedAnalysis.mods`, gardée dans le processus principal),

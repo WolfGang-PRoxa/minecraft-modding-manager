@@ -3,13 +3,13 @@
 // builds (`releases/`, `build/libs/`) : le Studio y prend les nouvelles versions.
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
-import { copyFile, readdir, stat } from 'node:fs/promises'
+import { copyFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { compareVersions } from '../../shared/releases'
 import type { ModLoader } from '../../shared/content'
 import { BUILTIN_IDS, readModJar, type LoaderPreference } from '../gameTests/modMetadata'
 import { pathExists } from '../fsutil'
-import { openZip, readEntries } from '../zip'
+import { openEntry, openZip, readEntries } from '../zip'
 import { describeError, StudioError } from './analyze'
 
 export interface JarAnalysis {
@@ -217,6 +217,50 @@ export async function sourceVersions(sourceDir: string, modId: string | null): P
     byVersion.set(jar.analysis.version, entry)
   }
   return [...byVersion.values()].sort((a, b) => compareVersions(b.version, a.version))
+}
+
+/**
+ * Icône déclarée par le jar (fabric.mod.json `icon`, mods.toml `logoFile`), écrite comme image du mod
+ * (`cover.png` ou `cover.jpg`). Renvoie false si le jar n'en déclare pas de lisible.
+ */
+export async function extractModIcon(jarPath: string, dir: string): Promise<boolean> {
+  const zip = await openZip(jarPath).catch(() => null)
+  if (!zip) return false
+  try {
+    const entries = await readEntries(zip)
+    const read = async (name: string) => {
+      const entry = entries.find((e) => e.fileName === name)
+      if (!entry) return null
+      const chunks: Buffer[] = []
+      for await (const chunk of await openEntry(zip, entry)) chunks.push(chunk as Buffer)
+      return Buffer.concat(chunks)
+    }
+    let icon: string | null = null
+    const fabric = await read('fabric.mod.json')
+    if (fabric) {
+      try {
+        const value = (JSON.parse(fabric.toString('utf8').replace(/^﻿/, '')) as { icon?: unknown }).icon
+        // Une icône par taille : la plus grande.
+        if (typeof value === 'string') icon = value
+        else if (value && typeof value === 'object') {
+          const sizes = Object.entries(value as Record<string, unknown>).filter(([, v]) => typeof v === 'string')
+          icon = (sizes.sort(([a], [b]) => Number(b) - Number(a))[0]?.[1] as string | undefined) ?? null
+        }
+      } catch {
+        // fabric.mod.json illisible : pas d'icône
+      }
+    } else {
+      const toml = (await read('META-INF/neoforge.mods.toml')) ?? (await read('META-INF/mods.toml'))
+      icon = toml ? (/^\s*logoFile\s*=\s*["']([^"']+)["']/m.exec(toml.toString('utf8'))?.[1] ?? null) : null
+    }
+    const ext = icon ? /\.(png|jpe?g)$/i.exec(icon)?.[1].toLowerCase() : null
+    const data = icon && ext ? await read(icon.replace(/^\/+/, '')) : null
+    if (!data) return false
+    await writeFile(join(dir, `cover.${ext === 'png' ? 'png' : 'jpg'}`), data)
+    return true
+  } finally {
+    zip.close()
+  }
 }
 
 /** Copie dans le dossier du mod les jars de ces versions ; refuse d'écraser un autre fichier du même nom. */

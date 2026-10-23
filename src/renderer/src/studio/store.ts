@@ -11,7 +11,12 @@ export type Dialog =
   | { kind: 'pack-settings'; folder: string; tab?: SettingsTab }
   /** Retirer d'un zip les fichiers exclus dans les réglages ; `label` comme pour « contents ». */
   | { kind: 'strip'; folder: string; fileName: string; label: string }
-  | { kind: 'notes'; folder: string; version: number }
+  /** Notes d'une version : numéro d'un modpack, ou version déclarée d'un mod. */
+  | { kind: 'notes'; folder: string; version: number | string }
+  /** Importer des versions du dossier lié d'un mod. */
+  | { kind: 'mod-import'; folder: string }
+  /** Mettre une version d'un mod en ligne sur CurseForge. */
+  | { kind: 'mod-curseforge-publish'; folder: string; version: string }
   /** Créer la version suivante depuis CurseForge ; `profilePath` : profil déjà choisi. */
   | { kind: 'import'; folder: string; profilePath?: string }
   /** Lien avec le projet CurseForge et réglages de publication. */
@@ -32,6 +37,7 @@ export type Dialog =
 /** Ce que le publieur supprime : une version, tout un modpack, ou des releases dont le zip n'existe plus. */
 export type DeleteTarget =
   | { type: 'version'; folder: string; version: number }
+  | { type: 'mod-version'; folder: string; version: string }
   | { type: 'pack'; folder: string }
   | { type: 'releases'; name: string; versions: string[]; tags: string[]; orphan: boolean }
 

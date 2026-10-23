@@ -34,7 +34,7 @@ import { UpdatesLine } from './MaintenancePanel'
 import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
 import { errorMessage, openLink, openPath, useStudio } from './store'
 
-const STATUS: Record<RemoteStatus, { label: string; className: string }> = {
+export const STATUS: Record<RemoteStatus, { label: string; className: string }> = {
   published: { label: 'En ligne', className: 'bg-grass-400/15 text-grass-300 ring-grass-400/30' },
   create: { label: 'À publier', className: 'bg-sky-400/15 text-sky-300 ring-sky-400/30' },
   update: { label: 'Modifiée', className: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35' },
@@ -64,7 +64,7 @@ export function Pill({
   )
 }
 
-function Message({ tone, children }: { tone: 'warning' | 'error'; children: ReactNode }) {
+export function Message({ tone, children }: { tone: 'warning' | 'error'; children: ReactNode }) {
   const Icon = tone === 'error' ? CircleAlert : TriangleAlert
   return (
     <p className={`mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed ${tone === 'error' ? 'text-red-300' : 'text-amber-glow/90'}`}>
@@ -134,7 +134,7 @@ function SettingsSummary({ pack }: { pack: PackView }) {
   )
 }
 
-function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode; aside?: ReactNode }) {
+export function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-start gap-x-4 gap-y-2 rounded-xl px-4 py-3 transition hover:bg-tint/[0.03]">
       <div className="w-14 shrink-0 pt-0.5">{badge}</div>
@@ -145,7 +145,7 @@ function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode
   )
 }
 
-function VersionBadge({ children, tone = 'default' }: { children: ReactNode; tone?: 'default' | 'muted' | 'removed' }) {
+export function VersionBadge({ children, tone = 'default' }: { children: ReactNode; tone?: 'default' | 'muted' | 'removed' }) {
   const styles = {
     default: 'bg-tint/[0.08] text-ink-100',
     muted: 'bg-tint/[0.04] text-ink-400',
@@ -168,7 +168,7 @@ function versionMeta(version: VersionView): string {
 }
 
 /** Bouton discret qui rougit au survol : supprimer est une action rare. */
-const DANGER_HOVER = 'hover:bg-red-500/15! hover:text-red-300!'
+export const DANGER_HOVER = 'hover:bg-red-500/15! hover:text-red-300!'
 
 /** Où en est sur GitHub la version que contient le CurseForge du publieur. */
 const ONLINE: Record<RemoteStatus, string> = {
@@ -359,7 +359,7 @@ function PendingRow({ folder, zip, number }: { folder: string; zip: PendingZip; 
   )
 }
 
-function RemoteOnlyRow({ pack, version }: { pack: PackView; version: RemoteOnlyVersion }) {
+export function RemoteOnlyRow({ pack, version }: { pack: PackView; version: RemoteOnlyVersion }) {
   const openDialog = useStudio((s) => s.openDialog)
   return (
     <Row
@@ -391,7 +391,9 @@ function RemoteOnlyRow({ pack, version }: { pack: PackView; version: RemoteOnlyV
       <p className="mt-0.5 text-xs text-ink-400">
         {version.draft
           ? 'Reste d’une publication interrompue : il sera supprimé.'
-          : 'Son zip n’est plus dans le dossier : la release sera supprimée à la prochaine publication.'}
+          : pack.type === 'mod'
+            ? 'Ses fichiers ne sont plus dans le dossier : la release sera supprimée à la prochaine publication.'
+            : 'Son zip n’est plus dans le dossier : la release sera supprimée à la prochaine publication.'}
       </p>
     </Row>
   )

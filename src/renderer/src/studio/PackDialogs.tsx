@@ -134,11 +134,12 @@ export function PackInfoDialog({ folder }: { folder: string }) {
   )
 }
 
-export function NotesDialog({ folder, version }: { folder: string; version: number }) {
+export function NotesDialog({ folder, version }: { folder: string; version: number | string }) {
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const run = useStudio((s) => s.run)
-  const current = pack?.versions.find((v) => v.number === version)
+  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : pack?.modVersions.find((v) => v.version === version)
+  const label = typeof version === 'number' ? `v${version}` : `version ${version}`
   const [notes, setNotes] = useState(current?.notes ?? '')
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -152,7 +153,7 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
 
   return (
     <Modal
-      title={`Notes de la v${version}`}
+      title={`Notes de la ${label}`}
       subtitle={`${pack.name} · affichées aux joueurs dans « Nouveautés ». Envoyées à la prochaine publication.`}
       onClose={close}
       width="max-w-3xl"

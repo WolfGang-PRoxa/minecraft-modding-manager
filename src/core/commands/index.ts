@@ -8,6 +8,7 @@ import {
   maintenanceStatusCommand,
   maintenanceValidate
 } from './maintenance'
+import { modsCreate, modsCurseforge, modsDelete, modsImport, modsNotes, modsSource, modsVersions } from './mods'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
@@ -34,6 +35,13 @@ export const COMMANDS = [
   versionsFile,
   versionsStrip,
   versionsDelete,
+  modsCreate,
+  modsVersions,
+  modsImport,
+  modsSource,
+  modsNotes,
+  modsDelete,
+  modsCurseforge,
   updatesCheck,
   updatesChangelog,
   updatesApply,

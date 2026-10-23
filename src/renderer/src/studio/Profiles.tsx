@@ -2,6 +2,7 @@
 // profil face au modpack qui en vient.
 import { useMemo, useState, type ReactNode } from 'react'
 import {
+  Blocks,
   ChevronDown,
   ChevronRight,
   CircleCheck,
@@ -130,6 +131,7 @@ export function ProfilesSidebar() {
     }
   }
   const packName = (folder: string) => overview?.packs.find((p) => p.folder === folder)?.name ?? folder
+  const mods = overview?.packs.filter((p) => p.type === 'mod') ?? []
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-tint/[0.05] bg-ink-900/40">
@@ -197,6 +199,22 @@ export function ProfilesSidebar() {
             </div>
           )
         })}
+
+        {mods.length > 0 && !wanted && (
+          <div>
+            <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">Mods</p>
+            {mods.map((pack) => {
+              const target: Selection = { kind: 'pack', folder: pack.folder }
+              return (
+                <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                  <Blocks size={15} className="shrink-0 text-ink-400" />
+                  <span className="flex-1 truncate">{pack.name}</span>
+                  {pack.modVersions[0] && <span className="text-xs text-ink-500">{pack.modVersions[0].version.split('-')[0]}</span>}
+                </SidebarItem>
+              )
+            })}
+          </div>
+        )}
 
         {library && library.packsWithoutProfile.length > 0 && !wanted && (
           <div>

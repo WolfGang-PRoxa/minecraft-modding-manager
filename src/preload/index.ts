@@ -77,6 +77,12 @@ const studio: StudioApi = {
   onPublishProgress: (listener) => subscribe('studio:publish-progress', listener),
 
   deleteVersion: (folder, version) => ipcRenderer.invoke('studio:deleteVersion', folder, version),
+  deleteModVersion: (folder, version) => ipcRenderer.invoke('studio:deleteModVersion', folder, version),
+  createModFromSource: () => ipcRenderer.invoke('studio:createModFromSource'),
+  availableModVersions: (folder) => ipcRenderer.invoke('studio:availableModVersions', folder),
+  importModVersions: (folder, versions) => ipcRenderer.invoke('studio:importModVersions', folder, versions),
+  linkModSource: (folder, mode) => ipcRenderer.invoke('studio:linkModSource', folder, mode),
+  publishModCurseForge: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishModCurseForge', folder, version, releaseType),
   deletePack: (folder) => ipcRenderer.invoke('studio:deletePack', folder),
   deleteReleases: (tags) => ipcRenderer.invoke('studio:deleteReleases', tags),
 

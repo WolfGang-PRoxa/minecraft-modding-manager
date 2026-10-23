@@ -49,18 +49,24 @@ function describe(target: DeleteTarget, overview: StudioOverview): Description |
   const releasesLeft = pack.remoteOnly.filter((r) => !r.draft).length
 
   if (target.type === 'pack') {
-    const online = pack.versions.filter((v) => ONLINE.includes(v.remote)).length + releasesLeft
+    const mod = pack.type === 'mod'
+    const versions = mod ? pack.modVersions : pack.versions
+    const online = versions.filter((v) => ONLINE.includes(v.remote)).length + releasesLeft
     return {
       title: `Supprimer « ${pack.name} » ?`,
-      subtitle: `${pack.versions.length} ${plural(pack.versions.length, 'version')} dans le dossier ${pack.folder}`,
+      subtitle: `${versions.length} ${plural(versions.length, 'version')} dans le dossier ${pack.folder}`,
       points: [
         online > 0
-          ? `${online > 1 ? `Ses ${online} versions en ligne sont retirées` : 'Sa version en ligne est retirée'} de GitHub (releases et tags) : le modpack disparaît de l’application des joueurs. Ceux qui l’ont installé gardent leur profil CurseForge.`
+          ? mod
+            ? `${online > 1 ? `Ses ${online} versions en ligne sont retirées` : 'Sa version en ligne est retirée'} de GitHub (releases et tags). Ses fichiers sur CurseForge ne sont pas touchés.`
+            : `${online > 1 ? `Ses ${online} versions en ligne sont retirées` : 'Sa version en ligne est retirée'} de GitHub (releases et tags) : le modpack disparaît de l’application des joueurs. Ceux qui l’ont installé gardent leur profil CurseForge.`
           : 'Il n’a aucune version sur GitHub : seul son dossier est supprimé.',
-        `Son dossier ${pack.folder} (zips, image, notes de version) part à la corbeille : tu peux l’y récupérer.`
+        mod
+          ? `Son dossier ${pack.folder} (jars, image, notes de version) part à la corbeille : tu peux l’y récupérer. Le dossier de son projet n’est pas touché.`
+          : `Son dossier ${pack.folder} (zips, image, notes de version) part à la corbeille : tu peux l’y récupérer.`
       ],
       warning: null,
-      confirm: 'Supprimer le modpack',
+      confirm: mod ? 'Supprimer le mod' : 'Supprimer le modpack',
       run: () => window.studio.deletePack(pack.folder),
       success: (done) => ({
         title: `« ${pack.name} » supprimé`,
@@ -68,6 +74,33 @@ function describe(target: DeleteTarget, overview: StudioOverview): Description |
           done > 0
             ? `${done} ${plural(done, 'release retirée', 'releases retirées')} de GitHub, dossier mis à la corbeille.`
             : 'Dossier mis à la corbeille.'
+      })
+    }
+  }
+
+  if (target.type === 'mod-version') {
+    const modVersion = pack.modVersions.find((v) => v.version === target.version)
+    if (!modVersion) return null
+    const online = ONLINE.includes(modVersion.remote)
+    const files = modVersion.files.map((f) => f.fileName).join(', ')
+    return {
+      title: `Supprimer la version ${modVersion.version} ?`,
+      subtitle: pack.name,
+      points: [
+        online
+          ? 'Sa release est retirée de GitHub tout de suite, avec son tag.'
+          : modVersion.remote === 'unknown'
+            ? 'Si elle est publiée sur GitHub, sa release est retirée aussi.'
+            : 'Elle n’est pas sur GitHub : seuls ses fichiers sont supprimés.',
+        `${files} part à la corbeille. Le dossier lié la propose de nouveau à l’import.`,
+        ...(modVersion.curseforgeFileId ? ['Son fichier sur CurseForge n’est pas touché : il ne se retire que depuis le site.'] : [])
+      ],
+      warning: null,
+      confirm: `Supprimer la version ${modVersion.version}`,
+      run: () => window.studio.deleteModVersion(pack.folder, modVersion.version),
+      success: (done) => ({
+        title: `Version ${modVersion.version} supprimée`,
+        message: done > 0 ? 'Release retirée de GitHub, fichiers mis à la corbeille.' : 'Fichiers mis à la corbeille.'
       })
     }
   }

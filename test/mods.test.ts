@@ -28,9 +28,11 @@ const lmaJar = (version: string) =>
       name: 'LMA',
       description: 'Un mod de test',
       environment: '*',
+      icon: 'assets/lma/icon.png',
       depends: { fabricloader: '>=0.19.5', minecraft: '~26.3', java: '>=25', 'fabric-api': '*', 'fabric-language-kotlin': '>=1.14.2' }
     }),
-    'com/exemple/Lma.class': `classe ${version}`
+    'com/exemple/Lma.class': `classe ${version}`,
+    'assets/lma/icon.png': Buffer.from('89504e470d0a1a0a', 'hex')
   })
 
 describe('versions de Minecraft d’un jar', () => {
@@ -95,7 +97,7 @@ describe('mods dans le Studio', () => {
   it('crée le mod depuis le dossier de son projet, avec sa version la plus récente', async () => {
     const folder = await service.createModFromSource(source)
     assert.equal(folder, 'LMA')
-    assert.deepEqual(await readdir(join(workspace, folder)), ['lma-26.3-1.2.0.jar', 'pack.json'])
+    assert.deepEqual(await readdir(join(workspace, folder)), ['cover.png', 'lma-26.3-1.2.0.jar', 'pack.json'])
     const saved = JSON.parse(await readFile(join(workspace, folder, 'pack.json'), 'utf8')) as Record<string, unknown>
     assert.equal(saved.type, 'mod')
     assert.equal(saved.id, 'lma')
@@ -136,7 +138,7 @@ describe('mods dans le Studio', () => {
     assert.equal(release.name, 'LMA 1.2.0-26.3')
     assert.equal(release.draft, false)
     assert.match(release.body ?? '', /Particules des armures\.\n\n---\n_Minecraft 26\.3 · Fabric_/)
-    assert.deepEqual(release.assets.map((a) => a.name).sort(), ['content.json', 'lma-26.3-1.2.0.jar'])
+    assert.deepEqual(release.assets.map((a) => a.name).sort(), ['content.json', 'cover.png', 'lma-26.3-1.2.0.jar'])
     const manifest = JSON.parse(github.file(release.tag_name, 'content.json')!.toString('utf8')) as ContentManifest
     assert.equal(manifest.type, 'mod')
     assert.equal(manifest.version, '1.2.0-26.3')
@@ -161,7 +163,7 @@ describe('mods dans le Studio', () => {
     const result = await service.deleteModVersion('LMA', '1.1.0-26.3')
     assert.ok(result.ok, result.ok ? '' : result.error)
     assert.ok(!github.releases.some((r) => r.tag_name === 'mod-lma-v1.1.0-26.3'))
-    assert.deepEqual(await readdir(join(workspace, 'LMA')), ['lma-26.3-1.2.0.jar', 'pack.json'])
+    assert.deepEqual(await readdir(join(workspace, 'LMA')), ['cover.png', 'lma-26.3-1.2.0.jar', 'pack.json'])
     // Elle redevient importable depuis le dossier lié.
     assert.deepEqual((await service.availableModVersions('LMA')).map((v) => v.version), ['1.1.0-26.3'])
   })

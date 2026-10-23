@@ -248,6 +248,36 @@ dossier n’a ses mods, le Studio le signale : le profil a sans doute été modi
 
 Il reste à y mettre une première version : voir [Préparer une version](versions.md).
 
+## Les mods
+
+Le Studio publie aussi les mods du publieur, à côté de ses modpacks. Un mod a son propre dossier dans le dossier des
+modpacks, qui contient ses fichiers `.jar` ; il apparaît dans la colonne de gauche sous **Mods**, et sa carte se
+distingue par la mention **Mod**.
+
+**Nouveau mod** demande le dossier où le projet du mod dépose ses jars (`releases`, `build/libs`…). Le Studio y lit le
+jar le plus récent (`fabric.mod.json`, `quilt.mod.json` ou `mods.toml`) : le mod prend son nom, son identifiant, sa
+description et son icône, et sa version la plus récente est copiée. Le dossier du projet reste **lié** au mod : il
+n’est jamais modifié, et ses nouvelles versions s’y repèrent toutes seules (« 2 versions à importer »). **Importer des
+versions** les copie dans le Studio, une ou plusieurs à la fois. Une copie du dernier jar sous un autre nom
+(`lma-latest.jar`) n’est comptée qu’une fois. Le lien se change ou se retire depuis la carte ; sans lien, les jars
+se déposent à la main dans le dossier du mod.
+
+Une **version** de mod est celle que déclare son jar (`1.2.0-26.3`), pas un numéro donné par le Studio. Plusieurs
+jars de même version (un par chargeur ou par version de Minecraft) forment une seule version. Chaque ligne indique ses
+fichiers, la version de Minecraft, le chargeur et le côté où le mod fonctionne (client, serveur ou les deux).
+
+À la publication, chaque version devient une release `mod-<id>-v<version>` avec ses jars, l’image du mod et un fichier
+`content.json` qui la décrit. Les règles sont celles des modpacks : le dossier fait foi, une version supprimée du
+dossier est retirée de GitHub. Les applications des joueurs n’affichent pas ces releases parmi les modpacks.
+
+Pour CurseForge, le mod se lie à son projet par **Publier aussi sur CurseForge** (adresse
+`curseforge.com/minecraft/mc-mods/…` ou numéro). Les fichiers déjà mis en ligne depuis le site sont reconnus à leur
+nom. **Publier sur CurseForge**, sur la version la plus récente, envoie chaque jar sous son nom (sans `.jar`), avec
+sa version de Minecraft, son chargeur, `Client` et `Server` selon le côté du mod, ses notes, et ses dépendances
+obligatoires qui sont aussi des projets CurseForge (Fabric API, Fabric Language Kotlin…). Une dépendance introuvable
+est signalée, pour l’ajouter depuis le site. Il faut la clé de l’API et le jeton d’auteur
+([Compte CurseForge](parametres.md#compte-curseforge)).
+
 ## Le fichier pack.json
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :
@@ -255,11 +285,12 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 | Champ | Contenu |
 |---|---|
 | `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
-| `type` | Ce que contient le dossier. Absent pour un modpack. Les autres types (`mod`, `resourcepack`, `shader`, `plugin`) sont réservés aux prochaines versions : un dossier qui en déclare un est affiché, mais ignoré à la publication. |
+| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods). Les autres types (`resourcepack`, `shader`, `plugin`) sont réservés aux prochaines versions : un dossier qui en déclare un est affiché, mais ignoré à la publication. |
+| `source` | Mod : le dossier où son projet dépose ses jars. Absent s’il n’est pas lié. |
 | `name` | Le nom affiché aux joueurs. |
 | `description` | La description courte. |
 | `lastVersion` | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé. |
-| `notes` | Les notes de chaque version, en Markdown, par numéro. |
+| `notes` | Les notes de chaque version, en Markdown, par numéro (par version déclarée pour un mod). |
 | `exclude` | Les [fichiers exclus](reglages.md#exclure-des-fichiers) : des chemins depuis la racine de l’instance. Absent s’il n’y en a pas. |
 | `disabledMods` | Les [mods désactivés chez les joueurs](reglages.md#désactiver-des-mods-chez-les-joueurs) : pour chacun, son projet CurseForge (`addonId`, ou `null`), son fichier (`file`) et son nom (`name`). Absent s’il n’y en a pas. |
 | `keepPlayerConfigs` | `true` pour [garder les configurations modifiées par les joueurs](reglages.md#garder-les-configurations-des-joueurs). Absent sinon. |

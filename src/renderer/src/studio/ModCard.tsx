@@ -1,0 +1,444 @@
+// Un mod dans le Studio : son dossier lié (où son projet dépose ses jars), ses versions, et leur publication sur GitHub
+// et CurseForge.
+import { useEffect, useState } from 'react'
+import { Blocks, FolderOpen, FolderSync, Link2Off, NotebookPen, PackagePlus, Pencil, Trash2, Upload } from 'lucide-react'
+import { LOADER_LABELS, type ModLoader } from '../../../shared/content'
+import type { AvailableModVersion, CurseForgeVersion, ModVersionView, PackView } from '../../../shared/studio'
+import { Button, IconButton } from '../components/Button'
+import { Cover } from '../components/Cover'
+import { formatBytes, formatDate } from '../lib/format'
+import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
+import { Modal, Spinner } from './Modal'
+import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
+import { openPath, useStudio } from './store'
+
+/** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
+function loadersLabel(loaders: ModLoader[]): string {
+  return loaders.filter((l) => !(l === 'quilt' && loaders.includes('fabric'))).map((l) => LOADER_LABELS[l]).join(', ')
+}
+
+const SIDES = { client: 'client seulement', server: 'serveur seulement', both: 'client et serveur' }
+
+function fileMeta(file: ModVersionView['files'][number]): string {
+  return [
+    formatBytes(file.size),
+    file.minecraftVersions.length ? `Minecraft ${file.minecraftVersions.join(', ')}` : 'version de Minecraft non précisée',
+    loadersLabel(file.loaders),
+    SIDES[file.side]
+  ].join(' · ')
+}
+
+const CURSEFORGE_LIVE = 'bg-curseforge/15 text-curseforge ring-curseforge/30'
+const CURSEFORGE_REVIEW = 'bg-sky-400/15 text-sky-300 ring-sky-400/30'
+
+/** État sur CurseForge d'une version : rapprochée d'un fichier du projet, ou bouton pour l'y mettre en ligne. */
+function ModCurseForgeStatus({ pack, version, latest, curseforge }: { pack: PackView; version: ModVersionView; latest: boolean; curseforge: CurseForgeVersions }) {
+  const openDialog = useStudio((s) => s.openDialog)
+  if (!pack.curseforge) return null
+  const found: CurseForgeVersion | undefined = curseforge.versions?.find((v) => v.version === version.version)
+  if (found) {
+    const live = found.status === 4 || found.status === 10
+    return <Pill className={live ? CURSEFORGE_LIVE : CURSEFORGE_REVIEW}>{live ? 'Publiée sur CurseForge' : `CurseForge : ${found.label}`}</Pill>
+  }
+  if (!curseforge.versions) return version.curseforgeFileId ? <span className="text-xs text-ink-500">CurseForge…</span> : null
+  // Seule la version la plus récente se publie : une plus ancienne passerait après des versions déjà en ligne.
+  if (!latest || pack.errors.length) return null
+  return (
+    <Button size="sm" variant="ghost" icon={Upload} className="text-curseforge" onClick={() => openDialog({ kind: 'mod-curseforge-publish', folder: pack.folder, version: version.version })}>
+      Publier sur CurseForge
+    </Button>
+  )
+}
+
+function ModVersionRow({ pack, version, latest, curseforge }: { pack: PackView; version: ModVersionView; latest: boolean; curseforge: CurseForgeVersions }) {
+  const openDialog = useStudio((s) => s.openDialog)
+  const status = STATUS[version.remote]
+  return (
+    <Row
+      badge={<VersionBadge>{version.version.split('-')[0]}</VersionBadge>}
+      aside={
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={NotebookPen}
+            onClick={() => openDialog({ kind: 'notes', folder: pack.folder, version: version.version })}
+            className={version.notes ? 'text-grass-300' : ''}
+          >
+            {version.notes ? 'Notes' : 'Ajouter des notes'}
+          </Button>
+          <IconButton
+            icon={Trash2}
+            size={16}
+            label={`Supprimer la version ${version.version}`}
+            className={DANGER_HOVER}
+            onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: version.version } })}
+          />
+        </>
+      }
+    >
+      <p className="font-medium text-ink-100 select-text">Version {version.version}</p>
+      {version.files.map((file) => (
+        <p key={file.fileName} className="mt-0.5 text-xs text-ink-400">
+          <span className="font-mono text-ink-300 select-text">{file.fileName}</span> · {fileMeta(file)}
+        </p>
+      ))}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {pack.github && (
+          <Pill className={status.className} title={version.changes.join('\n') || undefined}>
+            {status.label}
+          </Pill>
+        )}
+        <ModCurseForgeStatus pack={pack} version={version} latest={latest} curseforge={curseforge} />
+      </div>
+      {version.remote === 'update' &&
+        version.changes.map((change) => (
+          <p key={change} className="mt-1 text-xs text-amber-glow/80">
+            ↻ {change}
+          </p>
+        ))}
+    </Row>
+  )
+}
+
+/** Où le mod prend ses versions : le dossier où son projet dépose ses jars. */
+function SourceLine({ pack, available }: { pack: PackView; available: AvailableModVersion[] | null }) {
+  const openDialog = useStudio((s) => s.openDialog)
+  const run = useStudio((s) => s.run)
+  return (
+    <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
+      <FolderSync size={14} className="shrink-0 text-ink-400" />
+      {pack.source ? (
+        <>
+          <span>Versions prises dans</span>
+          <button type="button" className="max-w-full truncate font-mono text-xs text-ink-200 hover:underline" onClick={() => openPath(pack.source!)} title="Ouvrir dans l’Explorateur">
+            {pack.source}
+          </button>
+          {available && available.length > 0 && (
+            <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}>
+              {available.length > 1 ? `${available.length} versions à importer` : `Version ${available[0].version} à importer`}
+            </button>
+          )}
+          <button type="button" className="text-xs font-semibold text-ink-400 hover:text-ink-100" onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'))}>
+            Changer
+          </button>
+          <IconButton icon={Link2Off} size={14} label="Retirer le lien" className="size-7!" onClick={() => void run(window.studio.linkModSource(pack.folder, null), 'Lien retiré')} />
+        </>
+      ) : (
+        <>
+          <span>Aucun dossier lié : dépose ses jars dans son dossier, ou</span>
+          <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'), 'Dossier lié')}>
+            lie-le au dossier de son projet
+          </button>
+        </>
+      )}
+    </p>
+  )
+}
+
+/** Versions du dossier lié pas encore importées, relues quand le mod change. */
+function useAvailableVersions(pack: PackView): AvailableModVersion[] | null {
+  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null)
+  const key = JSON.stringify([pack.source, pack.modVersions.map((v) => v.version)])
+  useEffect(() => {
+    setAvailable(null)
+    if (!pack.source) return
+    let alive = true
+    void window.studio.availableModVersions(pack.folder).then((r) => alive && setAvailable(r.ok ? r.versions : []))
+    return () => {
+      alive = false
+    }
+  }, [pack.folder, key])
+  return available
+}
+
+export function ModCard({ pack, index }: { pack: PackView; index: number }) {
+  const openDialog = useStudio((s) => s.openDialog)
+  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
+  const available = useAvailableVersions(pack)
+  const empty = !pack.modVersions.length && !pack.remoteOnly.length
+
+  return (
+    <section
+      className="animate-rise relative overflow-hidden rounded-3xl bg-ink-850 ring-1 ring-tint/[0.06]"
+      style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
+    >
+      <div className="flex gap-6 p-6">
+        <button
+          type="button"
+          onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}
+          className="group relative aspect-square w-32 shrink-0 overflow-hidden rounded-2xl ring-1 ring-tint/10"
+          title="Modifier l’image"
+        >
+          <Cover id={pack.id} name={pack.name} url={pack.coverUrl} className="absolute inset-0" />
+          <span className="absolute inset-0 flex items-center justify-center bg-ink-950/60 text-sm font-semibold text-ink-100 opacity-0 transition group-hover:opacity-100">
+            <Pencil size={16} className="mr-2" /> Image
+          </span>
+        </button>
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-ink-100">{pack.name}</h2>
+            <span className="inline-flex items-center gap-1 rounded-md bg-tint/[0.06] px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-ink-300 uppercase">
+              <Blocks size={11} /> Mod
+            </span>
+            <span className="font-mono text-xs text-ink-500 select-text" title="Identifiant publié sur GitHub">
+              {pack.id}
+            </span>
+          </div>
+          {pack.description ? (
+            <p className="mt-1.5 line-clamp-2 text-sm text-ink-300">{pack.description}</p>
+          ) : (
+            <p className="mt-1.5 text-sm text-ink-500 italic">Pas encore de description.</p>
+          )}
+          <SourceLine pack={pack} available={available} />
+          <CurseForgeLine pack={pack} curseforge={curseforge} />
+          <div className="mt-auto flex flex-wrap gap-2 pt-4">
+            <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>
+              Infos et image
+            </Button>
+            {pack.source && (
+              <Button size="sm" icon={PackagePlus} disabled={!available?.length} onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}>
+                Importer des versions
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" icon={FolderOpen} onClick={() => openPath(pack.dir)}>
+              Ouvrir le dossier
+            </Button>
+            <IconButton
+              icon={Trash2}
+              size={16}
+              label="Supprimer le mod"
+              className={`ml-auto ${DANGER_HOVER}`}
+              onClick={() => openDialog({ kind: 'delete', target: { type: 'pack', folder: pack.folder } })}
+            />
+          </div>
+        </div>
+      </div>
+
+      {pack.errors.length > 0 && (
+        <div className="mx-6 mb-4 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-inset ring-red-400/25">
+          <p className="text-sm font-semibold text-red-300">Ce mod ne sera pas publié tant que ceci n’est pas corrigé :</p>
+          {pack.errors.map((error) => (
+            <p key={error} className="mt-1 text-sm text-ink-200 select-text">
+              {error}
+            </p>
+          ))}
+        </div>
+      )}
+
+      <div className="border-t border-tint/[0.05] px-2 py-2">
+        {pack.modVersions.map((version, i) => (
+          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} />
+        ))}
+        {pack.remoteOnly.map((version) => (
+          <RemoteOnlyRow key={version.tag} pack={pack} version={version} />
+        ))}
+        {pack.badJars.map((jar) => (
+          <Row key={jar.fileName} badge={<VersionBadge tone="muted">—</VersionBadge>}>
+            <p className="font-medium break-all text-ink-200 select-text">{jar.fileName}</p>
+            <Message tone="error">{jar.error}</Message>
+          </Row>
+        ))}
+        {empty && !pack.badJars.length && (
+          <div className="flex items-center gap-4 px-4 py-5 text-sm text-ink-400">
+            <Blocks size={22} className="shrink-0 text-ink-500" />
+            <span>Aucune version pour l’instant : importe-en une depuis le dossier lié, ou dépose ses jars dans son dossier.</span>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function usePack(folder: string) {
+  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
+}
+
+/** Choix des versions du dossier lié à copier dans le Studio. */
+export function ModImportDialog({ folder }: { folder: string }) {
+  const pack = usePack(folder)
+  const close = useStudio((s) => s.closeDialog)
+  const pushToast = useStudio((s) => s.pushToast)
+  const refresh = useStudio((s) => s.refresh)
+  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [chosen, setChosen] = useState<Set<string>>(new Set())
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    void window.studio.availableModVersions(folder).then((r) => {
+      if (!r.ok) return setError(r.error)
+      setAvailable(r.versions)
+      setChosen(new Set(r.versions.slice(0, 1).map((v) => v.version)))
+    })
+  }, [folder])
+  if (!pack) return null
+
+  const toggle = (version: string) => {
+    const next = new Set(chosen)
+    if (next.has(version)) next.delete(version)
+    else next.add(version)
+    setChosen(next)
+  }
+
+  async function importVersions() {
+    setBusy(true)
+    try {
+      const result = await window.studio.importModVersions(folder, [...chosen])
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Import impossible', message: result.error })
+      pushToast({
+        kind: 'success',
+        title: result.imported.length > 1 ? `${result.imported.length} versions importées` : `Version ${result.imported[0]} importée`,
+        message: 'Elles partiront sur GitHub à la prochaine publication.'
+      })
+      close()
+    } finally {
+      setBusy(false)
+      void refresh()
+    }
+  }
+
+  return (
+    <Modal
+      title="Importer des versions"
+      subtitle={`Depuis ${pack.source ?? 'le dossier lié'}. Les jars sont copiés dans le dossier du mod : le dossier de son projet n’est pas touché.`}
+      onClose={close}
+      closable={!busy}
+      footer={
+        <>
+          <div className="flex-1" />
+          <Button variant="ghost" disabled={busy} onClick={close}>
+            Annuler
+          </Button>
+          <Button variant="primary" icon={PackagePlus} disabled={busy || !chosen.size} onClick={() => void importVersions()}>
+            Importer {chosen.size > 1 ? `${chosen.size} versions` : 'la version'}
+          </Button>
+        </>
+      }
+    >
+      {error ? (
+        <p className="text-sm text-red-300 select-text">{error}</p>
+      ) : !available ? (
+        <p className="flex items-center gap-2 text-sm text-ink-300">
+          <Spinner /> Lecture du dossier lié…
+        </p>
+      ) : !available.length ? (
+        <p className="text-sm text-ink-400">Toutes les versions du dossier lié sont déjà dans le Studio.</p>
+      ) : (
+        <ul className="divide-y divide-tint/[0.05]">
+          {available.map((v) => (
+            <li key={v.version}>
+              <label className="flex cursor-pointer items-start gap-3 py-3">
+                <input type="checkbox" className="mt-0.5" checked={chosen.has(v.version)} onChange={() => toggle(v.version)} />
+                <span className="min-w-0">
+                  <span className="block font-medium text-ink-100">Version {v.version}</span>
+                  {v.files.map((f) => (
+                    <span key={f.fileName} className="block text-xs text-ink-400">
+                      <span className="font-mono">{f.fileName}</span> · Minecraft {f.minecraftVersions.join(', ') || '?'} · {loadersLabel(f.loaders)}
+                    </span>
+                  ))}
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Modal>
+  )
+}
+
+/** Mise en ligne d'une version du mod sur CurseForge, après confirmation. */
+export function PublishModCurseForgeDialog({ folder, version }: { folder: string; version: string }) {
+  const pack = usePack(folder)
+  const close = useStudio((s) => s.closeDialog)
+  const pushToast = useStudio((s) => s.pushToast)
+  const refresh = useStudio((s) => s.refresh)
+  const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
+  const [busy, setBusy] = useState(false)
+  const [step, setStep] = useState<string | null>(null)
+  useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
+  const view = pack?.modVersions.find((v) => v.version === version)
+  if (!pack || !view) return null
+  const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
+
+  async function publish() {
+    setBusy(true)
+    try {
+      const result = await window.studio.publishModCurseForge(folder, version, releaseType)
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Envoi impossible', message: result.error })
+      pushToast({
+        kind: 'success',
+        title: `Version ${version} envoyée sur CurseForge`,
+        message: result.unknownDependencies.length
+          ? `Elle sera visible une fois acceptée par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
+          : 'Elle sera visible une fois acceptée par la modération.'
+      })
+      close()
+    } finally {
+      setBusy(false)
+      void refresh()
+    }
+  }
+
+  return (
+    <Modal
+      title={`Publier la version ${version} sur CurseForge`}
+      subtitle="Chaque jar est envoyé sur le projet du mod et passe en modération avant d’être visible. Un fichier envoyé ne se retire que depuis le site."
+      onClose={close}
+      closable={!busy}
+      footer={
+        <>
+          {busy ? (
+            <span className="flex flex-1 items-center gap-2 text-sm text-ink-300">
+              <Spinner /> {step ?? 'Préparation…'}
+            </span>
+          ) : (
+            <div className="flex-1" />
+          )}
+          <Button variant="ghost" disabled={busy} onClick={close}>
+            Annuler
+          </Button>
+          <Button variant="primary" icon={Upload} disabled={busy} onClick={() => void publish()}>
+            Publier sur CurseForge
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4 text-sm">
+        {view.files.map((file) => (
+          <div key={file.fileName} className="rounded-xl bg-ink-950/50 px-4 py-3 ring-1 ring-inset ring-tint/[0.06]">
+            <p className="text-ink-300">
+              Nom affiché : <span className="font-mono text-ink-100 select-text">{file.fileName.replace(/\.jar$/i, '')}</span>
+            </p>
+            <p className="mt-1 text-xs text-ink-400">
+              {[...file.minecraftVersions.map((v) => `Minecraft ${v}`), loadersLabel(file.loaders), SIDES[file.side]].join(' · ')} · {formatBytes(file.size)}
+            </p>
+          </div>
+        ))}
+        <p className="text-ink-300">
+          Dépendances obligatoires : <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>
+          {dependencies.length > 0 && <span className="text-ink-400"> (liées à leur projet CurseForge quand il porte le même nom)</span>}
+        </p>
+        <div>
+          <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
+          {view.notes ? (
+            <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{view.notes}</pre>
+          ) : (
+            <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold tracking-widest text-ink-400 uppercase">Type</span>
+          {(['release', 'beta', 'alpha'] as const).map((type) => (
+            <label key={type} className="flex cursor-pointer items-center gap-1.5 text-ink-200">
+              <input type="radio" name="mod-release-type" checked={releaseType === type} onChange={() => setReleaseType(type)} />
+              {type === 'release' ? 'Version stable' : type === 'beta' ? 'Bêta' : 'Alpha'}
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-ink-500">Modifiée le {formatDate(view.modifiedAt)}.</p>
+      </div>
+    </Modal>
+  )
+}

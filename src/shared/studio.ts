@@ -605,6 +605,12 @@ export interface ZipProgress {
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
+/** Une version du dossier lié d'un mod, pas encore dans le Studio. */
+export interface AvailableModVersion {
+  version: string
+  files: Array<{ fileName: string; loaders: ModLoader[]; minecraftVersions: string[] }>
+}
+
 /** Fichier d'un zip de modpack, chemin relatif au dossier de l'instance. */
 export interface ZipFileEntry {
   path: string
@@ -654,7 +660,8 @@ export interface StudioApi {
   updatePackSettings(folder: string, settings: PackSettings): Promise<ActionResult>
   pickCover(folder: string): Promise<ActionResult>
   removeCover(folder: string): Promise<ActionResult>
-  setNotes(folder: string, version: number, notes: string): Promise<ActionResult>
+  /** Notes d'une version : numéro d'un modpack, ou version déclarée d'un mod. */
+  setNotes(folder: string, version: number | string, notes: string): Promise<ActionResult>
   importFiles(folder: string, paths: string[]): Promise<ImportResult>
 
   getRangerPlan(orders?: RangerOrders): Promise<RangerPlan>
@@ -666,6 +673,21 @@ export interface StudioApi {
 
   /** Zip à la corbeille et release retirée de GitHub. */
   deleteVersion(folder: string, version: number): Promise<PublishResult>
+  /** Jars d'une version de mod à la corbeille et release retirée de GitHub. */
+  deleteModVersion(folder: string, version: string): Promise<PublishResult>
+
+  /** Choisit le dossier où le projet d'un mod dépose ses jars, puis crée le mod avec sa version la plus récente. */
+  createModFromSource(): Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>
+  /** Versions du dossier lié d'un mod qui ne sont pas encore dans le Studio. */
+  availableModVersions(folder: string): Promise<{ ok: true; versions: AvailableModVersion[] } | { ok: false; error: string }>
+  importModVersions(folder: string, versions: string[]): Promise<{ ok: true; imported: string[] } | { ok: false; error: string }>
+  /** Lie un mod à un autre dossier (choisi dans une fenêtre), ou retire le lien (null). */
+  linkModSource(folder: string, mode: 'pick' | null): Promise<ActionResult>
+  publishModCurseForge(
+    folder: string,
+    version: string,
+    releaseType: 'release' | 'beta' | 'alpha'
+  ): Promise<{ ok: true; fileIds: number[]; unknownDependencies: string[] } | { ok: false; error: string }>
   /** Dossier à la corbeille et toutes les releases du modpack retirées de GitHub. */
   deletePack(folder: string): Promise<PublishResult>
   /** Releases sans zip dans le dossier, retirées sans attendre la publication. */

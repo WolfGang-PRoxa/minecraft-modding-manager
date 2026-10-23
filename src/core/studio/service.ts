@@ -1,7 +1,7 @@
 import { basename, dirname, join, resolve } from 'node:path'
 import { APP_REPO } from '../../shared/config'
 import { CONTENT_KINDS, contentTag, parseContentTag } from '../../shared/content'
-import { copyVersions, sourceVersions, type SourceVersion } from './mods'
+import { copyVersions, extractModIcon, sourceVersions, type SourceVersion } from './mods'
 import { compareVersions, modpackTag } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
 import {
@@ -741,6 +741,8 @@ export class StudioService {
         const id = latest.modId.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
         const folder = await createPack((await this.scan())!, latest.name ?? latest.modId, { type: 'mod', id, description: latest.description ?? '', source: sourceDir })
         await copyVersions(join(this.requireWorkspace(), folder), chosen)
+        // L'icône du mod devient son image (sans elle, une vignette est dessinée d'après son nom).
+        await extractModIcon(available[0].files[0].path, join(this.requireWorkspace(), folder)).catch(() => false)
         return folder
       },
       (folder) => ({ ok: true, detail: folder })

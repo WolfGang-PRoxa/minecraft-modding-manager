@@ -82,6 +82,15 @@ function registerCoverProtocol(): void {
   })
 }
 
+/** Résultat d'une action qui renvoie des données : `{ ok: true, ...données }` ou l'erreur. */
+async function outcomeOf<T extends object>(run: () => Promise<T>): Promise<({ ok: true } & T) | { ok: false; error: string }> {
+  try {
+    return { ok: true as const, ...(await run()) }
+  } catch (err) {
+    return { ok: false as const, error: describeError(err) }
+  }
+}
+
 async function action(run: () => Promise<unknown>): Promise<ActionResult> {
   try {
     await run()
@@ -171,7 +180,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     })
   )
   ipcMain.handle('studio:removeCover', (_e, folder: string) => action(() => service.setCover(folder, null)))
-  ipcMain.handle('studio:setNotes', (_e, folder: string, version: number, notes: string) =>
+  ipcMain.handle('studio:setNotes', (_e, folder: string, version: number | string, notes: string) =>
     action(() => service.setNotes(folder, version, notes))
   )
   ipcMain.handle('studio:importFiles', async (_e, folder: string, paths: string[]) => {
@@ -208,7 +217,41 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
   ipcMain.handle('studio:deleteVersion', (_e, folder: string, version: number) =>
     unpublished(() => service.deleteVersion(folder, version))
   )
+  ipcMain.handle('studio:deleteModVersion', (_e, folder: string, version: string) =>
+    unpublished(() => service.deleteModVersion(folder, String(version)))
+  )
   ipcMain.handle('studio:deletePack', (_e, folder: string) => unpublished(() => service.deletePack(folder)))
+
+  // Mods : dossier lié au projet du mod, import de ses versions.
+  const pickModSource = async (title: string): Promise<string | null> => {
+    const options: Electron.OpenDialogOptions = { title, properties: ['openDirectory'] }
+    const result = parent() ? await dialog.showOpenDialog(parent()!, options) : await dialog.showOpenDialog(options)
+    return result.canceled || !result.filePaths[0] ? null : result.filePaths[0]
+  }
+  ipcMain.handle('studio:createModFromSource', () =>
+    outcomeOf(async () => {
+      const source = await pickModSource('Dossier où le projet du mod dépose ses jars (releases, build/libs…)')
+      return { folder: source ? await service.createModFromSource(source) : null }
+    })
+  )
+  ipcMain.handle('studio:availableModVersions', (_e, folder: string) =>
+    outcomeOf(async () => ({
+      versions: (await service.availableModVersions(folder)).map((v) => ({
+        version: v.version,
+        files: v.files.map((f) => ({ fileName: f.fileName, loaders: f.analysis.loaders, minecraftVersions: f.analysis.minecraftVersions }))
+      }))
+    }))
+  )
+  ipcMain.handle('studio:importModVersions', (_e, folder: string, versions: string[]) =>
+    outcomeOf(async () => ({ imported: await service.importModVersions(folder, Array.isArray(versions) ? versions.filter((v) => typeof v === 'string') : []) }))
+  )
+  ipcMain.handle('studio:linkModSource', (_e, folder: string, mode: 'pick' | null) =>
+    action(async () => {
+      if (mode !== 'pick') return service.linkModSource(folder, null)
+      const source = await pickModSource('Dossier où le projet du mod dépose ses jars')
+      if (source) await service.linkModSource(folder, source)
+    })
+  )
   ipcMain.handle('studio:deleteReleases', (_e, tags: string[]) => unpublished(() => service.deleteReleases(tags)))
 
   ipcMain.handle('studio:listInstances', async () => {
@@ -295,6 +338,13 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
         (text) => send('studio:curseforge-progress', text)
       )
     }))
+  )
+  ipcMain.handle('studio:publishModCurseForge', (_e, folder: string, version: string, releaseType: string) =>
+    outcome(() =>
+      service.publishModToCurseForge(folder, String(version), releaseType === 'beta' || releaseType === 'alpha' ? releaseType : 'release', (text) =>
+        send('studio:curseforge-progress', text)
+      )
+    )
   )
   ipcMain.handle('studio:curseForgeVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.curseForgeVersions(folder) })))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>

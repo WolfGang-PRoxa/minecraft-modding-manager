@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import {
   ArrowDownWideNarrow,
+  Blocks,
   BookOpen,
   CircleCheck,
   CircleX,
@@ -23,6 +24,7 @@ import { formatBytes, formatRelative } from '../lib/format'
 import { Spinner } from './Modal'
 import { ContentsDialog } from './ContentsDialog'
 import { DeleteDialog } from './DeleteDialog'
+import { ModCard, ModImportDialog, PublishModCurseForgeDialog } from './ModCard'
 import { PackCard } from './PackCard'
 import { CurseForgeDialog, CurseForgeVersionsDialog, PublishCurseForgeDialog } from './CurseForgePanel'
 import { UpdatesDialog } from './MaintenancePanel'
@@ -280,7 +282,7 @@ function SelectionContent({ overview }: { overview: StudioOverview }) {
   }
   if (selection.kind === 'pack') {
     const pack = packs.find((p) => p.folder === selection.folder)
-    if (pack) return <UnlinkedPackDetail pack={pack} />
+    if (pack) return pack.type === 'mod' ? <ModCard pack={pack} index={0} /> : <UnlinkedPackDetail pack={pack} />
   }
   return packs.length === 0 ? (
     <div className="rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-tint/[0.06]">
@@ -296,9 +298,9 @@ function SelectionContent({ overview }: { overview: StudioOverview }) {
     </div>
   ) : (
     <div className="space-y-6">
-      {packs.map((pack, index) => (
-        <PackCard key={pack.folder} pack={pack} index={index} />
-      ))}
+      {packs.map((pack, index) =>
+        pack.type === 'mod' ? <ModCard key={pack.folder} pack={pack} index={index} /> : <PackCard key={pack.folder} pack={pack} index={index} />
+      )}
     </div>
   )
 }
@@ -316,6 +318,18 @@ function WorkspaceView({ overview }: { overview: StudioOverview }) {
 
 function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
   const openDialog = useStudio((s) => s.openDialog)
+  const pushToast = useStudio((s) => s.pushToast)
+  const refresh = useStudio((s) => s.refresh)
+  const select = useStudio((s) => s.select)
+
+  async function newMod() {
+    const result = await window.studio.createModFromSource()
+    if (!result.ok) return pushToast({ kind: 'error', title: 'Création impossible', message: result.error })
+    if (!result.folder) return
+    await refresh()
+    select({ kind: 'pack', folder: result.folder })
+    pushToast({ kind: 'success', title: 'Mod créé', message: 'Sa version la plus récente est importée ; les autres se proposent à l’import.' })
+  }
   const { plan, strayZips, orphanPacks, toRange, settings } = overview
   const changes = plan?.actions.length ?? 0
 
@@ -339,6 +353,9 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
           </Button>
           <Button icon={FolderPlus} onClick={() => openDialog({ kind: 'new-pack' })}>
             Nouveau modpack
+          </Button>
+          <Button icon={Blocks} onClick={() => void newMod()} title="Depuis le dossier où le projet du mod dépose ses jars">
+            Nouveau mod
           </Button>
           <Button
             icon={ArrowDownWideNarrow}
@@ -450,6 +467,10 @@ function Dialogs() {
       return <StripDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />
     case 'notes':
       return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+    case 'mod-import':
+      return <ModImportDialog key={dialog.folder} folder={dialog.folder} />
+    case 'mod-curseforge-publish':
+      return <PublishModCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'import':
       return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />
     case 'curseforge':

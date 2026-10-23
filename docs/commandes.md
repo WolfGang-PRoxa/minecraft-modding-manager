@@ -66,6 +66,13 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
 | `versions strip` | Retire d’un zip les fichiers exclus dans les réglages. |
 | `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
+| `mods create` | Crée un [mod](studio.md#les-mods) depuis le dossier où son projet dépose ses jars, qui lui reste lié. |
+| `mods versions` | Les versions d’un mod (état sur GitHub et CurseForge) et celles de son dossier lié à importer. |
+| `mods import` | Copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
+| `mods source` | Lie un mod à un autre dossier de jars, ou retire ce lien (`--unlink`). |
+| `mods notes` | Écrit les notes d’une version d’un mod. |
+| `mods delete` | Supprime une version d’un mod (jars à la corbeille, release retirée de GitHub). |
+| `mods curseforge` | Met une version d’un mod en ligne sur son projet CurseForge (elle passe en modération). |
 | `updates check` | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien. |
 | `updates changelog` | Les notes de version d’un fichier CurseForge, pour juger une mise à jour. |
 | `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
@@ -83,7 +90,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `maintenance schedule` | Crée (`--time 04:00`, `--wake`) ou retire (`--off`) la tâche planifiée de Windows. |
 | `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
 | `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
-| `curseforge link` | Lie un modpack à son projet CurseForge (numéro, adresse de la page ou slug). |
+| `curseforge link` | Lie un modpack ou un mod à son projet CurseForge (numéro, adresse de la page ou slug). |
 | `curseforge targets` | Où le modpack est publié (GitHub ou non) et les fichiers joints à son export CurseForge. |
 | `curseforge export` | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier. |
 | `curseforge publish` | Met une version en ligne sur CurseForge (elle passe en modération). |
@@ -145,6 +152,11 @@ d’auteur doit être enregistré ([Compte CurseForge](parametres.md#compte-curs
   qui ne vient pas de CurseForge bloque l’envoi : la modération le refuserait. La version passe ensuite en modération ;
   `curseforge versions` liste toutes les versions du projet (aussi celles mises en ligne depuis le site) et suit leur
   état. Un numéro déjà sur CurseForge ne s’y publie plus. Le pack serveur se joint encore à la main sur le site.
+
+Pour un **mod**, `mods create --source <dossier>` crée le mod depuis le dossier de ses jars (voir
+[Les mods](studio.md#les-mods)), `mods versions` montre ses versions et celles à importer, `mods import` les copie.
+Il se publie sur GitHub comme les modpacks (`publish plan`, `publish apply`). `curseforge link` le lie à son projet
+CurseForge, puis `mods curseforge` y envoie une version.
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
 pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests players` sur l’essai, puis laisse la
