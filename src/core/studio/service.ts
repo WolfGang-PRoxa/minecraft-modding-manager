@@ -1,6 +1,8 @@
 import { basename, dirname, join, resolve } from 'node:path'
 import { APP_REPO } from '../../shared/config'
-import { modpackTag, parseModpackTag } from '../../shared/releases'
+import { CONTENT_KINDS, contentTag, parseContentTag } from '../../shared/content'
+import { copyVersions, sourceVersions, type SourceVersion } from './mods'
+import { compareVersions, modpackTag } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
 import {
   DEFAULT_PACK_UPDATES,
@@ -37,7 +39,7 @@ import { forgetTrial } from '../maintenance/state'
 import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
 import type { CurseForgeClient } from '../curseforgeApi'
 import type { CurseForgeUploader } from '../curseforgeUpload'
-import { exportToFile, inspectProject, projectVersions, publishVersion, resolveProject } from './curseforgePublish'
+import { exportToFile, inspectProject, modDisplayName, projectVersions, publishModVersion, publishVersion, resolveProject } from './curseforgePublish'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, modsOf, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
@@ -92,7 +94,7 @@ export function describeExcluded(excluded: ExcludedInZip): string {
 /** Prévient, dans le plan de publication, qu'un zip envoyé contient des fichiers exclus. */
 function annotatePlan(plan: InternalPlan, excluded: ExcludedMap, tests: TestsMap): void {
   for (const step of plan.steps) {
-    if (step.kind === 'delete' || (step.kind === 'update' && !step.archive)) continue
+    if (step.kind === 'delete' || step.kind === 'create-content' || step.kind === 'update-content' || (step.kind === 'update' && !step.archive)) continue
     const found = excluded.get(step.desired.version.path)
     if (found) {
       step.action.warnings.push(
@@ -375,12 +377,12 @@ export class StudioService {
     const blocked = pack.errors.length > 0
     const remoteOnly = plan
       ? plan.steps
-          .filter((s) => s.kind === 'delete' && s.action.packId === pack.meta.id)
+          .filter((s) => s.kind === 'delete' && s.action.packId === pack.meta.id && parseContentTag(s.action.tag)?.kind === pack.meta.type)
           .map((s) => {
             const release = s.kind === 'delete' ? (s.releases.find((r) => !r.draft) ?? s.releases[0]) : null
             return {
               tag: s.action.tag,
-              version: parseModpackTag(s.action.tag)?.version ?? s.action.tag,
+              version: parseContentTag(s.action.tag)?.version ?? s.action.tag,
               url: release?.html_url ?? repoUrl(this.remoteRepo),
               draft: Boolean(release?.draft)
             }
@@ -398,6 +400,28 @@ export class StudioService {
       github: pack.meta.github,
       curseforge: pack.meta.curseforge,
       updates: pack.meta.updates,
+      source: pack.meta.source,
+      modVersions: [...pack.modVersions].reverse().map((v) => {
+        const status = plan?.statuses.get(contentTag(pack.meta.type, pack.meta.id, v.version))
+        return {
+          version: v.version,
+          files: v.files.map((f) => ({
+            fileName: f.fileName,
+            path: f.path,
+            size: f.size,
+            loaders: f.analysis.loaders,
+            minecraftVersions: f.analysis.minecraftVersions,
+            side: f.analysis.side,
+            dependencies: f.analysis.dependencies
+          })),
+          modifiedAt: new Date(Math.max(...v.files.map((f) => f.mtimeMs))).toISOString(),
+          notes: pack.meta.notes[v.version] ?? '',
+          remote: blocked || !pack.meta.github ? 'blocked' : (status?.status ?? 'unknown'),
+          changes: status?.changes ?? [],
+          curseforgeFileId: pack.meta.curseforge?.files[v.version] ?? null
+        }
+      }),
+      badJars: pack.badJars.map((j) => ({ fileName: j.fileName, error: j.error ?? 'Illisible.' })),
       settings: {
         exclude: pack.meta.exclude,
         disabledMods: pack.meta.disabledMods,
@@ -440,8 +464,8 @@ export class StudioService {
     for (const step of plan.steps) {
       if (step.kind !== 'delete' || localIds.has(step.action.packId)) continue
       const id = step.action.packId || step.action.tag
-      const entry = byId.get(id) ?? { id, name: step.action.label.replace(/ v[^ ]+$/, ''), versions: [], tags: [] }
-      entry.versions.push(parseModpackTag(step.action.tag)?.version ?? step.action.tag)
+      const entry = byId.get(id) ?? { id, name: step.action.label.replace(/ v?[^ ]+$/, ''), versions: [], tags: [] }
+      entry.versions.push(parseContentTag(step.action.tag)?.version ?? step.action.tag)
       entry.tags.push(step.action.tag)
       byId.set(id, entry)
     }
@@ -573,6 +597,18 @@ export class StudioService {
     })
   }
 
+  /** Supprime une version d'un mod : ses jars partent à la corbeille, puis sa release est retirée de GitHub. */
+  deleteModVersion(folder: string, version: string): Promise<PublishResult> {
+    return this.unpublish(`la suppression de la version ${version} de ${folder}`, true, async (workspace) => {
+      const pack = workspace.packs.find((p) => p.folder === folder)
+      const local = pack?.modVersions.find((v) => v.version === version)
+      if (!pack || !local) throw new StudioError(`La version ${version} de ${folder} est introuvable : le dossier a changé.`)
+      if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
+      for (const file of local.files) await this.trash(file.path)
+      return [contentTag(pack.meta.type, pack.meta.id, version)]
+    })
+  }
+
   /** Supprime un modpack : son dossier part à la corbeille, puis toutes ses releases sont retirées de GitHub. */
   deletePack(folder: string): Promise<PublishResult> {
     return this.unpublish(`la suppression du modpack ${folder}`, true, async (workspace) => {
@@ -581,7 +617,12 @@ export class StudioService {
       // Sans pack.json lisible, on ne sait pas sous quel identifiant le modpack a été publié.
       if (pack.packFileError) throw new StudioError(pack.packFileError)
       await this.trash(pack.dir)
-      return this.remote!.releases.map((r) => r.tag_name).filter((tag) => parseModpackTag(tag)?.id === pack.meta.id)
+      return this.remote!.releases
+        .map((r) => r.tag_name)
+        .filter((tag) => {
+          const parsed = parseContentTag(tag)
+          return parsed?.kind === pack.meta.type && parsed.id === pack.meta.id
+        })
     })
   }
 
@@ -627,8 +668,8 @@ export class StudioService {
           (tag) => !steps.some((s) => s.action.tag === tag) && this.remote!.releases.some((r) => r.tag_name === tag)
         )
         if (kept.length && !changesFolder) {
-          const versions = kept.map((tag) => `v${parseModpackTag(tag)?.version ?? tag}`).join(', ')
-          const error = `${versions} : le zip est toujours dans le dossier, rien n’a été retiré de GitHub.`
+          const versions = kept.map((tag) => `v${parseContentTag(tag)?.version ?? tag}`).join(', ')
+          const error = `${versions} : le fichier est toujours dans le dossier, rien n’a été retiré de GitHub.`
           return { ok: false, cancelled: false, error, done: 0 }
         }
         const signal = new AbortController().signal
@@ -676,6 +717,70 @@ export class StudioService {
       },
       (folder) => ({ ok: true, detail: folder })
     )
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Mods
+
+  /**
+   * Crée le dossier d'un mod à partir du dossier où son projet dépose ses builds, qui lui reste lié : nom, identifiant
+   * et description viennent du jar le plus récent, dont la version est importée (ou celles demandées).
+   */
+  createModFromSource(sourceDir: string, versions?: string[]): Promise<string> {
+    return this.exclusive(
+      `la création d’un mod depuis ${sourceDir}`,
+      async () => {
+        this.requireWorkspace()
+        const available = await sourceVersions(sourceDir, null)
+        if (!available.length) throw new StudioError(`Aucun jar de mod dans ${sourceDir}.`)
+        const latest = available[0].files[0].analysis
+        const others = available.filter((v) => v.files.some((f) => f.analysis.modId !== latest.modId))
+        if (others.length) throw new StudioError(`Ce dossier contient plusieurs mods (${[...new Set(available.flatMap((v) => v.files.map((f) => f.analysis.modId)))].join(', ')}) : choisis le dossier d’un seul mod.`)
+        const chosen = versions?.length ? available.filter((v) => versions.includes(v.version)) : [available[0]]
+        if (!chosen.length) throw new StudioError(`Aucune de ces versions dans ${sourceDir} : ${versions!.join(', ')}.`)
+        const id = latest.modId.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
+        const folder = await createPack((await this.scan())!, latest.name ?? latest.modId, { type: 'mod', id, description: latest.description ?? '', source: sourceDir })
+        await copyVersions(join(this.requireWorkspace(), folder), chosen)
+        return folder
+      },
+      (folder) => ({ ok: true, detail: folder })
+    )
+  }
+
+  /** Versions du dossier lié d'un mod qui ne sont pas encore dans le Studio, de la plus récente à la plus ancienne. */
+  async availableModVersions(folder: string): Promise<SourceVersion[]> {
+    const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
+    if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
+    if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+    if (!pack.meta.source) throw new StudioError(`${pack.meta.name} n’est lié à aucun dossier : lie-le au dossier où son projet dépose ses jars.`)
+    const present = new Set(pack.modVersions.map((v) => v.version))
+    const modId = pack.modVersions[0]?.files[0]?.analysis.modId ?? null
+    return (await sourceVersions(pack.meta.source, modId)).filter((v) => !present.has(v.version))
+  }
+
+  /** Copie dans le dossier du mod des versions de son dossier lié (par défaut la plus récente qui manque). */
+  importModVersions(folder: string, versions?: string[]): Promise<string[]> {
+    return this.exclusive(
+      `l’import de versions dans ${folder}`,
+      async () => {
+        const available = await this.availableModVersions(folder)
+        const chosen = versions?.length ? available.filter((v) => versions.includes(v.version)) : available.slice(0, 1)
+        if (!chosen.length) throw new StudioError(versions?.length ? `Ces versions ne sont pas à importer : ${versions.join(', ')}.` : 'Aucune nouvelle version dans le dossier lié.')
+        await copyVersions(join(this.requireWorkspace(), folder), chosen)
+        return chosen.map((v) => v.version)
+      },
+      (imported) => ({ ok: true, detail: imported.join(', ') })
+    )
+  }
+
+  /** Lie un mod au dossier où son projet dépose ses jars, ou retire le lien (null). */
+  async linkModSource(folder: string, sourceDir: string | null): Promise<void> {
+    if (sourceDir && !(await pathExists(sourceDir))) throw new StudioError(`Le dossier ${sourceDir} est introuvable.`)
+    await this.logged(sourceDir ? `le lien de ${folder} au dossier ${sourceDir}` : `le retrait du dossier lié de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      if (meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+      await writePackFile(dir, { ...meta, source: sourceDir })
+    })
   }
 
   /** Crée un modpack depuis un profil CurseForge, avec sa v1 : le profil devient sa source. */
@@ -745,11 +850,14 @@ export class StudioService {
    */
   async linkCurseForge(folder: string, ref: string): Promise<{ projectId: number; name: string; highestVersion: number; overrides: string[] }> {
     const client = await this.curseForge()
-    const project = await resolveProject(client, ref)
-    const { highestVersion, overrides } = await inspectProject(client, project.id)
+    const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (current.type !== 'modpack' && current.type !== 'mod') throw new StudioError(`Les ${CONTENT_KINDS[current.type].plural} ne se publient pas encore sur CurseForge.`)
+    const project = await resolveProject(client, ref, current.type)
+    // Un mod n'a ni numérotation « _V<N> » ni fichiers joints : seul le lien compte.
+    const { highestVersion, overrides } = current.type === 'modpack' ? await inspectProject(client, project.id) : { highestVersion: 0, overrides: [] }
     await this.logged(`le lien de ${folder} au projet CurseForge ${project.name}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-      requireModpack(meta, folder)
+      if (meta.type !== current.type) throw new StudioError(`${folder} a changé de type entre-temps.`)
       const files = meta.curseforge?.projectId === project.id ? meta.curseforge.files : {}
       await writePackFile(dir, {
         ...meta,
@@ -824,13 +932,73 @@ export class StudioService {
   }
 
   /**
+   * Met en ligne une version d'un mod sur son projet CurseForge : chaque jar, avec ses versions de Minecraft, son
+   * chargeur, son côté (client, serveur) et ses dépendances obligatoires connues de CurseForge.
+   */
+  publishModToCurseForge(
+    folder: string,
+    version: string,
+    releaseType: 'release' | 'beta' | 'alpha',
+    onStep: (text: string) => void
+  ): Promise<{ fileIds: number[]; unknownDependencies: string[] }> {
+    return this.exclusive(
+      `la publication de la version ${version} de ${folder} sur CurseForge`,
+      async () => {
+        this.requireWorkspace()
+        if (!this.options.getCurseForgeUploader) throw new StudioError('Publication sur CurseForge impossible depuis ce programme.')
+        const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
+        if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
+        if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+        if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
+        const curseforge = pack.meta.curseforge
+        if (!curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)
+        const local = pack.modVersions.find((v) => v.version === version)
+        if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
+        const newer = pack.modVersions.filter((v) => curseforge.files[v.version] && compareVersions(v.version, version) > 0)
+        if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur CurseForge : une version plus ancienne n’y a plus sa place.`)
+        const client = await this.curseForge()
+        const result = await publishModVersion(
+          await this.options.getCurseForgeUploader(),
+          client,
+          {
+            version,
+            files: local.files.map((f) => ({
+              path: f.path,
+              fileName: f.fileName,
+              loaders: f.analysis.loaders,
+              minecraftVersions: f.analysis.minecraftVersions,
+              side: f.analysis.side,
+              dependencies: f.analysis.dependencies
+            })),
+            notes: pack.meta.notes[version] ?? '',
+            releaseType,
+            curseforge,
+            published: await projectVersions(client, curseforge)
+          },
+          onStep
+        )
+        const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+        if (meta.curseforge) await writePackFile(dir, { ...meta, curseforge: { ...meta.curseforge, files: { ...meta.curseforge.files, [version]: result.fileIds[0] } } })
+        return result
+      },
+      (result) => ({ ok: true, detail: `fichier CurseForge ${result.fileIds.join(', ')}, en modération` })
+    )
+  }
+
+  /**
    * Versions du projet CurseForge lié, de la plus récente à la plus ancienne, avec leur état de modération : celles que
-   * l'application a envoyées et celles mises en ligne depuis le site.
+   * l'application a envoyées et celles mises en ligne depuis le site. Pour un mod, chacune est rapprochée de la version
+   * locale dont un jar porte son nom.
    */
   async curseForgeVersions(folder: string) {
     const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
     if (!meta.curseforge) return []
-    return projectVersions(await this.curseForge(), meta.curseforge)
+    const versions = await projectVersions(await this.curseForge(), meta.curseforge)
+    if (meta.type !== 'mod') return versions
+    const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
+    const byName = new Map((pack?.modVersions ?? []).flatMap((v) => v.files.map((f) => [modDisplayName(f.fileName), v.version] as const)))
+    const sent = new Map(Object.entries(meta.curseforge.files).map(([version, id]) => [id, version]))
+    return versions.map((v) => ({ ...v, number: null, version: sent.get(v.fileId) ?? byName.get(v.displayName) ?? null }))
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -1049,8 +1217,10 @@ export class StudioService {
     return next
   }
 
-  async setNotes(folder: string, version: number, notes: string): Promise<void> {
-    await this.logged(`les notes de la v${version} de ${folder}`, async () => {
+  /** Notes d'une version : numéro d'un modpack, ou version déclarée d'un mod (`1.2.0-26.3`). */
+  async setNotes(folder: string, version: number | string, notes: string): Promise<void> {
+    const label = typeof version === 'number' ? `v${version}` : `version ${version}`
+    await this.logged(`les notes de la ${label} de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       const text = notes.replace(/\r\n/g, '\n').trim()
       await writePackFile(dir, { ...meta, notes: { ...meta.notes, [String(version)]: text } })

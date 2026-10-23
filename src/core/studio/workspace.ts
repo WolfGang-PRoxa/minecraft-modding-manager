@@ -17,6 +17,7 @@ import {
 } from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, githubSizeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
+import { scanModFolder, type LocalJar, type LocalModVersion } from './mods'
 
 /** Métadonnées d'un modpack, gérées par le studio dans son dossier. */
 export const PACK_FILE = 'pack.json'
@@ -45,6 +46,8 @@ export interface PackFile extends PackSettings {
   curseforge: PackCurseForge | null
   /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
   updates: PackUpdates
+  /** Mod : dossier d'où viennent ses versions (`releases/`, `build/libs/` de son projet), écrit seulement s'il est lié. */
+  source: string | null
 }
 
 export interface LocalFile {
@@ -80,6 +83,10 @@ export interface LocalPack {
   versions: LocalVersion[]
   /** Zips pas encore numérotés, du plus ancien au plus récent. */
   pending: LocalZip[]
+  /** Mod : ses versions, de la plus ancienne à la plus récente (vide pour un modpack). */
+  modVersions: LocalModVersion[]
+  /** Mod : jars illisibles ou qui ne sont pas un mod. */
+  badJars: LocalJar[]
   /** Plus grand numéro trouvé dans les noms de fichiers (doublons compris). */
   maxNumber: number
   /** Erreurs qui bloquent la publication de ce modpack. */
@@ -120,6 +127,7 @@ function defaultPackFile(folder: string): PackFile {
     github: true,
     curseforge: null,
     updates: DEFAULT_PACK_UPDATES,
+    source: null,
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -181,6 +189,7 @@ async function readPackFile(
       github: data.github !== false,
       curseforge: normalizeCurseForge(data.curseforge),
       updates: normalizePackUpdates(data.updates),
+      source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
       ...normalizePackSettings(data)
     }
     const error =
@@ -239,7 +248,7 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, source, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -250,6 +259,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...info,
     notes,
     ...(profile ? { profile } : {}),
+    ...(source ? { source } : {}),
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
     ...(isDefaultUpdates(updates) ? {} : { updates }),
@@ -321,7 +331,11 @@ async function scanPack(
   // Type que le Studio ne sait pas encore lire : le dossier est montré, ses fichiers ne sont ni analysés ni publiés.
   if (!CONTENT_KINDS[meta.type].supported) {
     errors.push(`Les ${CONTENT_KINDS[meta.type].plural} ne sont pas encore pris en charge par le Studio : ce dossier est ignoré.`)
-    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], maxNumber: 0, errors }
+    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], modVersions: [], badJars: [], maxNumber: 0, errors }
+  }
+  if (meta.type === 'mod') {
+    const mods = await scanModFolder(dir)
+    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], modVersions: mods.versions, badJars: mods.badJars, maxNumber: 0, errors: [...errors, ...mods.errors] }
   }
 
   const byNumber = new Map<number, LocalFile[]>()
@@ -354,6 +368,8 @@ async function scanPack(
     cover,
     versions,
     pending,
+    modVersions: [],
+    badJars: [],
     maxNumber: Math.max(0, ...byNumber.keys()),
     errors
   }
@@ -499,20 +515,25 @@ function folderNameFor(name: string): string {
     .replace(/\s+/g, '_')
 }
 
-export async function createPack(workspace: LocalWorkspace, name: string): Promise<string> {
+/** Ce qu'un nouveau dossier reçoit d'emblée (un mod : son type, l'identifiant de son jar, son dossier lié). */
+export type NewPackInit = Partial<Pick<PackFile, 'type' | 'id' | 'description' | 'source'>>
+
+export async function createPack(workspace: LocalWorkspace, name: string, init: NewPackInit = {}): Promise<string> {
   const display = name.trim().replace(/\s+/g, ' ')
   const folder = folderNameFor(display)
-  if (!folder || folder.startsWith('.')) throw new StudioError('Donne un nom au modpack.')
+  const kind = CONTENT_KINDS[init.type ?? 'modpack'].label
+  if (!folder || folder.startsWith('.')) throw new StudioError(`Donne un nom au ${kind}.`)
   const dir = join(workspace.dir, folder)
   if (await pathExists(dir)) throw new StudioError(`Le dossier ${folder} existe déjà.`)
 
   const taken = new Set(workspace.packs.map((p) => p.meta.id))
-  const base = defaultPackFile(folder).id
+  const wanted = init.id && isValidModpackId(init.id) ? init.id : null
+  const base = wanted ?? defaultPackFile(folder).id
   let id = base
   for (let i = 2; taken.has(id); i++) id = `${base.slice(0, 60)}-${i}`
 
   await mkdir(dir, { recursive: true })
-  await writePackFile(dir, { ...defaultPackFile(folder), id, name: display })
+  await writePackFile(dir, { ...defaultPackFile(folder), ...init, id, name: display })
   return folder
 }
 

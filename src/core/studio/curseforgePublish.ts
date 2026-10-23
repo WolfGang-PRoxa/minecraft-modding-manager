@@ -5,6 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import yauzl from 'yauzl'
+import { CONTENT_KINDS, CURSEFORGE_CLASSES, type ContentKind } from '../../shared/content'
 import type { CurseForgeVersion, PackCurseForge } from '../../shared/studio'
 import type { CfFile, CurseForgeClient } from '../curseforgeApi'
 import { curseForgeApis } from '../curseforgeAuth'
@@ -28,19 +29,21 @@ export const displayNameFor = (name: string, version: number) => `${name}_V${ver
 /** Nom de fichier sûr sous Windows, comme ceux que produit l'export de CurseForge. */
 export const exportFileName = (name: string) => `${name.replace(/[<>:"/\\|?*]/g, '').replace(/[. ]+$/, '').trim() || 'modpack'}.zip`
 
-/** Identifiant d'un projet d'après sa page (…/minecraft/modpacks/<slug>), son slug ou son numéro. */
-export async function resolveProject(client: CurseForgeClient, ref: string | number): Promise<{ id: number; name: string; url: string | null }> {
+/** Identifiant d'un projet d'après sa page (…/minecraft/modpacks/<slug>, …/mc-mods/<slug>), son slug ou son numéro. */
+export async function resolveProject(client: CurseForgeClient, ref: string | number, kind: ContentKind = 'modpack'): Promise<{ id: number; name: string; url: string | null }> {
+  const classId = CURSEFORGE_CLASSES[kind] ?? MODPACK_CLASS
+  const label = CONTENT_KINDS[kind].label
   const text = String(ref).trim()
   let id = /^\d+$/.test(text) ? Number(text) : null
   if (id === null) {
-    const slug = /curseforge\.com\/minecraft\/modpacks\/([^/?#]+)/i.exec(text)?.[1] ?? text
-    const found = await client.searchModpackBySlug(slug)
-    if (!found) throw new StudioError(`Aucun modpack CurseForge à l’adresse « ${slug} ».`)
+    const slug = /curseforge\.com\/minecraft\/[^/]+\/([^/?#]+)/i.exec(text)?.[1] ?? text
+    const found = await client.searchBySlug(slug, classId)
+    if (!found) throw new StudioError(`Aucun ${label} CurseForge à l’adresse « ${slug} ».`)
     id = found.id
   }
   const [mod] = await client.getMods([id])
   if (!mod) throw new StudioError(`Projet CurseForge ${id} introuvable.`)
-  if (mod.classId !== MODPACK_CLASS) throw new StudioError(`« ${mod.name} » n’est pas un modpack sur CurseForge.`)
+  if (mod.classId !== classId) throw new StudioError(`« ${mod.name} » n’est pas un ${label} sur CurseForge.`)
   return { id: mod.id, name: mod.name, url: mod.links?.websiteUrl ?? null }
 }
 
@@ -146,6 +149,82 @@ export async function projectVersions(client: CurseForgeClient, curseforge: Pack
     versions.push({ fileId, number: version, status: 0, label: 'introuvable sur CurseForge', displayName: '', releaseType: 0, date: null, gameVersions: [], sentByApp: true, url: null })
   }
   return versions.sort((a, b) => b.fileId - a.fileId)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Mods
+
+/** Un jar d'une version de mod à mettre en ligne. */
+export interface ModUploadFile {
+  path: string
+  fileName: string
+  loaders: string[]
+  minecraftVersions: string[]
+  side: 'client' | 'server' | 'both'
+  dependencies: string[]
+}
+
+export interface ModPublishInput {
+  version: string
+  files: ModUploadFile[]
+  notes: string
+  releaseType: 'release' | 'beta' | 'alpha'
+  curseforge: PackCurseForge
+  /** Fichiers déjà sur le projet (projectVersions). */
+  published: CurseForgeVersion[]
+}
+
+/** Nom affiché d'un jar sur CurseForge : son nom sans « .jar », comme à la mise en ligne depuis le site. */
+export const modDisplayName = (fileName: string) => fileName.replace(/\.jar$/i, '')
+
+/**
+ * Projets CurseForge des dépendances obligatoires : un mod dont l'identifiant est aussi un slug de mod sur
+ * CurseForge (fabric-api, fabric-language-kotlin…). Les autres sont rendus à part, pour le dire au publieur.
+ */
+export async function dependencyProjects(client: CurseForgeClient, ids: string[]): Promise<{ slugs: string[]; unknown: string[] }> {
+  const slugs: string[] = []
+  const unknown: string[] = []
+  for (const id of [...new Set(ids)]) {
+    const slug = id.toLowerCase().replace(/_/g, '-')
+    const found = await client.searchBySlug(slug, CURSEFORGE_CLASSES.mod!)
+    if (found) slugs.push(found.slug ?? slug)
+    else unknown.push(id)
+  }
+  return { slugs, unknown }
+}
+
+/** Met en ligne chaque jar d'une version de mod ; renvoie les identifiants des fichiers créés. */
+export async function publishModVersion(
+  uploader: CurseForgeUploader,
+  client: CurseForgeClient,
+  input: ModPublishInput,
+  onStep: (text: string) => void
+): Promise<{ fileIds: number[]; unknownDependencies: string[] }> {
+  if (input.curseforge.files[input.version]) throw new StudioError(`La version ${input.version} est déjà sur CurseForge.`)
+  for (const file of input.files) {
+    const same = input.published.find((v) => v.displayName === modDisplayName(file.fileName))
+    if (same) throw new StudioError(`${file.fileName} est déjà sur CurseForge (« ${same.displayName} ») : publie une nouvelle version du mod.`)
+    if (!file.minecraftVersions.length) throw new StudioError(`${file.fileName} ne dit pas pour quelle version de Minecraft il est fait : CurseForge l’exige.`)
+  }
+  onStep('Dépendances sur CurseForge')
+  const { slugs, unknown } = await dependencyProjects(client, input.files.flatMap((f) => f.dependencies))
+  const fileIds: number[] = []
+  for (const file of input.files) {
+    onStep(`Envoi de ${file.fileName}`)
+    const environments = file.side === 'client' ? (['Client'] as const) : file.side === 'server' ? (['Server'] as const) : (['Client', 'Server'] as const)
+    const gameVersions = await uploader.gameVersionIds(file.minecraftVersions, file.loaders, [...environments])
+    const relations = slugs.filter((slug) => file.dependencies.some((d) => d.toLowerCase().replace(/_/g, '-') === slug || d === slug))
+    fileIds.push(
+      await uploader.upload(input.curseforge.projectId, file.path, {
+        displayName: modDisplayName(file.fileName),
+        changelog: input.notes.trim() || `Version ${input.version}`,
+        releaseType: input.releaseType,
+        gameVersions,
+        ...(relations.length ? { relations: { projects: relations.map((slug) => ({ slug, type: 'requiredDependency' as const })) } } : {})
+      })
+    )
+  }
+  return { fileIds, unknownDependencies: unknown }
 }
 
 /** Garde le fichier exporté pour vérification (commande « curseforge export »). */

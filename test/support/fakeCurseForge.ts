@@ -94,14 +94,19 @@ export async function startFakeCurseForge(): Promise<FakeCurseForge> {
           { id: 1, gameVersionTypeID: 1, name: '1.20.1', slug: '1-20-1' },
           { id: 9990, gameVersionTypeID: 75125, name: '1.20.1', slug: '1-20-1' },
           { id: 7498, gameVersionTypeID: 68441, name: 'Forge', slug: 'forge' },
-          { id: 7499, gameVersionTypeID: 68441, name: 'Fabric', slug: 'fabric' }
+          { id: 7499, gameVersionTypeID: 68441, name: 'Fabric', slug: 'fabric' },
+          { id: 12600, gameVersionTypeID: 80000, name: '26.3', slug: '26-3' },
+          { id: 9638, gameVersionTypeID: 75208, name: 'Client', slug: 'client' },
+          { id: 9639, gameVersionTypeID: 75208, name: 'Server', slug: 'server' }
         ])
       }
       if (path === '/api/game/version-types') {
         return json(res, 200, [
           { id: 1, name: 'Bukkit', slug: 'bukkit' },
           { id: 75125, name: 'Minecraft 1.20', slug: 'minecraft-1-20' },
-          { id: 68441, name: 'Modloader', slug: 'modloader' }
+          { id: 68441, name: 'Modloader', slug: 'modloader' },
+          { id: 80000, name: 'Minecraft 26', slug: 'minecraft-26' },
+          { id: 75208, name: 'Environment', slug: 'environment' }
         ])
       }
       const upload = /^\/api\/projects\/(\d+)\/upload-file$/.exec(path)

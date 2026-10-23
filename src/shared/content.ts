@@ -5,6 +5,40 @@ import { CONTENT_MANIFEST_ASSET, MODPACK_MANIFEST_ASSET, MODPACK_TAG_PREFIX } fr
 
 export type ContentKind = 'modpack' | 'mod' | 'resourcepack' | 'shader' | 'plugin'
 
+/** Chargeurs qu'un mod peut viser. */
+export type ModLoader = 'fabric' | 'quilt' | 'forge' | 'neoforge'
+
+export const LOADER_LABELS: Record<ModLoader, string> = { fabric: 'Fabric', quilt: 'Quilt', forge: 'Forge', neoforge: 'NeoForge' }
+
+/** Un fichier d'une version publiée (content.json). */
+export interface ContentFile {
+  name: string
+  size: number
+  sha256: string
+  sha1: string
+  loaders: ModLoader[]
+  minecraftVersions: string[]
+}
+
+/** Contenu de l'asset `content.json` joint à chaque release d'un contenu qui n'est pas un modpack. */
+export interface ContentManifest {
+  schema: 1
+  type: ContentKind
+  id: string
+  name: string
+  /** Version déclarée par le fichier (`1.2.0-26.3`) ou numéro donné par le Studio. */
+  version: string
+  description: string
+  minecraftVersions: string[]
+  loaders: ModLoader[]
+  files: ContentFile[]
+  cover: string | null
+  coverSha256: string | null
+  /** Propriétaire du dépôt. */
+  author: string
+  createdAt: string
+}
+
 export interface ContentKindInfo {
   /** Nom au singulier, en minuscules (« pack de ressources »). */
   label: string
@@ -21,7 +55,7 @@ export interface ContentKindInfo {
 
 export const CONTENT_KINDS: Record<ContentKind, ContentKindInfo> = {
   modpack: { label: 'modpack', plural: 'modpacks', tagPrefix: MODPACK_TAG_PREFIX, manifest: MODPACK_MANIFEST_ASSET, versioning: 'number', supported: true },
-  mod: { label: 'mod', plural: 'mods', tagPrefix: 'mod-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: false },
+  mod: { label: 'mod', plural: 'mods', tagPrefix: 'mod-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: true },
   resourcepack: {
     label: 'pack de ressources',
     plural: 'packs de ressources',
@@ -45,6 +79,15 @@ export function contentTag(kind: ContentKind, id: string, version: string): stri
 }
 
 const TAG_REST = /^(.+)-v(\d[\w.+-]*)$/
+
+/** Classe CurseForge du projet de chaque type (mods 6, packs de ressources 12, shaders 6552, modpacks 4471). */
+export const CURSEFORGE_CLASSES: Partial<Record<ContentKind, number>> = { modpack: 4471, mod: 6, resourcepack: 12, shader: 6552 }
+
+export function isContentManifest(value: unknown): value is ContentManifest {
+  if (!value || typeof value !== 'object') return false
+  const m = value as Record<string, unknown>
+  return m.schema === 1 && isContentKind(m.type) && typeof m.id === 'string' && typeof m.version === 'string' && Array.isArray(m.files)
+}
 
 /** Type, identifiant et version d'un tag de release, ou null pour un tag d'un autre usage (`app-v…`, inconnu). */
 export function parseContentTag(tag: string): { kind: ContentKind; id: string; version: string } | null {

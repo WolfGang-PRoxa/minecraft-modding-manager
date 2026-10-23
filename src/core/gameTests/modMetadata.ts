@@ -9,6 +9,9 @@ import { openEntry, openZip, readEntries } from '../zip'
 export interface DeclaredMod {
   id: string
   version: string | null
+  /** Nom et description affichés (Fabric `name`, Forge `displayName`), s'ils sont donnés. */
+  name?: string | null
+  description?: string | null
   /** `client` : ne fonctionne que dans le jeu, jamais sur un serveur. */
   side: 'client' | 'server' | 'both'
   /** Identifiants des mods sans lesquels il ne démarre pas. */
@@ -123,6 +126,8 @@ function fromForgeToml(text: string, jarVersion: string | null): DeclaredMod[] {
     return {
       id,
       version: resolveJarVersion(mod.version, jarVersion),
+      name: typeof mod.displayName === 'string' && mod.displayName.trim() ? mod.displayName.trim() : null,
+      description: typeof mod.description === 'string' && mod.description.trim() ? mod.description.trim() : null,
       side: clientOnly ? 'client' : 'both',
       requires: relations.filter((r) => r.kind === 'required').map((r) => r.id),
       relations
@@ -155,7 +160,15 @@ function fromFabricJson(text: string): { mod: DeclaredMod; nested: string[] } | 
   const nested = Array.isArray(json.jars) ? (json.jars as Array<{ file?: unknown }>).map((j) => String(j.file ?? '')).filter(Boolean) : []
   const version = typeof json.version === 'string' ? json.version : null
   return {
-    mod: { id, version, side: environment, requires: Object.keys(depends), relations },
+    mod: {
+      id,
+      version,
+      name: typeof json.name === 'string' && json.name.trim() ? json.name.trim() : null,
+      description: typeof json.description === 'string' && json.description.trim() ? json.description.trim() : null,
+      side: environment,
+      requires: Object.keys(depends),
+      relations
+    },
     nested: [...nested, ...provides.map((p) => `provides:${p}`)]
   }
 }

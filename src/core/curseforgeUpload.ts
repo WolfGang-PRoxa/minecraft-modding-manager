@@ -68,24 +68,43 @@ export class CurseForgeUploader {
    * Identifiants de la version de Minecraft et du chargeur pour la mise en ligne. Une version de Minecraft existe en
    * plusieurs exemplaires (Minecraft, Bukkit, addons…) : on prend celle dont le type est un « minecraft-… ».
    */
-  async gameVersionIds(minecraftVersion: string, loader: string | null): Promise<number[]> {
+  async gameVersionIds(minecraftVersion: string | string[], loader: string | string[] | null, environments: Array<'Client' | 'Server'> = []): Promise<number[]> {
     this.versions ??= Promise.all([
       this.get<GameVersion[]>('game/versions'),
       this.get<Array<{ id: number; slug: string }>>('game/version-types')
     ]).then(([versions, types]) => ({ versions, minecraftTypes: new Set(types.filter((t) => t.slug.startsWith('minecraft-')).map((t) => t.id)) }))
     const { versions, minecraftTypes } = await this.versions
-    const game = versions.find((v) => v.name === minecraftVersion && minecraftTypes.has(v.gameVersionTypeID))
-    if (!game) throw new StudioError(`CurseForge ne connaît pas Minecraft ${minecraftVersion}.`)
-    const loaderName = { forge: 'Forge', neoforge: 'NeoForge', fabric: 'Fabric', quilt: 'Quilt' }[/^(neoforge|forge|fabric|quilt)/i.exec(loader ?? '')?.[1].toLowerCase() ?? '']
-    const loaderVersion = loaderName ? versions.find((v) => v.name === loaderName) : undefined
-    return loaderVersion ? [game.id, loaderVersion.id] : [game.id]
+    const ids: number[] = []
+    for (const name of Array.isArray(minecraftVersion) ? minecraftVersion : [minecraftVersion]) {
+      const game = versions.find((v) => v.name === name && minecraftTypes.has(v.gameVersionTypeID))
+      if (!game) throw new StudioError(`CurseForge ne connaît pas Minecraft ${name}.`)
+      ids.push(game.id)
+    }
+    for (const value of Array.isArray(loader) ? loader : [loader]) {
+      const loaderName = { forge: 'Forge', neoforge: 'NeoForge', fabric: 'Fabric', quilt: 'Quilt' }[/^(neoforge|forge|fabric|quilt)/i.exec(value ?? '')?.[1].toLowerCase() ?? '']
+      const loaderVersion = loaderName ? versions.find((v) => v.name === loaderName) : undefined
+      if (loaderVersion && !ids.includes(loaderVersion.id)) ids.push(loaderVersion.id)
+    }
+    // Côté où un mod fonctionne : « Client », « Server », comme sur les fichiers mis en ligne depuis le site.
+    for (const name of environments) {
+      const environment = versions.find((v) => v.name === name)
+      if (environment) ids.push(environment.id)
+    }
+    return ids
   }
 
   /** Met un fichier en ligne sur un projet ; renvoie l'identifiant du fichier créé (il passe ensuite en modération). */
   async upload(
     projectId: number,
     file: string,
-    metadata: { displayName: string; changelog: string; releaseType: 'release' | 'beta' | 'alpha'; gameVersions: number[] }
+    metadata: {
+      displayName: string
+      changelog: string
+      releaseType: 'release' | 'beta' | 'alpha'
+      gameVersions: number[]
+      /** Dépendances : projets CurseForge par slug. */
+      relations?: { projects: Array<{ slug: string; type: 'requiredDependency' | 'optionalDependency' | 'embeddedLibrary' | 'incompatible' | 'tool' }> }
+    }
   ): Promise<number> {
     const form = new FormData()
     form.set('metadata', JSON.stringify({ ...metadata, changelogType: 'markdown' }))

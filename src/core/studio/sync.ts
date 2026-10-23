@@ -1,6 +1,16 @@
 import { createHash } from 'node:crypto'
 import { extname } from 'node:path'
-import { MODPACK_MANIFEST_ASSET, MODPACK_TAG_PREFIX } from '../../shared/config'
+import { CONTENT_MANIFEST_ASSET, MODPACK_MANIFEST_ASSET } from '../../shared/config'
+import {
+  CONTENT_KINDS,
+  contentTag,
+  isContentManifest,
+  LOADER_LABELS,
+  parseContentTag,
+  type ContentKind,
+  type ContentManifest,
+  type ModLoader
+} from '../../shared/content'
 import { formatLoader } from '../../shared/format'
 import {
   findManifestAsset,
@@ -21,6 +31,7 @@ import {
 import type { ModpackManifest } from '../../shared/types'
 import { describeError, type AnalyzedMod, type CachedAnalysis } from './analyze'
 import { CancelledError, GitHubError, type GitHubClient, type UploadSource } from './githubApi'
+import type { LocalModVersion } from './mods'
 import type { LocalPack, LocalVersion, LocalWorkspace } from './workspace'
 
 // ---------------------------------------------------------------------------------------------
@@ -30,6 +41,17 @@ export interface RemoteState {
   releases: GhRelease[]
   /** modpack.json déjà lus, par « id:date » de l'asset (conservés d'une lecture à l'autre). */
   manifests: Map<string, ModpackManifest | null>
+  /** content.json des autres contenus (mods…), de même. */
+  contents: Map<string, ContentManifest | null>
+}
+
+/** Types autres que le modpack que le Studio publie déjà : leurs releases sont lues, mises à jour et retirées. */
+const PUBLISHED_CONTENT = (Object.keys(CONTENT_KINDS) as ContentKind[]).filter((k) => k !== 'modpack' && CONTENT_KINDS[k].supported)
+
+/** Type d'un tag de release que la publication gère (modpack ou contenu pris en charge), sinon null. */
+function managedKind(tag: string): ContentKind | null {
+  const parsed = parseContentTag(tag)
+  return parsed && (parsed.kind === 'modpack' || PUBLISHED_CONTENT.includes(parsed.kind)) ? parsed.kind : null
 }
 
 const assetKey = (asset: GhAsset) => `${asset.id}:${asset.updated_at}`
@@ -46,28 +68,43 @@ async function mapLimit<T>(items: T[], limit: number, run: (item: T) => Promise<
 export async function fetchRemoteState(client: GitHubClient, previous: RemoteState | null): Promise<RemoteState> {
   const releases = await client.listReleases()
   const manifests = new Map<string, ModpackManifest | null>()
-  const assets = releases
-    .filter((r) => r.tag_name.startsWith(MODPACK_TAG_PREFIX))
-    .map(findManifestAsset)
-    .filter((a): a is GhAsset => Boolean(a))
+  const contents = new Map<string, ContentManifest | null>()
+  const assets: Array<{ asset: GhAsset; content: boolean }> = []
+  for (const release of releases) {
+    const kind = managedKind(release.tag_name)
+    if (!kind) continue
+    const asset = release.assets.find((a) => a.name === CONTENT_KINDS[kind].manifest)
+    if (asset) assets.push({ asset, content: kind !== 'modpack' })
+  }
 
-  await mapLimit(assets, 6, async (asset) => {
+  await mapLimit(assets, 6, async ({ asset, content }) => {
     const key = assetKey(asset)
-    if (previous?.manifests.has(key)) {
+    if (content && previous?.contents.has(key)) {
+      contents.set(key, previous.contents.get(key)!)
+      return
+    }
+    if (!content && previous?.manifests.has(key)) {
       manifests.set(key, previous.manifests.get(key)!)
       return
     }
     // Une erreur réseau fait échouer la lecture : un manifeste considéré à tort comme absent
-    // provoquerait le renvoi de tout le modpack.
+    // provoquerait le renvoi de toute la version.
     const text = await client.downloadAssetText(asset)
+    let json: unknown = null
     try {
-      const json: unknown = JSON.parse(text)
-      manifests.set(key, isModpackManifest(json) ? json : null)
+      json = JSON.parse(text)
     } catch {
-      manifests.set(key, null)
+      // illisible : comme absent
     }
+    if (content) contents.set(key, isContentManifest(json) ? json : null)
+    else manifests.set(key, isModpackManifest(json) ? json : null)
   })
-  return { releases, manifests }
+  return { releases, manifests, contents }
+}
+
+function contentManifestOf(release: GhRelease, remote: RemoteState): ContentManifest | null {
+  const asset = release.assets.find((a) => a.name === CONTENT_MANIFEST_ASSET)
+  return asset ? (remote.contents.get(assetKey(asset)) ?? null) : null
 }
 
 function manifestOf(release: GhRelease, remote: RemoteState): ModpackManifest | null {
@@ -150,6 +187,83 @@ function desiredFor(pack: LocalPack, version: LocalVersion & { analysis: CachedA
   }
 }
 
+/** Un fichier à joindre à la release d'un contenu. */
+export interface ContentAsset {
+  name: string
+  path: string
+  size: number
+  sha256: string
+  type: string
+}
+
+/** Ce qui doit exister sur GitHub pour une version d'un contenu qui n'est pas un modpack (un mod…). */
+export interface ContentDesired {
+  pack: LocalPack
+  version: LocalModVersion
+  tag: string
+  releaseName: string
+  body: string
+  /** Les jars, puis l'image s'il y en a une. */
+  assets: ContentAsset[]
+  /** Manifeste attendu, sans date de création. */
+  manifest: ContentManifest
+}
+
+const JAR_TYPE = 'application/java-archive'
+
+/** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
+export function shownLoaders(loaders: ModLoader[]): string[] {
+  const unique = [...new Set(loaders)]
+  return unique.filter((l) => !(l === 'quilt' && unique.includes('fabric'))).map((l) => LOADER_LABELS[l])
+}
+
+function contentDesiredFor(pack: LocalPack, version: LocalModVersion, author: string): ContentDesired {
+  const { id, name, description, notes } = pack.meta
+  const coverName = pack.cover ? `cover${extname(pack.cover.fileName).toLowerCase()}` : null
+  const files = version.files.map((f) => ({
+    name: f.fileName,
+    size: f.size,
+    sha256: f.analysis.sha256,
+    sha1: f.analysis.sha1,
+    loaders: f.analysis.loaders,
+    minecraftVersions: f.analysis.minecraftVersions
+  }))
+  const minecraftVersions = [...new Set(files.flatMap((f) => f.minecraftVersions))]
+  const loaders = [...new Set(files.flatMap((f) => f.loaders))]
+  const footer = [minecraftVersions.length ? `Minecraft ${minecraftVersions.join(', ')}` : '', shownLoaders(loaders).join(', ')].filter(Boolean).join(' · ')
+  const text = (notes[version.version] ?? '').trim()
+  const assets: ContentAsset[] = version.files.map((f) => ({ name: f.fileName, path: f.path, size: f.size, sha256: f.analysis.sha256, type: JAR_TYPE }))
+  if (pack.cover && coverName) {
+    assets.push({ name: coverName, path: pack.cover.path, size: pack.cover.size, sha256: pack.cover.sha256, type: IMAGE_TYPES[extname(coverName)] ?? 'image/png' })
+  }
+  return {
+    pack,
+    version,
+    tag: contentTag(pack.meta.type, id, version.version),
+    releaseName: `${name} ${version.version}`,
+    body: `${text}${text && footer ? '\n\n---\n' : ''}${footer ? `_${footer}_` : ''}`,
+    assets,
+    manifest: {
+      schema: 1,
+      type: pack.meta.type,
+      id,
+      name,
+      version: version.version,
+      description,
+      minecraftVersions,
+      loaders,
+      files,
+      cover: coverName,
+      coverSha256: pack.cover?.sha256 ?? null,
+      author,
+      createdAt: ''
+    }
+  }
+}
+
+/** Manifeste comparable (sans date de création). */
+const contentComparable = (m: ContentManifest) => JSON.stringify({ ...m, createdAt: '' })
+
 const MANIFEST_FIELDS: Array<keyof ModpackManifest> = [
   'schema',
   'id',
@@ -226,6 +340,20 @@ export type Step =
       extraneous: GhAsset[]
     }
   | { kind: 'delete'; action: SyncAction; releases: GhRelease[] }
+  | { kind: 'create-content'; action: SyncAction; desired: ContentDesired; drafts: GhRelease[] }
+  | {
+      kind: 'update-content'
+      action: SyncAction
+      desired: ContentDesired
+      release: GhRelease
+      drafts: GhRelease[]
+      createdAt: string | null
+      /** Fichiers à (r)envoyer. */
+      replace: ContentAsset[]
+      manifest: boolean
+      release_: boolean
+      extraneous: GhAsset[]
+    }
 
 export interface InternalPlan {
   view: SyncPlan
@@ -247,6 +375,9 @@ function formatSize(bytes: number): string {
 /** `author` : propriétaire du dépôt, inscrit dans chaque modpack.json. */
 export function computePlan(workspace: LocalWorkspace, remote: RemoteState, author: string): InternalPlan {
   const desired = new Map<string, Desired>()
+  const contentDesired = new Map<string, ContentDesired>()
+  /** Contenus en erreur ou pas publiés sur GitHub, par « type:id » : leurs releases ne sont jamais touchées. */
+  const blockedContent = new Set<string>()
   const blockedIds = new Set<string>()
   const blockedTags = new Set<string>()
   const warnings: string[] = []
@@ -255,12 +386,22 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
   for (const pack of workspace.packs) {
     pendingZips += pack.pending.filter((zip) => !zip.error).length
     if (pack.errors.length) {
-      blockedIds.add(pack.meta.id)
+      if (pack.meta.type === 'modpack') blockedIds.add(pack.meta.id)
+      else blockedContent.add(`${pack.meta.type}:${pack.meta.id}`)
       warnings.push(`« ${pack.meta.name} » est ignoré tant que ses erreurs ne sont pas corrigées.`)
       continue
     }
     // Autre contenu qu'un modpack : publié sous son propre préfixe de tag, jamais sous `pack-`.
-    if (pack.meta.type !== 'modpack') continue
+    if (pack.meta.type !== 'modpack') {
+      if (!pack.meta.github) blockedContent.add(`${pack.meta.type}:${pack.meta.id}`)
+      else {
+        for (const version of pack.modVersions) {
+          const d = contentDesiredFor(pack, version, author)
+          contentDesired.set(d.tag, d)
+        }
+      }
+      continue
+    }
     // Modpack publié seulement sur CurseForge : rien n'est publié sur GitHub, et ses releases n'y sont jamais retirées.
     if (!pack.meta.github) {
       blockedIds.add(pack.meta.id)
@@ -274,9 +415,12 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
   }
 
   const byTag = new Map<string, GhRelease[]>()
+  const contentByTag = new Map<string, GhRelease[]>()
   for (const release of remote.releases) {
-    if (!release.tag_name.startsWith(MODPACK_TAG_PREFIX)) continue
-    byTag.set(release.tag_name, [...(byTag.get(release.tag_name) ?? []), release])
+    const kind = managedKind(release.tag_name)
+    if (!kind) continue
+    const map = kind === 'modpack' ? byTag : contentByTag
+    map.set(release.tag_name, [...(map.get(release.tag_name) ?? []), release])
   }
 
   const steps: Step[] = []
@@ -377,6 +521,93 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
     statuses.set(tag, { status: 'update', changes: details })
   }
 
+  for (const [tag, d] of contentDesired) {
+    const releases = contentByTag.get(tag) ?? []
+    const published = releases.find((r) => !r.draft)
+    const drafts = releases.filter((r) => r !== published)
+    const label = d.releaseName
+    const jars = d.assets.filter((a) => a.type === JAR_TYPE)
+    if (!published) {
+      const details = [`Nouvelle release : ${jars.map((f) => `${f.name} (${formatSize(f.size)})`).join(', ')}`]
+      if (d.manifest.cover) details.push(`Image de couverture : ${d.pack.cover!.fileName}`)
+      if (drafts.length) details.push('Un brouillon abandonné sera supprimé.')
+      const uploadBytes = d.assets.reduce((sum, a) => sum + a.size, 0)
+      steps.push({ kind: 'create-content', desired: d, drafts, action: { kind: 'create', tag, packId: d.pack.meta.id, label, details, warnings: [], uploadBytes } })
+      statuses.set(tag, { status: 'create', changes: ['Nouvelle version'] })
+      continue
+    }
+    const remoteManifest = contentManifestOf(published, remote)
+    const remoteSha = new Map<string, string>((remoteManifest?.files ?? []).map((f) => [f.name, f.sha256]))
+    if (remoteManifest?.cover && remoteManifest.coverSha256) remoteSha.set(remoteManifest.cover, remoteManifest.coverSha256)
+    const replace = d.assets.filter((a) => {
+      const asset = published.assets.find((x) => x.name === a.name)
+      return !asset || asset.size !== a.size || remoteSha.get(a.name) !== a.sha256
+    })
+    const manifest = replace.length > 0 || !remoteManifest || contentComparable(remoteManifest) !== contentComparable(d.manifest)
+    const release_ = published.name !== d.releaseName || normalizeText(published.body) !== normalizeText(d.body) || published.prerelease
+    const keep = new Set([...d.assets.map((a) => a.name), CONTENT_MANIFEST_ASSET])
+    const extraneous = published.assets.filter((a) => !keep.has(a.name))
+    if (!replace.length && !manifest && !release_ && !extraneous.length && !drafts.length) {
+      statuses.set(tag, { status: 'published', changes: [] })
+      continue
+    }
+    const details: string[] = []
+    const stepWarnings: string[] = []
+    const changedJars = replace.filter((a) => a.type === JAR_TYPE)
+    if (changedJars.length) {
+      const replaced = changedJars.filter((a) => published.assets.some((x) => x.name === a.name) && remoteSha.has(a.name))
+      details.push(`${replaced.length ? 'Fichier remplacé' : 'Fichier envoyé'} : ${changedJars.map((a) => a.name).join(', ')}`)
+      if (replaced.length) stepWarnings.push(`Le contenu de la version ${d.version.version} a changé : pour une mise à jour, publie plutôt une nouvelle version du mod.`)
+    }
+    if (replace.some((a) => a.type !== JAR_TYPE)) details.push('Nouvelle image de couverture')
+    if (manifest && !replace.length) details.push('Infos du mod mises à jour (nom, description…)')
+    if (release_) details.push('Titre ou notes de version mis à jour')
+    if (extraneous.length) details.push(`Fichiers en trop retirés : ${extraneous.map((a) => a.name).join(', ')}`)
+    if (drafts.length) details.push('Brouillon abandonné supprimé')
+    steps.push({
+      kind: 'update-content',
+      desired: d,
+      release: published,
+      drafts,
+      createdAt: remoteManifest?.createdAt ?? null,
+      replace,
+      manifest,
+      release_,
+      extraneous,
+      action: { kind: 'update', tag, packId: d.pack.meta.id, label, details, warnings: stepWarnings, uploadBytes: replace.reduce((sum, a) => sum + a.size, 0) }
+    })
+    statuses.set(tag, { status: 'update', changes: details })
+  }
+
+  for (const [tag, releases] of contentByTag) {
+    if (contentDesired.has(tag)) continue
+    const parsed = parseContentTag(tag)!
+    if (blockedContent.has(`${parsed.kind}:${parsed.id}`)) continue
+    const published = releases.find((r) => !r.draft)
+    const manifest = published ? contentManifestOf(published, remote) : null
+    const pack = workspace.packs.find((p) => p.meta.type === parsed.kind && p.meta.id === parsed.id)
+    const name = manifest?.name ?? pack?.meta.name ?? parsed.id
+    steps.push({
+      kind: 'delete',
+      releases,
+      action: {
+        kind: 'delete',
+        tag,
+        packId: parsed.id,
+        label: `${name} ${parsed.version}`,
+        details: [
+          !published
+            ? 'Brouillon abandonné'
+            : pack
+              ? 'Ses fichiers ne sont plus dans le dossier'
+              : `Le dossier de ce ${CONTENT_KINDS[parsed.kind].label} n’existe plus`
+        ],
+        warnings: [],
+        uploadBytes: 0
+      }
+    })
+  }
+
   for (const [tag, releases] of byTag) {
     if (desired.has(tag) || blockedTags.has(tag)) continue
     const parsed = parseModpackTag(tag)
@@ -408,7 +639,7 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
 
   // Modpacks qui disparaîtraient complètement de l'application.
   const deletedIds = new Set(steps.filter((s) => s.kind === 'delete').map((s) => s.action.packId))
-  const remainingIds = new Set([...desired.values()].map((d) => d.pack.meta.id))
+  const remainingIds = new Set([...desired.values(), ...contentDesired.values()].map((d) => d.pack.meta.id))
   for (const id of deletedIds) {
     if (!id || remainingIds.has(id)) continue
     const label = steps.find((s) => s.action.packId === id)!.action.label.replace(/ v[^ ]+$/, '')
@@ -418,7 +649,7 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
     warnings.unshift('Le dossier ne contient aucun modpack : publier supprimerait tout de GitHub. Vérifie le dossier choisi.')
   }
 
-  const order = { create: 0, update: 1, delete: 2 }
+  const order = { create: 0, 'create-content': 0, update: 1, 'update-content': 1, delete: 2 }
   steps.sort((a, b) => order[a.kind] - order[b.kind] || a.action.label.localeCompare(b.action.label, 'fr', { numeric: true }))
 
   const actions = steps.map((s) => s.action)
@@ -429,7 +660,11 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
           s.kind,
           s.action.tag,
           s.action.details,
-          s.kind === 'delete' ? s.releases.map((r) => r.id) : [s.desired.version.analysis.sha256, s.desired.manifest]
+          s.kind === 'delete'
+            ? s.releases.map((r) => r.id)
+            : s.kind === 'create-content' || s.kind === 'update-content'
+              ? [s.desired.manifest]
+              : [s.desired.version.analysis.sha256, s.desired.manifest]
         ])
       )
     )
@@ -480,7 +715,7 @@ export interface ApplyOptions {
 export async function applyPlan(client: GitHubClient, plan: InternalPlan, options: ApplyOptions): Promise<PublishResult> {
   const { signal } = options
   const progress: PublishProgress = {
-    steps: plan.steps.map((s) => ({ tag: s.action.tag, kind: s.kind, label: s.action.label, status: 'pending' })),
+    steps: plan.steps.map((s) => ({ tag: s.action.tag, kind: s.action.kind, label: s.action.label, status: 'pending' })),
     current: null
   }
   let lastEmit = 0
@@ -533,9 +768,10 @@ export async function applyPlan(client: GitHubClient, plan: InternalPlan, option
     await client.renameAsset(uploaded.id, name)
   }
 
-  const manifestData = (d: Desired, createdAt: string | null): UploadSource => ({
+  const manifestData = (d: Desired | ContentDesired, createdAt: string | null): UploadSource => ({
     data: Buffer.from(JSON.stringify({ ...d.manifest, createdAt: createdAt ?? new Date().toISOString() }, null, 2))
   })
+  const contentManifestData = manifestData
 
   let done = 0
   for (let i = 0; i < plan.steps.length; i++) {
@@ -579,6 +815,31 @@ export async function applyPlan(client: GitHubClient, plan: InternalPlan, option
           await replace(release, d.coverName, { file: d.pack.cover.path }, IMAGE_TYPES[extname(d.coverName)] ?? 'image/png')
         }
         if (step.manifest) await replace(release, MODPACK_MANIFEST_ASSET, manifestData(d, step.createdAt), 'application/json')
+        for (const asset of step.extraneous) await client.deleteAsset(asset.id)
+        if (step.release_) {
+          say('Mise à jour des notes')
+          await client.updateRelease(release.id, { name: d.releaseName, body: d.body, prerelease: false, make_latest: 'false' })
+        }
+      } else if (step.kind === 'create-content') {
+        const d = step.desired
+        for (const draft of step.drafts) await client.deleteRelease(draft.id)
+        say('Création de la release')
+        const release = await client.createRelease({ tag_name: d.tag, name: d.releaseName, body: d.body, draft: true, prerelease: false, make_latest: 'false' })
+        try {
+          for (const asset of d.assets) await upload(release, { file: asset.path }, asset.name, asset.type)
+          await upload(release, contentManifestData(d, null), CONTENT_MANIFEST_ASSET, 'application/json')
+          say('Mise en ligne')
+          await client.updateRelease(release.id, { draft: false, make_latest: 'false' })
+        } catch (err) {
+          await client.deleteRelease(release.id).catch(() => {})
+          throw err
+        }
+      } else if (step.kind === 'update-content') {
+        const d = step.desired
+        for (const draft of step.drafts) await client.deleteRelease(draft.id)
+        const release = step.release
+        for (const asset of step.replace) await replace(release, asset.name, { file: asset.path }, asset.type)
+        if (step.manifest) await replace(release, CONTENT_MANIFEST_ASSET, contentManifestData(d, step.createdAt), 'application/json')
         for (const asset of step.extraneous) await client.deleteAsset(asset.id)
         if (step.release_) {
           say('Mise à jour des notes')

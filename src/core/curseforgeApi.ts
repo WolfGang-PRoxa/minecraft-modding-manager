@@ -128,7 +128,12 @@ export class CurseForgeClient {
 
   /** Un modpack d'après l'adresse de sa page (slug), ou null. */
   async searchModpackBySlug(slug: string): Promise<CfMod | null> {
-    const found = await this.request<CfMod[]>('GET', `/v1/mods/search?gameId=432&classId=4471&slug=${encodeURIComponent(slug)}`)
+    return this.searchBySlug(slug, 4471)
+  }
+
+  /** Projet d'une classe (mods 6, modpacks 4471…) d'après son slug, ou null. */
+  async searchBySlug(slug: string, classId: number): Promise<CfMod | null> {
+    const found = await this.request<CfMod[]>('GET', `/v1/mods/search?gameId=432&classId=${classId}&slug=${encodeURIComponent(slug)}`)
     return found[0] ?? null
   }
 

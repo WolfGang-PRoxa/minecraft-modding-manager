@@ -1,5 +1,5 @@
 // Types du Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
-import type { ContentKind } from './content'
+import type { ContentKind, ModLoader } from './content'
 import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {
@@ -88,6 +88,38 @@ export interface VersionTests {
   at: string
 }
 
+/** Un fichier (.jar) d'une version de mod. */
+export interface ModFileView {
+  fileName: string
+  path: string
+  size: number
+  loaders: ModLoader[]
+  minecraftVersions: string[]
+  /** Côté où le mod fonctionne. */
+  side: 'client' | 'server' | 'both'
+  /** Dépendances obligatoires (identifiants de mods, hors jeu, Java et chargeur). */
+  dependencies: string[]
+}
+
+/** Une version d'un mod : un ou plusieurs jars (un par chargeur ou par version de Minecraft) de même version déclarée. */
+export interface ModVersionView {
+  /** Version déclarée par le jar (`1.2.0-26.3`). */
+  version: string
+  files: ModFileView[]
+  modifiedAt: string
+  notes: string
+  remote: RemoteStatus
+  changes: string[]
+  /** Fichier CurseForge envoyé par l'application pour cette version. */
+  curseforgeFileId: number | null
+}
+
+/** Jar du dossier d'un mod qui n'a pas pu être lu (pas un mod, autre mod, illisible). */
+export interface BadJar {
+  fileName: string
+  error: string
+}
+
 /** Zip déposé dans le dossier mais pas encore numéroté. */
 export interface PendingZip {
   fileName: string
@@ -121,6 +153,8 @@ export interface CurseForgeVersion {
   fileId: number
   /** Numéro de la version : celui donné par l'application, sinon le « _V<N> » du nom affiché ; null sans numéro. */
   number: number | null
+  /** Version d'un mod (déclarée par son jar) à laquelle ce fichier correspond ; null pour un modpack ou si inconnue. */
+  version?: string | null
   /** FileStatus de CurseForge (3 en modération, 4 approuvé, 5 refusé, 10 publié…), 0 si le fichier est introuvable. */
   status: number
   label: string
@@ -164,6 +198,11 @@ export interface PackView {
   github: boolean
   curseforge: PackCurseForge | null
   updates: PackUpdates
+  /** Dossier d'où un mod importe ses versions (mods seulement). */
+  source: string | null
+  /** Versions d'un mod, de la plus récente à la plus ancienne (vide pour un modpack). */
+  modVersions: ModVersionView[]
+  badJars: BadJar[]
   /** Versions numérotées, de la plus récente à la plus ancienne. */
   versions: VersionView[]
   pending: PendingZip[]
