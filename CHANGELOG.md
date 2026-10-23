@@ -8,6 +8,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Paramètres : la fenêtre est plus large et range ses sections côte à côte, en deux colonnes, ou trois pour un
+  publieur sur un grand écran. Il n’y a plus besoin de la faire défiler pour tout voir.
+
 ## [1.9.3] - 2026-10-20
 
 <!-- relais du mainteneur, sans effet dans l’application : aa93f74 2f35a2d 2d8faaf -->

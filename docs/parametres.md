@@ -3,8 +3,13 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès qu’il est modifié.
 
-Les sections **Dossier des modpacks**, **Compte CurseForge** et **Claude Code et terminal** n’apparaissent qu’en mode
-publieur.
+Les sections **Dossier des modpacks**, **Compte CurseForge**, **Mises à jour automatiques** et **Claude Code et
+terminal** n’apparaissent qu’en mode publieur.
+
+Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
+colonnes : l’application (utilisation, raccourci, à propos), CurseForge (installation, dossier des instances, compte),
+puis le Studio (dossier des modpacks, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
+s’empilent sur une seule colonne.
 
 ## Utilisation
 
