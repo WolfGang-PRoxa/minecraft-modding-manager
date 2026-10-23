@@ -26,7 +26,7 @@ function WarningBox({ children }: { children: ReactNode }) {
 function ActionRow({ action }: { action: SyncAction }) {
   const kind = KINDS[action.kind]
   return (
-    <div className="flex gap-3 rounded-xl bg-white/[0.03] px-4 py-3 ring-1 ring-inset ring-white/[0.05]">
+    <div className="flex gap-3 rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.05]">
       <span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg ${kind.tone}`}>
         <kind.icon size={14} strokeWidth={2.75} />
       </span>
@@ -69,7 +69,7 @@ function ProgressView({ progress }: { progress: PublishProgress | null }) {
         const running = step.status === 'running'
         const current = running ? progress.current : null
         return (
-          <div key={step.tag} className={`rounded-xl px-4 py-3 ${running ? 'bg-white/[0.05] ring-1 ring-inset ring-white/[0.06]' : ''}`}>
+          <div key={step.tag} className={`rounded-xl px-4 py-3 ${running ? 'bg-tint/[0.05] ring-1 ring-inset ring-tint/[0.06]' : ''}`}>
             <div className="flex items-center gap-3">
               <span className="flex size-5 items-center justify-center">{STEP_ICONS[step.status]}</span>
               <span className={`flex-1 font-medium ${step.status === 'pending' || step.status === 'skipped' ? 'text-ink-400' : 'text-ink-100'}`}>

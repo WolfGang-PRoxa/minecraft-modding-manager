@@ -8,10 +8,10 @@ import { Logo } from './Logo'
 export function LoadingView() {
   return (
     <div aria-busy="true" aria-label="Chargement">
-      <div className="skeleton mx-8 mt-6 h-[min(56vh,560px)] rounded-[28px]" />
+      <div className="skeleton mx-8 mt-6 h-[min(56vh,560px)] rounded-[calc(var(--radius-4xl)*0.875)]" />
       <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-6 px-8 pt-10">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="overflow-hidden rounded-2xl bg-ink-850 ring-1 ring-white/[0.06]">
+          <div key={i} className="overflow-hidden rounded-2xl bg-ink-850 ring-1 ring-tint/[0.06]">
             <div className="skeleton aspect-[16/9]" />
             <div className="space-y-3 p-5">
               <div className="skeleton h-5 w-2/3 rounded-md" />

@@ -51,7 +51,7 @@ const STATUS_TONES = {
   live: 'bg-curseforge/15 text-curseforge ring-curseforge/30',
   review: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
   refused: 'bg-red-500/15 text-red-300 ring-red-400/30',
-  neutral: 'bg-white/[0.04] text-ink-300 ring-white/10'
+  neutral: 'bg-tint/[0.04] text-ink-300 ring-tint/10'
 }
 
 /** Pastille d'une version sur CurseForge, d'après son FileStatus. */
@@ -189,7 +189,7 @@ export function CurseForgeVersionsDialog({ folder }: { folder: string }) {
       ) : !versions.length ? (
         <p className="text-sm text-ink-400">Aucune version sur ce projet pour l’instant.</p>
       ) : (
-        <ul className="divide-y divide-white/[0.05]">
+        <ul className="divide-y divide-tint/[0.05]">
           {versions.map((v) => (
             <li key={v.fileId} className="flex items-center gap-4 py-3">
               <span className="w-14 shrink-0 font-mono text-sm font-semibold text-ink-100">{v.number === null ? '—' : `V${v.number}`}</span>

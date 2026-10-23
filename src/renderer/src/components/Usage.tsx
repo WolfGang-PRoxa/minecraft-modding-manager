@@ -28,7 +28,7 @@ export interface UsageContext {
 }
 
 const inputClass =
-  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-white/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
+  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
 
 function Label({ children }: { children: ReactNode }) {
   return <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">{children}</span>
@@ -187,16 +187,16 @@ function RoleCard({
       onClick={onSelect}
       aria-pressed={selected}
       className={`flex flex-col rounded-3xl p-6 text-left ring-1 transition ${
-        selected ? 'bg-grass-400/[0.08] ring-2 ring-grass-400/60' : 'bg-ink-850 ring-white/[0.07] hover:bg-ink-800'
+        selected ? 'bg-grass-400/[0.08] ring-2 ring-grass-400/60' : 'bg-ink-850 ring-tint/[0.07] hover:bg-ink-800'
       }`}
     >
       <div className="flex items-center gap-3">
-        <span className={`flex size-11 items-center justify-center rounded-2xl ${selected ? 'bg-grass-400 text-ink-950' : 'bg-white/[0.07] text-ink-200'}`}>
+        <span className={`flex size-11 items-center justify-center rounded-2xl ${selected ? 'bg-grass-400 text-ink-950' : 'bg-tint/[0.07] text-ink-200'}`}>
           <Icon size={22} />
         </span>
         <span className="font-display text-xl font-bold text-ink-100">{title}</span>
         {badge && (
-          <span className="rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-ink-200 uppercase">{badge}</span>
+          <span className="rounded-md bg-tint/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-ink-200 uppercase">{badge}</span>
         )}
         <span className={`ml-auto flex size-5 items-center justify-center rounded-full ring-2 ${selected ? 'ring-grass-400' : 'ring-ink-500'}`}>
           {selected && <span className="size-2.5 rounded-full bg-grass-400" />}
@@ -284,7 +284,7 @@ export function SetupView() {
           </Button>
         </div>
       ) : (
-        <div className="animate-rise mt-6 rounded-3xl bg-ink-850 p-7 ring-1 ring-white/[0.07]">
+        <div className="animate-rise mt-6 rounded-3xl bg-ink-850 p-7 ring-1 ring-tint/[0.07]">
           <PublisherForm
             ctx={ctx}
             initialRepo={settings.repo}
@@ -346,7 +346,7 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
 
   return (
     <div className="space-y-5">
-      <div className="inline-flex rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-white/[0.06]">
+      <div className="inline-flex rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-tint/[0.06]">
         {(
           [
             { value: 'receiver', label: 'Récepteur', icon: Download },
@@ -365,7 +365,7 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
                 else if (tab.value === 'receiver') setEditing(null)
               }}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
-                active ? 'bg-white/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+                active ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
               }`}
             >
               <tab.icon size={15} /> {tab.label}

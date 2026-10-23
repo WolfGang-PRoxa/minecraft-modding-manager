@@ -101,7 +101,7 @@ export function PackInfoDialog({ folder }: { folder: string }) {
               id={pack.id}
               name={name || pack.name}
               url={pack.coverUrl}
-              className="aspect-[16/9] w-72 shrink-0 rounded-2xl ring-1 ring-white/10"
+              className="aspect-[16/9] w-72 shrink-0 rounded-2xl ring-1 ring-tint/10"
             />
             <div className="flex flex-col gap-2">
               <Button size="sm" icon={ImagePlus} onClick={() => void run(window.studio.pickCover(folder))}>
@@ -168,7 +168,7 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
         </>
       }
     >
-      <div className="mb-3 inline-flex rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-white/[0.06]">
+      <div className="mb-3 inline-flex rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-tint/[0.06]">
         {[
           { value: false, label: 'Écrire', icon: PencilLine },
           { value: true, label: 'Aperçu', icon: Eye }
@@ -178,7 +178,7 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
             type="button"
             onClick={() => setPreview(tab.value)}
             className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-semibold transition ${
-              preview === tab.value ? 'bg-white/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+              preview === tab.value ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
             }`}
           >
             <tab.icon size={15} /> {tab.label}
@@ -186,7 +186,7 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
         ))}
       </div>
       {preview ? (
-        <div className="min-h-72 rounded-xl bg-ink-950/40 px-5 py-4 ring-1 ring-inset ring-white/[0.06]">
+        <div className="min-h-72 rounded-xl bg-ink-950/40 px-5 py-4 ring-1 ring-inset ring-tint/[0.06]">
           <Notes markdown={notes} openLink={openLink} />
         </div>
       ) : (
@@ -225,7 +225,7 @@ function InstanceRow({
       type="button"
       onClick={onSelect}
       className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
-        selected ? 'bg-grass-400/10 ring-1 ring-inset ring-grass-400/40' : 'hover:bg-white/[0.05]'
+        selected ? 'bg-grass-400/10 ring-1 ring-inset ring-grass-400/40' : 'hover:bg-tint/[0.05]'
       }`}
     >
       <span

@@ -131,7 +131,7 @@ export function Select<T extends string | number>({
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={onKeyDown}
         className={`flex min-w-0 items-center justify-between gap-2 bg-ink-950/60 text-left ring-1 ring-inset outline-none transition hover:bg-ink-950/80 disabled:cursor-not-allowed disabled:opacity-50 ${
-          open ? 'ring-grass-400/60' : 'ring-white/10 focus-visible:ring-grass-400/60'
+          open ? 'ring-grass-400/60' : 'ring-tint/10 focus-visible:ring-grass-400/60'
         } ${SIZES[size]} ${className}`}
       >
         <span className={`truncate ${selected >= 0 ? 'text-ink-100' : 'text-ink-500'}`}>{selected >= 0 ? options[selected].label : placeholder}</span>
@@ -153,7 +153,7 @@ export function Select<T extends string | number>({
               maxHeight: position.maxHeight,
               transform: position.above ? 'translateY(-100%)' : undefined
             }}
-            className="animate-fade-in fixed z-[100] max-w-[min(28rem,calc(100vw-2rem))] overflow-y-auto rounded-xl bg-ink-800 p-1 shadow-2xl ring-1 ring-white/10"
+            className="animate-fade-in fixed z-[100] max-w-[min(28rem,calc(100vw-2rem))] overflow-y-auto rounded-xl bg-ink-800 p-1 shadow-2xl ring-1 ring-tint/10"
           >
             {options.map((option, index) => {
               const isSelected = index === selected
@@ -167,7 +167,7 @@ export function Select<T extends string | number>({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => choose(index)}
                   className={`flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm ${
-                    index === active ? 'bg-white/[0.07] text-ink-100' : 'text-ink-200'
+                    index === active ? 'bg-tint/[0.07] text-ink-100' : 'text-ink-200'
                   }`}
                 >
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>

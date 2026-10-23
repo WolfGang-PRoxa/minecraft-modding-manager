@@ -1,3 +1,5 @@
+import type { AppearanceSettings } from './appearance'
+
 /** Contenu de l'asset `modpack.json` attaché à chaque release de modpack. */
 export interface ModpackManifest {
   schema: 1
@@ -182,6 +184,8 @@ export interface Settings {
   lastRunVersion: string | null
   /** Un passage automatique qui échoue est confié à Claude Code, qui en cherche la cause. */
   maintenanceClaude: boolean
+  /** Style de couleurs, styles personnalisés et taille de l'interface. */
+  appearance: AppearanceSettings
 }
 
 /** D'où vient la connexion GitHub : connexion faite dans l'application, ou repli sur une session existante. */

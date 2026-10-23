@@ -8,6 +8,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Paramètres → **Apparence** : six styles de couleurs au choix (dont **Neige**, un style clair, et **Contraste
+  élevé**), et des styles personnalisés à créer soi-même : couleurs du fond, du texte et de l’accent, angles, police
+  des titres, animations et effets de flou, avec un aperçu.
+- La taille de l’interface se règle de 80 % à 150 %, dans Paramètres → Apparence ou avec `Ctrl` + `+`, `Ctrl` + `-` et
+  `Ctrl` + `0`.
+
 ### Améliorations
 
 - Paramètres : la fenêtre est plus large et range ses sections côte à côte, en deux colonnes, ou trois pour un

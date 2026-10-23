@@ -55,7 +55,7 @@ export function ToastList({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (
               type="button"
               onClick={() => dismiss(toast.id)}
               aria-label="Fermer"
-              className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-white/10 hover:text-ink-100"
+              className="-mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-tint/10 hover:text-ink-100"
             >
               <X size={15} />
             </button>

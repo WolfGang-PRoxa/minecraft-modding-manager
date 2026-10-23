@@ -1,5 +1,6 @@
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
+import { DEFAULT_APPEARANCE, normalizeAppearance } from '../shared/appearance'
 import { APP_REPO } from '../shared/config'
 import { isRepoRef } from '../shared/repo'
 import type { Settings } from '../shared/types'
@@ -15,7 +16,8 @@ const DEFAULTS: Settings = {
   workspaceDir: null,
   lastView: 'library',
   lastRunVersion: null,
-  maintenanceClaude: false
+  maintenanceClaude: false,
+  appearance: DEFAULT_APPEARANCE
 }
 
 // Réglages de l'application (rôle, dépôt, dossier des modpacks…), lus aussi par les scripts `modpacks:*` :
@@ -44,7 +46,8 @@ export async function getSettings(): Promise<Settings> {
     workspaceDir: typeof stored?.workspaceDir === 'string' && stored.workspaceDir ? stored.workspaceDir : null,
     lastView: stored?.lastView === 'studio' ? 'studio' : 'library',
     lastRunVersion: typeof stored?.lastRunVersion === 'string' && stored.lastRunVersion ? stored.lastRunVersion : null,
-    maintenanceClaude: stored?.maintenanceClaude === true
+    maintenanceClaude: stored?.maintenanceClaude === true,
+    appearance: normalizeAppearance(stored?.appearance)
   }
 }
 

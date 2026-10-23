@@ -178,7 +178,7 @@ function ReportForm({ onClose }: { onClose: () => void }) {
               className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ring-1 ring-inset transition ${
                 kind === option.kind
                   ? 'bg-grass-400/10 text-grass-300 ring-grass-400/40'
-                  : 'bg-white/[0.03] text-ink-300 ring-white/[0.08] hover:bg-white/[0.06]'
+                  : 'bg-tint/[0.03] text-ink-300 ring-tint/[0.08] hover:bg-tint/[0.06]'
               }`}
             >
               <option.icon size={16} /> {option.label}
@@ -218,7 +218,7 @@ function ReportForm({ onClose }: { onClose: () => void }) {
           </Field>
         )}
 
-        <div className="rounded-xl bg-white/[0.03] px-4 py-3 ring-1 ring-inset ring-white/[0.06]">
+        <div className="rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.06]">
           <div className="flex items-center gap-3">
             <input
               id="report-diagnostics"
@@ -240,7 +240,7 @@ function ReportForm({ onClose }: { onClose: () => void }) {
             </button>
           </div>
           {showDiagnostics && (
-            <ul className="mt-3 space-y-1 border-t border-white/[0.06] pt-3 text-xs text-ink-400 select-text">
+            <ul className="mt-3 space-y-1 border-t border-tint/[0.06] pt-3 text-xs text-ink-400 select-text">
               {(info?.diagnostics ?? []).map((line) => (
                 <li key={line}>{line}</li>
               ))}

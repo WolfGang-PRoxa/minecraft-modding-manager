@@ -49,7 +49,7 @@ function FolderTree() {
     ['1', 'Autre_Modpack/']
   ]
   return (
-    <div className="mx-auto mt-8 w-full max-w-md rounded-2xl bg-ink-950/60 p-5 text-left font-mono text-[13px] ring-1 ring-inset ring-white/[0.06]">
+    <div className="mx-auto mt-8 w-full max-w-md rounded-2xl bg-ink-950/60 p-5 text-left font-mono text-[13px] ring-1 ring-inset ring-tint/[0.06]">
       {lines.map(([depth, name, note]) => (
         <div key={name} className="flex items-baseline gap-3 leading-7" style={{ paddingLeft: `${Number(depth) * 1.25}rem` }}>
           <span className={name.endsWith('/') ? 'text-grass-300' : 'text-ink-200'}>{name}</span>
@@ -151,7 +151,7 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
 
   if (checking && !plan) {
     return (
-      <Panel icon={RefreshCw} tone="bg-white/[0.03] text-ink-300 ring-white/[0.06] [&>svg]:animate-spin">
+      <Panel icon={RefreshCw} tone="bg-tint/[0.03] text-ink-300 ring-tint/[0.06] [&>svg]:animate-spin">
         Comparaison avec GitHub…
       </Panel>
     )
@@ -283,7 +283,7 @@ function SelectionContent({ overview }: { overview: StudioOverview }) {
     if (pack) return <UnlinkedPackDetail pack={pack} />
   }
   return packs.length === 0 ? (
-    <div className="rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-white/[0.06]">
+    <div className="rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-tint/[0.06]">
       <h2 className="font-display text-2xl font-bold tracking-tight">Aucun modpack dans ce dossier</h2>
       <p className="mx-auto mt-2 max-w-lg text-ink-300">
         Choisis un profil CurseForge à gauche pour en faire un modpack, ou crée un sous-dossier par modpack et dépose-y
@@ -347,7 +347,7 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
             onClick={() => openDialog({ kind: 'ranger' })}
           >
             Ranger les zips
-            {toRange > 0 && <Count tone="bg-white/15 text-ink-100">{toRange}</Count>}
+            {toRange > 0 && <Count tone="bg-tint/15 text-ink-100">{toRange}</Count>}
           </Button>
           <Button
             variant="primary"
@@ -375,7 +375,7 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
         {toRange > 0 && (
           <Panel
             icon={ArrowDownWideNarrow}
-            tone="bg-white/[0.04] text-ink-200 ring-white/[0.08]"
+            tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
             action={
               <Button size="sm" onClick={() => openDialog({ kind: 'ranger' })}>
                 Ranger
@@ -477,7 +477,7 @@ function AnalyzingPill() {
   const analyzing = useStudio((s) => s.analyzing)
   if (!analyzing) return null
   return (
-    <div className="animate-rise fixed bottom-6 left-6 z-40 flex items-center gap-3 rounded-full bg-ink-800/95 py-2.5 pr-5 pl-4 text-sm text-ink-200 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl">
+    <div className="animate-rise fixed bottom-6 left-6 z-40 flex items-center gap-3 rounded-full bg-ink-800/95 py-2.5 pr-5 pl-4 text-sm text-ink-200 shadow-2xl ring-1 ring-tint/10 backdrop-blur-xl">
       <Spinner className="text-grass-300" /> Analyse de <span className="max-w-72 truncate font-medium text-ink-100">{analyzing}</span>
     </div>
   )

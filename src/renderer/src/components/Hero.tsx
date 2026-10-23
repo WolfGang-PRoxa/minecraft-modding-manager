@@ -13,7 +13,7 @@ export function Hero({ modpack }: { modpack: Modpack }) {
   const latest = modpack.latest
 
   return (
-    <section className="animate-rise relative mx-8 mt-6 overflow-hidden rounded-[28px] ring-1 ring-white/[0.07]">
+    <section className="animate-rise relative mx-8 mt-6 overflow-hidden rounded-[calc(var(--radius-4xl)*0.875)] ring-1 ring-tint/[0.07]">
       <Cover
         id={latest.id}
         name={latest.name}
@@ -35,7 +35,7 @@ export function Hero({ modpack }: { modpack: Modpack }) {
             <PackBadges modpack={modpack} />
           </div>
 
-          <h1 className="font-display text-[clamp(2.75rem,5vw,4.75rem)] leading-[0.95] font-bold tracking-tight text-white drop-shadow-lg">
+          <h1 className="font-display text-[clamp(2.75rem,5vw,4.75rem)] leading-[0.95] font-bold tracking-tight text-ink-100 drop-shadow-lg">
             {latest.name}
           </h1>
           <p className="mt-2 font-display text-lg font-medium text-ink-300">Version {latest.version}</p>
@@ -58,7 +58,7 @@ export function Hero({ modpack }: { modpack: Modpack }) {
         </div>
 
         {latest.notes.trim() && (
-          <aside className="hidden w-[380px] shrink-0 self-end rounded-2xl bg-ink-950/55 p-6 ring-1 ring-white/10 backdrop-blur-xl xl:block">
+          <aside className="hidden w-[380px] shrink-0 self-end rounded-2xl bg-ink-950/55 p-6 ring-1 ring-tint/10 backdrop-blur-xl xl:block">
             <h2 className="mb-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">
               Nouveautés de la v{latest.version}
             </h2>

@@ -26,7 +26,7 @@ const CATEGORY_STYLES: Record<string, { icon: LucideIcon; accent: string; chip: 
   Sécurité: { icon: ShieldCheck, accent: 'text-violet-300', chip: 'bg-violet-400/15 text-violet-300 ring-violet-400/30' },
   Suppressions: { icon: CircleMinus, accent: 'text-red-300', chip: 'bg-red-500/15 text-red-300 ring-red-400/30' }
 }
-const OTHER_CATEGORY = { icon: Tag, accent: 'text-ink-200', chip: 'bg-white/[0.06] text-ink-200 ring-white/10' }
+const OTHER_CATEGORY = { icon: Tag, accent: 'text-ink-200', chip: 'bg-tint/[0.06] text-ink-200 ring-tint/10' }
 
 const CHANGELOG_PATH = 'CHANGELOG.md'
 const releaseUrl = (version: string) => `${APP_REPO_URL}/releases/tag/app-v${version}`
@@ -97,7 +97,7 @@ function ReleaseEntry({
           {version ? `Version ${version}` : 'Prochaine version'}
         </h2>
         {release.date && <time className="text-sm text-ink-400">{formatDate(`${release.date}T12:00:00`)}</time>}
-        {version === null && <Pill className="bg-white/[0.06] text-ink-300 ring-white/10">{UNRELEASED}</Pill>}
+        {version === null && <Pill className="bg-tint/[0.06] text-ink-300 ring-tint/10">{UNRELEASED}</Pill>}
         {current && <Pill className="bg-grass-400/15 text-grass-300 ring-grass-400/30">Ta version</Pill>}
         {fresh && <Pill className="bg-sky-400/15 text-sky-300 ring-sky-400/30">Nouveau</Pill>}
         {version && (
@@ -150,7 +150,7 @@ function AvailableUpdate({ onLink }: { onLink: (link: DocLink) => void }) {
         </Button>
       </div>
       {notes.map(({ release, notes: parsed }) => (
-        <div key={release.version} className="mt-6 border-t border-white/[0.06] pt-5">
+        <div key={release.version} className="mt-6 border-t border-tint/[0.06] pt-5">
           {notes.length > 1 && (
             <p className="font-display text-lg font-semibold text-ink-100">
               Version {release.version}{' '}
@@ -224,8 +224,8 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
                 onClick={() => setFilter(category)}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset transition ${
                   active
-                    ? (style?.chip ?? 'bg-white/10 text-ink-100 ring-white/20')
-                    : 'bg-white/[0.03] text-ink-400 ring-white/[0.08] hover:text-ink-200'
+                    ? (style?.chip ?? 'bg-tint/10 text-ink-100 ring-tint/20')
+                    : 'bg-tint/[0.03] text-ink-400 ring-tint/[0.08] hover:text-ink-200'
                 }`}
               >
                 {style && <style.icon size={13} strokeWidth={2.5} />}
@@ -236,7 +236,7 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
         </div>
       )}
 
-      <div className="relative before:absolute before:top-3 before:bottom-3 before:left-[5px] before:w-px before:bg-white/10">
+      <div className="relative before:absolute before:top-3 before:bottom-3 before:left-[5px] before:w-px before:bg-tint/10">
         {shown.map((release) => (
           <ReleaseEntry
             key={release.heading}

@@ -21,6 +21,7 @@ import type { ToastItem as Toast } from './components/Toasts'
 import { changelog, CHANGELOG_PAGE } from './docs/content'
 import { showDocs, useDocs } from './docs/store'
 import { APP_NAME } from '../../shared/config'
+import type { AppearanceSettings } from '../../shared/appearance'
 
 interface State {
   catalog: Catalog | null
@@ -63,6 +64,8 @@ interface State {
   setSettingsOpen(open: boolean): void
   setReportOpen(open: boolean): void
   updateSettings(patch: Partial<Settings>): Promise<void>
+  /** Style ou taille de l'interface : appliqué tout de suite, puis enregistré (sans relire les profils). */
+  updateAppearance(patch: Partial<AppearanceSettings>): Promise<void>
   pickInstancesDir(): Promise<void>
   createShortcut(location: ShortcutLocation): Promise<void>
   /**
@@ -300,6 +303,14 @@ export const useStore = create<State>((set, get) => ({
     const settings = await window.api.updateSettings(patch)
     set({ settings })
     await get().refreshLocal()
+  },
+
+  async updateAppearance(patch) {
+    const current = get().settings
+    if (!current) return
+    const appearance = { ...current.appearance, ...patch }
+    set({ settings: { ...current, appearance } })
+    set({ settings: await window.api.updateSettings({ appearance }) })
   },
 
   async pickInstancesDir() {

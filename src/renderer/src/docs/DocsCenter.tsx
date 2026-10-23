@@ -69,7 +69,7 @@ function NavLink({ active, onClick, children, badge }: { active: boolean; onClic
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       className={`flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[13px] transition ${
-        active ? 'bg-white/10 font-semibold text-ink-100' : 'text-ink-300 hover:bg-white/[0.05] hover:text-ink-100'
+        active ? 'bg-tint/10 font-semibold text-ink-100' : 'text-ink-300 hover:bg-tint/[0.05] hover:text-ink-100'
       }`}
     >
       <span className="min-w-0 flex-1 truncate">{children}</span>
@@ -95,13 +95,13 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
   ) : null
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-r border-white/[0.06] bg-ink-950/40">
+    <aside className="flex w-72 shrink-0 flex-col border-r border-tint/[0.06] bg-ink-950/40">
       <div className="px-4 pt-5 pb-3">
         <div className="mb-4 flex items-center gap-2.5 px-1">
           <BookOpen size={18} className="text-grass-300" />
           <span className="font-display text-lg font-semibold tracking-tight text-ink-100">Aide</span>
         </div>
-        <label className="flex h-10 items-center gap-2 rounded-xl bg-ink-950/70 px-3 ring-1 ring-inset ring-white/10 focus-within:ring-grass-400/60">
+        <label className="flex h-10 items-center gap-2 rounded-xl bg-ink-950/70 px-3 ring-1 ring-inset ring-tint/10 focus-within:ring-grass-400/60">
           <Search size={15} className="shrink-0 text-ink-500" />
           <input
             ref={searchRef}
@@ -117,7 +117,7 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
             spellCheck={false}
             className="min-w-0 flex-1 bg-transparent text-sm text-ink-100 outline-none placeholder:text-ink-500"
           />
-          <kbd className="shrink-0 rounded-md bg-white/[0.06] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-ink-400">Ctrl K</kbd>
+          <kbd className="shrink-0 rounded-md bg-tint/[0.06] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-ink-400">Ctrl K</kbd>
         </label>
       </div>
 
@@ -146,7 +146,7 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
         ))}
       </nav>
 
-      <div className="border-t border-white/[0.06] px-5 py-3 text-xs text-ink-500">
+      <div className="border-t border-tint/[0.06] px-5 py-3 text-xs text-ink-500">
         {APP_NAME} {appVersion && `v${appVersion}`}
       </div>
     </aside>
@@ -168,7 +168,7 @@ function QuickLink({
     <button
       type="button"
       onClick={onClick}
-      className="group flex items-start gap-4 rounded-2xl bg-white/[0.03] p-5 text-left ring-1 ring-inset ring-white/[0.07] transition hover:bg-white/[0.06] hover:ring-white/15"
+      className="group flex items-start gap-4 rounded-2xl bg-tint/[0.03] p-5 text-left ring-1 ring-inset ring-tint/[0.07] transition hover:bg-tint/[0.06] hover:ring-tint/15"
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-grass-400/10 text-grass-300 ring-1 ring-inset ring-grass-400/20">
         <Icon size={19} />
@@ -227,7 +227,7 @@ function HomePage() {
                   key={page.slug}
                   type="button"
                   onClick={() => go(page.slug)}
-                  className="rounded-xl px-4 py-3 text-left transition hover:bg-white/[0.05]"
+                  className="rounded-xl px-4 py-3 text-left transition hover:bg-tint/[0.05]"
                 >
                   <span className="font-medium text-ink-100">{page.title}</span>
                   {page.description && (
@@ -260,7 +260,7 @@ function SearchResults({ query }: { query: string }) {
             key={`${hit.section.slug}#${hit.section.anchor ?? ''}`}
             type="button"
             onClick={() => navigate({ slug: hit.section.slug, anchor: hit.section.anchor })}
-            className="block w-full rounded-2xl bg-white/[0.03] px-5 py-4 text-left ring-1 ring-inset ring-white/[0.06] transition hover:bg-white/[0.06] hover:ring-white/15"
+            className="block w-full rounded-2xl bg-tint/[0.03] px-5 py-4 text-left ring-1 ring-inset ring-tint/[0.06] transition hover:bg-tint/[0.06] hover:ring-tint/15"
           >
             <span className="flex items-center gap-1.5 text-xs text-ink-500">
               {hit.section.group && (
@@ -298,13 +298,13 @@ function PageFooter({ page, onLink }: { page: DocPage; onLink: (link: DocLink) =
   const next = index >= 0 && index < readingOrder.length - 1 ? readingOrder[index + 1] : null
 
   return (
-    <footer className="mt-16 border-t border-white/[0.06] pt-6">
+    <footer className="mt-16 border-t border-tint/[0.06] pt-6">
       <div className="grid gap-3 sm:grid-cols-2">
         {previous ? (
           <button
             type="button"
             onClick={() => navigate({ slug: previous.slug })}
-            className="rounded-2xl px-5 py-4 text-left ring-1 ring-inset ring-white/[0.07] transition hover:bg-white/[0.04]"
+            className="rounded-2xl px-5 py-4 text-left ring-1 ring-inset ring-tint/[0.07] transition hover:bg-tint/[0.04]"
           >
             <span className="flex items-center gap-1.5 text-xs text-ink-500">
               <ArrowLeft size={13} /> Précédent
@@ -318,7 +318,7 @@ function PageFooter({ page, onLink }: { page: DocPage; onLink: (link: DocLink) =
           <button
             type="button"
             onClick={() => navigate({ slug: next.slug })}
-            className="rounded-2xl px-5 py-4 text-right ring-1 ring-inset ring-white/[0.07] transition hover:bg-white/[0.04]"
+            className="rounded-2xl px-5 py-4 text-right ring-1 ring-inset ring-tint/[0.07] transition hover:bg-tint/[0.04]"
           >
             <span className="flex items-center justify-end gap-1.5 text-xs text-ink-500">
               Suivant <ArrowRight size={13} />
@@ -343,7 +343,7 @@ function Toc({ entries, active, onSelect }: { entries: TocEntry[]; active: strin
   return (
     <nav className="sticky top-0 max-h-full overflow-y-auto py-10 pr-6" aria-label="Sur cette page">
       <p className="mb-3 text-[11px] font-semibold tracking-widest text-ink-500 uppercase">Sur cette page</p>
-      <ul className="space-y-0.5 border-l border-white/[0.07]">
+      <ul className="space-y-0.5 border-l border-tint/[0.07]">
         {entries.map((entry) => (
           <li key={entry.id}>
             <button
@@ -494,7 +494,7 @@ export function DocsCenter() {
       <Sidebar searchRef={searchRef} />
 
       <div ref={scroller} tabIndex={-1} className="relative min-w-0 flex-1 overflow-y-auto outline-none">
-        <div className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-white/[0.05] bg-ink-900/85 px-6 backdrop-blur-xl">
+        <div className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b border-tint/[0.05] bg-ink-900/85 px-6 backdrop-blur-xl">
           <IconButton icon={ArrowLeft} label="Retour (Alt + ←)" disabled={history.length === 0} onClick={back} />
           <div className="flex min-w-0 flex-1 items-center gap-1.5 text-sm">
             <button

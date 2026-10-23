@@ -6,9 +6,9 @@ export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    'bg-grass-400 text-ink-950 hover:bg-grass-300 shadow-[0_10px_30px_-10px_rgb(126_217_87/0.65)] disabled:shadow-none',
-  secondary: 'bg-white/[0.07] text-ink-100 ring-1 ring-inset ring-white/10 hover:bg-white/[0.12]',
-  ghost: 'text-ink-200 hover:bg-white/[0.07] hover:text-ink-100',
+    'bg-grass-400 text-ink-950 hover:bg-grass-300 shadow-[0_10px_30px_-10px_color-mix(in_oklab,var(--color-grass-400)_65%,transparent)] disabled:shadow-none',
+  secondary: 'bg-tint/[0.07] text-ink-100 ring-1 ring-inset ring-tint/10 hover:bg-tint/[0.12]',
+  ghost: 'text-ink-200 hover:bg-tint/[0.07] hover:text-ink-100',
   danger: 'bg-red-500/15 text-red-300 ring-1 ring-inset ring-red-400/25 hover:bg-red-500/25'
 }
 
@@ -52,7 +52,7 @@ export function IconButton({
       type="button"
       title={label}
       aria-label={label}
-      className={`inline-flex size-9 items-center justify-center rounded-lg text-ink-300 transition hover:bg-white/[0.08] hover:text-ink-100 disabled:opacity-40 ${className}`}
+      className={`inline-flex size-9 items-center justify-center rounded-lg text-ink-300 transition hover:bg-tint/[0.08] hover:text-ink-100 disabled:opacity-40 ${className}`}
       {...rest}
     >
       <Icon size={size} strokeWidth={2} />

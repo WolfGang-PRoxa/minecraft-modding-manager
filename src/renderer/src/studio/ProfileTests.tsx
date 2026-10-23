@@ -21,7 +21,7 @@ const TEST_PILLS = {
   passed: { label: 'Testée', className: 'bg-grass-400/15 text-grass-300 ring-grass-400/30' },
   partial: { label: 'Testée en partie', className: 'bg-sky-400/15 text-sky-300 ring-sky-400/30' },
   failed: { label: 'Tests en échec', className: 'bg-red-500/15 text-red-300 ring-red-400/30' },
-  never: { label: 'Pas testée', className: 'bg-white/[0.04] text-ink-400 ring-white/10' }
+  never: { label: 'Pas testée', className: 'bg-tint/[0.04] text-ink-400 ring-tint/10' }
 }
 
 /** Bilan des derniers tests faits sur les mods d'une version ; `showUntested` : « Pas testée » plutôt que rien. */
@@ -186,7 +186,7 @@ export function ProfileTests({ profilePath, label }: { profilePath: string; labe
   const server = reports.server?.startedAt !== reports.players?.server?.startedAt ? reports.server : null
 
   return (
-    <div className="mt-5 rounded-2xl bg-white/[0.03] px-5 py-4 ring-1 ring-inset ring-white/[0.06]">
+    <div className="mt-5 rounded-2xl bg-tint/[0.03] px-5 py-4 ring-1 ring-inset ring-tint/[0.06]">
       <div className="flex flex-wrap items-center gap-4">
         <ListChecks size={20} className="shrink-0 text-ink-300" />
         <div className="min-w-0 flex-1 text-sm">

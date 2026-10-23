@@ -237,7 +237,7 @@ export function UpdatesDialog({ folder }: { folder: string }) {
             {FREQUENCIES.map((f) => (
               <label
                 key={f.value}
-                className={`flex cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2.5 ring-1 ring-inset ${updates.frequency === f.value ? 'bg-grass-400/10 ring-grass-400/40' : 'ring-white/[0.06] hover:bg-white/[0.04]'}`}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-xl px-3 py-2.5 ring-1 ring-inset ${updates.frequency === f.value ? 'bg-grass-400/10 ring-grass-400/40' : 'ring-tint/[0.06] hover:bg-tint/[0.04]'}`}
               >
                 <input type="radio" name="frequency" className="mt-1 accent-grass-400" checked={updates.frequency === f.value} onChange={() => set({ frequency: f.value })} />
                 <span>
@@ -278,12 +278,12 @@ export function UpdatesDialog({ folder }: { folder: string }) {
           {updates.pinned.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-1.5">
               {updates.pinned.map((p) => (
-                <span key={p.projectId} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] py-1 pr-1.5 pl-3 text-xs text-ink-100">
+                <span key={p.projectId} className="inline-flex items-center gap-1.5 rounded-full bg-tint/[0.07] py-1 pr-1.5 pl-3 text-xs text-ink-100">
                   <Pin size={11} /> {p.name}
                   <button
                     type="button"
                     aria-label={`Ne plus figer ${p.name}`}
-                    className="rounded-full p-0.5 text-ink-400 hover:bg-white/10 hover:text-ink-100"
+                    className="rounded-full p-0.5 text-ink-400 hover:bg-tint/10 hover:text-ink-100"
                     onClick={() => set({ pinned: updates.pinned.filter((x) => x.projectId !== p.projectId) })}
                   >
                     <X size={12} />
@@ -308,7 +308,7 @@ export function UpdatesDialog({ folder }: { folder: string }) {
                 <button
                   key={m.addonId}
                   type="button"
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-ink-200 hover:bg-white/[0.06]"
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm text-ink-200 hover:bg-tint/[0.06]"
                   onClick={() => set({ pinned: [...updates.pinned, { projectId: m.addonId!, name: m.name ?? m.fileName }] })}
                 >
                   <Pin size={12} className="text-ink-400" /> {m.name ?? m.fileName}

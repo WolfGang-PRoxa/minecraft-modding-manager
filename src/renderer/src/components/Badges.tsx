@@ -9,7 +9,7 @@ import { useStore } from '../store'
 
 export function MetaChip({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2.5 py-1 text-xs font-medium text-ink-200 ring-1 ring-inset ring-white/[0.06]">
+    <span className="inline-flex items-center gap-1.5 rounded-lg bg-tint/[0.06] px-2.5 py-1 text-xs font-medium text-ink-200 ring-1 ring-inset ring-tint/[0.06]">
       <Icon size={13} strokeWidth={2.25} className="text-ink-300" />
       {children}
     </span>

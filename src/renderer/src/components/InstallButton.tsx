@@ -58,7 +58,7 @@ function ProgressBar({
         className="absolute inset-y-0 left-0 bg-linear-to-r from-grass-600/50 to-grass-400/45 transition-[width] duration-300 ease-out"
         style={{ width: `${Math.max(3, overall * 100)}%` }}
       >
-        <div className="absolute inset-y-0 right-0 w-0.5 bg-grass-300 shadow-[0_0_12px_2px_rgb(166_240_138/0.6)]" />
+        <div className="absolute inset-y-0 right-0 w-0.5 bg-grass-300 shadow-[0_0_12px_2px_color-mix(in_oklab,var(--color-grass-300)_60%,transparent)]" />
       </div>
       <div className="relative flex flex-1 items-center gap-2 px-4 font-semibold text-ink-100 tabular-nums">
         <span>{PHASE_LABELS[progress.phase]}</span>
@@ -73,7 +73,7 @@ function ProgressBar({
           onClick={onCancel}
           title="Annuler"
           aria-label="Annuler l’installation"
-          className="relative mr-1.5 inline-flex size-8 items-center justify-center rounded-lg text-ink-300 transition hover:bg-white/10 hover:text-ink-100"
+          className="relative mr-1.5 inline-flex size-8 items-center justify-center rounded-lg text-ink-300 transition hover:bg-tint/10 hover:text-ink-100"
         >
           <X size={16} strokeWidth={2.5} />
         </button>

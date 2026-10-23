@@ -21,7 +21,7 @@ import { errorMessage, useStudio } from './store'
 
 export type SettingsTab = 'files' | 'mods' | 'configs'
 
-const panel = 'rounded-2xl bg-ink-950/40 ring-1 ring-inset ring-white/[0.06]'
+const panel = 'rounded-2xl bg-ink-950/40 ring-1 ring-inset ring-tint/[0.06]'
 
 const plural = (n: number, singular: string, pluralForm = `${singular}s`) => `${n} ${n > 1 ? pluralForm : singular}`
 
@@ -154,7 +154,7 @@ function FilesTab({
     const { state, locked } = rowState(path, folder)
     const Icon = icon
     return (
-      <div key={`${folder ? 'd' : 'f'}:${path}`} className="flex items-center gap-3 px-4 py-1.5 transition hover:bg-white/[0.04]">
+      <div key={`${folder ? 'd' : 'f'}:${path}`} className="flex items-center gap-3 px-4 py-1.5 transition hover:bg-tint/[0.04]">
         <Checkbox
           state={state}
           disabled={locked !== null}
@@ -179,7 +179,7 @@ function FilesTab({
   return (
     <div className="flex h-full gap-5">
       <div className={`flex min-w-0 flex-1 flex-col overflow-hidden ${panel}`}>
-        <div className="flex min-h-11 flex-wrap items-center gap-1 border-b border-white/[0.06] px-3 py-2 text-xs">
+        <div className="flex min-h-11 flex-wrap items-center gap-1 border-b border-tint/[0.06] px-3 py-2 text-xs">
           {source && node ? (
             [`Contenu de ${source.label}`, ...crumbs].map((part, i) => (
               <span key={i} className="flex items-center gap-1">
@@ -187,7 +187,7 @@ function FilesTab({
                 <button
                   type="button"
                   onClick={() => setCwd(crumbs.slice(0, i).join('/'))}
-                  className={`rounded-md px-1.5 py-0.5 transition hover:bg-white/[0.07] ${i === crumbs.length ? 'font-semibold text-ink-100' : 'text-ink-400'}`}
+                  className={`rounded-md px-1.5 py-0.5 transition hover:bg-tint/[0.07] ${i === crumbs.length ? 'font-semibold text-ink-100' : 'text-ink-400'}`}
                 >
                   {part}
                 </button>
@@ -228,7 +228,7 @@ function FilesTab({
               {exclude.map((pattern) => {
                 const count = patternCount(pattern)
                 return (
-                  <li key={pattern} className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-2 hover:bg-white/[0.04]">
+                  <li key={pattern} className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-2 hover:bg-tint/[0.04]">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-mono text-xs text-ink-100 select-text" title={pattern}>
                         {pattern}
@@ -267,7 +267,7 @@ function FilesTab({
                 placeholder="Chemin à exclure"
                 className="px-3! py-2! font-mono text-xs"
               />
-              <IconButton icon={Plus} label="Exclure ce chemin" type="submit" disabled={!draft.trim()} className="shrink-0 bg-white/[0.07]" />
+              <IconButton icon={Plus} label="Exclure ce chemin" type="submit" disabled={!draft.trim()} className="shrink-0 bg-tint/[0.07]" />
             </div>
             {draftError ? (
               <p className="mt-1.5 text-xs text-red-300">{draftError}</p>
@@ -335,7 +335,7 @@ function ModsTab({
           Un mod désactivé est installé chez les joueurs mais ne se lance pas : chacun peut l’activer dans CurseForge, et son
           choix est gardé d’une mise à jour à l’autre.
         </p>
-        <label className="flex h-10 w-72 items-center gap-2 rounded-xl bg-ink-950/60 px-3 ring-1 ring-inset ring-white/10 focus-within:ring-grass-400/60">
+        <label className="flex h-10 w-72 items-center gap-2 rounded-xl bg-ink-950/60 px-3 ring-1 ring-inset ring-tint/10 focus-within:ring-grass-400/60">
           <Search size={15} className="shrink-0 text-ink-500" />
           <input
             value={query}
@@ -357,7 +357,7 @@ function ModsTab({
             {shown.map((mod) => {
               const off = mod.disabled || offForPlayers(mod)
               return (
-                <div key={mod.fileName} className="flex items-center gap-4 border-b border-white/[0.04] px-4 py-2.5 last:border-0">
+                <div key={mod.fileName} className="flex items-center gap-4 border-b border-tint/[0.04] px-4 py-2.5 last:border-0">
                   <Package size={16} className={`shrink-0 ${off ? 'text-ink-600' : 'text-ink-500'}`} />
                   <div className="min-w-0 flex-1">
                     <p className={`truncate text-sm font-medium ${off ? 'text-ink-400' : 'text-ink-100'}`}>{mod.name ?? mod.fileName}</p>
@@ -387,13 +387,13 @@ function ModsTab({
         )}
       </div>
       {missing.length > 0 && (
-        <div className="mt-3 rounded-xl bg-white/[0.03] px-4 py-3 text-xs text-ink-300 ring-1 ring-inset ring-white/[0.06]">
+        <div className="mt-3 rounded-xl bg-tint/[0.03] px-4 py-3 text-xs text-ink-300 ring-1 ring-inset ring-tint/[0.06]">
           <p>
             Absents de {source?.label} : toujours désactivés dans les versions qui les contiennent.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             {missing.map((entry) => (
-              <span key={`${entry.addonId}:${entry.file}`} className="inline-flex items-center gap-1 rounded-lg bg-white/[0.06] py-0.5 pr-0.5 pl-2.5 text-ink-200">
+              <span key={`${entry.addonId}:${entry.file}`} className="inline-flex items-center gap-1 rounded-lg bg-tint/[0.06] py-0.5 pr-0.5 pl-2.5 text-ink-200">
                 {entry.name ?? entry.file}
                 <IconButton
                   icon={X}
@@ -527,7 +527,7 @@ export function PackSettingsDialog({ folder, tab: initialTab = 'files' }: { fold
         </>
       }
     >
-      <nav className="flex w-fit rounded-xl bg-white/[0.04] p-1 ring-1 ring-inset ring-white/[0.06]" aria-label="Réglages">
+      <nav className="flex w-fit rounded-xl bg-tint/[0.04] p-1 ring-1 ring-inset ring-tint/[0.06]" aria-label="Réglages">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -535,7 +535,7 @@ export function PackSettingsDialog({ folder, tab: initialTab = 'files' }: { fold
             aria-current={tab === t.id ? 'page' : undefined}
             onClick={() => setTab(t.id)}
             className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${
-              tab === t.id ? 'bg-white/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+              tab === t.id ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
             }`}
           >
             {t.label}

@@ -31,7 +31,7 @@ export function Modal({ title, subtitle, onClose, children, footer, width = 'max
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`animate-rise relative flex max-h-[calc(100vh-3rem)] w-full ${width} flex-col rounded-3xl bg-ink-850 shadow-2xl ring-1 ring-white/10`}
+        className={`animate-rise relative flex max-h-[calc(100vh-3rem)] w-full ${width} flex-col rounded-3xl bg-ink-850 shadow-2xl ring-1 ring-tint/10`}
       >
         <div className="flex items-start justify-between gap-4 px-8 pt-7 pb-5">
           <div className="min-w-0">
@@ -42,7 +42,7 @@ export function Modal({ title, subtitle, onClose, children, footer, width = 'max
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-8 pb-6">{children}</div>
         {footer && (
-          <div className="flex items-center gap-3 rounded-b-3xl border-t border-white/[0.06] bg-ink-900/40 px-8 py-5">
+          <div className="flex items-center gap-3 rounded-b-3xl border-t border-tint/[0.06] bg-ink-900/40 px-8 py-5">
             {footer}
           </div>
         )}
@@ -62,7 +62,7 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
 }
 
 const inputClass =
-  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-white/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
+  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />
@@ -78,7 +78,7 @@ export function Spinner({ size = 16, className = '' }: { size?: number; classNam
 
 export function ProgressBar({ ratio, className = '' }: { ratio: number; className?: string }) {
   return (
-    <div className={`h-2 overflow-hidden rounded-full bg-ink-950/70 ring-1 ring-inset ring-white/[0.06] ${className}`}>
+    <div className={`h-2 overflow-hidden rounded-full bg-ink-950/70 ring-1 ring-inset ring-tint/[0.06] ${className}`}>
       <div
         className="h-full rounded-full bg-linear-to-r from-grass-600 to-grass-400 transition-[width] duration-300 ease-out"
         style={{ width: `${Math.max(2, Math.min(1, ratio) * 100)}%` }}

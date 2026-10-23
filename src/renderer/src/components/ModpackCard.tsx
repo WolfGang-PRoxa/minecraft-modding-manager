@@ -13,7 +13,7 @@ export function ModpackCard({ modpack, index }: { modpack: Modpack; index: numbe
 
   return (
     <article
-      className="animate-rise group flex flex-col overflow-hidden rounded-2xl bg-ink-850 ring-1 ring-white/[0.06] transition duration-200 hover:-translate-y-1 hover:ring-white/15 hover:shadow-[0_24px_60px_-24px_rgb(0_0_0/0.8)]"
+      className="animate-rise group flex flex-col overflow-hidden rounded-2xl bg-ink-850 ring-1 ring-tint/[0.06] transition duration-200 hover:-translate-y-1 hover:ring-tint/15 hover:shadow-[0_24px_60px_-24px_rgb(0_0_0/0.8)]"
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
     >
       <button type="button" onClick={() => select(modpack.id)} className="relative block aspect-[16/9] text-left">
@@ -42,7 +42,7 @@ export function ModpackCard({ modpack, index }: { modpack: Modpack; index: numbe
         <VersionMeta version={latest} withSize={false} />
         <div className="mt-auto flex items-center gap-2">
           <InstallButton version={latest} latest={latest} className="flex-1" />
-          <IconButton icon={Info} label="Détails" onClick={() => select(modpack.id)} className="size-11! rounded-xl bg-white/[0.05]" />
+          <IconButton icon={Info} label="Détails" onClick={() => select(modpack.id)} className="size-11! rounded-xl bg-tint/[0.05]" />
         </div>
       </div>
     </article>

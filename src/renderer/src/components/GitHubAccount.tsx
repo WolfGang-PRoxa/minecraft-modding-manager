@@ -13,7 +13,7 @@ const SOURCES: Record<CredentialSource, string> = {
 }
 
 const inputClass =
-  'w-full rounded-xl bg-ink-950/60 px-4 py-2.5 text-sm text-ink-100 ring-1 ring-inset ring-white/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
+  'w-full rounded-xl bg-ink-950/60 px-4 py-2.5 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
 
 export function Avatar({ login, url, size = 36 }: { login: string | null; url?: string | null; size?: number }) {
   const [failed, setFailed] = useState(false)
@@ -22,7 +22,7 @@ export function Avatar({ login, url, size = 36 }: { login: string | null; url?: 
   if (!src || failed) {
     return (
       <span
-        className="flex shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-ink-300"
+        className="flex shrink-0 items-center justify-center rounded-full bg-tint/[0.08] text-ink-300"
         style={{ width: size, height: size }}
       >
         <UserRound size={size * 0.5} />
@@ -35,7 +35,7 @@ export function Avatar({ login, url, size = 36 }: { login: string | null; url?: 
       alt=""
       draggable={false}
       onError={() => setFailed(true)}
-      className="shrink-0 rounded-full bg-ink-800 ring-1 ring-white/10"
+      className="shrink-0 rounded-full bg-ink-800 ring-1 ring-tint/10"
       style={{ width: size, height: size }}
     />
   )
@@ -126,7 +126,7 @@ export function GitHubAccount({ api, openLink, onChange, promptLogin = false }: 
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3 rounded-xl bg-white/[0.03] px-4 py-3 ring-1 ring-inset ring-white/[0.06]">
+      <div className="flex items-center gap-3 rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.06]">
         <Avatar login={account?.login ?? null} url={account?.avatarUrl} />
         <div className="min-w-0 flex-1">
           {account ? (

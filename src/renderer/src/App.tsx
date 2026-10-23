@@ -14,6 +14,8 @@ import { DocsCenter } from './docs/DocsCenter'
 import { useDocs } from './docs/store'
 import { StudioView } from './studio/StudioView'
 import { useStore } from './store'
+import { applyAppearance } from './lib/appearance'
+import { stepScale } from '../../shared/appearance'
 
 function Library() {
   const catalog = useStore((s) => s.catalog)
@@ -54,6 +56,11 @@ export function App() {
   // Premier lancement : le rôle n'est pas encore choisi.
   const needsSetup = useStore((s) => s.settings !== null && s.settings.role === null)
   const studio = useStore((s) => s.view === 'studio' && s.settings?.role === 'publisher')
+  const appearance = useStore((s) => s.settings?.appearance)
+
+  useEffect(() => {
+    if (appearance) applyAppearance(appearance)
+  }, [appearance])
 
   useEffect(() => {
     void init()
@@ -67,6 +74,15 @@ export function App() {
     const timer = setInterval(() => void autoRefresh(), 60_000)
     // F1 ouvre ou ferme l'aide, sauf derrière une fenêtre de dialogue, qui garde la main.
     const onKey = (e: KeyboardEvent) => {
+      // Ctrl + / Ctrl - / Ctrl 0 : taille de l'interface, partout.
+      if (e.ctrlKey && !e.altKey && ['+', '=', '-', '0'].includes(e.key)) {
+        const { settings, updateAppearance } = useStore.getState()
+        if (!settings) return
+        e.preventDefault()
+        const scale = e.key === '0' ? 1 : stepScale(settings.appearance.scale, e.key === '-' ? -1 : 1)
+        if (scale !== settings.appearance.scale) void updateAppearance({ scale })
+        return
+      }
       if (e.key !== 'F1' || document.querySelector('[aria-modal="true"]')) return
       e.preventDefault()
       useDocs.getState().toggle()

@@ -80,7 +80,7 @@ export function Cover({ id, name, url, className = '', imgClassName = '', align 
     >
       <div className="relative flex size-full items-center justify-center">
         <div className="pixel-grid absolute inset-0 opacity-70" />
-        <span className="font-display text-[clamp(2.5rem,8vw,7rem)] font-bold tracking-tight text-white/15 select-none">
+        <span className="font-display text-[clamp(2.5rem,8vw,7rem)] font-bold tracking-tight text-tint/15 select-none">
           {initials(name)}
         </span>
       </div>

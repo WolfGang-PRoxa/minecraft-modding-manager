@@ -23,7 +23,7 @@ const MAX_MATCHES = 400
 /** Petite étiquette posée au bout d'une ligne (mod désactivé, fichier exclu…). */
 export function Tag({ children, tone = 'muted', title }: { children: string; tone?: 'muted' | 'sky' | 'amber'; title?: string }) {
   const styles = {
-    muted: 'bg-white/[0.06] text-ink-300',
+    muted: 'bg-tint/[0.06] text-ink-300',
     sky: 'bg-sky-400/15 text-sky-300',
     amber: 'bg-amber-glow/15 text-amber-glow'
   }[tone]
@@ -58,7 +58,7 @@ function ListRow({
       onClick={onClick}
       title={label}
       className={`flex w-full items-center gap-3 px-4 py-2 text-left text-sm transition ${
-        active ? 'bg-grass-400/10 text-grass-300' : `${excluded ? 'text-ink-400' : 'text-ink-200'} hover:bg-white/[0.05]`
+        active ? 'bg-grass-400/10 text-grass-300' : `${excluded ? 'text-ink-400' : 'text-ink-200'} hover:bg-tint/[0.05]`
       }`}
     >
       <Icon size={15} className={`shrink-0 ${active ? '' : 'text-ink-500'}`} />
@@ -73,7 +73,7 @@ function ListRow({
   )
 }
 
-const panel = 'rounded-2xl bg-ink-950/40 ring-1 ring-inset ring-white/[0.06]'
+const panel = 'rounded-2xl bg-ink-950/40 ring-1 ring-inset ring-tint/[0.06]'
 
 /** Mod d'un zip que les joueurs reçoivent désactivé à cause des réglages du modpack. */
 export const disabledForPlayers = (mod: ZipMod, settings: PackSettings) =>
@@ -90,7 +90,7 @@ function ModsList({ mods, query, settings }: { mods: ZipMod[]; query: string; se
   return (
     <div className={`h-full overflow-y-auto ${panel}`}>
       {shown.map((mod) => (
-        <div key={mod.fileName} className="flex items-center gap-4 border-b border-white/[0.04] px-4 py-2.5 last:border-0">
+        <div key={mod.fileName} className="flex items-center gap-4 border-b border-tint/[0.04] px-4 py-2.5 last:border-0">
           <Package size={16} className="shrink-0 text-ink-500" />
           <div className="min-w-0 flex-1">
             <p className={`truncate text-sm font-medium select-text ${mod.disabled ? 'text-ink-400 line-through' : 'text-ink-100'}`}>
@@ -162,7 +162,7 @@ function Preview({ folder, fileName, file }: { folder: string; fileName: string;
           {result.text || '(fichier vide)'}
         </pre>
         {result.truncated && (
-          <p className="border-t border-white/[0.06] px-4 py-2 text-xs text-ink-400">Fichier long : seul son début est affiché.</p>
+          <p className="border-t border-tint/[0.06] px-4 py-2 text-xs text-ink-400">Fichier long : seul son début est affiché.</p>
         )}
       </>
     )
@@ -178,7 +178,7 @@ function Preview({ folder, fileName, file }: { folder: string; fileName: string;
 
   return (
     <div className={`flex min-w-0 flex-1 flex-col overflow-hidden ${panel}`}>
-      <div className="flex items-center gap-3 border-b border-white/[0.06] px-4 py-2.5">
+      <div className="flex items-center gap-3 border-b border-tint/[0.06] px-4 py-2.5">
         <span className="min-w-0 flex-1 truncate font-mono text-xs text-ink-200 select-text" title={file.path}>
           {file.path}
         </span>
@@ -214,7 +214,7 @@ function FilesBrowser({
   return (
     <div className="flex h-full gap-4">
       <div className={`flex w-[42%] shrink-0 flex-col overflow-hidden ${panel}`}>
-        <div className="flex min-h-11 flex-wrap items-center gap-1 border-b border-white/[0.06] px-3 py-2 text-xs">
+        <div className="flex min-h-11 flex-wrap items-center gap-1 border-b border-tint/[0.06] px-3 py-2 text-xs">
           {matches ? (
             <span className="px-1 text-ink-300">
               {matches.length} fichier{matches.length > 1 ? 's' : ''} trouvé{matches.length > 1 ? 's' : ''}
@@ -227,7 +227,7 @@ function FilesBrowser({
                 <button
                   type="button"
                   onClick={() => setCwd(crumbs.slice(0, i).join('/'))}
-                  className={`rounded-md px-1.5 py-0.5 transition hover:bg-white/[0.07] ${i === crumbs.length ? 'font-semibold text-ink-100' : 'text-ink-400'}`}
+                  className={`rounded-md px-1.5 py-0.5 transition hover:bg-tint/[0.07] ${i === crumbs.length ? 'font-semibold text-ink-100' : 'text-ink-400'}`}
                 >
                   {part}
                 </button>
@@ -338,7 +338,7 @@ export function ContentsDialog({ folder, fileName, label }: { folder: string; fi
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-3">
-              <nav className="flex rounded-xl bg-white/[0.04] p-1 ring-1 ring-inset ring-white/[0.06]" aria-label="Contenu">
+              <nav className="flex rounded-xl bg-tint/[0.04] p-1 ring-1 ring-inset ring-tint/[0.06]" aria-label="Contenu">
                 {tabs.map((t) => (
                   <button
                     key={t.id}
@@ -349,7 +349,7 @@ export function ContentsDialog({ folder, fileName, label }: { folder: string; fi
                       setQuery('')
                     }}
                     className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${
-                      tab === t.id ? 'bg-white/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+                      tab === t.id ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
                     }`}
                   >
                     {t.label}
@@ -358,7 +358,7 @@ export function ContentsDialog({ folder, fileName, label }: { folder: string; fi
                 ))}
               </nav>
               <div className="flex-1" />
-              <label className="flex h-10 w-80 items-center gap-2 rounded-xl bg-ink-950/60 px-3 ring-1 ring-inset ring-white/10 focus-within:ring-grass-400/60">
+              <label className="flex h-10 w-80 items-center gap-2 rounded-xl bg-ink-950/60 px-3 ring-1 ring-inset ring-tint/10 focus-within:ring-grass-400/60">
                 <Search size={15} className="shrink-0 text-ink-500" />
                 <input
                   value={query}

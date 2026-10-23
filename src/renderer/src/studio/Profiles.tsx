@@ -68,7 +68,7 @@ function SidebarItem({
       onClick={onClick}
       title={title}
       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm transition ${
-        selected ? 'bg-grass-400/12 text-ink-100 ring-1 ring-inset ring-grass-400/30' : 'text-ink-300 hover:bg-white/[0.05] hover:text-ink-100'
+        selected ? 'bg-grass-400/12 text-ink-100 ring-1 ring-inset ring-grass-400/30' : 'text-ink-300 hover:bg-tint/[0.05] hover:text-ink-100'
       }`}
     >
       {children}
@@ -132,7 +132,7 @@ export function ProfilesSidebar() {
   const packName = (folder: string) => overview?.packs.find((p) => p.folder === folder)?.name ?? folder
 
   return (
-    <aside className="flex w-80 shrink-0 flex-col border-r border-white/[0.05] bg-ink-900/40">
+    <aside className="flex w-80 shrink-0 flex-col border-r border-tint/[0.05] bg-ink-900/40">
       <div className="flex items-center gap-2 p-4 pb-3">
         <div className="relative flex-1">
           <Search size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-500" />
@@ -140,14 +140,14 @@ export function ProfilesSidebar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Chercher un profil…"
-            className="w-full rounded-lg bg-ink-950/60 py-2 pr-3 pl-9 text-sm text-ink-100 ring-1 ring-white/[0.06] outline-none placeholder:text-ink-500 focus:ring-grass-400/50"
+            className="w-full rounded-lg bg-ink-950/60 py-2 pr-3 pl-9 text-sm text-ink-100 ring-1 ring-tint/[0.06] outline-none placeholder:text-ink-500 focus:ring-grass-400/50"
           />
         </div>
         <button
           type="button"
           onClick={() => void refresh()}
           title="Relire les profils CurseForge"
-          className="rounded-lg p-2 text-ink-400 transition hover:bg-white/[0.06] hover:text-ink-100"
+          className="rounded-lg p-2 text-ink-400 transition hover:bg-tint/[0.06] hover:text-ink-100"
         >
           <RefreshCw size={15} />
         </button>
@@ -269,7 +269,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
   if (profile.trialOf) return null
   if (profile.installedPack) {
     return (
-      <Banner icon={Download} tone="bg-white/[0.04] text-ink-300 ring-white/[0.08]">
+      <Banner icon={Download} tone="bg-tint/[0.04] text-ink-300 ring-tint/[0.08]">
         Installé par l’application depuis GitHub ({profile.installedPack.id}, v{profile.installedPack.version}) : c’est une copie
         de joueur, pas la source d’un modpack.
       </Banner>
@@ -279,7 +279,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
     return (
       <Banner
         icon={FolderPlus}
-        tone="bg-white/[0.04] text-ink-200 ring-white/[0.08]"
+        tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
         actions={
           <>
             <Button
@@ -317,7 +317,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
     switch (profile.state) {
       case 'no-version':
         return (
-          <Banner icon={PackagePlus} tone="bg-white/[0.04] text-ink-200 ring-white/[0.08]" actions={createVersion('Créer la v1 depuis ce profil')}>
+          <Banner icon={PackagePlus} tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]" actions={createVersion('Créer la v1 depuis ce profil')}>
             <strong className="font-semibold">{pack.name} n’a encore aucune version.</strong>
           </Banner>
         )
@@ -358,7 +358,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
       {profile.link === 'guessed' && (
         <Banner
           icon={Link2}
-          tone="bg-white/[0.04] text-ink-200 ring-white/[0.08]"
+          tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
           actions={
             <Button size="sm" icon={Link2} onClick={() => void run(window.studio.linkProfile(pack.folder, profile.path), 'Lien enregistré')}>
               Confirmer
@@ -391,7 +391,7 @@ export function ProfileDetail({ profile }: { profile: ProfileView }) {
 
   return (
     <div className="space-y-6">
-      <section className="animate-rise rounded-3xl bg-ink-850 p-6 ring-1 ring-white/[0.06]">
+      <section className="animate-rise rounded-3xl bg-ink-850 p-6 ring-1 ring-tint/[0.06]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-xs font-semibold tracking-widest text-curseforge uppercase">
@@ -445,7 +445,7 @@ export function UnlinkedPackDetail({ pack }: { pack: PackView }) {
     <div className="space-y-6">
       <Banner
         icon={Link2}
-        tone="bg-white/[0.04] text-ink-200 ring-white/[0.08]"
+        tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
         actions={
           <LinkPicker options={options} onLink={(path) => void run(window.studio.linkProfile(pack.folder, path), 'Profil lié au modpack')} />
         }

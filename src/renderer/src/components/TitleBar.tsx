@@ -19,7 +19,7 @@ function CurseForgeChip() {
       type="button"
       onClick={() => (ok ? void launch() : openSettings(true))}
       title={ok ? 'Ouvrir CurseForge' : 'CurseForge est introuvable'}
-      className="no-drag flex items-center gap-2 rounded-full bg-white/[0.05] py-1.5 pr-3.5 pl-3 text-xs font-medium text-ink-200 ring-1 ring-inset ring-white/[0.07] transition hover:bg-white/[0.09]"
+      className="no-drag flex items-center gap-2 rounded-full bg-tint/[0.05] py-1.5 pr-3.5 pl-3 text-xs font-medium text-ink-200 ring-1 ring-inset ring-tint/[0.07] transition hover:bg-tint/[0.09]"
     >
       <span className="relative flex size-2">
         {ok && <span className="absolute inset-0 animate-ping rounded-full bg-curseforge/60" />}
@@ -88,7 +88,7 @@ function ViewTabs() {
   const closeDocs = useDocs((s) => s.close)
   if (!publisher) return null
   return (
-    <nav className="no-drag ml-4 flex rounded-xl bg-white/[0.04] p-1 ring-1 ring-inset ring-white/[0.06]" aria-label="Vues">
+    <nav className="no-drag ml-4 flex rounded-xl bg-tint/[0.04] p-1 ring-1 ring-inset ring-tint/[0.06]" aria-label="Vues">
       {VIEWS.map((tab) => (
         <button
           key={tab.view}
@@ -99,7 +99,7 @@ function ViewTabs() {
             setView(tab.view)
           }}
           className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${
-            !docsOpen && view === tab.view ? 'bg-white/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+            !docsOpen && view === tab.view ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
           }`}
         >
           <tab.icon size={15} /> {tab.label}
@@ -124,7 +124,7 @@ export function TitleBar() {
   const toggleDocs = useDocs((s) => s.toggle)
 
   return (
-    <header className="drag-region relative z-30 flex h-14 shrink-0 items-center gap-3 border-b border-white/[0.05] bg-ink-900/70 pr-2 pl-5 backdrop-blur-xl">
+    <header className="drag-region relative z-30 flex h-14 shrink-0 items-center gap-3 border-b border-tint/[0.05] bg-ink-900/70 pr-2 pl-5 backdrop-blur-xl">
       <div className="flex items-center gap-3">
         <Logo size={26} />
         <div className="leading-tight">
@@ -139,7 +139,7 @@ export function TitleBar() {
         <UpdateChip />
         <CoffeeChip />
         <CurseForgeChip />
-        <div className="mx-2 h-5 w-px bg-white/10" />
+        <div className="mx-2 h-5 w-px bg-tint/10" />
         <IconButton
           icon={RefreshCw}
           label={studio ? 'Relire le dossier et GitHub' : 'Actualiser'}
@@ -152,11 +152,11 @@ export function TitleBar() {
           label={docsOpen ? 'Fermer l’aide (F1)' : 'Aide (F1)'}
           aria-pressed={docsOpen}
           onClick={toggleDocs}
-          className={docsOpen ? 'bg-white/10 text-ink-100' : ''}
+          className={docsOpen ? 'bg-tint/10 text-ink-100' : ''}
         />
         <IconButton icon={Bug} label="Signaler un problème" onClick={() => openReport(true)} />
         <IconButton icon={Settings} label="Paramètres" onClick={() => openSettings(true)} />
-        <div className="mx-2 h-5 w-px bg-white/10" />
+        <div className="mx-2 h-5 w-px bg-tint/10" />
         <IconButton icon={Minus} label="Réduire" onClick={() => window.api.minimizeWindow()} />
         <IconButton {...maximizeButton} onClick={() => window.api.toggleMaximize()} />
         <IconButton

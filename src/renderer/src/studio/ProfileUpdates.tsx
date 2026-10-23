@@ -156,7 +156,7 @@ function UpdateFinder({ profile }: { profile: ProfileView }) {
   }
 
   return (
-    <div className="mt-5 rounded-2xl bg-white/[0.03] px-5 py-4 ring-1 ring-inset ring-white/[0.06]">
+    <div className="mt-5 rounded-2xl bg-tint/[0.03] px-5 py-4 ring-1 ring-inset ring-tint/[0.06]">
       <div className="flex flex-wrap items-center gap-4">
         <PackageSearch size={20} className="shrink-0 text-ink-300" />
         <div className="min-w-0 flex-1 text-sm">
@@ -209,9 +209,9 @@ function UpdateFinder({ profile }: { profile: ProfileView }) {
 
       {plan && plan.updates.length > 0 && (
         <div className="mt-4">
-          <div className="max-h-80 space-y-0.5 overflow-y-auto rounded-xl bg-ink-950/40 p-2 ring-1 ring-white/[0.05]">
+          <div className="max-h-80 space-y-0.5 overflow-y-auto rounded-xl bg-ink-950/40 p-2 ring-1 ring-tint/[0.05]">
             {plan.updates.map((u) => (
-              <label key={u.projectId} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-sm hover:bg-white/[0.04]">
+              <label key={u.projectId} className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-sm hover:bg-tint/[0.04]">
                 <input
                   type="checkbox"
                   className="size-4 shrink-0 accent-grass-400"

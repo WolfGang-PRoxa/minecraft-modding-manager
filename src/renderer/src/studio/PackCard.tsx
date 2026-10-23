@@ -39,7 +39,7 @@ const STATUS: Record<RemoteStatus, { label: string; className: string }> = {
   create: { label: 'À publier', className: 'bg-sky-400/15 text-sky-300 ring-sky-400/30' },
   update: { label: 'Modifiée', className: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35' },
   blocked: { label: 'Non publiable', className: 'bg-red-500/15 text-red-300 ring-red-400/30' },
-  unknown: { label: 'GitHub non vérifié', className: 'bg-white/[0.06] text-ink-300 ring-white/10' }
+  unknown: { label: 'GitHub non vérifié', className: 'bg-tint/[0.06] text-ink-300 ring-tint/10' }
 }
 
 export function Pill({
@@ -125,7 +125,7 @@ function SettingsSummary({ pack }: { pack: PackView }) {
           key={tab}
           type="button"
           onClick={() => openDialog({ kind: 'pack-settings', folder: pack.folder, tab })}
-          className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.05] px-2.5 py-1 text-xs font-semibold text-ink-300 ring-1 ring-inset ring-white/[0.08] transition hover:bg-white/[0.09] hover:text-ink-100"
+          className="inline-flex items-center gap-1.5 rounded-full bg-tint/[0.05] px-2.5 py-1 text-xs font-semibold text-ink-300 ring-1 ring-inset ring-tint/[0.08] transition hover:bg-tint/[0.09] hover:text-ink-100"
         >
           <Icon size={12} strokeWidth={2.5} /> {label}
         </button>
@@ -136,7 +136,7 @@ function SettingsSummary({ pack }: { pack: PackView }) {
 
 function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-start gap-x-4 gap-y-2 rounded-xl px-4 py-3 transition hover:bg-white/[0.03]">
+    <div className="flex flex-wrap items-start gap-x-4 gap-y-2 rounded-xl px-4 py-3 transition hover:bg-tint/[0.03]">
       <div className="w-14 shrink-0 pt-0.5">{badge}</div>
       {/* Le nom garde au moins cette largeur : faute de place, les actions passent dessous. */}
       <div className="min-w-72 flex-1 basis-72">{children}</div>
@@ -147,8 +147,8 @@ function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode
 
 function VersionBadge({ children, tone = 'default' }: { children: ReactNode; tone?: 'default' | 'muted' | 'removed' }) {
   const styles = {
-    default: 'bg-white/[0.08] text-ink-100',
-    muted: 'bg-white/[0.04] text-ink-400',
+    default: 'bg-tint/[0.08] text-ink-100',
+    muted: 'bg-tint/[0.04] text-ink-400',
     removed: 'bg-red-500/10 text-red-300/80 line-through'
   }[tone]
   return <span className={`inline-block rounded-lg px-2 py-1 font-display text-sm font-bold ${styles}`}>{children}</span>
@@ -328,7 +328,7 @@ function PendingRow({ folder, zip, number }: { folder: string; zip: PendingZip; 
           {zip.error ? (
             <Pill className={STATUS.blocked.className}>Refusé</Pill>
           ) : (
-            <Pill className="bg-white/[0.06] text-ink-200 ring-white/10" icon={Hourglass}>
+            <Pill className="bg-tint/[0.06] text-ink-200 ring-tint/10" icon={Hourglass}>
               À ranger
             </Pill>
           )}
@@ -476,7 +476,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
     <section
       {...handlers}
       className={`animate-rise relative overflow-hidden rounded-3xl bg-ink-850 ring-1 transition ${
-        over ? 'ring-2 ring-grass-400/70' : 'ring-white/[0.06]'
+        over ? 'ring-2 ring-grass-400/70' : 'ring-tint/[0.06]'
       }`}
       style={{ animationDelay: `${Math.min(index, 6) * 50}ms` }}
     >
@@ -484,7 +484,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
         <button
           type="button"
           onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}
-          className="group relative aspect-[16/9] w-60 shrink-0 overflow-hidden rounded-2xl ring-1 ring-white/10"
+          className="group relative aspect-[16/9] w-60 shrink-0 overflow-hidden rounded-2xl ring-1 ring-tint/10"
           title="Modifier l’image"
         >
           <Cover id={pack.id} name={pack.name} url={pack.coverUrl} className="absolute inset-0" />
@@ -544,7 +544,7 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
         </div>
       )}
 
-      <div className="border-t border-white/[0.05] px-2 py-2">
+      <div className="border-t border-tint/[0.05] px-2 py-2">
         {pack.pending.map((zip) => (
           <PendingRow key={zip.fileName} folder={pack.folder} zip={zip} number={zip.error ? null : next++} />
         ))}

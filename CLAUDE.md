@@ -287,7 +287,15 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - `src/renderer/` — React 19 + Tailwind v4 + zustand, une seule page (`index.html`). `store.ts` : état de l'app,
   dont `view` (`library` / `studio`, qui suit le rôle : `applyRoleResult`). `src/studio/` : vue Studio (`StudioView`)
   et son store (`useStudio`, notifications et paramètres délégués à l'app). Section « Utilisation » partagée
-  `components/Usage.tsx` (premier lancement et paramètres). Thème sombre unique.
+  `components/Usage.tsx` (premier lancement et paramètres).
+  Apparence (`src/shared/appearance.ts`, réglage `appearance` : style, taille de l'interface, styles personnalisés) :
+  un style = fond, texte, accent et aspect (angles, police des titres, animations, flou) ; `colorVariables` en tire
+  dans OKLab toutes les variables `--color-ink-*` / `--color-grass-*` (le style « Herbe » garde les valeurs exactes de
+  `styles.css`). `lib/appearance.ts` les pose sur la racine (`data-tone` clair / sombre, `data-motion`) ou sur un
+  aperçu. Voiles et filets en `tint` (`bg-tint/[0.06]`, pas `white/`) : la couleur du texte, qui assombrit un style
+  clair. Pas de couleur codée en dur dans le renderer : une variable du thème ou `color-mix`. Taille = zoom de la
+  page (`applyInterfaceScale`, taille minimale de la fenêtre multipliée d'autant), `Ctrl` + `+` / `-` / `0`.
+  `components/Appearance.tsx` : section des paramètres et éditeur de style.
   `components/UpdateBar.tsx` : proposition de mise à jour de l'app, sous la barre de titre et hors de `<main>`, donc
   visible dans toutes les vues (« Plus tard » la replie en rappel dans `TitleBar`). `autoRefresh` relit GitHub en
   silence toutes les 30 min (minuterie + retour sur la fenêtre) ; `DetailsPanel` est positionné dans la zone de

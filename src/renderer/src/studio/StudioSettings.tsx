@@ -22,7 +22,7 @@ export function WorkspaceFolderSetting() {
 
   return (
     <>
-      <div className="rounded-xl bg-ink-950/60 px-4 py-3 font-mono text-[13px] break-all text-ink-100 ring-1 ring-inset ring-white/[0.06] select-text">
+      <div className="rounded-xl bg-ink-950/60 px-4 py-3 font-mono text-[13px] break-all text-ink-100 ring-1 ring-inset ring-tint/[0.06] select-text">
         {workspaceDir ?? 'Pas encore choisi : le Studio te le demandera.'}
       </div>
       <p className="mt-2 text-xs text-ink-400">Un sous-dossier par modpack, avec les zips de ses mises à jour.</p>
@@ -183,7 +183,7 @@ function SecretRow({ kind, status, onChange }: { kind: CurseForgeSecretKind; sta
           placeholder={status?.source === 'saved' ? 'Coller pour remplacer…' : 'Coller ici…'}
           autoComplete="off"
           spellCheck={false}
-          className="min-w-0 flex-1 rounded-lg bg-ink-950/60 px-3 py-1.5 font-mono text-sm text-ink-100 ring-1 ring-white/10 outline-none placeholder:font-sans placeholder:text-ink-500 focus:ring-grass-400/50"
+          className="min-w-0 flex-1 rounded-lg bg-ink-950/60 px-3 py-1.5 font-mono text-sm text-ink-100 ring-1 ring-tint/10 outline-none placeholder:font-sans placeholder:text-ink-500 focus:ring-grass-400/50"
         />
         <Button size="sm" icon={KeyRound} disabled={busy || !value.trim()} onClick={() => void save(value)}>
           Vérifier et enregistrer
@@ -205,7 +205,7 @@ export function CurseForgeAccountSetting() {
   useEffect(load, [load])
   return (
     <>
-      <div className="divide-y divide-white/[0.05]">
+      <div className="divide-y divide-tint/[0.05]">
         <SecretRow kind="apiKey" status={status?.apiKey ?? null} onChange={load} />
         <SecretRow kind="uploadToken" status={status?.uploadToken ?? null} onChange={load} />
       </div>
@@ -280,7 +280,7 @@ export function MaintenanceSetting() {
             type="time"
             value={shownTime}
             onChange={(e) => setTime(e.target.value)}
-            className="rounded-lg bg-ink-950/60 px-2.5 py-1.5 text-sm text-ink-100 ring-1 ring-white/10 ring-inset focus:ring-grass-400/60 focus:outline-none"
+            className="rounded-lg bg-ink-950/60 px-2.5 py-1.5 text-sm text-ink-100 ring-1 ring-tint/10 ring-inset focus:ring-grass-400/60 focus:outline-none"
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-ink-200">

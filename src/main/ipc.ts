@@ -14,7 +14,8 @@ import { registerRoleIpc } from './roleIpc'
 import { getSettings, updateSettings } from '../core/settings'
 import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut'
 import { studioTask } from './studioIpc'
-import { toggleMaximize } from './windowState'
+import { applyInterfaceScale, toggleMaximize } from './windowState'
+import { normalizeAppearance } from '../shared/appearance'
 
 export function registerIpc(
   getWindow: () => BrowserWindow | null,
@@ -72,7 +73,12 @@ export function registerIpc(
     }
     if (typeof patch.shortcutPrompted === 'boolean') allowed.shortcutPrompted = patch.shortcutPrompted
     if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView
-    return updateSettings(allowed)
+    if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance)
+    return updateSettings(allowed).then((settings) => {
+      const win = getWindow()
+      if (allowed.appearance && win) applyInterfaceScale(win, settings.appearance.scale)
+      return settings
+    })
   })
   ipcMain.handle('settings:pickInstancesDir', async () => {
     const win = getWindow()

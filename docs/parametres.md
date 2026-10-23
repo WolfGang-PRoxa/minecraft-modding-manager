@@ -7,7 +7,7 @@ Les sections **Dossier des modpacks**, **Compte CurseForge**, **Mises à jour au
 terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
-colonnes : l’application (utilisation, raccourci, à propos), CurseForge (installation, dossier des instances, compte),
+colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des instances, compte),
 puis le Studio (dossier des modpacks, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
 
@@ -31,6 +31,31 @@ Pour **passer en publieur**, cliquer sur l’onglet **Publieur** : le formulaire
 (voir [Devenir publieur](publieur.md)). Pour **revenir en récepteur**, cliquer sur l’onglet **Récepteur** : l’onglet
 Studio disparaît, la Bibliothèque s’affiche. Le dossier des modpacks, la connexion GitHub et les releases ne sont pas
 touchés : repasser en publieur les retrouve.
+
+## Apparence
+
+Le style de couleurs de l’application et la taille de son interface. Tout s’applique aussitôt, à toute la fenêtre.
+
+**Style** : chaque vignette montre un style avec ses propres couleurs ; un clic l’applique. Six styles sont fournis :
+**Herbe** (le style d’origine), **Océan**, **Améthyste**, **Nether**, **Contraste élevé** et **Neige**, un style clair.
+
+Un **style personnalisé** se crée avec **Nouveau style** (à partir du style en cours) ou **Personnaliser** sous un
+style fourni. Sa fenêtre règle, avec un aperçu à côté :
+
+- son **nom** ;
+- trois **couleurs** : le **fond**, le **texte** et l’**accent** (boutons principaux, liens, interrupteurs). Les
+  autres nuances de l’interface en sont tirées. Une couleur se choisit dans la palette de Windows ou s’écrit en
+  hexadécimal (`#3a8a22`). Un avertissement signale un texte trop proche du fond ;
+- l’**aspect** : les **angles** (carrés, légers, arrondis, très arrondis), la **police des titres** (Space Grotesk,
+  Inter ou Segoe UI), les **animations** et les **effets de flou** (arrière-plan flouté derrière les fenêtres, lueurs).
+
+**Enregistrer** l’ajoute aux vignettes et l’applique. Un style personnalisé sélectionné se **modifie**, se
+**duplique** ou se **supprime** (un second clic confirme la suppression) ; supprimé, il laisse la place au style
+**Herbe**. Les styles personnalisés restent sur ce PC, dans les réglages de l’application (24 au plus).
+
+**Taille de l’interface** : de 80 % à 150 %. Tous les éléments, textes compris, grandissent ou rapetissent ensemble.
+`Ctrl` + `+` et `Ctrl` + `-` passent au palier suivant ou précédent depuis n’importe quelle vue, `Ctrl` + `0` revient à
+100 %. La taille minimale de la fenêtre grandit avec l’interface, sans dépasser l’écran.
 
 ## Dossier des modpacks
 
@@ -108,7 +133,8 @@ Le numéro de la version installée et sa date de publication.
 
 ## La fenêtre
 
-- La fenêtre s’ouvre en grand, la barre des tâches restant visible. Sa taille minimale est de 960 × 640 pixels.
+- La fenêtre s’ouvre en grand, la barre des tâches restant visible. Sa taille minimale est de 960 × 640 pixels, plus
+  si l’interface est agrandie (voir [Apparence](#apparence)).
 - La barre de titre se fait glisser pour déplacer la fenêtre ; un double-clic l’agrandit ou la ramène à sa taille.
 - Les boutons de droite **réduisent**, **agrandissent** (ou ramènent au **niveau inférieur**) et **ferment** la
   fenêtre. En plein écran, le bouton du milieu en fait sortir.
@@ -123,6 +149,8 @@ Le numéro de la version installée et sa date de publication.
 | `F1` | Ouvrir ou fermer l’aide |
 | `F11` | Passer en plein écran, ou en sortir |
 | `Échap` | Fermer la fenêtre de dialogue, le panneau de détails ou l’aide |
+| `Ctrl` + `+` / `Ctrl` + `-` | Agrandir ou réduire l’interface (voir [Apparence](#apparence)) |
+| `Ctrl` + `0` | Revenir à la taille normale de l’interface |
 | `Entrée` | Valider le formulaire en cours (dépôt, jeton GitHub, nom d’un modpack…) |
 | `Ctrl` + `K` | Dans l’aide, rechercher dans toutes les pages |
 | `Alt` + `←` | Dans l’aide, revenir à la page précédente |

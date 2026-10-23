@@ -6,12 +6,13 @@ import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
-import { useSettingsFile } from '../core/settings'
+import { getSettings, useSettingsFile } from '../core/settings'
+import { findTheme, windowBackground } from '../shared/appearance'
 import { enablePreviousIdentityMigration, migrateDataDir } from '../core/previousIdentity'
 import { migratePreviousInstallation } from './previousIdentity'
 import { WINDOWS_APP_ID } from './shortcut'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
-import { toggleFullScreen, watchWindowState } from './windowState'
+import { applyInterfaceScale, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -25,16 +26,18 @@ function restrictPermissions(target: Session): void {
   target.setDevicePermissionHandler(() => false)
 }
 
-function createWindow(): void {
+async function createWindow(): Promise<void> {
+  const { appearance } = await getSettings()
   mainWindow = new BrowserWindow({
     title: APP_NAME,
     width: 1440,
     height: 900,
-    minWidth: 960,
-    minHeight: 640,
+    minWidth: MIN_WINDOW_SIZE.width,
+    minHeight: MIN_WINDOW_SIZE.height,
     frame: false,
     show: false,
-    backgroundColor: '#0a0d12',
+    // Déjà aux couleurs du style choisi, avant que la page ne s'affiche.
+    backgroundColor: windowBackground(findTheme(appearance)),
     // Une fois packagée, l'application utilise l'icône intégrée à l'exécutable.
     icon: app.isPackaged ? undefined : join(__dirname, '../../build/icon.png'),
     webPreferences: {
@@ -51,6 +54,10 @@ function createWindow(): void {
     mainWindow?.show()
   })
   watchWindowState(mainWindow)
+  // Taille de l'interface : le zoom est réappliqué à chaque chargement de la page (Chromium le retient par origine).
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (mainWindow) void getSettings().then((s) => mainWindow && applyInterfaceScale(mainWindow, s.appearance.scale))
+  })
 
   // Les liens externes s'ouvrent dans le navigateur, jamais dans l'application.
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -126,7 +133,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     void migratePreviousInstallation()
     registerIpc(() => mainWindow, launch)
     await registerStudio(() => mainWindow)
-    createWindow()
+    await createWindow()
   })
 
   app.on('window-all-closed', () => app.quit())

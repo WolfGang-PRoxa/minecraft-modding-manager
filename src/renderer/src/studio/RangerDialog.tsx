@@ -14,7 +14,7 @@ function PackPlan({ plan, onMove }: { plan: RangerPackPlan; onMove: (from: numbe
         {plan.renames.map((rename) => {
           const index = newOnes.indexOf(rename)
           return (
-            <div key={rename.from} className="rounded-xl bg-white/[0.03] px-4 py-3 ring-1 ring-inset ring-white/[0.05]">
+            <div key={rename.from} className="rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.05]">
               <div className="flex items-center gap-3">
                 <span className="min-w-0 flex-1 truncate text-sm text-ink-300 select-text" title={rename.from}>
                   {rename.from}

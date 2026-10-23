@@ -23,6 +23,9 @@
   --color-grass-600: #3f8a26;
   --color-grass-950: #0d1f08;
 
+  /* Voiles et filets (bg-tint/[0.06], ring-tint/10…) : du blanc sur le style d'origine, la couleur du texte sinon. */
+  --color-tint: #fff;
+
   --color-amber-glow: #f5b642;
   --color-curseforge: #f16436;
 
@@ -112,7 +115,7 @@
     width: 1rem;
     height: 1rem;
     margin: 0;
-    border-radius: 0.3rem;
+    border-radius: calc(var(--radius-sm) * 1.2);
     background: color-mix(in oklab, var(--color-ink-950) 60%, transparent);
     box-shadow: inset 0 0 0 2px var(--color-ink-500);
     cursor: pointer;
@@ -177,6 +180,30 @@
   }
 }
 
+/* Style clair : les couleurs d'état de Tailwind, faites pour un fond sombre, prennent leurs nuances foncées. */
+[data-tone='light'] {
+  color-scheme: light;
+  --color-red-300: oklch(50.5% 0.213 27.518);
+  --color-red-400: oklch(57.7% 0.245 27.325);
+  --color-sky-300: oklch(50% 0.134 242.749);
+  --color-sky-400: oklch(58.8% 0.158 241.966);
+  --color-violet-300: oklch(49.1% 0.27 292.581);
+  --color-violet-400: oklch(54.1% 0.281 293.009);
+  --color-amber-glow: #a8650a;
+}
+
+:root:not([data-tone='light']) {
+  color-scheme: dark;
+}
+
+/* Animations coupées dans le style choisi. */
+:root[data-motion='off'] *,
+:root[data-motion='off'] *::before,
+:root[data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 @utility drag-region {
   -webkit-app-region: drag;
 }
@@ -187,8 +214,8 @@
 
 @utility pixel-grid {
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.025) 1px, transparent 1px);
+    linear-gradient(to right, color-mix(in oklab, var(--color-tint) 2.5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-tint) 2.5%, transparent) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
@@ -270,14 +297,14 @@
     font-size: 0.85em;
     background: var(--color-ink-750);
     padding: 0.15em 0.4em;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
   & strong {
     color: var(--color-ink-100);
   }
   & hr {
     border: 0;
-    border-top: 1px solid rgb(255 255 255 / 0.08);
+    border-top: 1px solid color-mix(in oklab, var(--color-tint) 8%, transparent);
     margin: 1.2em 0;
   }
   & table {
@@ -286,7 +313,7 @@
   }
   & th,
   & td {
-    border: 1px solid rgb(255 255 255 / 0.08);
+    border: 1px solid color-mix(in oklab, var(--color-tint) 8%, transparent);
     padding: 0.35em 0.7em;
     text-align: left;
   }
@@ -327,7 +354,7 @@
     font-size: 1.5rem;
     margin: 2.2em 0 0.6em;
     padding-top: 1.3em;
-    border-top: 1px solid rgb(255 255 255 / 0.06);
+    border-top: 1px solid color-mix(in oklab, var(--color-tint) 6%, transparent);
   }
   & h3 {
     font-size: 1.15rem;
@@ -378,7 +405,7 @@
   & a {
     color: var(--color-grass-300);
     text-decoration: underline;
-    text-decoration-color: rgb(166 240 138 / 0.35);
+    text-decoration-color: color-mix(in oklab, var(--color-grass-300) 35%, transparent);
     text-underline-offset: 3px;
     cursor: pointer;
   }
@@ -394,7 +421,7 @@
     color: var(--color-ink-100);
     background: var(--color-ink-750);
     padding: 0.15em 0.4em;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
   }
   & pre {
     margin: 1.2em 0;
@@ -403,8 +430,8 @@
     font-size: 0.82rem;
     line-height: 1.6;
     background: var(--color-ink-950);
-    border: 1px solid rgb(255 255 255 / 0.06);
-    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--color-tint) 6%, transparent);
+    border-radius: calc(var(--radius-2xl) * 0.875);
   }
   & pre code {
     font-size: inherit;
@@ -414,7 +441,7 @@
   }
   & hr {
     border: 0;
-    border-top: 1px solid rgb(255 255 255 / 0.08);
+    border-top: 1px solid color-mix(in oklab, var(--color-tint) 8%, transparent);
     margin: 2em 0;
   }
   & blockquote {
@@ -426,8 +453,8 @@
   & .table-wrap {
     margin: 1.2em 0;
     overflow-x: auto;
-    border: 1px solid rgb(255 255 255 / 0.07);
-    border-radius: 14px;
+    border: 1px solid color-mix(in oklab, var(--color-tint) 7%, transparent);
+    border-radius: calc(var(--radius-2xl) * 0.875);
   }
   & table {
     width: 100%;
@@ -438,21 +465,21 @@
   & th {
     font-weight: 600;
     color: var(--color-ink-100);
-    background: rgb(255 255 255 / 0.04);
+    background: color-mix(in oklab, var(--color-tint) 4%, transparent);
   }
   & th,
   & td {
     padding: 0.6em 0.9em;
     text-align: left;
     vertical-align: top;
-    border-bottom: 1px solid rgb(255 255 255 / 0.06);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-tint) 6%, transparent);
   }
   & tr:last-child td {
     border-bottom: 0;
   }
   & th + th,
   & td + td {
-    border-left: 1px solid rgb(255 255 255 / 0.06);
+    border-left: 1px solid color-mix(in oklab, var(--color-tint) 6%, transparent);
   }
   & .callout > :first-child,
   & .callout > :nth-child(2) {
@@ -464,7 +491,7 @@
   & h2,
   & h3,
   & h4 {
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
   }
 }
 
@@ -482,7 +509,7 @@
 
 @keyframes docs-flash {
   from {
-    background-color: rgb(126 217 87 / 0.14);
+    background-color: color-mix(in oklab, var(--color-grass-400) 14%, transparent);
   }
   to {
     background-color: transparent;

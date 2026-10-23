@@ -10,6 +10,7 @@ import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
 import { ClaudeCodeSetting, CurseForgeAccountSetting, MaintenanceSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
+import { AppearanceSection } from './Appearance'
 import { APP_NAME } from '../../../shared/config'
 
 const SOURCE_LABELS = {
@@ -34,7 +35,7 @@ function useMediaQuery(query: string): boolean {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-white/[0.06]">
+    <section className="rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
       <h3 className="mb-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">{title}</h3>
       {children}
     </section>
@@ -67,7 +68,10 @@ export function SettingsDialog() {
 
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    // Échap ferme la fenêtre ouverte par-dessus (éditeur de style), pas les paramètres.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && document.querySelectorAll('[aria-modal="true"]').length === 1) setOpen(false)
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, setOpen])
@@ -77,6 +81,12 @@ export function SettingsDialog() {
   const usage = (
     <Section key="usage" title="Utilisation">
       <PlayerUsageSection />
+    </Section>
+  )
+
+  const appearanceSection = (
+    <Section key="appearance" title="Apparence">
+      <AppearanceSection />
     </Section>
   )
 
@@ -131,7 +141,7 @@ export function SettingsDialog() {
     <Section key="instances" title="Dossier des instances">
       {curseForge && (
         <>
-          <div className="rounded-xl bg-ink-950/60 px-4 py-3 font-mono text-[13px] break-all text-ink-100 ring-1 ring-inset ring-white/[0.06] select-text">
+          <div className="rounded-xl bg-ink-950/60 px-4 py-3 font-mono text-[13px] break-all text-ink-100 ring-1 ring-inset ring-tint/[0.06] select-text">
             {curseForge.instancesDir}
           </div>
           <p className="mt-2 text-xs text-ink-400">
@@ -229,22 +239,22 @@ export function SettingsDialog() {
     </Section>
   )
 
-  // Une colonne sur une fenêtre étroite, deux sinon ; trois pour le publieur sur un grand écran : l'application,
-  // CurseForge, puis le travail du Studio.
+  // Une colonne sur une fenêtre étroite, deux sinon ; trois pour le publieur sur un grand écran : l'application et
+  // son apparence, CurseForge, puis le travail du Studio.
   const columns = !publisher
     ? [
-        [usage, curseForgeSection, shortcutSection],
-        [instances, about]
+        [usage, appearanceSection],
+        [curseForgeSection, instances, shortcutSection, about]
       ]
     : wide
       ? [
-          [usage, shortcutSection, about],
+          [usage, appearanceSection, shortcutSection, about],
           [curseForgeSection, instances, curseForgeAccount],
           [workspace, maintenance, claude]
         ]
       : [
-          [usage, curseForgeSection, instances, shortcutSection, about],
-          [workspace, curseForgeAccount, maintenance, claude]
+          [usage, appearanceSection, curseForgeSection, instances],
+          [workspace, curseForgeAccount, maintenance, claude, shortcutSection, about]
         ]
 
   return (
@@ -254,7 +264,7 @@ export function SettingsDialog() {
         role="dialog"
         aria-modal="true"
         aria-label="Paramètres"
-        className={`animate-rise relative max-h-[calc(100vh-3rem)] w-full overflow-y-auto rounded-3xl bg-ink-850 p-8 shadow-2xl ring-1 ring-white/10 ${columns.length === 3 ? 'max-w-[100rem]' : 'max-w-6xl'}`}
+        className={`animate-rise relative max-h-[calc(100vh-3rem)] w-full overflow-y-auto rounded-3xl bg-ink-850 p-8 shadow-2xl ring-1 ring-tint/10 ${columns.length === 3 ? 'max-w-[100rem]' : 'max-w-6xl'}`}
       >
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold tracking-tight">Paramètres</h2>
