@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { CurseForgeMissingBanner, OfflineBanner, ShortcutBanner } from './components/Banners'
+import { ContentSections } from './components/ContentLibrary'
 import { DetailsPanel } from './components/DetailsPanel'
 import { Hero } from './components/Hero'
 import { ModpackCard } from './components/ModpackCard'
@@ -23,8 +24,15 @@ function Library() {
 
   if (loading && !catalog) return <LoadingView />
   if (!catalog) return <ErrorView message="Réessaie dans un instant." />
-  if (catalog.modpacks.length === 0) {
+  if (catalog.modpacks.length === 0 && catalog.contents.length === 0) {
     return catalog.error ? <ErrorView message={catalog.error} /> : <EmptyView />
+  }
+  if (catalog.modpacks.length === 0) {
+    return (
+      <div className="pt-8">
+        <ContentSections />
+      </div>
+    )
   }
 
   const [featured, ...others] = catalog.modpacks
@@ -45,6 +53,7 @@ function Library() {
         </section>
       )}
       {others.length === 0 && <div className="h-16" />}
+      <ContentSections />
     </>
   )
 }

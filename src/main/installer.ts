@@ -15,6 +15,7 @@ import { applyInstanceGuid, writeCurseClientFile } from '../core/instanceIdentit
 import { downloadFile } from './download'
 import { pathExists, readJson, removeQuietly, renameWithRetry, writeJsonAtomic } from '../core/fsutil'
 import { readInstanceMarker } from '../core/previousIdentity'
+import { carryOverExtras } from '../core/extras'
 import { applyModStates, carryOverConfigs, hashConfigFiles, readModStates } from '../core/playerChoices'
 import { getSettings } from '../core/settings'
 import { extractZip } from '../core/zip'
@@ -90,6 +91,7 @@ function installedFrom(marker: InstanceMarker, instancePath: string): InstalledM
     tag: marker.tag,
     installedAt: marker.installedAt,
     managedEntries: marker.managedEntries ?? [],
+    extras: marker.extras ?? [],
     instanceName: basename(instancePath),
     instancePath
   }
@@ -341,6 +343,10 @@ export async function installModpack(
       const oldDir = join(workDir, 'old')
       await renameWithRetry(targetDir, oldDir)
       try {
+        // Les ajouts du joueur (Bibliothèque) que la nouvelle version fournit elle-même sous le même nom lui reviennent.
+        const extras = previousMarker?.extras ?? []
+        const shipped = new Set<string>()
+        for (const extra of extras) if (await pathExists(join(stagingDir, extra.file))) shipped.add(extra.file.toLowerCase())
         // 2. On y récupère les données du joueur, ses configurations modifiées si le publieur le demande, et l'état
         // de ses mods ; 3. on met la nouvelle version en place.
         await carryOverPlayerData({ ...previous, instancePath: oldDir }, stagingDir)
@@ -351,6 +357,9 @@ export async function installModpack(
           states: await readModStates(oldDir, previousInstance),
           disabledByDefault: previousMarker?.disabledByDefault
         })
+        // Les mods ajoutés par le joueur : le dossier mods vient d'être remplacé par celui de la nouvelle version.
+        const keptExtras = await carryOverExtras(oldDir, stagingDir, extras, shipped)
+        if (keptExtras.length) marker.extras = keptExtras
         await finalize(targetDir, previousInstance)
       } catch (err) {
         // Par sécurité, on ne supprime rien : les mondes peuvent être dans l'un ou l'autre dossier.

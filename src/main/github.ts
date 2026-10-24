@@ -1,6 +1,8 @@
 import { app } from 'electron'
 import { join } from 'node:path'
-import { APP_REPO, APP_TAG_PREFIX } from '../shared/config'
+import { APP_REPO, APP_TAG_PREFIX, CONTENT_MANIFEST_ASSET } from '../shared/config'
+import { isContentManifest, parseContentTag, type ContentManifest } from '../shared/content'
+import { contentReleaseFrom, groupContents } from '../shared/contentReleases'
 import {
   compareVersions,
   findManifestAsset,
@@ -12,7 +14,7 @@ import {
   type GhRelease
 } from '../shared/releases'
 import { repoSlug } from '../shared/repo'
-import type { AppUpdateInfo, Catalog, ModpackManifest, ModpackVersion, RepoRef } from '../shared/types'
+import type { AppUpdateInfo, Catalog, ContentRelease, ModpackManifest, ModpackVersion, RepoRef } from '../shared/types'
 import { readJson, writeJsonAtomic } from '../core/fsutil'
 import { repoApiBase } from '../core/githubEnv'
 import { getSettings } from '../core/settings'
@@ -26,7 +28,8 @@ interface HttpCacheEntry {
 }
 
 type HttpCache = Record<string, HttpCacheEntry>
-type ManifestCache = Record<string, ModpackManifest>
+/** modpack.json et content.json déjà lus, par « id:date » de l'asset. */
+type ManifestCache = Record<string, unknown>
 
 let httpCache: HttpCache | null = null
 let manifestCache: ManifestCache | null = null
@@ -101,9 +104,10 @@ function cachedReleases(repo: RepoRef): GhRelease[] {
   return releases
 }
 
-async function fetchManifest(asset: GhAsset, offline: boolean): Promise<ModpackManifest | null> {
+async function fetchManifest<T>(asset: GhAsset, offline: boolean, valid: (json: unknown) => json is T): Promise<T | null> {
   const key = `${asset.id}:${asset.updated_at}`
-  if (manifestCache![key]) return manifestCache![key]
+  const known = manifestCache![key]
+  if (known !== undefined) return valid(known) ? known : null
   if (offline) return null
   try {
     // L'URL de téléchargement public ne consomme pas le quota de l'API.
@@ -113,7 +117,7 @@ async function fetchManifest(asset: GhAsset, offline: boolean): Promise<ModpackM
     })
     if (!res.ok) return null
     const json: unknown = await res.json()
-    if (!isModpackManifest(json)) return null
+    if (!valid(json)) return null
     manifestCache![key] = json
     return json
   } catch {
@@ -126,12 +130,26 @@ async function buildModpackVersions(releases: GhRelease[], offline: boolean): Pr
     releases.map(async (release) => {
       if (release.draft || release.tag_name.startsWith(APP_TAG_PREFIX)) return null
       const asset = findManifestAsset(release)
-      const manifest = asset ? await fetchManifest(asset, offline) : null
+      const manifest = asset ? await fetchManifest<ModpackManifest>(asset, offline, isModpackManifest) : null
       if (asset && !manifest) return null
       return modpackVersionFromRelease(release, manifest)
     })
   )
   return versions.filter((v): v is ModpackVersion => v !== null)
+}
+
+/** Mods, packs de ressources et shaders du dépôt (releases avec content.json). */
+async function buildContentReleases(releases: GhRelease[], offline: boolean): Promise<ContentRelease[]> {
+  const found = await Promise.all(
+    releases.map(async (release) => {
+      const parsed = parseContentTag(release.tag_name)
+      if (release.draft || !parsed || parsed.kind === 'modpack') return null
+      const asset = release.assets.find((a) => a.name === CONTENT_MANIFEST_ASSET)
+      const manifest = asset ? await fetchManifest<ContentManifest>(asset, offline, isContentManifest) : null
+      return manifest ? contentReleaseFrom(release, manifest) : null
+    })
+  )
+  return found.filter((r): r is ContentRelease => r !== null)
 }
 
 /** Version la plus récente de l'application, si elle est plus récente que celle qui tourne. */
@@ -203,6 +221,7 @@ export async function getCatalog(force = false): Promise<Catalog> {
   const catalog: Catalog = {
     repo,
     modpacks: groupModpacks(await buildModpackVersions(releases, offline)),
+    contents: groupContents(await buildContentReleases(releases, offline)),
     appUpdate: findAppUpdate(appReleases),
     fetchedAt: offline ? null : new Date().toISOString(),
     error

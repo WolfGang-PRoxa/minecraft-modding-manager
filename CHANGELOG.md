@@ -14,6 +14,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   du mod dépose ses jars, qui reste lié : ses nouvelles versions s’y repèrent et s’importent en un clic. Chaque
   version devient une release GitHub, et s’envoie sur CurseForge avec sa version de Minecraft, son chargeur et ses
   dépendances. Aussi depuis le terminal et Claude Code (commandes `content`).
+- Bibliothèque : les **mods**, **packs de ressources** et **shaders** publiés s’affichent sous les modpacks. Ils
+  s’ajoutent en un clic aux profils installés par l’application, où ils restent quand le modpack se met à jour ; une
+  autre version s’installe ou se retire depuis leur fiche.
 - Studio : les **packs de ressources** et les **shaders** se publient aussi, depuis le dossier du pack en cours de
   création (zippé à chaque version) ou depuis des zips. Les versions de Minecraft d’un pack de ressources sont lues
   dans son `pack.mcmeta` ; celles d’un shader se donnent à la main.

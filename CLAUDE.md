@@ -275,6 +275,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `github: false` (seulement CurseForge : `computePlan` met le modpack de côté, ses releases ne sont jamais retirées).
     Interface : `studio/CurseForgePanel.tsx` (ligne « Publié sur… », réglages, pastille par version, bouton sur la
     dernière version).
+- Bibliothèque des contenus : `shared/contentReleases.ts` (`contentReleaseFrom` : release `mod-`/`rp-`/`shader-` +
+  `content.json` cohérent avec le tag, chaque fichier avec SHA-256 ; `groupContents` ; `incompatibility` : version de
+  Minecraft, chargeur, Quilt accepte Fabric). `Catalog.contents` (github.ts, content.json lu par l'URL publique et
+  gardé dans le même cache que modpack.json). `core/extras.ts` : `installExtra` (profil avec marqueur seulement,
+  fichier téléchargé en `.part` puis vérifié, version précédente retirée, refus si un fichier du même nom ne vient
+  pas de la Bibliothèque), `removeExtra`, `carryOverExtras` (appelé par installer.ts après `applyModStates` : le
+  dossier mods est remplacé à la mise à jour). Marqueur `extras`. IPC `extras:*` (`main/extrasIpc.ts` : version et
+  fichier relus dans le catalogue, profil dans le dossier Instances). Interface `components/ContentLibrary.tsx`.
 - `src/core/maintenance/` — mises à jour automatiques (Node pur). `pipeline.ts` : `maintainPack` (profil source
   enregistré seulement, pas un lien deviné ; `checkUpdates` avec `pinned` → `applyUpdatesToTrial` → `checkProfile` →
   référence (`currentTests` du profil source, sinon `testPlayers` dessus) → `testPlayers` sur l'essai (`testServer`

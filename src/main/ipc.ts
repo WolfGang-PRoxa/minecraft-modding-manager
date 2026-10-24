@@ -3,6 +3,7 @@ import type { CurseForgeSecretKind, InstallResult, IssueReport, LaunchInfo, Modp
 import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
 import { registerAuthIpc } from './authIpc'
 import { registerClaudeCodeIpc } from './claudeCode'
+import { registerExtrasIpc } from './extrasIpc'
 import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth'
 import { modrinthAuthStatus, saveModrinthToken } from '../core/modrinth'
 import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
@@ -25,6 +26,7 @@ export function registerIpc(
   registerAuthIpc()
   registerRoleIpc()
   registerClaudeCodeIpc()
+  registerExtrasIpc()
   ipcMain.handle('cfauth:status', () => curseForgeAuthStatus())
   ipcMain.handle('mrauth:status', () => modrinthAuthStatus())
   ipcMain.handle('mrauth:save', async (_e, value: string | null) => {

@@ -56,8 +56,10 @@ L’application ajoute deux fichiers à chaque profil qu’elle installe :
   d’installation et la liste des éléments fournis par le modpack (`managedEntries`), qui sert à savoir quoi
   remplacer lors d’une mise à jour. Il note aussi ce que la version a installé, pour reconnaître ensuite ce que le
   joueur a changé : l’empreinte de chaque fichier du dossier `config` (`configFiles`) et les mods installés désactivés
-  (`disabledByDefault`). C’est la seule preuve qu’un profil a été installé par l’application : sans lui, le profil
-  n’est plus mis à jour sur place, seulement reconnu à ses mods ;
+  (`disabledByDefault`). Les mods, packs de ressources et shaders ajoutés depuis la Bibliothèque y sont notés
+  (`extras` : type, identifiant, version, fichier et empreinte), pour être gardés aux mises à jour. C’est la seule
+  preuve qu’un profil a été installé par l’application : sans lui, le profil n’est plus mis à jour sur place,
+  seulement reconnu à ses mods, et rien ne peut y être ajouté depuis la Bibliothèque ;
 - **`.modpack-cover.png`** (ou `.jpg`, `.webp`) : l’image du modpack, utilisée comme image du profil dans
   CurseForge.
 
@@ -95,6 +97,22 @@ Le fichier `modpack.json` décrit la version :
 Une release sans `modpack.json` est tout de même acceptée si son tag suit la convention et qu’elle contient un zip :
 son nom et sa version sont alors tirés du tag et du titre. Une release en brouillon n’est jamais affichée ; une
 préversion est marquée **Bêta**.
+
+## Format d’une release de mod, de pack de ressources ou de shader
+
+Les mods, packs de ressources et shaders publiés par le Studio sont des releases du même dépôt :
+
+- **tag** : `mod-<id>-v<version>` (version déclarée par le jar : `mod-lma-v1.2.0-26.3`), `rp-<id>-v<N>` ou
+  `shader-<id>-v<N>` ;
+- **titre** : `<nom> <version>` pour un mod, `<nom> v<N>` pour un pack ;
+- **fichiers** : les jars ou le zip de la version, l’image facultative, et `content.json`.
+
+Le fichier `content.json` décrit la version : `schema` (`1`), `type` (`mod`, `resourcepack` ou `shader`), `id`,
+`name`, `description`, `version`, `minecraftVersions`, `loaders` (`fabric`, `forge`, `iris`…), `files` (pour chaque
+fichier : nom, taille, empreintes SHA-256 et SHA-1, chargeurs et versions de Minecraft), `cover` et `coverSha256`,
+`author` et `createdAt`. La Bibliothèque ignore une release sans `content.json` lisible ou dont le tag ne lui
+correspond pas, et vérifie l’empreinte de chaque fichier téléchargé. Les versions plus anciennes de l’application,
+qui ne connaissent que les modpacks, ne les affichent pas : elles n’ont ni le préfixe `pack-` ni `modpack.json`.
 
 Les releases `app-v<version>` du dépôt de l’application contiennent l’installeur de chaque version de l’application,
 et ses notes, tirées de l’[historique des versions](../CHANGELOG.md).

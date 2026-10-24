@@ -1,4 +1,5 @@
 import type { AppearanceSettings } from './appearance'
+import type { ContentKind, ContentLoader } from './content'
 
 /** Contenu de l'asset `modpack.json` attaché à chaque release de modpack. */
 export interface ModpackManifest {
@@ -79,10 +80,47 @@ export interface AppUpdateInfo {
   installerSha256: string | null
 }
 
+/** Un fichier d'une version publiée d'un mod, d'un pack de ressources ou d'un shader. */
+export interface ContentReleaseFile {
+  name: string
+  url: string
+  size: number
+  sha256: string
+  loaders: ContentLoader[]
+  minecraftVersions: string[]
+}
+
+/** Une version publiée d'un contenu qui n'est pas un modpack (release `mod-`, `rp-`, `shader-` avec content.json). */
+export interface ContentRelease {
+  kind: Exclude<ContentKind, 'modpack'>
+  id: string
+  name: string
+  description: string
+  version: string
+  tag: string
+  notes: string
+  publishedAt: string
+  minecraftVersions: string[]
+  loaders: ContentLoader[]
+  files: ContentReleaseFile[]
+  coverUrl: string | null
+  releaseUrl: string
+}
+
+/** Un contenu et ses versions, de la plus récente à la plus ancienne. */
+export interface ContentItem {
+  kind: ContentRelease['kind']
+  id: string
+  latest: ContentRelease
+  versions: ContentRelease[]
+}
+
 export interface Catalog {
   /** Dépôt d'où viennent les modpacks. */
   repo: RepoRef
   modpacks: Modpack[]
+  /** Mods, packs de ressources et shaders publiés dans le même dépôt. */
+  contents: ContentItem[]
   appUpdate: AppUpdateInfo | null
   fetchedAt: string | null
   /** Renseigné quand GitHub n'a pas pu être joint : le catalogue vient alors du cache. */
@@ -104,12 +142,27 @@ export interface InstanceMarker {
   configFiles?: Record<string, string>
   /** Mods que cette version installe désactivés (clés de modKey) : un mod dans l'autre état a été changé par le joueur. */
   disabledByDefault?: string[]
+  /** Mods, packs de ressources et shaders ajoutés par le joueur depuis la Bibliothèque : gardés aux mises à jour. */
+  extras?: InstalledExtra[]
+}
+
+/** Un contenu ajouté par le joueur à un profil installé par l'application. */
+export interface InstalledExtra {
+  kind: ContentRelease['kind']
+  id: string
+  name: string
+  version: string
+  /** Chemin depuis le dossier du profil (« mods/lma-26.3-1.2.0.jar »). */
+  file: string
+  sha256: string
+  installedAt: string
 }
 
 /** Modpack installé par l'application, tel que la fenêtre le voit (sans les empreintes du marqueur). */
 export interface InstalledModpack extends Pick<InstanceMarker, 'id' | 'version' | 'tag' | 'installedAt' | 'managedEntries'> {
   instanceName: string
   instancePath: string
+  extras: InstalledExtra[]
 }
 
 export type CurseForgeFlavor = 'overwolf' | 'standalone'
@@ -370,8 +423,15 @@ export interface ModrinthAuthApi {
   saveModrinthToken(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
 }
 
+/** Bibliothèque : contenus ajoutés par le joueur à un profil installé par l'application. */
+export interface ExtrasApi {
+  /** Ajoute (ou met à jour) la version donnée d'un contenu dans le profil. */
+  installExtra(profilePath: string, kind: ContentRelease['kind'], id: string, version: string): Promise<{ ok: true; extra: InstalledExtra } | { ok: false; error: string }>
+  removeExtra(profilePath: string, kind: ContentRelease['kind'], id: string): Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi {
+export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi, ExtrasApi {
   getLaunchInfo(): Promise<LaunchInfo>
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
   onActivated(listener: (view: AppView | null) => void): () => void

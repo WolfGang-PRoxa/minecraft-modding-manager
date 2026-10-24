@@ -90,7 +90,8 @@ les autres (voir [Garder les configurations des joueurs](reglages.md#garder-les-
 
 > [!WARNING]
 > Un dossier fourni par le modpack, comme `mods`, est remplacé **en entier** par celui de la nouvelle version : un
-> mod ajouté à la main dans `mods` ne survit pas à la mise à jour, pas plus qu’une configuration modifiée quand le
+> mod ajouté à la main dans `mods` ne survit pas à la mise à jour (un mod ajouté depuis la Bibliothèque, si : voir
+> [Mods, packs de ressources et shaders](#mods-packs-de-ressources-et-shaders)), pas plus qu’une configuration modifiée quand le
 > publieur n’a pas choisi de les garder. Mieux vaut garder une copie de ce qui a été changé, ou demander au
 > publieur de l’intégrer au modpack.
 
@@ -109,6 +110,30 @@ Un clic sur une version l’affiche, puis **Installer la vN** l’installe.
 L’application gère **un profil par modpack** : si le modpack est déjà installé par l’application, son profil passe à
 la version choisie, en conservant les données du joueur comme pour une mise à jour. C’est utile pour revenir à une
 version précédente. Quand une version plus récente sort, la pastille **Mise à jour disponible** réapparaît.
+
+## Mods, packs de ressources et shaders
+
+Sous les modpacks, la Bibliothèque montre aussi les **mods**, **packs de ressources** et **shaders** publiés dans le
+même dépôt, chacun dans sa section. Chaque carte donne son nom, sa dernière version, ses versions de Minecraft et,
+pour un mod, son chargeur (Fabric, Forge…) ; **Dans N profils** indique où il est déjà ajouté.
+
+Un clic ouvre sa fiche : description, choix de la version, notes de la version, et la liste des **profils installés
+par l’application**. Seulement ceux-là : un profil créé dans CurseForge ou à la main n’est jamais modifié. Pour
+chaque profil :
+
+- **Ajouter** télécharge le fichier de la version choisie, vérifie son empreinte, puis le pose dans le dossier qui
+  convient (`mods`, `resourcepacks` ou `shaderpacks`). Un mod est chargé au prochain lancement du profil ; un pack de
+  ressources ou un shader se choisit ensuite dans les options du jeu (un shader demande Iris ou OptiFine) ;
+- **Installer cette version** remplace la version déjà ajoutée par celle choisie ;
+- **Retirer** supprime le fichier du profil.
+
+Un profil qui ne convient pas est signalé, sans bouton : version de Minecraft différente, ou autre chargeur de mods
+(un profil Quilt accepte les mods Fabric). L’ajout est aussi refusé quand un fichier du même nom est déjà dans le
+profil sans venir de la Bibliothèque (fourni par le modpack, ou posé à la main).
+
+Les ajouts sont notés dans le marqueur du profil (voir [Dans un profil installé](fichiers.md#dans-un-profil-installé)) :
+quand le modpack se met à jour, ils sont remis dans la nouvelle version, sauf si celle-ci fournit elle-même un
+fichier du même nom.
 
 ## Le panneau de détails
 
