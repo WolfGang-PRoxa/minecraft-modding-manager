@@ -8,6 +8,7 @@ import { Button, IconButton } from '../components/Button'
 import { Cover } from '../components/Cover'
 import { formatBytes, formatDate } from '../lib/format'
 import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
+import { ModrinthLine, ModrinthVersionStatus, useModrinthVersions, type ModrinthVersions } from './ModrinthPanel'
 import { Modal, Spinner } from './Modal'
 import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
 import { openPath, useStudio } from './store'
@@ -50,7 +51,19 @@ function ModCurseForgeStatus({ pack, version, latest, curseforge }: { pack: Pack
   )
 }
 
-function ModVersionRow({ pack, version, latest, curseforge }: { pack: PackView; version: ModVersionView; latest: boolean; curseforge: CurseForgeVersions }) {
+function ModVersionRow({
+  pack,
+  version,
+  latest,
+  curseforge,
+  modrinth
+}: {
+  pack: PackView
+  version: ModVersionView
+  latest: boolean
+  curseforge: CurseForgeVersions
+  modrinth: ModrinthVersions
+}) {
   const openDialog = useStudio((s) => s.openDialog)
   const status = STATUS[version.remote]
   return (
@@ -90,6 +103,7 @@ function ModVersionRow({ pack, version, latest, curseforge }: { pack: PackView; 
           </Pill>
         )}
         <ModCurseForgeStatus pack={pack} version={version} latest={latest} curseforge={curseforge} />
+        <ModrinthVersionStatus pack={pack} version={version} latest={latest} modrinth={modrinth} />
       </div>
       {version.remote === 'update' &&
         version.changes.map((change) => (
@@ -155,6 +169,7 @@ function useAvailableVersions(pack: PackView): AvailableModVersion[] | null {
 export function ModCard({ pack, index }: { pack: PackView; index: number }) {
   const openDialog = useStudio((s) => s.openDialog)
   const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
+  const modrinth = useModrinthVersions(pack.folder, pack.modrinth)
   const available = useAvailableVersions(pack)
   const empty = !pack.modVersions.length && !pack.remoteOnly.length
 
@@ -193,6 +208,7 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
           )}
           <SourceLine pack={pack} available={available} />
           <CurseForgeLine pack={pack} curseforge={curseforge} />
+          <ModrinthLine pack={pack} modrinth={modrinth} />
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>
               Infos et image
@@ -229,7 +245,7 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
 
       <div className="border-t border-tint/[0.05] px-2 py-2">
         {pack.modVersions.map((version, i) => (
-          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} />
+          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} modrinth={modrinth} />
         ))}
         {pack.remoteOnly.map((version) => (
           <RemoteOnlyRow key={version.tag} pack={pack} version={version} />

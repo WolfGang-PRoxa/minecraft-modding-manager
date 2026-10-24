@@ -8,6 +8,7 @@ import {
   maintenanceStatusCommand,
   maintenanceValidate
 } from './maintenance'
+import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth'
 import { modsCreate, modsCurseforge, modsDelete, modsImport, modsNotes, modsSource, modsVersions } from './mods'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
@@ -66,7 +67,11 @@ export const COMMANDS = [
   curseforgeExport,
   curseforgePublish,
   curseforgeVersions,
+  modrinthLink,
+  modrinthPublish,
+  modrinthVersions,
   releasesDelete,
   curseforgeStatus,
+  modrinthStatus,
   journal
 ] as unknown as Command[]

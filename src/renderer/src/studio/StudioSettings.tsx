@@ -1,7 +1,7 @@
 import { AlarmClock, Bot, CircleCheck, CircleX, FolderCog, FolderOpen, KeyRound, Plug, RotateCcw, TerminalSquare, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { MaintenanceTask } from '../../../shared/studio'
-import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus } from '../../../shared/types'
+import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus, ModrinthAuthStatus } from '../../../shared/types'
 import { Button } from '../components/Button'
 import { Toggle } from '../components/Toggle'
 import { formatDate } from '../lib/format'
@@ -212,6 +212,86 @@ export function CurseForgeAccountSetting() {
       <p className="mt-3 text-xs leading-relaxed text-ink-400">
         Vérifiés par CurseForge avant d’être enregistrés, chiffrés par Windows pour ton compte : ni l’application, ni le terminal,
         ni Claude ne les affichent.
+      </p>
+    </>
+  )
+}
+
+/** Paramètres → Compte Modrinth (publieurs) : le jeton d'accès personnel qui met les mods en ligne sur Modrinth. */
+export function ModrinthAccountSetting() {
+  const pushToast = useStore((s) => s.pushToast)
+  const [status, setStatus] = useState<ModrinthAuthStatus | null>(null)
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = useCallback(() => void window.api.getModrinthAuth().then(setStatus), [])
+  useEffect(load, [load])
+
+  async function save(next: string | null) {
+    setBusy(true)
+    try {
+      const result = await window.api.saveModrinthToken(next)
+      if (result.ok) {
+        pushToast({ kind: 'success', title: next === null ? 'Jeton Modrinth retiré' : 'Jeton Modrinth enregistré' })
+        setValue('')
+      } else {
+        pushToast({ kind: 'error', title: 'Enregistrement impossible', message: result.error })
+      }
+    } finally {
+      setBusy(false)
+      load()
+    }
+  }
+
+  const state = !status
+    ? 'Vérification…'
+    : !status.source
+      ? 'Absent.'
+      : status.valid
+        ? `${status.source === 'saved' ? 'Enregistré' : status.source === 'env' ? 'Trouvé dans une variable d’environnement' : 'Trouvé dans un fichier .env'}, compte ${status.username ?? '?'}.`
+        : status.valid === false
+          ? 'Refusé par Modrinth : remplace-le.'
+          : (status.error ?? 'Non vérifié.')
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink-100">Jeton d’accès personnel</p>
+          <p className="mt-0.5 text-xs text-ink-400">
+            Pour mettre tes mods en ligne sur leur projet Modrinth. À créer sur{' '}
+            <button type="button" className="font-semibold text-grass-300 hover:text-grass-400" onClick={() => void window.api.openExternal('https://modrinth.com/settings/pats')}>
+              modrinth.com/settings/pats
+            </button>{' '}
+            avec les droits « Read user data », « Read projects », « Read versions » et « Create versions ».
+          </p>
+        </div>
+        <span className={`flex shrink-0 items-center gap-1.5 text-xs ${status?.valid ? 'text-grass-400' : status?.valid === false ? 'text-red-300' : 'text-ink-400'}`}>
+          {status?.valid ? <CircleCheck size={14} /> : status?.valid === false ? <CircleX size={14} /> : null}
+          {state}
+        </span>
+      </div>
+      <div className="mt-2.5 flex gap-2">
+        <input
+          type="password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={status?.source === 'saved' ? 'Coller pour remplacer…' : 'mrp_…'}
+          autoComplete="off"
+          spellCheck={false}
+          className="min-w-0 flex-1 rounded-lg bg-ink-950/60 px-3 py-1.5 font-mono text-sm text-ink-100 ring-1 ring-tint/10 outline-none placeholder:font-sans placeholder:text-ink-500 focus:ring-grass-400/50"
+        />
+        <Button size="sm" icon={KeyRound} disabled={busy || !value.trim()} onClick={() => void save(value)}>
+          Vérifier et enregistrer
+        </Button>
+        {status?.source === 'saved' && (
+          <Button size="sm" variant="ghost" icon={Trash2} disabled={busy} onClick={() => void save(null)}>
+            Retirer
+          </Button>
+        )}
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-ink-400">
+        Vérifié par Modrinth avant d’être enregistré, chiffré par Windows pour ton compte : ni l’application, ni le terminal, ni
+        Claude ne l’affichent.
       </p>
     </>
   )

@@ -17,6 +17,9 @@ export type Dialog =
   | { kind: 'mod-import'; folder: string }
   /** Mettre une version d'un mod en ligne sur CurseForge. */
   | { kind: 'mod-curseforge-publish'; folder: string; version: string }
+  /** Lien d'un mod avec son projet Modrinth, et mise en ligne d'une version. */
+  | { kind: 'modrinth'; folder: string }
+  | { kind: 'modrinth-publish'; folder: string; version: string }
   /** Créer la version suivante depuis CurseForge ; `profilePath` : profil déjà choisi. */
   | { kind: 'import'; folder: string; profilePath?: string }
   /** Lien avec le projet CurseForge et réglages de publication. */

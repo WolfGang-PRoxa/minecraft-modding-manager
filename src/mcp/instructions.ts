@@ -45,7 +45,8 @@ Méthode :
   seulement sur CurseForge.
 - Mods (dossier de type mod : packs_list le montre) : mods_create depuis le dossier où le projet du mod dépose ses
   jars (il reste lié), mods_versions puis mods_import pour les nouvelles versions, mods_notes, publish_plan pour
-  GitHub, curseforge_link puis mods_curseforge (irréversible : montre la version et ses notes avant). Une version de
+  GitHub, curseforge_link puis mods_curseforge, modrinth_link puis modrinth_publish (irréversibles : montre la
+  version et ses notes avant ; modrinth_status dit si le jeton est là). Une version de
   mod est celle de son jar (« 1.2.0-26.3 »). Les outils de profils, de tests et de maintenance ne concernent que les
   modpacks.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).

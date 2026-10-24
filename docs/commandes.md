@@ -95,8 +95,12 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `curseforge export` | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier. |
 | `curseforge publish` | Met une version en ligne sur CurseForge (elle passe en modération). |
 | `curseforge versions` | Les versions du projet CurseForge, envoyées par l’application ou depuis le site, et leur état (en modération, approuvée, refusée…). |
+| `modrinth link` | Lie un mod à son projet Modrinth (adresse, slug ou identifiant), ou retire ce lien (`--unlink`). |
+| `modrinth publish` | Met une version d’un mod en ligne sur son projet Modrinth. |
+| `modrinth versions` | Les versions du projet Modrinth d’un mod, rapprochées des versions locales. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
 | `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
+| `modrinth status` | Si le jeton Modrinth est là et accepté, et à quel compte il appartient (sans jamais l’afficher). |
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :
@@ -156,7 +160,8 @@ d’auteur doit être enregistré ([Compte CurseForge](parametres.md#compte-curs
 Pour un **mod**, `mods create --source <dossier>` crée le mod depuis le dossier de ses jars (voir
 [Les mods](studio.md#les-mods)), `mods versions` montre ses versions et celles à importer, `mods import` les copie.
 Il se publie sur GitHub comme les modpacks (`publish plan`, `publish apply`). `curseforge link` le lie à son projet
-CurseForge, puis `mods curseforge` y envoie une version.
+CurseForge, puis `mods curseforge` y envoie une version. De même, `modrinth link` le lie à son projet Modrinth et
+`modrinth publish` y envoie une version (jeton dans [Compte Modrinth](parametres.md#compte-modrinth)).
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
 pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests players` sur l’essai, puis laisse la

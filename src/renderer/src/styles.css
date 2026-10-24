@@ -28,6 +28,7 @@
 
   --color-amber-glow: #f5b642;
   --color-curseforge: #f16436;
+  --color-modrinth: #1bd96a;
 
   --animate-shimmer: shimmer 1.6s ease-in-out infinite;
   --animate-kenburns: kenburns 24s ease-in-out infinite alternate;
@@ -190,6 +191,7 @@
   --color-violet-300: oklch(49.1% 0.27 292.581);
   --color-violet-400: oklch(54.1% 0.281 293.009);
   --color-amber-glow: #a8650a;
+  --color-modrinth: #0f8f45;
 }
 
 :root:not([data-tone='light']) {

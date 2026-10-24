@@ -14,6 +14,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   mod dépose ses jars, qui reste lié : ses nouvelles versions s’y repèrent et s’importent en un clic. Chaque version
   devient une release GitHub, et s’envoie sur CurseForge avec sa version de Minecraft, son chargeur et ses
   dépendances. Aussi depuis le terminal et Claude Code (commandes `mods`).
+- Studio : les mods se publient aussi sur **Modrinth**, avec un jeton enregistré dans Paramètres → **Compte Modrinth**
+  (commandes `modrinth`).
 - Paramètres → **Apparence** : six styles de couleurs au choix (dont **Neige**, un style clair, et **Contraste
   élevé**), et des styles personnalisés à créer soi-même : couleurs du fond, du texte et de l’accent, angles, police
   des titres, animations et effets de flou, avec un aperçu.

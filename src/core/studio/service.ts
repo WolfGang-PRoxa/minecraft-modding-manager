@@ -2,6 +2,8 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { APP_REPO } from '../../shared/config'
 import { CONTENT_KINDS, contentTag, parseContentTag } from '../../shared/content'
 import { copyVersions, extractModIcon, sourceVersions, type SourceVersion } from './mods'
+import { modrinthVersionViews, publishToModrinth, resolveModrinthProject } from './modrinthPublish'
+import type { ModrinthClient } from '../modrinth'
 import { compareVersions, modpackTag } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
 import {
@@ -30,7 +32,8 @@ import {
   type StudioSettings,
   type ZipAnalysis,
   type ZipContents,
-  type ZipEntryPreview
+  type ZipEntryPreview,
+  type ModrinthVersionView
 } from '../../shared/studio'
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
@@ -156,6 +159,8 @@ export interface StudioServiceOptions {
   getCurseForgeClient?(): Promise<CurseForgeClient>
   /** Mise en ligne sur CurseForge avec le jeton d'auteur du publieur. */
   getCurseForgeUploader?(): Promise<CurseForgeUploader>
+  /** Client Modrinth avec le jeton du publieur (publication des mods). */
+  getModrinthClient?(): Promise<ModrinthClient>
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -399,6 +404,7 @@ export class StudioService {
       profile: pack.meta.profile,
       github: pack.meta.github,
       curseforge: pack.meta.curseforge,
+      modrinth: pack.meta.modrinth,
       updates: pack.meta.updates,
       source: pack.meta.source,
       modVersions: [...pack.modVersions].reverse().map((v) => {
@@ -418,7 +424,8 @@ export class StudioService {
           notes: pack.meta.notes[v.version] ?? '',
           remote: blocked || !pack.meta.github ? 'blocked' : (status?.status ?? 'unknown'),
           changes: status?.changes ?? [],
-          curseforgeFileId: pack.meta.curseforge?.files[v.version] ?? null
+          curseforgeFileId: pack.meta.curseforge?.files[v.version] ?? null,
+          modrinthVersionId: pack.meta.modrinth?.versions[v.version] ?? null
         }
       }),
       badJars: pack.badJars.map((j) => ({ fileName: j.fileName, error: j.error ?? 'Illisible.' })),
@@ -870,16 +877,101 @@ export class StudioService {
     return { projectId: project.id, name: project.name, highestVersion, overrides }
   }
 
-  /** Réglages de publication : fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait du lien. */
-  async updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }): Promise<void> {
+  /** Réglages de publication : fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait d'un lien. */
+  async updatePublishTargets(
+    folder: string,
+    changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }
+  ): Promise<void> {
     await this.logged(`les cibles de publication de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       if (changes.overrides && !meta.curseforge) throw new StudioError('Lie d’abord ce modpack à son projet CurseForge.')
       const curseforge = changes.unlinkCurseForge ? null : meta.curseforge && { ...meta.curseforge, overrides: changes.overrides ?? meta.curseforge.overrides }
+      const modrinth = changes.unlinkModrinth ? null : meta.modrinth
       const github = changes.github ?? meta.github
-      if (!github && !curseforge) throw new StudioError('Un modpack doit être publié quelque part : sur GitHub, sur CurseForge, ou les deux.')
-      await writePackFile(dir, { ...meta, github, curseforge })
+      if (!github && !curseforge && !modrinth) {
+        throw new StudioError(`Un ${CONTENT_KINDS[meta.type].label} doit être publié quelque part : sur GitHub, sur CurseForge${meta.type === 'mod' ? ', sur Modrinth' : ''}, ou plusieurs.`)
+      }
+      await writePackFile(dir, { ...meta, github, curseforge, modrinth })
     })
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Publication sur Modrinth (mods)
+
+  private async modrinth(): Promise<ModrinthClient> {
+    if (!this.options.getModrinthClient) throw new StudioError('Publication sur Modrinth impossible depuis ce programme.')
+    return this.options.getModrinthClient()
+  }
+
+  /** Lie un mod à son projet Modrinth (adresse, slug ou identifiant). */
+  async linkModrinth(folder: string, ref: string): Promise<{ projectId: string; slug: string; url: string }> {
+    const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (current.type !== 'mod') throw new StudioError(`Seuls les mods se publient sur Modrinth pour l’instant : ${folder} n’en est pas un.`)
+    const project = await resolveModrinthProject(await this.modrinth(), ref)
+    await this.logged(`le lien de ${folder} au projet Modrinth ${project.slug}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      const versions = meta.modrinth?.projectId === project.projectId ? meta.modrinth.versions : {}
+      await writePackFile(dir, { ...meta, modrinth: { ...project, versions } })
+    })
+    return { projectId: project.projectId, slug: project.slug, url: project.url }
+  }
+
+  /** Met en ligne une version d'un mod sur son projet Modrinth (visible tout de suite si le projet est approuvé). */
+  publishModToModrinth(
+    folder: string,
+    version: string,
+    releaseType: 'release' | 'beta' | 'alpha',
+    onStep: (text: string) => void
+  ): Promise<{ versionId: string; unknownDependencies: string[] }> {
+    return this.exclusive(
+      `la publication de la version ${version} de ${folder} sur Modrinth`,
+      async () => {
+        this.requireWorkspace()
+        const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
+        if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
+        if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+        if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
+        const modrinth = pack.meta.modrinth
+        if (!modrinth) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet Modrinth.`)
+        const local = pack.modVersions.find((v) => v.version === version)
+        if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
+        const newer = pack.modVersions.filter((v) => modrinth.versions[v.version] && compareVersions(v.version, version) > 0)
+        if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur Modrinth : une version plus ancienne n’y a plus sa place.`)
+        const client = await this.modrinth()
+        const result = await publishToModrinth(
+          client,
+          {
+            name: pack.meta.name,
+            version,
+            files: local.files.map((f) => ({
+              path: f.path,
+              fileName: f.fileName,
+              loaders: f.analysis.loaders,
+              minecraftVersions: f.analysis.minecraftVersions,
+              dependencies: f.analysis.dependencies
+            })),
+            notes: pack.meta.notes[version] ?? '',
+            releaseType,
+            modrinth,
+            published: await client.projectVersions(modrinth.projectId)
+          },
+          onStep
+        )
+        const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+        if (meta.modrinth) await writePackFile(dir, { ...meta, modrinth: { ...meta.modrinth, versions: { ...meta.modrinth.versions, [version]: result.versionId } } })
+        return result
+      },
+      (result) => ({ ok: true, detail: `version Modrinth ${result.versionId}` })
+    )
+  }
+
+  /** Versions du projet Modrinth lié, de la plus récente à la plus ancienne, rapprochées des versions locales. */
+  async modrinthVersions(folder: string): Promise<ModrinthVersionView[]> {
+    const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (!meta.modrinth) return []
+    const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
+    const localFiles = new Map((pack?.modVersions ?? []).flatMap((v) => v.files.map((f) => [f.fileName, v.version] as const)))
+    return modrinthVersionViews(await (await this.modrinth()).projectVersions(meta.modrinth.projectId), meta.modrinth, localFiles)
   }
 
   private async versionFor(folder: string, version: number) {

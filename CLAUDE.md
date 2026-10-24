@@ -223,7 +223,15 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `curseforgePublish.ts` : nom affiché = jar sans `.jar`, versions `Client` / `Server` selon le côté, dépendances
     par slug = id du mod, `searchBySlug` classe 6). `computePlan` : étapes `create-content` / `update-content`
     (`mod-<id>-v<version>`, jars + image + `content.json`), retrait des releases `mod-` sous la même règle que `pack-`
-    (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx` ; commandes `mods *` (`commands/mods.ts`). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
+    (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx` ; commandes `mods *` (`commands/mods.ts`).
+  - Modrinth (mods seulement) : `core/modrinth.ts` (jeton d'accès personnel chiffré `modrinth-auth.json`, ordre
+    enregistré > `MODRINTH_TOKEN` > `.env`, vérifié par `GET /v2/user` ; `ModrinthClient` : en-tête `Authorization`
+    sans « Bearer », `User-Agent` obligatoire ; `MPD_MODRINTH_API` en test) et `studio/modrinthPublish.ts`
+    (`resolveModrinthProject` refuse un autre type que `mod`, `publishToModrinth` : version `<nom> <version>`,
+    dépendances par slug = id du mod). `pack.json` `modrinth` (`projectId`, `slug`, `url`, `versions`). Service
+    `linkModrinth`, `publishModToModrinth`, `modrinthVersions` ; `updatePublishTargets({ unlinkModrinth })`. Interface
+    `studio/ModrinthPanel.tsx`, Paramètres → Compte Modrinth ; commandes `modrinth *`. Faux serveur
+    `test/support/fakeModrinth.ts`. Le slug `lma` est pris sur Modrinth (modpack d'un autre). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
     `keepPlayerConfigs`, écrits seulement s'ils servent ; `normalizePackSettings`).
   - `analyze.ts` : validation d'un zip (instance CurseForge, refus des exports `manifest.json`), SHA-256, empreinte
     des mods, liste des mods avec leur projet CurseForge (`CachedAnalysis.mods`, gardée dans le processus principal),

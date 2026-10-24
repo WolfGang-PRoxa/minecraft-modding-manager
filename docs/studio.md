@@ -278,6 +278,13 @@ obligatoires qui sont aussi des projets CurseForge (Fabric API, Fabric Language 
 est signalée, pour l’ajouter depuis le site. Il faut la clé de l’API et le jeton d’auteur
 ([Compte CurseForge](parametres.md#compte-curseforge)).
 
+Pour **Modrinth**, le projet se crée aussi une fois sur le site, puis **Publier aussi sur Modrinth** l’y lie (adresse
+`modrinth.com/mod/…`, slug ou identifiant ; un projet d’un autre type, comme un modpack, est refusé). **Publier sur
+Modrinth**, sur la version la plus récente, envoie ses jars sous le nom `<nom> <version>`, avec la version déclarée
+comme numéro, ses versions de Minecraft, ses chargeurs, ses notes et ses dépendances obligatoires qui sont aussi des
+projets Modrinth. La version est visible tout de suite si le projet est approuvé. Il faut le jeton Modrinth
+([Compte Modrinth](parametres.md#compte-modrinth)). Les modpacks ne se publient pas encore sur Modrinth.
+
 ## Le fichier pack.json
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :

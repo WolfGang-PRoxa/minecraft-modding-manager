@@ -4,6 +4,7 @@ import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
 import { registerAuthIpc } from './authIpc'
 import { registerClaudeCodeIpc } from './claudeCode'
 import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth'
+import { modrinthAuthStatus, saveModrinthToken } from '../core/modrinth'
 import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
 import { getCatalog } from './github'
 import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
@@ -25,6 +26,15 @@ export function registerIpc(
   registerRoleIpc()
   registerClaudeCodeIpc()
   ipcMain.handle('cfauth:status', () => curseForgeAuthStatus())
+  ipcMain.handle('mrauth:status', () => modrinthAuthStatus())
+  ipcMain.handle('mrauth:save', async (_e, value: string | null) => {
+    try {
+      await saveModrinthToken(typeof value === 'string' ? value : null)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
   ipcMain.handle('cfauth:save', async (_e, kind: CurseForgeSecretKind, value: string | null) => {
     if (kind !== 'apiKey' && kind !== 'uploadToken') return { ok: false, error: 'Secret inconnu.' }
     try {

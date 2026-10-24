@@ -3,11 +3,12 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès qu’il est modifié.
 
-Les sections **Dossier des modpacks**, **Compte CurseForge**, **Mises à jour automatiques** et **Claude Code et
-terminal** n’apparaissent qu’en mode publieur.
+Les sections **Dossier des modpacks**, **Compte CurseForge**, **Compte Modrinth**, **Mises à jour automatiques** et
+**Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
-colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des instances, compte),
+colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des
+instances, compte) et Modrinth,
 puis le Studio (dossier des modpacks, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
 
@@ -105,6 +106,16 @@ Coller la clé ou le jeton dans son champ, puis cliquer sur **Vérifier et enreg
 sinon rien n’est enregistré. L’état indique s’il est enregistré et accepté. **Retirer** le supprime de
 l’application. Les deux sont chiffrés par Windows pour le compte en cours (comme la connexion GitHub) ; ni
 l’application, ni le terminal, ni Claude ne les affichent.
+
+## Compte Modrinth
+
+Réservé aux publieurs : le **jeton d’accès personnel** qui met les [mods](studio.md#les-mods) en ligne sur leur projet
+Modrinth. Il se crée sur [modrinth.com/settings/pats](https://modrinth.com/settings/pats), avec les droits **Read user
+data**, **Read projects**, **Read versions** et **Create versions**.
+
+Le coller, puis cliquer sur **Vérifier et enregistrer** : Modrinth doit l’accepter, sinon rien n’est enregistré.
+L’état indique le compte Modrinth du jeton. **Retirer** le supprime. Il est chiffré par Windows comme la connexion
+GitHub ; ni l’application, ni le terminal, ni Claude ne l’affichent.
 
 ## Mises à jour automatiques
 

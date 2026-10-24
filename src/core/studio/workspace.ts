@@ -7,6 +7,7 @@ import {
   DEFAULT_PACK_UPDATES,
   type DisabledMod,
   type PackCurseForge,
+  type PackModrinth,
   type PackProfileLink,
   type PackSettings,
   type PackUpdates,
@@ -44,6 +45,8 @@ export interface PackFile extends PackSettings {
   github: boolean
   /** Son projet CurseForge, s'il en a un. */
   curseforge: PackCurseForge | null
+  /** Mod : son projet Modrinth, s'il en a un. */
+  modrinth: PackModrinth | null
   /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
   updates: PackUpdates
   /** Mod : dossier d'où viennent ses versions (`releases/`, `build/libs/` de son projet), écrit seulement s'il est lié. */
@@ -126,6 +129,7 @@ function defaultPackFile(folder: string): PackFile {
     profile: null,
     github: true,
     curseforge: null,
+    modrinth: null,
     updates: DEFAULT_PACK_UPDATES,
     source: null,
     exclude: [],
@@ -188,6 +192,7 @@ async function readPackFile(
       profile: normalizeProfileLink(data.profile),
       github: data.github !== false,
       curseforge: normalizeCurseForge(data.curseforge),
+      modrinth: normalizeModrinth(data.modrinth),
       updates: normalizePackUpdates(data.updates),
       source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
       ...normalizePackSettings(data)
@@ -225,6 +230,20 @@ export function normalizeCurseForge(value: unknown): PackCurseForge | null {
   }
 }
 
+export function normalizeModrinth(value: unknown): PackModrinth | null {
+  const data = value as Partial<PackModrinth> | null | undefined
+  if (typeof data?.projectId !== 'string' || !/^[A-Za-z0-9]{1,16}$/.test(data.projectId)) return null
+  const slug = typeof data.slug === 'string' && data.slug ? data.slug : data.projectId
+  const versions: Record<string, string> = {}
+  for (const [version, id] of Object.entries(data.versions ?? {})) if (typeof id === 'string' && id) versions[version] = id
+  return {
+    projectId: data.projectId,
+    slug,
+    url: typeof data.url === 'string' && /^https:\/\//.test(data.url) ? data.url : `https://modrinth.com/mod/${slug}`,
+    versions
+  }
+}
+
 const FREQUENCIES: UpdateFrequency[] = ['weekly', 'biweekly', 'monthly', 'manual', 'never']
 
 /** Réglages des mises à jour lus dans pack.json (ou reçus d'une commande), remis au propre. */
@@ -248,7 +267,7 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, updates, source, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, updates, source, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -262,6 +281,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...(source ? { source } : {}),
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
+    ...(modrinth ? { modrinth } : {}),
     ...(isDefaultUpdates(updates) ? {} : { updates }),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),

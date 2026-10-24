@@ -8,7 +8,7 @@ import { formatDate } from '../lib/format'
 import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
-import { ClaudeCodeSetting, CurseForgeAccountSetting, MaintenanceSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
+import { ClaudeCodeSetting, CurseForgeAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
 import { AppearanceSection } from './Appearance'
 import { APP_NAME } from '../../../shared/config'
@@ -228,6 +228,11 @@ export function SettingsDialog() {
       <CurseForgeAccountSetting />
     </Section>
   )
+  const modrinthAccount = (
+    <Section key="modrinth-account" title="Compte Modrinth">
+      <ModrinthAccountSetting />
+    </Section>
+  )
   const maintenance = (
     <Section key="maintenance" title="Mises à jour automatiques">
       <MaintenanceSetting />
@@ -249,12 +254,12 @@ export function SettingsDialog() {
     : wide
       ? [
           [usage, appearanceSection, shortcutSection, about],
-          [curseForgeSection, instances, curseForgeAccount],
+          [curseForgeSection, instances, curseForgeAccount, modrinthAccount],
           [workspace, maintenance, claude]
         ]
       : [
           [usage, appearanceSection, curseForgeSection, instances],
-          [workspace, curseForgeAccount, maintenance, claude, shortcutSection, about]
+          [workspace, curseForgeAccount, modrinthAccount, maintenance, claude, shortcutSection, about]
         ]
 
   return (

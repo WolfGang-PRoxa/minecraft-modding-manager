@@ -6,8 +6,8 @@ transite sur le réseau, ce qui reste sur le PC, et comment l’application prot
 ## Ce qui est envoyé, et à qui
 
 L’application contacte GitHub : `api.github.com`, `github.com` et ses serveurs de fichiers. En mode publieur, elle
-contacte aussi CurseForge, avec la clé et le jeton que le publieur lui a confiés, et, pour les tests, les serveurs de
-Minecraft et de ses chargeurs. Elle ne contient ni statistiques d’utilisation ni publicité.
+contacte aussi CurseForge et Modrinth, avec la clé et les jetons que le publieur lui a confiés, et, pour les tests,
+les serveurs de Minecraft et de ses chargeurs. Elle ne contient ni statistiques d’utilisation ni publicité.
 
 | Quand | Ce qui est demandé à GitHub |
 |---|---|
@@ -24,7 +24,13 @@ Minecraft et de ses chargeurs. Elle ne contient ni statistiques d’utilisation 
 | À la recherche des mises à jour des mods | Les fichiers disponibles pour les mods du profil, et leurs notes de version. |
 | À l’application de mises à jour | Les fichiers des mods choisis (`edge.forgecdn.net`). |
 | À la liaison d’un modpack à son projet, ou à l’ouverture de ses versions | Le projet et ses versions, et les fichiers joints à sa dernière version. |
-| À la publication d’une version sur CurseForge | L’export de la version (liste des mods, fichiers joints), ses notes et son type. |
+| À la publication d’une version sur CurseForge | L’export de la version (liste des mods, fichiers joints), ses notes et son type ; pour un mod, ses jars. |
+
+| Quand | Ce qui est demandé à Modrinth (`api.modrinth.com`, publieurs), avec le jeton du publieur |
+|---|---|
+| À l’enregistrement du jeton | Le compte du jeton, pour vérifier que Modrinth l’accepte. |
+| À la liaison d’un mod à son projet, ou à l’affichage de ses versions | Le projet et ses versions, et les projets de ses dépendances. |
+| À la publication d’une version d’un mod sur Modrinth | Ses jars, ses notes, son numéro et son type. |
 
 | Quand | Ce qui est demandé ailleurs (publieurs) |
 |---|---|
@@ -45,8 +51,8 @@ transmise à un autre système.
 - **La connexion GitHub** : le jeton est chiffré par Windows (DPAPI), avec une clé liée à la session Windows. Un
   autre compte Windows, ou une copie du fichier sur un autre PC, ne peut pas le relire. **Se déconnecter** le
   supprime.
-- **La clé de l’API CurseForge et le jeton d’auteur** (publieurs) : chiffrés de la même façon. **Retirer** les
-  supprime.
+- **La clé de l’API CurseForge, le jeton d’auteur et le jeton Modrinth** (publieurs) : chiffrés de la même façon.
+  **Retirer** les supprime.
 - **Ce que l’application lit pour fonctionner**, sans jamais l’envoyer : l’emplacement de CurseForge (dans le
   registre de Windows), le dossier de ses profils (dans ses journaux), la liste des profils et de leurs mods, et la
   liste des programmes en cours (pour savoir si CurseForge ou Minecraft tournent).

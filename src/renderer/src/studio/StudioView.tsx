@@ -25,6 +25,7 @@ import { Spinner } from './Modal'
 import { ContentsDialog } from './ContentsDialog'
 import { DeleteDialog } from './DeleteDialog'
 import { ModCard, ModImportDialog, PublishModCurseForgeDialog } from './ModCard'
+import { ModrinthDialog, PublishModrinthDialog } from './ModrinthPanel'
 import { PackCard } from './PackCard'
 import { CurseForgeDialog, CurseForgeVersionsDialog, PublishCurseForgeDialog } from './CurseForgePanel'
 import { UpdatesDialog } from './MaintenancePanel'
@@ -469,6 +470,10 @@ function Dialogs() {
       return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'mod-import':
       return <ModImportDialog key={dialog.folder} folder={dialog.folder} />
+    case 'modrinth':
+      return <ModrinthDialog key={dialog.folder} folder={dialog.folder} />
+    case 'modrinth-publish':
+      return <PublishModrinthDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'mod-curseforge-publish':
       return <PublishModCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'import':

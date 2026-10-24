@@ -15,6 +15,7 @@ import { getSettings } from '../core/settings'
 import { AnalysisCache, describeError, StudioError } from '../core/studio/analyze'
 import { CurseForgeClient } from '../core/curseforgeApi'
 import { CurseForgeUploader } from '../core/curseforgeUpload'
+import { ModrinthClient } from '../core/modrinth'
 import { listProfiles } from '../core/profiles'
 import { StudioService } from '../core/studio/service'
 import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
@@ -134,6 +135,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     getInstancesDir: async () => (await resolveInstancesDir(await getSettings())).dir,
     getCurseForgeClient: () => CurseForgeClient.create(),
     getCurseForgeUploader: () => CurseForgeUploader.create(),
+    getModrinthClient: () => ModrinthClient.create(),
     ...operationTools('l’application')
   })
   registerCoverProtocol()
@@ -320,12 +322,13 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
   ipcMain.handle('studio:cancelTest', () => testController?.abort())
   ipcMain.handle('studio:lastTests', (_e, profilePath: string) => service.lastTests(profilePath))
   ipcMain.handle('studio:linkCurseForge', (_e, folder: string, ref: string) => outcome(() => service.linkCurseForge(folder, ref)))
-  ipcMain.handle('studio:updatePublishTargets', (_e, folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }) =>
+  ipcMain.handle('studio:updatePublishTargets', (_e, folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }) =>
     action(() =>
       service.updatePublishTargets(folder, {
         overrides: Array.isArray(changes?.overrides) ? changes.overrides.filter((o) => typeof o === 'string') : undefined,
         github: typeof changes?.github === 'boolean' ? changes.github : undefined,
-        unlinkCurseForge: changes?.unlinkCurseForge === true
+        unlinkCurseForge: changes?.unlinkCurseForge === true,
+        unlinkModrinth: changes?.unlinkModrinth === true
       })
     )
   )
@@ -346,6 +349,15 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
       )
     )
   )
+  ipcMain.handle('studio:linkModrinth', (_e, folder: string, ref: string) => outcome(() => service.linkModrinth(folder, String(ref ?? ''))))
+  ipcMain.handle('studio:publishModrinth', (_e, folder: string, version: string, releaseType: string) =>
+    outcome(() =>
+      service.publishModToModrinth(folder, String(version), releaseType === 'beta' || releaseType === 'alpha' ? releaseType : 'release', (text) =>
+        send('studio:curseforge-progress', text)
+      )
+    )
+  )
+  ipcMain.handle('studio:modrinthVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.modrinthVersions(folder) })))
   ipcMain.handle('studio:curseForgeVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.curseForgeVersions(folder) })))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>
     action(() => service.linkProfile(folder, profilePath))

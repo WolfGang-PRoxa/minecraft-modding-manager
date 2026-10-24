@@ -112,6 +112,8 @@ export interface ModVersionView {
   changes: string[]
   /** Fichier CurseForge envoyé par l'application pour cette version. */
   curseforgeFileId: number | null
+  /** Version Modrinth envoyée par l'application pour cette version. */
+  modrinthVersionId: string | null
 }
 
 /** Jar du dossier d'un mod qui n'a pas pu être lu (pas un mod, autre mod, illisible). */
@@ -182,6 +184,33 @@ export interface PackCurseForge {
   files: Record<string, number>
 }
 
+/** Le projet Modrinth d'un mod (pack.json). */
+export interface PackModrinth {
+  projectId: string
+  slug: string
+  /** Page du projet. */
+  url: string
+  /** Version Modrinth de chaque version envoyée par l'application, par version déclarée. */
+  versions: Record<string, string>
+}
+
+/** Une version du projet Modrinth : envoyée par l'application, ou mise en ligne depuis le site. */
+export interface ModrinthVersionView {
+  versionId: string
+  versionNumber: string
+  name: string
+  /** listed, draft, unlisted, archived… */
+  status: string
+  versionType: 'release' | 'beta' | 'alpha'
+  date: string | null
+  gameVersions: string[]
+  loaders: string[]
+  /** Version locale correspondante (envoyée par l'application, ou mêmes noms de fichiers), sinon null. */
+  version: string | null
+  sentByApp: boolean
+  url: string
+}
+
 export interface PackView {
   folder: string
   dir: string
@@ -197,6 +226,8 @@ export interface PackView {
   /** Publié sur GitHub (faux : modpack seulement sur CurseForge, jamais touché sur GitHub). */
   github: boolean
   curseforge: PackCurseForge | null
+  /** Mod : son projet Modrinth, s'il en a un. */
+  modrinth: PackModrinth | null
   updates: PackUpdates
   /** Dossier d'où un mod importe ses versions (mods seulement). */
   source: string | null
@@ -688,6 +719,14 @@ export interface StudioApi {
     version: string,
     releaseType: 'release' | 'beta' | 'alpha'
   ): Promise<{ ok: true; fileIds: number[]; unknownDependencies: string[] } | { ok: false; error: string }>
+  /** Lie un mod à son projet Modrinth (adresse, slug ou identifiant). */
+  linkModrinth(folder: string, ref: string): Promise<{ ok: true; projectId: string; slug: string; url: string } | { ok: false; error: string }>
+  publishModrinth(
+    folder: string,
+    version: string,
+    releaseType: 'release' | 'beta' | 'alpha'
+  ): Promise<{ ok: true; versionId: string; unknownDependencies: string[] } | { ok: false; error: string }>
+  modrinthVersions(folder: string): Promise<{ ok: true; versions: ModrinthVersionView[] } | { ok: false; error: string }>
   /** Dossier à la corbeille et toutes les releases du modpack retirées de GitHub. */
   deletePack(folder: string): Promise<PublishResult>
   /** Releases sans zip dans le dossier, retirées sans attendre la publication. */
@@ -714,7 +753,7 @@ export interface StudioApi {
     ref: string
   ): Promise<{ ok: true; projectId: number; name: string; highestVersion: number; overrides: string[] } | { ok: false; error: string }>
   /** Fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait du lien. */
-  updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean }): Promise<ActionResult>
+  updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }): Promise<ActionResult>
   publishCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; fileId: number } | { ok: false; error: string }>
   onCurseForgeProgress(listener: (text: string) => void): () => void
   /** Toutes les versions du projet CurseForge du modpack, de la plus récente à la plus ancienne. */

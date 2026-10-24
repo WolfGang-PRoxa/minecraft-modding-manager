@@ -358,8 +358,20 @@ export interface CurseForgeAuthApi {
   saveCurseForgeSecret(kind: CurseForgeSecretKind, value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
 }
 
+/** Jeton d'accès personnel Modrinth du publieur. */
+export interface ModrinthAuthStatus extends CurseForgeSecretStatus {
+  /** Compte Modrinth du jeton, une fois vérifié. */
+  username: string | null
+}
+
+export interface ModrinthAuthApi {
+  getModrinthAuth(): Promise<ModrinthAuthStatus>
+  /** Vérifie puis enregistre (chiffré) le jeton ; null le retire. */
+  saveModrinthToken(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi {
+export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi {
   getLaunchInfo(): Promise<LaunchInfo>
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
   onActivated(listener: (view: AppView | null) => void): () => void

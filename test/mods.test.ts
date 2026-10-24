@@ -8,11 +8,13 @@ import type { ContentManifest } from '../src/shared/content'
 import { CurseForgeClient } from '../src/core/curseforgeApi'
 import { setCurseForgeApiOverride } from '../src/core/curseforgeAuth'
 import { CurseForgeUploader } from '../src/core/curseforgeUpload'
+import { checkModrinthToken, ModrinthClient, setModrinthApiOverride } from '../src/core/modrinth'
 import { setGitHubApiOverride } from '../src/core/githubEnv'
 import { minecraftVersionsOf } from '../src/core/studio/mods'
 import { StudioService } from '../src/core/studio/service'
 import { startFakeCurseForge, VALID_API_KEY, VALID_UPLOAD_TOKEN, type FakeCurseForge } from './support/fakeCurseForge'
 import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub'
+import { startFakeModrinth, VALID_MODRINTH_TOKEN, type FakeModrinth } from './support/fakeModrinth'
 import { tempDir } from './support/fixtures'
 import { makeJar } from './support/jars'
 
@@ -51,6 +53,7 @@ describe('versions de Minecraft d’un jar', () => {
 describe('mods dans le Studio', () => {
   let github: FakeGitHub
   let curseforge: FakeCurseForge
+  let modrinth: FakeModrinth
   let root: { dir: string; cleanup: () => Promise<void> }
   let workspace: string
   let source: string
@@ -65,6 +68,12 @@ describe('mods dans le Studio', () => {
     const project = (id: number, name: string, slug: string) => ({ id, name, slug, classId: 6, isAvailable: true, allowModDistribution: true, links: { websiteUrl: `https://www.curseforge.com/minecraft/mc-mods/${slug}` }, latestFilesIndexes: [] })
     curseforge.catalog.mods.push(project(1599334, 'LMA', 'lma'), project(306612, 'Fabric API', 'fabric-api'), project(308769, 'Fabric Language Kotlin', 'fabric-language-kotlin'))
     curseforge.catalog.files.push({ id: 9169792, modId: 1599334, displayName: 'lma-26.3-1.1.0', fileName: 'lma-26.3-1.1.0.jar', releaseType: 1, fileStatus: 4, fileDate: '2026-10-14T00:00:00Z', fileLength: 10, downloadUrl: null, isAvailable: true, gameVersions: ['26.3', 'Fabric'], hashes: [], dependencies: [] } as never)
+    modrinth = await startFakeModrinth()
+    setModrinthApiOverride(modrinth.url)
+    // Le projet du mod sur Modrinth (le slug « lma » est pris : « lma-mod »), avec une version mise en ligne depuis le site.
+    const mr = (id: string, slug: string, title: string, type = 'mod') => ({ id, slug, title, project_type: type, status: 'approved' })
+    modrinth.projects.push(mr('AbCd1234', 'lma-mod', 'LMA'), mr('P7dR8mSH', 'fabric-api', 'Fabric API'), mr('Ha28R6CL', 'fabric-language-kotlin', 'Fabric Language Kotlin'), mr('ZmrsPQI7', 'lma', 'LMA', 'modpack'))
+    modrinth.versions.push({ id: 'old1', project_id: 'AbCd1234', name: 'LMA 1.1.0', version_number: '1.1.0', version_type: 'release', status: 'listed', date_published: '2026-10-14T00:00:00Z', game_versions: ['26.3'], loaders: ['fabric'], files: [{ filename: 'lma-26.3-1.1.0.jar', hashes: {}, primary: true }] })
     root = await tempDir()
     workspace = join(root.dir, 'Modpacks')
     source = join(root.dir, 'lma', 'releases')
@@ -82,6 +91,7 @@ describe('mods dans le Studio', () => {
       getCredential: async () => ({ token: 'jeton-de-test', source: 'env' }),
       getCurseForgeClient: async () => new CurseForgeClient(VALID_API_KEY),
       getCurseForgeUploader: async () => new CurseForgeUploader(VALID_UPLOAD_TOKEN),
+      getModrinthClient: async () => new ModrinthClient(VALID_MODRINTH_TOKEN),
       trashItem: (path) => rm(path, { recursive: true, force: true })
     })
   })
@@ -89,7 +99,9 @@ describe('mods dans le Studio', () => {
   after(async () => {
     setGitHubApiOverride(null)
     setCurseForgeApiOverride(null)
+    setModrinthApiOverride(null)
     await curseforge.close()
+    await modrinth.close()
     await github.close()
     await root.cleanup()
   })
@@ -198,6 +210,42 @@ describe('mods dans le Studio', () => {
     await assert.rejects(() => service.publishModToCurseForge('LMA', '1.2.0-26.3', 'release', noProgress), /déjà sur CurseForge/)
     const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
     assert.equal(mod.modVersions[0].curseforgeFileId, result.fileIds[0])
+  })
+
+  it('vérifie le jeton Modrinth', async () => {
+    assert.deepEqual(await checkModrinthToken(VALID_MODRINTH_TOKEN), { valid: true, username: 'WolfGang', error: null })
+    assert.equal((await checkModrinthToken('mrp_faux')).valid, false)
+  })
+
+  it('lie le mod à son projet Modrinth, mais pas à un modpack du même nom', async () => {
+    await assert.rejects(() => service.linkModrinth('LMA', 'https://modrinth.com/modpack/lma'), /n’est pas un mod sur Modrinth/)
+    const linked = await service.linkModrinth('LMA', 'https://modrinth.com/mod/lma-mod')
+    assert.deepEqual(linked, { projectId: 'AbCd1234', slug: 'lma-mod', url: 'https://modrinth.com/mod/lma-mod' })
+    await service.importModVersions('LMA', ['1.1.0-26.3'])
+    const versions = await service.modrinthVersions('LMA')
+    assert.deepEqual(versions.map((v) => [v.versionNumber, v.version, v.sentByApp]), [['1.1.0', '1.1.0-26.3', false]])
+    await service.deleteModVersion('LMA', '1.1.0-26.3')
+  })
+
+  it('met une version en ligne sur Modrinth, avec Minecraft, Fabric et ses dépendances', async () => {
+    const result = await service.publishModToModrinth('LMA', '1.2.0-26.3', 'release', noProgress)
+    assert.deepEqual(result.unknownDependencies, [])
+    const sent = modrinth.created.at(-1)!
+    assert.equal(sent.data.project_id, 'AbCd1234')
+    assert.equal(sent.data.version_number, '1.2.0-26.3')
+    assert.equal(sent.data.name, 'LMA 1.2.0-26.3')
+    assert.equal(sent.data.changelog, 'Particules des armures.')
+    assert.deepEqual(sent.data.game_versions, ['26.3'])
+    assert.deepEqual(sent.data.loaders, ['fabric'])
+    assert.deepEqual(sent.data.dependencies, [
+      { project_id: 'P7dR8mSH', dependency_type: 'required' },
+      { project_id: 'Ha28R6CL', dependency_type: 'required' }
+    ])
+    assert.deepEqual(sent.files.map((f) => f.name), ['lma-26.3-1.2.0.jar'])
+    await assert.rejects(() => service.publishModToModrinth('LMA', '1.2.0-26.3', 'release', noProgress), /déjà sur Modrinth/)
+    const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
+    assert.equal(mod.modVersions[0].modrinthVersionId, result.versionId)
+    assert.equal((await service.modrinthVersions('LMA'))[0].version, '1.2.0-26.3')
   })
 
   it('signale deux jars de la même version', async () => {
