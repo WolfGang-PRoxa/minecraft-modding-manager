@@ -57,7 +57,7 @@ propriétaire.
 ## L'évaluation du risque
 
 Elle est faite par une session Claude Code, sur l'abonnement du propriétaire, lancée par une **routine à part** :
-ses consignes (`routine-evaluation.md`, routine « Modpack Manager : évaluer le risque d'une issue », modèle Sonnet 5.5,
+ses consignes (`routine-evaluation.md`, routine « ⚡ Modding Manager : évaluer le risque d'une issue », modèle Sonnet 5.5,
 outils `Bash` et `Read` seulement, sans connecteur) ne lui permettent que de pousser un commit vide sur
 `evaluation/issue-<N>` (à défaut `claude/evaluation-issue-<N>`), avec l'identité du dernier commit de `main`, dont le
 message porte l'évaluation en JSON (`src/risk.mts`). Rien n'entre dans le code du
