@@ -4,7 +4,7 @@
 import type { MaintenanceRecord } from '../../shared/studio'
 
 /** Nom du serveur MCP de l'application dans Claude Code. */
-export const MCP_SERVER_NAME = 'modpack-manager'
+export const MCP_SERVER_NAME = 'modding-manager'
 
 /** Outils MCP permis pour analyser un échec : lecture seulement. */
 export const ANALYSIS_TOOLS = [
@@ -27,7 +27,7 @@ export function failurePrompt(record: MaintenanceRecord): string {
     record.changes.length ? `Mises à jour essayées :\n${record.changes.map((c) => `- ${c}`).join('\n')}` : 'Aucune mise à jour essayée.',
     record.trialPath ? `\nCopie d’essai (profil CurseForge) : ${record.trialPath}` : '',
     '',
-    'Cherche la cause avec les outils modpack-manager (maintenance_status, tests_check sur la copie d’essai, ' +
+    'Cherche la cause avec les outils modding-manager (maintenance_status, tests_check sur la copie d’essai, ' +
       'updates_changelog des mods en cause). Tu ne peux rien modifier. Réponds en français, en 6 lignes au plus, sans ' +
       'titre : la cause probable, le ou les mods en cause, et ce que tu proposes au publieur (figer un mod avec ' +
       '« maintenance configure », attendre une version corrigée, valider quand même…).'

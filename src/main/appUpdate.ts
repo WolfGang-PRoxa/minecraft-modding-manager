@@ -2,6 +2,7 @@ import { app } from 'electron'
 import { spawn } from 'node:child_process'
 import { readdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { APP_TEMP_DIR } from '../shared/config'
 import { compareVersions } from '../shared/releases'
 import type { AppUpdateProgress, AppUpdateResult } from '../shared/types'
 import { downloadFile } from './download'
@@ -9,8 +10,8 @@ import { removeQuietly } from '../core/fsutil'
 import { getCatalog } from './github'
 import { getSettings, updateSettings } from '../core/settings'
 
-const INSTALLER_PREFIX = 'Modpack-Manager-Setup-'
-const downloadDir = () => join(app.getPath('temp'), 'modpack-manager')
+const INSTALLER_PREFIX = 'Modding-Manager-Setup-'
+const downloadDir = () => join(app.getPath('temp'), APP_TEMP_DIR)
 
 // Posé du clic sur « Mettre à jour » jusqu'à la fermeture de l'application (ou l'échec de la mise à jour).
 let controller: AbortController | null = null

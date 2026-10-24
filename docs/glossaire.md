@@ -11,7 +11,7 @@ application autonome. Voir [CurseForge](curseforge.md).
 
 **Dépôt**\
 Un projet hébergé sur GitHub, désigné par `propriétaire/nom`. Le dépôt des modpacks contient leurs releases ; le
-dépôt de l’application (`WolfGang-PRoxa/minecraft-modpack-manager`) contient aussi son code et ses versions.
+dépôt de l’application (`WolfGang-PRoxa/minecraft-modding-manager`) contient aussi son code et ses versions.
 
 **Dossier des instances** (ou dossier `Instances`)\
 Le dossier où CurseForge range ses profils, un sous-dossier par profil. L’application y installe les modpacks.
@@ -48,7 +48,7 @@ Une clé d’accès créée sur GitHub, qui permet à l’application de publier
 [Créer un jeton GitHub](publieur.md#créer-un-jeton-github).
 
 **Marqueur**\
-Le fichier `.modpack-manager.json` que l’application dépose dans chaque profil qu’elle installe, pour le
+Le fichier `.modding-manager.json` que l’application dépose dans chaque profil qu’elle installe, pour le
 reconnaître et le mettre à jour.
 
 **Mod désactivé**\

@@ -58,7 +58,7 @@ Ce qui se passe pendant l’installation :
 - l’image du modpack devient l’image du profil dans CurseForge ;
 - les mods que le publieur propose en option sont installés **désactivés** : CurseForge les affiche dans le profil,
   et chacun s’active d’un clic ;
-- un petit fichier `.modpack-manager.json` est ajouté au profil : c’est ce qui permet à l’application de le
+- un petit fichier `.modding-manager.json` est ajouté au profil : c’est ce qui permet à l’application de le
   reconnaître et de le mettre à jour plus tard.
 
 > [!TIP]
@@ -188,7 +188,7 @@ l’application.
 
 ## Suivre les modpacks d’un autre publieur
 
-Par défaut, la Bibliothèque affiche les modpacks du dépôt `WolfGang-PRoxa/minecraft-modpack-manager`. Pour suivre
+Par défaut, la Bibliothèque affiche les modpacks du dépôt `WolfGang-PRoxa/minecraft-modding-manager`. Pour suivre
 ceux d’un autre publieur :
 
 1. Ouvrir **Paramètres → Utilisation**.
@@ -202,5 +202,5 @@ ceux d’un autre publieur :
 > que les fichiers reçus sont bien ceux que le publieur a mis en ligne, pas ce qu’ils font : suivre un dépôt, c’est
 > faire confiance à son auteur. Un avertissement le rappelle dès qu’un autre dépôt que celui par défaut est saisi.
 
-**Revenir à WolfGang-PRoxa/minecraft-modpack-manager** rétablit le dépôt par défaut. Les modpacks déjà installés
+**Revenir à WolfGang-PRoxa/minecraft-modding-manager** rétablit le dépôt par défaut. Les modpacks déjà installés
 restent dans CurseForge quel que soit le dépôt suivi.

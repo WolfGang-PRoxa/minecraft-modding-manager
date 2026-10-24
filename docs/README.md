@@ -1,6 +1,6 @@
-# Documentation de Modpack Manager
+# Documentation de Modding Manager
 
-Modpack Manager installe en un clic, directement dans CurseForge, les modpacks Minecraft publiés sur GitHub, et
+Modding Manager installe en un clic, directement dans CurseForge, les modpacks Minecraft publiés sur GitHub, et
 les garde à jour. Ses auteurs les publient avec le Studio, dans la même application.
 
 Cette documentation est aussi intégrée à l’application : bouton **Aide** de la barre de titre, ou touche `F1`.

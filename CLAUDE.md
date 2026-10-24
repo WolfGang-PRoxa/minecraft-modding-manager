@@ -1,9 +1,10 @@
 # CLAUDE.md
 
-Le projet s'appelle **Modpack Manager** (Modpack Downloader jusqu'à la 1.0.5).
+Le projet s'appelle **Modding Manager** depuis la 2.0.0 (Modpack Manager jusqu'à la 1.9, Modpack Downloader jusqu'à
+la 1.0.5).
 
 Application Windows (Electron) qui affiche les modpacks Minecraft publiés en releases sur
-`WolfGang-PRoxa/minecraft-modpack-manager` et les installe directement comme profils CurseForge.
+`WolfGang-PRoxa/minecraft-modding-manager` et les installe directement comme profils CurseForge.
 Une seule fenêtre, deux vues : la **Bibliothèque** (installer les modpacks) et le **Studio** (ranger ses zips et
 publier les releases), réservé aux publieurs. Au premier lancement, l'utilisateur choisit son rôle : **récepteur** (par
 défaut) ou **publieur** (dépôt GitHub + compte qui a le droit d'y publier). Changer de rôle change la vue, jamais de
@@ -67,7 +68,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   - `shortcut.ts` : raccourci `.lnk` de l'app (bureau ou emplacement choisi). Non packagée : cible
     `electron.exe "<projet>"` et icône `.ico` générée depuis `build/icon.png`.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
-    fenêtre), télécharge l'installeur dans `%TEMP%\modpack-manager`, compare son SHA-256 au `digest` publié par
+    fenêtre), télécharge l'installeur dans `%TEMP%\modding-manager`, compare son SHA-256 au `digest` publié par
     GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec `--updated`.
     Refusée pendant une installation de modpack ou une opération du studio (`busyWith`) ; à l'inverse, tant qu'elle
     est en cours (`appUpdateTask`), `install:start` et le verrou du studio (`blockedBy`) refusent de démarrer.
@@ -85,7 +86,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `maintenanceTask` fait attendre la mise à jour de l'app. Interface : `studio/MaintenancePanel.tsx` (`UpdatesLine`
     sur la carte, essai à valider, `UpdatesDialog`), `studio/maintenanceStore.ts`, `MaintenanceSetting` (Paramètres).
   - `claudeCode.ts` : connexion à Claude Code (canaux `claude:*`, Paramètres → Claude Code et terminal) : `claude mcp
-    add --scope user modpack-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
+    add --scope user modding-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
     (`claude.exe` natif de `~/.local/bin`, sinon `where claude`, `.cmd` par cmd.exe). « Connecté » = `claude mcp get`
     cite le cli.js de cette installation. `askClaude` : `claude -p` (demande par stdin), `--strict-mcp-config` avec
     le seul serveur MCP de cette installation, `--tools ""`, `--allowedTools` donnés, `--permission-mode dontAsk`.
@@ -112,7 +113,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     appartient à `Overwolf.exe`. Elle est arrêtée de force, puis on vérifie qu'Overwolf ne l'a pas relancée.
   - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
     `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
-    Lu aussi par les scripts (`%APPDATA%\Modpack Manager\settings.json`).
+    Lu aussi par les scripts (`%APPDATA%\Modding Manager\settings.json`).
   - `auth.ts` : connexion GitHub partagée app / commandes. Jeton chiffré par DPAPI via PowerShell
     (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
     `GITHUB_TOKEN` > `.env` (scripts) > `gh auth token`. Vérifie le droit de publier (`permissions.push`) et gère la
@@ -174,7 +175,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `clientSideOnly`, ou fichier CurseForge « Client » sans « Server »). Vérifié sur les 29 profils du propriétaire
     (2 786 mods, le 2026-10-19) : aucun faux positif. `java.ts` (Java de la version : `Install/versions/<v>/<v>.json`
     `javaVersion`, puis `Install/java/<component>`, puis JDK installés). `serverInstall.ts` (cache par chargeur dans
-    `%LOCALAPPDATA%\Modpack Manager\test-servers` : lanceur Fabric de meta.fabricmc.net, installeurs Forge / NeoForge
+    `%LOCALAPPDATA%\Modding Manager\test-servers` : lanceur Fabric de meta.fabricmc.net, installeurs Forge / NeoForge
     `--installServer`, puis `@libraries/.../win_args.txt`). `serverTest.ts` (copie mods sans ceux du client + dossiers
     de configuration, `eula.txt`, `server.properties` sur un port libre, hors ligne, sans liste blanche (Minecraft 26
     l'active), attente de « Done (…s)! », `whileRunning` puis `stop` ; sinon rapport de plantage). `logIssues.ts`
@@ -184,7 +185,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `is_quick_play_multiplayer`), bibliothèques dédoublonnées (celle du chargeur d'abord), jar de la version lancée,
     joueur hors ligne (`offlineUuid`), `--quickPlayMultiplayer` sinon `--server`/`--port` ; `profileVersionId` : `id` de
     `baseModLoader.versionJson`). `playerTest.ts` (`runPlayerTest` : serveur, puis clients `Testeur1`… dans
-    `%LOCALAPPDATA%\Modpack Manager\test-clients\<nom>` (mods en liens durs, configurations, `options.txt` allégé, sans
+    `%LOCALAPPDATA%\Modding Manager\test-clients\<nom>` (mods en liens durs, configurations, `options.txt` allégé, sans
     shaders), connexion lue dans le journal du serveur (« joined the game », « lost connection » avec ou sans adresse),
     échec du chargement lu dans celui du client (Forge et Fabric affichent une fenêtre et attendent), `gamemode`,
     `time set midnight`, `spreadplayers`, puis fin ; `unavailable` si le jeu n'est pas installé ou la mémoire manque ;
@@ -302,7 +303,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `maintenance.lock` (`maintenanceLock`, distinct d'`operation.lock` que prend chaque étape). `state.ts` :
   `maintenance.json` à côté des réglages (`checkedAt` et dernier passage par id de modpack ; un `skipped` ne remplace
   pas un essai `ready` / `failed` en attente). `schedule.ts` : `dueAt` / `isDue` (marge de 6 h). `scheduledTask.ts` :
-  tâche Windows `Modpack Manager - mises a jour des modpacks` (racine, compte de l'utilisateur, `Interactive`,
+  tâche Windows `Modding Manager - mises a jour des modpacks` (racine, compte de l'utilisateur, `Interactive`,
   `Limited`, quotidienne, `WakeToRun`, `StartWhenAvailable` ; PowerShell par stdin en UTF-8, sans droits
   d'administrateur : vérifié le 2026-10-11) ; `foreign` si elle lance une autre installation. `claude.ts` : demande
   à Claude pour un échec et outils MCP en lecture permis (`ANALYSIS_TOOLS`). `pack.json` `updates` (`PackUpdates` :
@@ -485,7 +486,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - Release de l'app : tag `app-v<version>` = version de `package.json`, avec l'installeur `.exe`. Préparer la version
   avec `npm run changelog -- --version <version>` ; le texte de la release (notes, `---`, mode d'emploi) est relu par
   les apps installées pour présenter la mise à jour.
-- Chaque instance installée contient `.modpack-manager.json` (id, version, `managedEntries`, et depuis la 1.0.5
+- Chaque instance installée contient `.modding-manager.json` (id, version, `managedEntries`, et depuis la 1.0.5
   `configFiles` et `disabledByDefault`, que `listInstalled` ne transmet pas à la fenêtre) : c'est la source
   de vérité pour savoir ce qui est installé, et la seule qui autorise une mise à jour sur place. Un profil sans
   marqueur reconnu à ses mods (profil d'origine du publieur, zip importé à la main) est seulement signalé : l'app
@@ -543,23 +544,31 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 
 ## Pièges connus
 
-- **Changement d'identité en 1.9.0** (avant : « Modpack Downloader ») : `appId` et `APP_USER_MODEL_ID`
-  `com.wolfgangproxa.modpackmanager` (avant `…modpackdownloader`), paquet et dossier d'installation
-  `Programs\minecraft-modpack-manager`, exécutable `Modpack Manager.exe`, `userData` `%APPDATA%\Modpack Manager`
-  (fixé dans `index.ts`), marqueur `.modpack-manager.json`, dossiers temporaires `modpack-manager`, dépôt
-  `minecraft-modpack-manager` (GitHub redirige l'ancienne adresse, que les apps d'avant la 1.9.0 lisent encore).
-  L'ancienne identité est décrite dans `src/shared/previousIdentity.ts` et reprise une fois : l'installeur trouve
-  l'ancienne app (`mpdFindPrevious` : entrée « Applications installées » du même éditeur au nom du même produit, autre
-  clé), la ferme et la désinstalle sur place avec `--updated` (`mpdUninstallPrevious`) avant de poser ses fichiers ;
-  au lancement, `migrateDataDir` (core) déplace le dossier des données (aussi pour les commandes), `readInstanceMarker`
-  renomme le marqueur d'un profil en le lisant, `currentRepoName` remplace l'ancien nom du dépôt dans les réglages, et
-  `migratePreviousInstallation` (main, une fois : `previous-identity.done`) redirige raccourcis, épingles, tâche
-  planifiée et connexion de Claude Code. Déplacements et renommages seulement depuis l'app installée
+- **Changement d'identité en 2.0.0** (avant : « Modpack Manager » de la 1.9.0 à la 1.9.x, et « Modpack Downloader »
+  jusqu'à la 1.8, sous le nom affiché « Modpack Manager ») : `appId` et `APP_USER_MODEL_ID`
+  `com.wolfgangproxa.moddingmanager` (avant `…modpackmanager`, puis `…modpackdownloader`), paquet et dossier
+  d'installation `Programs\minecraft-modding-manager`, exécutable `Modding Manager.exe`, `userData`
+  `%APPDATA%\Modding Manager` (fixé dans `index.ts`), données locales `%LOCALAPPDATA%\Modding Manager` (tests),
+  marqueur `.modding-manager.json`, dossiers temporaires `modding-manager` (`APP_TEMP_DIR`), tâche planifiée
+  `Modding Manager - mises a jour des modpacks`, serveur MCP `modding-manager`, dépôt `minecraft-modding-manager`
+  (GitHub redirige les anciennes adresses, que lisent les apps d'avant la 2.0.0). Les identités précédentes sont
+  décrites dans `src/shared/previousIdentity.ts` (`PREVIOUS_IDENTITIES`, la plus récente d'abord, et
+  `PREVIOUS_PRODUCT` : ce qu'elles partageaient) et reprises une fois : l'installeur trouve l'ancienne app
+  (`mpdFindPrevious` : entrée « Applications installées » du même éditeur dont le nom commence par
+  `MPD_PREVIOUS_PRODUCT_NAME`, autre clé), la ferme et la désinstalle sur place avec `--updated`
+  (`mpdUninstallPrevious`) avant de poser ses fichiers ; au lancement, `migrateDataDir` et `migrateLocalDataDir`
+  (core) déplacent les dossiers des données (aussi pour les commandes), `readInstanceMarker` renomme le marqueur d'un
+  profil en le lisant, `currentRepoName` remplace l'ancien nom du dépôt dans les réglages, et
+  `migratePreviousInstallation` (main, une fois : `previous-identity-2.done`, pas `previous-identity.done` venu de la
+  1.9.0 avec le dossier des données) redirige raccourcis (celui du bureau prend le nouveau nom), épingles, tâche
+  planifiée (remplacée par celle du nouveau nom) et connexion de Claude Code (`reconnectPrevious` : l'ancien serveur
+  MCP est retiré). Déplacements et renommages seulement depuis l'app installée
   (`enablePreviousIdentityMigration(app.isPackaged)`, ou `app.asar` pour les commandes) : en développement, l'app
-  installée, peut-être encore ancienne, se sert des mêmes fichiers, et l'ancien nom est seulement lu. Tout cela est à
-  retirer en 2.0. Ne jamais tester ces migrations avec les vrais noms : compiler sous une identité de test avec
-  `PREVIOUS_IDENTITY` et `APP_NAME` modifiés le temps du build (sinon le vrai dossier des données et les vrais
-  raccourcis seraient déplacés).
+  installée, peut-être encore ancienne, se sert des mêmes fichiers, et l'ancien nom est seulement lu. Une identité se
+  retire de la liste quand plus personne ne l'a. Ne jamais tester ces migrations avec les vrais noms : compiler sous
+  une identité de test avec `PREVIOUS_IDENTITIES`, `PREVIOUS_PRODUCT` et `APP_NAME` modifiés le temps du build (sinon
+  le vrai dossier des données et les vrais raccourcis seraient déplacés). La graine des mondes de test reste
+  `modpack-manager`, pour que les tests restent comparables.
 
 - Une notification d'Electron non packagé (passage `--maintenance` lancé depuis le dépôt) crée dans le menu Démarrer
   `Electron.lnk` vers `node_modules\electron\dist\electron.exe`, avec l'identifiant Windows de l'app (constaté le
@@ -598,7 +607,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   -c.extraMetadata.name=mpd-test -c.extraMetadata.productName="MPD Test" -c.nsis.shortcutName="MPD Test"
   -c.directories.output=<dossier>`, plus `-c.extraMetadata.version=1.0.1` pour une autre version) : autre dossier
   d'installation (`Programs\mpd-test`), autres clés de registre. Le `userData` vient d'`APP_NAME`, pas du nom du
-  produit : pour ne pas toucher au vrai `%APPDATA%\Modpack Manager`, changer `APP_NAME` le temps du build (et
+  produit : pour ne pas toucher au vrai `%APPDATA%\Modding Manager`, changer `APP_NAME` le temps du build (et
   `-c.executableName` pour ne pas viser les vrais raccourcis), puis supprimer son dossier. Désinstaller ensuite avec
   `"Uninstall <exécutable>.exe" /currentuser /S`. Depuis PowerShell, mettre chaque
   argument `-c.…` entier entre guillemets (`"-c.productName=MPD Test"`), sinon il est coupé au premier point.

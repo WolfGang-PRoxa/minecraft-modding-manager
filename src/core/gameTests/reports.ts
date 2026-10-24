@@ -5,11 +5,12 @@ import { createHash } from 'node:crypto'
 import { readdir } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
-import { APP_NAME } from '../../shared/config'
 import type { PlayerTestReport, ProfileTestReports, ServerTestReport, StaticCheckReport } from '../../shared/studio'
 import { readJson, writeJsonAtomic } from '../fsutil'
+import { migrateLocalDataDir } from '../previousIdentity'
 
-const localData = () => join(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'), APP_NAME)
+// %LOCALAPPDATA%\Modding Manager, repris au besoin du dossier de l'ancien nom (previousIdentity.ts).
+const localData = () => migrateLocalDataDir(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local'))
 
 /** Serveurs de test : volumineux et reconstruits à la demande, donc dans les données locales (pas itinérantes). */
 export const testServersDir = () => join(localData(), 'test-servers')

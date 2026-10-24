@@ -1,8 +1,8 @@
 # Présentation
 
-Modpack Manager est une application Windows qui installe des modpacks Minecraft dans CurseForge en un clic, et
-les garde à jour. Les modpacks sont publiés sur GitHub par leurs auteurs, qui utilisent la même application, avec
-le Studio, pour préparer et publier chaque nouvelle version.
+Modding Manager (Modpack Manager jusqu’à la 1.9) est une application Windows qui installe des modpacks Minecraft dans
+CurseForge en un clic, et les garde à jour. Les modpacks sont publiés sur GitHub par leurs auteurs, qui utilisent la
+même application, avec le Studio, pour préparer et publier chaque nouvelle version.
 
 ## À quoi sert l’application
 
@@ -54,7 +54,7 @@ Joueur ──── Bibliothèque ── installe ──▶ CurseForge (dossier 
 4. Le joueur lance le modpack depuis CurseForge, onglet Minecraft.
 
 Les mises à jour de l’application elle-même viennent toujours de son propre dépôt
-([WolfGang-PRoxa/minecraft-modpack-manager](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager)),
+([WolfGang-PRoxa/minecraft-modding-manager](https://github.com/WolfGang-PRoxa/minecraft-modding-manager)),
 quel que soit le dépôt de modpacks suivi. Voir [Mises à jour de l’application](mises-a-jour.md).
 
 ## Configuration requise

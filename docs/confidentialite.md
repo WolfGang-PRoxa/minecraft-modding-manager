@@ -1,6 +1,6 @@
 # Confidentialité et sécurité
 
-Modpack Manager ne collecte aucune donnée et n’envoie rien à ses auteurs de lui-même. Cette page détaille ce qui
+Modding Manager ne collecte aucune donnée et n’envoie rien à ses auteurs de lui-même. Cette page détaille ce qui
 transite sur le réseau, ce qui reste sur le PC, et comment l’application protège ce qu’elle installe.
 
 ## Ce qui est envoyé, et à qui
@@ -51,9 +51,9 @@ transmise à un autre système.
 
 ## Ce qui reste sur le PC
 
-- **Les réglages** et la **liste mise en cache**, dans `%APPDATA%\Modpack Manager` (voir
+- **Les réglages** et la **liste mise en cache**, dans `%APPDATA%\Modding Manager` (voir
   [Fichiers et dossiers](fichiers.md)), et pour un publieur les serveurs, jeux et résultats des tests, dans
-  `%LOCALAPPDATA%\Modpack Manager`.
+  `%LOCALAPPDATA%\Modding Manager`.
 - **La connexion GitHub** : le jeton est chiffré par Windows (DPAPI), avec une clé liée à la session Windows. Un
   autre compte Windows, ou une copie du fichier sur un autre PC, ne peut pas le relire. **Se déconnecter** le
   supprime.
@@ -87,13 +87,13 @@ transmise à un autre système.
 L’installeur n’est pas signé pour l’instant : Windows affiche « Windows a protégé votre ordinateur » (voir
 [Installation](installation.md)). Son intégrité reste vérifiée : une mise à jour téléchargée par l’application est
 comparée à l’empreinte SHA-256 que GitHub calcule pour le fichier publié. Un installeur téléchargé à la main ne se
-prend que sur la [page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
+prend que sur la [page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases).
 
 La signature gratuite de [SignPath Foundation](https://signpath.org), réservée aux projets open source, demande un
 projet déjà connu du public : elle sera demandée de nouveau plus tard. Une fois en place, les propriétés du fichier
 indiqueront l’éditeur **SignPath Foundation**, et seuls les installeurs construits par GitHub Actions à partir du
 dépôt public seront signés, après une approbation manuelle du mainteneur. La politique de signature complète est dans le
-[README du dépôt](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/blob/main/README.fr.md#politique-de-signature-du-code).
+[README du dépôt](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/blob/main/README.fr.md#politique-de-signature-du-code).
 
 ## Protection de l’application
 

@@ -200,7 +200,7 @@ essai, elle teste l’essai lui-même. **Tout tester** enchaîne les trois tests
 - **Serveur seul** démarre un vrai serveur Minecraft avec les mods et les configurations du profil, sans fenêtre ni
   compte, jusqu’à ce qu’il soit prêt, puis l’arrête. Il trouve la plupart des incompatibilités entre mods. Compter une
   à deux minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, le serveur est téléchargé (puis
-  gardé dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu (Sodium, Iris, Oculus…) sont
+  gardé dans `%LOCALAPPDATA%\Modding Manager\test-servers`). Les mods réservés au jeu (Sodium, Iris, Oculus…) sont
   laissés de côté. S’il plante, **Fin du journal du serveur** montre le rapport de plantage, avec les mods suspectés.
   Même quand il démarre, les erreurs de son journal (recette ou script en erreur, mod qui échoue à se charger…) sont
   relevées : un modpack en écrit souvent beaucoup sans gravité, elles servent surtout à comparer deux tests.

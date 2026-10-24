@@ -120,6 +120,6 @@ toujours gardés (voir [Mettre à jour un modpack](bibliotheque.md#mettre-à-jou
 | Fichiers exclus | Rien tout de suite : ils s’appliquent aux prochaines versions créées depuis CurseForge, ou aux zips nettoyés avec **Retirer du zip**. |
 | Mods désactivés, configurations | À la prochaine publication, le `modpack.json` de **toutes les versions** du modpack est renvoyé (le zip n’est pas renvoyé). L’aperçu le détaille, version par version. |
 
-Les mods désactivés et les configurations gardées demandent aux joueurs une version récente de Modpack Manager ;
+Les mods désactivés et les configurations gardées demandent aux joueurs une version récente de Modding Manager ;
 l’application leur propose elle-même de se mettre à jour. Une version plus ancienne installe tous les mods actifs et
 remplace le dossier `config`, comme avant.

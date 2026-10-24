@@ -5,6 +5,7 @@ import { mkdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import yauzl from 'yauzl'
+import { APP_TEMP_DIR } from '../../shared/config'
 import { CONTENT_KINDS, CURSEFORGE_CLASSES, type ContentKind } from '../../shared/content'
 import type { CurseForgeVersion, PackCurseForge } from '../../shared/studio'
 import type { CfFile, CurseForgeClient } from '../curseforgeApi'
@@ -98,7 +99,7 @@ export async function publishVersion(uploader: CurseForgeUploader, input: Publis
   const taken = [...Object.keys(input.curseforge.files).map(Number), ...input.published.map((v) => v.number ?? 0)]
   const newer = taken.filter((v) => v > input.version)
   if (newer.length) throw new StudioError(`La v${Math.max(...newer)} est déjà sur CurseForge : une version plus ancienne n’y a plus sa place.`)
-  const dir = join(tmpdir(), 'modpack-manager', `curseforge-${Date.now()}`)
+  const dir = join(tmpdir(), APP_TEMP_DIR, `curseforge-${Date.now()}`)
   await mkdir(dir, { recursive: true })
   try {
     onStep('Export au format CurseForge')

@@ -2,7 +2,7 @@ import { app } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { mkdir, readdir, readFile, rm, rmdir, stat, writeFile } from 'node:fs/promises'
 import { basename, dirname, extname, join, relative } from 'node:path'
-import { CURSEFORGE_INSTANCE_FILE, INSTANCE_MARKER_FILE } from '../shared/config'
+import { APP_TEMP_DIR, CURSEFORGE_INSTANCE_FILE, INSTANCE_MARKER_FILE } from '../shared/config'
 import type {
   InstalledModpack,
   InstallProgress,
@@ -249,7 +249,7 @@ export async function installModpack(
 
   let workDir: string | null = null
   let keepWorkDir = false
-  const zipPath = join(app.getPath('temp'), 'modpack-manager', `${version.id}-${Date.now()}.zip`)
+  const zipPath = join(app.getPath('temp'), APP_TEMP_DIR, `${version.id}-${Date.now()}.zip`)
 
   try {
     report('preparing')
@@ -268,7 +268,7 @@ export async function installModpack(
 
     // Le dossier de travail est sur le même disque que les instances : le basculement final
     // est un simple renommage, et CurseForge ne voit jamais d'instance à moitié extraite.
-    workDir = join(dirname(instancesDir), '.modpack-manager', `${version.id}-${Date.now()}`)
+    workDir = join(dirname(instancesDir), `.${APP_TEMP_DIR}`, `${version.id}-${Date.now()}`)
     const stagingDir = join(workDir, 'new')
 
     // Sans empreinte, rien ne prouverait que le zip reçu est celui publié.

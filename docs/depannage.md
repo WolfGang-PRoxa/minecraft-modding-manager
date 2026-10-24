@@ -8,7 +8,7 @@ de l’aide (`Ctrl` + `K`) retrouve un message à partir de quelques-uns de ses 
 **« Windows a protégé votre ordinateur »**\
 L’installeur n’est pas signé pour l’instant, et SmartScreen ne le connaît pas. Cliquer sur **Informations complémentaires**, puis **Exécuter
 quand même**. L’installeur se télécharge toujours depuis la
-[page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases).
+[page officielle des versions](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases).
 
 **L’installeur affiche « Version plus récente installée »**\
 L’installeur lancé est plus ancien que la version installée. **Ouvrir la …** ouvre la version installée ;
@@ -18,7 +18,7 @@ L’installeur lancé est plus ancien que la version installée. **Ouvrir la …
 L’application tourne encore : elle doit être fermée pour être remplacée. Terminer d’abord une installation de modpack
 ou une publication en cours, puis cliquer sur **Fermer et continuer** ; elle est rouverte à la fin.
 
-**« Modpack Manager ne peut pas être fermé »**\
+**« Modding Manager ne peut pas être fermé »**\
 L’installeur n’a pas réussi à fermer l’application, sans doute lancée en tant qu’administrateur. La fermer à la main,
 puis cliquer sur **Réessayer**.
 

@@ -1,6 +1,6 @@
 # Mises à jour de l’application
 
-Modpack Manager se tient à jour tout seul : quand une nouvelle version sort, il la propose, la télécharge, la
+Modding Manager se tient à jour tout seul : quand une nouvelle version sort, il la propose, la télécharge, la
 vérifie et l’installe en un clic, sans rien faire perdre.
 
 ## Être prévenu
@@ -49,25 +49,32 @@ depuis **Paramètres → À propos → Nouveautés**. Pour chaque version : sa d
 ## Quelles versions sont proposées
 
 - Seules les versions **stables** publiées sur le dépôt de l’application
-  ([WolfGang-PRoxa/minecraft-modpack-manager](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases))
+  ([WolfGang-PRoxa/minecraft-modding-manager](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases))
   sont proposées, quel que soit le dépôt de modpacks suivi.
 - Une version n’est proposée qu’une fois son installeur en ligne, et seulement si elle est **plus récente** que la
   version installée : l’application ne revient jamais en arrière d’elle-même.
 
-## Passage à la 1.9.0
+## Passage à la 2.0.0
 
-Jusqu’à la 1.8, l’application gardait des noms de l’époque où elle s’appelait **Modpack Downloader**. La 1.9.0 prend
-partout le nom **Modpack Manager**. La mise à jour s’en charge, sans rien demander :
+L’application s’appelait **Modpack Manager** jusqu’à la 1.9 (et gardait avant la 1.9.0 des noms de l’époque où elle
+s’appelait **Modpack Downloader**). Elle gère maintenant aussi les mods, les packs de ressources, les shaders et les
+plugins : la 2.0.0 prend partout le nom **Modding Manager**, et son dépôt devient
+`WolfGang-PRoxa/minecraft-modding-manager` (GitHub redirige l’ancienne adresse). La mise à jour s’en charge, sans rien
+demander, depuis la 1.9 comme depuis une version plus ancienne :
 
-- l’installeur retire l’ancienne application (`Programs\minecraft-modpack-downloader`) et installe la nouvelle dans
-  `%LOCALAPPDATA%\Programs\minecraft-modpack-manager` ;
-- au premier lancement, les réglages, la connexion GitHub, la clé CurseForge et l’historique passent de
-  `%APPDATA%\Modpack Downloader` à `%APPDATA%\Modpack Manager` ;
-- le raccourci du bureau, ceux du menu Démarrer et les épingles de la barre des tâches lancent la nouvelle
-  application ; pour un publieur, la tâche planifiée des mises à jour automatiques et la connexion à Claude Code
+- l’installeur retire l’ancienne application (`Programs\minecraft-modpack-manager`, ou
+  `Programs\minecraft-modpack-downloader`) et installe la nouvelle dans
+  `%LOCALAPPDATA%\Programs\minecraft-modding-manager` ;
+- au premier lancement, les réglages, les connexions (GitHub, CurseForge, Modrinth, Hangar) et l’historique passent
+  de `%APPDATA%\Modpack Manager` (ou `%APPDATA%\Modpack Downloader`) à `%APPDATA%\Modding Manager`, et les résultats
+  des tests de `%LOCALAPPDATA%\Modpack Manager` à `%LOCALAPPDATA%\Modding Manager` ;
+- le raccourci du bureau prend le nouveau nom ; lui, ceux du menu Démarrer et les épingles de la barre des tâches
+  lancent la nouvelle application ; pour un publieur, la tâche planifiée des mises à jour automatiques (désormais
+  « Modding Manager - mises a jour des modpacks ») et la connexion à Claude Code (serveur MCP `modding-manager`)
   aussi ;
-- chaque modpack installé garde son lien avec l’application : son marqueur devient `.modpack-manager.json` la
-  première fois qu’elle le lit.
+- chaque modpack installé garde son lien avec l’application : son marqueur devient `.modding-manager.json` la
+  première fois qu’elle le lit ;
+- un dépôt de modpacks suivi sous l’ancienne adresse du dépôt de l’application prend la nouvelle.
 
 > [!NOTE]
 > Un raccourci créé ailleurs que sur le bureau (avec **Autre emplacement…**) n’est pas retrouvé : il se recrée depuis

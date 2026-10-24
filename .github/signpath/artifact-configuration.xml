@@ -9,7 +9,7 @@
     <parameter name="version" />
   </parameters>
   <zip-file>
-    <pe-file path="Modpack-Manager-Setup-${version}.exe" product-name="Modpack Manager" product-version="${version}">
+    <pe-file path="Modding-Manager-Setup-${version}.exe" product-name="Modding Manager" product-version="${version}">
       <authenticode-sign/>
     </pe-file>
   </zip-file>

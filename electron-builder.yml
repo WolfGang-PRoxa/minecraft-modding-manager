@@ -1,8 +1,9 @@
-# Identité depuis la 1.9.0 (avant : com.wolfgangproxa.modpackdownloader, « Modpack Downloader.exe », dossier
+# Identité depuis la 2.0.0 (de la 1.9.0 à la 1.9.x : com.wolfgangproxa.modpackmanager, « Modpack Manager.exe », dossier
+# Programs\minecraft-modpack-manager ; avant : com.wolfgangproxa.modpackdownloader, « Modpack Downloader.exe », dossier
 # Programs\minecraft-modpack-downloader) : le nouvel installeur désinstalle l'ancienne application (build/installer.nsh).
-appId: com.wolfgangproxa.modpackmanager
-productName: Modpack Manager
-executableName: Modpack Manager
+appId: com.wolfgangproxa.moddingmanager
+productName: Modding Manager
+executableName: Modding Manager
 directories:
   buildResources: build
   output: dist
@@ -19,7 +20,7 @@ win:
     - target: nsis
       arch: [x64]
   icon: build/icon.png
-  artifactName: Modpack-Manager-Setup-${version}.${ext}
+  artifactName: Modding-Manager-Setup-${version}.${ext}
 nsis:
   # Installeur « assisté » pour pouvoir dessiner ses fenêtres aux couleurs de l'application (build/installer.nsh),
   # réglé pour se comporter comme un installeur « en un clic » : aucune question, pour l'utilisateur seul.
@@ -30,7 +31,7 @@ nsis:
   createDesktopShortcut: false
   include: build/installer.nsh
   createStartMenuShortcut: true
-  shortcutName: Modpack Manager
+  shortcutName: Modding Manager
   runAfterFinish: true
   deleteAppDataOnUninstall: false
 publish: null

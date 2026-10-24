@@ -43,7 +43,7 @@ Si GitHub refuse l’envoi direct (jeton expiré, ou limité à un autre dépôt
 signalement sur GitHub**.
 
 Les signalements arrivent toujours sur le dépôt de l’application
-([WolfGang-PRoxa/minecraft-modpack-manager](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/issues)),
+([WolfGang-PRoxa/minecraft-modding-manager](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/issues)),
 quel que soit le dépôt de modpacks suivi. Pour un problème propre au contenu d’un modpack publié par quelqu’un
 d’autre (un mod qui plante, une quête bloquée), mieux vaut prévenir aussi son publieur.
 

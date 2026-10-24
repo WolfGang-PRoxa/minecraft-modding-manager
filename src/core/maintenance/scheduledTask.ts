@@ -4,7 +4,7 @@
 import type { MaintenanceTask } from '../../shared/studio'
 import { powershell } from '../powershell'
 
-export const MAINTENANCE_TASK_NAME = 'Modpack Manager - mises a jour des modpacks'
+export const MAINTENANCE_TASK_NAME = 'Modding Manager - mises a jour des modpacks'
 
 /** Ce que la tâche lance : l'exécutable de l'application avec ses arguments. */
 export interface MaintenanceLauncher {
@@ -80,7 +80,7 @@ export async function installMaintenanceTask(
     REGISTER,
     JSON.stringify({
       name,
-      description: 'Mises a jour automatiques des modpacks de Modpack Manager (modpacks dont le tour est venu).',
+      description: 'Mises a jour automatiques des modpacks de Modding Manager (modpacks dont le tour est venu).',
       execute: launcher.execute,
       arguments: launcher.arguments,
       time: options.time,

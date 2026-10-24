@@ -56,7 +56,7 @@ partie du publieur sont laissées de côté :
   Chat (`voicechat_recordings`, `config/voicechat/voicechat-client.properties`) et les données de JEI par monde
   (`config/jei/world`) ;
 - `usercache.json`, `usernamecache.json`, `command_history.txt` ;
-- les fichiers propres à Modpack Manager (`.modpack-manager.json`, image du profil) ;
+- les fichiers propres à Modding Manager (`.modding-manager.json`, image du profil) ;
 - les fichiers exclus dans les [réglages du modpack](reglages.md#exclure-des-fichiers) (options du jeu, shaders…) :
   la fenêtre les rappelle sous la liste des profils, avec un lien vers **Réglages des versions**.
 

@@ -9,7 +9,7 @@ l’autre.
 
 Si [Claude Code](https://claude.com/claude-code) est installé sur le PC, ouvrir **Paramètres → Claude Code et
 terminal** (mode publieur) et cliquer sur **Connecter**. L’application s’inscrit dans la configuration de Claude Code
-(un serveur MCP nommé `modpack-manager`) ; la connexion reste valable après les mises à jour de l’application.
+(un serveur MCP nommé `modding-manager`) ; la connexion reste valable après les mises à jour de l’application.
 **Reconnecter** la refait, par exemple si l’application a changé de dossier.
 
 Dans une nouvelle session Claude Code, il suffit de demander par exemple :
@@ -31,7 +31,7 @@ installé.
 L’application installée contient `mpm.cmd`, à côté de son exécutable :
 
 ```bash
-%LOCALAPPDATA%\Programs\minecraft-modpack-manager\mpm.cmd status
+%LOCALAPPDATA%\Programs\minecraft-modding-manager\mpm.cmd status
 ```
 
 Sans argument, `mpm` liste ses commandes ; `mpm <commande> --help` détaille une commande. Depuis le code source de
@@ -138,7 +138,7 @@ Avant de garder un essai ou de publier une version, tester le profil (ou son ess
   liste aussi les mods qui ne fonctionnent que dans le jeu.
 - **`tests server`** démarre un vrai serveur Minecraft avec les mods du profil, sans fenêtre ni compte, jusqu’à ce
   qu’il soit prêt, puis l’arrête. Quelques minutes ; la première fois pour une version de Fabric, Forge ou NeoForge, il
-  télécharge le serveur (gardé ensuite dans `%LOCALAPPDATA%\Modpack Manager\test-servers`). Les mods réservés au jeu
+  télécharge le serveur (gardé ensuite dans `%LOCALAPPDATA%\Modding Manager\test-servers`). Les mods réservés au jeu
   (Sodium, Iris, Oculus…) sont laissés de côté. En cas de plantage, le rapport donne sa cause et les mods suspectés ;
   sinon, `logIssues` relève les erreurs de son journal. Ce serveur local accepte pour son utilisateur le
   [contrat d’utilisation de Minecraft](https://aka.ms/MinecraftEULA).

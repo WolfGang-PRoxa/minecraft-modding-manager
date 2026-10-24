@@ -188,7 +188,7 @@ export async function clientArguments(options: ClientLaunchOptions): Promise<str
     resolution_height: String(options.height ?? 480),
     quickPlayMultiplayer: `${options.server.host}:${options.server.port}`,
     natives_directory: options.nativesDir,
-    launcher_name: 'modpack-manager',
+    launcher_name: 'modding-manager',
     launcher_version: '1',
     classpath: classpath.join(';'),
     classpath_separator: ';',

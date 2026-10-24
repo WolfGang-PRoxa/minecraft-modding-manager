@@ -7,7 +7,7 @@ est celui de la routine : une modification ici se reporte sur la routine.
 
 ---
 
-Correction d'une issue du dépôt WolfGang-PRoxa/minecraft-modpack-manager (application Electron « Modpack Manager »).
+Correction d'une issue du dépôt WolfGang-PRoxa/minecraft-modding-manager (application Electron « Modding Manager »).
 La session est lancée par le relais du projet quand le propriétaire du dépôt clique, dans un mail, sur « Corriger
 maintenant », « Ajouter du contexte » ou « Invalider ». Personne ne suit la session en direct : aller au bout sans
 poser de question.

@@ -77,14 +77,18 @@ async function connect(): Promise<{ ok: true } | { ok: false; error: string }> {
 }
 
 /**
- * Connexion faite par une installation qui a changé d'emplacement (l'ancien exécutable figure dans la commande
- * enregistrée) : elle est refaite vers celle-ci. Sans effet si Claude Code n'est pas connecté, ou l'est à celle-ci.
+ * Connexion faite par une ancienne installation, sous l'ancien nom du serveur (un des anciens exécutables figure dans
+ * la commande enregistrée) : elle est retirée et refaite vers celle-ci. Sans effet si Claude Code n'était pas
+ * connecté à une ancienne installation.
  */
-export async function reconnectIfMoved(previousExecutable: string): Promise<void> {
+export async function reconnectPrevious(previousServerName: string, previousExecutables: readonly string[]): Promise<void> {
   const claude = await findClaude()
   if (!claude) return
-  const { code, output } = await runClaude(claude, ['mcp', 'get', MCP_SERVER_NAME])
-  if (code === 0 && output.toLowerCase().includes(previousExecutable.toLowerCase())) await connect()
+  const { code, output } = await runClaude(claude, ['mcp', 'get', previousServerName])
+  const text = output.toLowerCase()
+  if (code !== 0 || !previousExecutables.some((exe) => text.includes(exe.toLowerCase()))) return
+  await runClaude(claude, ['mcp', 'remove', '--scope', 'user', previousServerName])
+  await connect()
 }
 
 /**

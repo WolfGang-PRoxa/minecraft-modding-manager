@@ -1,21 +1,29 @@
-// Ce que l'installation d'avant la 1.9.0 (« Modpack Downloader.exe », dans Programs\minecraft-modpack-downloader) a
-// laissé autour d'elle, et que son désinstalleur garde : raccourcis du bureau, épingles de la barre des tâches, tâche
-// planifiée des mises à jour automatiques, connexion de Claude Code. Le nouvel installeur a désinstallé l'ancienne
-// application (build/installer.nsh) ; au premier lancement, tout cela est dirigé vers la nouvelle, une fois.
-// À retirer avec shared/previousIdentity.ts (voir ce fichier).
+// Ce que les installations précédentes (« Modpack Manager.exe » dans Programs\minecraft-modpack-manager, et avant la
+// 1.9.0 « Modpack Downloader.exe » dans Programs\minecraft-modpack-downloader) ont laissé autour d'elles, et que leur
+// désinstalleur garde : raccourci du bureau, épingles de la barre des tâches, tâche planifiée des mises à jour
+// automatiques, connexion de Claude Code. Le nouvel installeur a désinstallé l'ancienne application
+// (build/installer.nsh) ; au premier lancement, tout cela est dirigé vers la nouvelle, une fois.
+// Voir shared/previousIdentity.ts.
 import { app, shell } from 'electron'
 import { existsSync } from 'node:fs'
-import { readdir, rm, writeFile } from 'node:fs/promises'
+import { readdir, rm, unlink, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
-import { installMaintenanceTask, maintenanceTaskExecutable, readMaintenanceTask } from '../core/maintenance/scheduledTask'
-import { PREVIOUS_IDENTITY } from '../shared/previousIdentity'
-import { reconnectIfMoved } from './claudeCode'
+import {
+  installMaintenanceTask,
+  maintenanceTaskExecutable,
+  readMaintenanceTask,
+  removeMaintenanceTask
+} from '../core/maintenance/scheduledTask'
+import { APP_NAME } from '../shared/config'
+import { PREVIOUS_EXECUTABLES, PREVIOUS_IDENTITIES, PREVIOUS_PRODUCT } from '../shared/previousIdentity'
+import { reconnectPrevious } from './claudeCode'
 import { maintenanceLauncher } from './maintenance'
 import { refreshShellIcons, WINDOWS_APP_ID } from './shortcut'
 
-const DONE_FILE = 'previous-identity.done'
+// Marque la reprise faite. Pas celui de la 1.9.0 (« previous-identity.done »), venu avec le dossier des données.
+const DONE_FILE = 'previous-identity-2.done'
 
-const isPrevious = (target: string) => basename(target).toLowerCase() === PREVIOUS_IDENTITY.executable.toLowerCase()
+const isPrevious = (target: string) => PREVIOUS_EXECUTABLES.some((exe) => basename(target).toLowerCase() === exe.toLowerCase())
 
 /** Les raccourcis (.lnk) d'un dossier et, si demandé, de ses sous-dossiers. */
 async function shortcutsIn(dir: string, recursive: boolean): Promise<string[]> {
@@ -30,13 +38,16 @@ async function shortcutsIn(dir: string, recursive: boolean): Promise<string[]> {
 }
 
 /**
- * Raccourcis vers l'ancien exécutable (bureau, menu Démarrer, épingles de la barre des tâches) : ils lancent désormais
- * celui-ci, avec son identifiant Windows (sans quoi la fenêtre ouverte ne se rangerait pas sous son épingle).
+ * Raccourcis vers un ancien exécutable (bureau, menu Démarrer, épingles de la barre des tâches) : ils lancent
+ * désormais celui-ci, avec son identifiant Windows (sans quoi la fenêtre ouverte ne se rangerait pas sous son épingle).
+ * Celui du bureau qui porte l'ancien nom de l'application prend le nouveau (les épingles gardent leur fichier, que
+ * Windows retient).
  */
 async function retargetShortcuts(): Promise<number> {
   const roaming = app.getPath('appData')
+  const desktop = app.getPath('desktop')
   const files = [
-    ...(await shortcutsIn(app.getPath('desktop'), false)),
+    ...(await shortcutsIn(desktop, false)),
     ...(await shortcutsIn(join(roaming, 'Microsoft', 'Windows', 'Start Menu', 'Programs'), true)),
     ...(await shortcutsIn(join(roaming, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar'), false))
   ]
@@ -49,26 +60,39 @@ async function retargetShortcuts(): Promise<number> {
       continue
     }
     if (!isPrevious(link.target)) continue
-    const ok = shell.writeShortcutLink(file, 'replace', {
+    const details: Electron.ShortcutDetails = {
       ...link,
       target: process.execPath,
       cwd: dirname(process.execPath),
       icon: process.execPath,
       iconIndex: 0,
       appUserModelId: WINDOWS_APP_ID
-    })
-    if (ok) changed++
+    }
+    const renamed = join(desktop, `${APP_NAME}.lnk`)
+    const rename = dirname(file) === desktop && basename(file).toLowerCase() === `${PREVIOUS_PRODUCT.name}.lnk`.toLowerCase()
+    if (rename && !existsSync(renamed)) {
+      if (shell.writeShortcutLink(renamed, 'create', details)) {
+        await unlink(file).catch(() => {})
+        changed++
+      }
+      continue
+    }
+    if (shell.writeShortcutLink(file, 'replace', details)) changed++
   }
   if (changed) refreshShellIcons()
   return changed
 }
 
-/** La tâche planifiée qui lançait l'ancien exécutable lance celui-ci, à la même heure. */
+/**
+ * La tâche planifiée de l'ancien nom, qui lançait un ancien exécutable, est remplacée par celle de ce nom, qui lance
+ * celui-ci à la même heure.
+ */
 async function retargetMaintenanceTask(): Promise<void> {
-  const executable = await maintenanceTaskExecutable()
+  const executable = await maintenanceTaskExecutable(PREVIOUS_PRODUCT.maintenanceTask)
   if (!executable || !isPrevious(executable)) return
-  const task = await readMaintenanceTask(null)
+  const task = await readMaintenanceTask(null, PREVIOUS_PRODUCT.maintenanceTask)
   if (task.time) await installMaintenanceTask(maintenanceLauncher(), { time: task.time, wake: task.wake })
+  await removeMaintenanceTask(PREVIOUS_PRODUCT.maintenanceTask)
 }
 
 /** Une seule fois par dossier de données, et seulement pour l'application installée. Ne lève jamais. */
@@ -79,8 +103,8 @@ export async function migratePreviousInstallation(): Promise<void> {
   await Promise.allSettled([
     retargetShortcuts(),
     retargetMaintenanceTask(),
-    reconnectIfMoved(PREVIOUS_IDENTITY.executable),
-    rm(join(app.getPath('temp'), PREVIOUS_IDENTITY.tempDir), { recursive: true, force: true })
+    reconnectPrevious(PREVIOUS_PRODUCT.mcpServer, PREVIOUS_EXECUTABLES),
+    ...PREVIOUS_IDENTITIES.map((identity) => rm(join(app.getPath('temp'), identity.tempDir), { recursive: true, force: true }))
   ])
   await writeFile(done, new Date().toISOString()).catch(() => {})
 }

@@ -1,6 +1,6 @@
 # CurseForge
 
-Modpack Manager installe les modpacks comme des profils CurseForge : c’est depuis CurseForge, onglet Minecraft,
+Modding Manager installe les modpacks comme des profils CurseForge : c’est depuis CurseForge, onglet Minecraft,
 qu’une partie se lance. Cette page explique comment l’application trouve CurseForge et son dossier de profils, et ce
 qu’elle fait quand CurseForge est déjà ouvert.
 

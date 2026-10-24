@@ -10,8 +10,8 @@ suivi des changements et publication d’une nouvelle version.
 - de préférence CurseForge, pour essayer les installations.
 
 ```bash
-git clone https://github.com/WolfGang-PRoxa/minecraft-modpack-manager.git
-cd minecraft-modpack-manager
+git clone https://github.com/WolfGang-PRoxa/minecraft-modding-manager.git
+cd minecraft-modding-manager
 npm install
 npm run dev
 ```
@@ -181,6 +181,6 @@ et le commentaire, après lecture des changements de l’action.
   ses traductions s’appellent `README.<langue>.md` (`README.fr.md`) et chaque version porte en tête les boutons
   des langues.
 - Messages de commit en français, au format conventionnel : `feat: …`, `fix: …`, `docs: …`, `chore: …`.
-- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/blob/main/README.fr.md#politique-de-signature-du-code)
+- La [politique de signature du code](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/blob/main/README.fr.md#politique-de-signature-du-code)
   est exigée par SignPath : la garder à jour dans chaque version du README.
 - Licence : [MIT](../LICENSE).

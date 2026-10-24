@@ -134,7 +134,7 @@ export class RepoError extends Error {
 
 export function parseRepoInput(input: string): RepoRef {
   const repo = parseRepo(input)
-  if (!repo) throw new RepoError('Format attendu : propriétaire/dépôt, par exemple WolfGang-PRoxa/minecraft-modpack-manager.')
+  if (!repo) throw new RepoError('Format attendu : propriétaire/dépôt, par exemple WolfGang-PRoxa/minecraft-modding-manager.')
   return repo
 }
 

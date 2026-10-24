@@ -77,7 +77,7 @@ export function loadConfig(req: Request, needs: RequiredKey[]): RelayConfig {
   }
   return {
     ...values,
-    mailFrom: env('MAIL_FROM') || 'Modpack Manager <onboarding@resend.dev>',
+    mailFrom: env('MAIL_FROM') || 'Modding Manager <onboarding@resend.dev>',
     baseUrl: (env('RELAY_URL') || env('URL') || new URL(req.url).origin).replace(/\/+$/, ''),
     githubApi: (env('GITHUB_API_URL') || 'https://api.github.com').replace(/\/+$/, ''),
     resendApi: (env('RESEND_API_URL') || 'https://api.resend.com').replace(/\/+$/, ''),

@@ -49,7 +49,7 @@ Sans session existante, la connexion se fait avec un jeton d’accès *fine-grai
 
 1. Ouvrir la page de [création d’un jeton](https://github.com/settings/personal-access-tokens/new) (lien
    **en créer un** dans l’application).
-2. Lui donner un nom (« Modpack Manager ») et une date d’expiration.
+2. Lui donner un nom (« Modding Manager ») et une date d’expiration.
 3. Dans **Repository access**, choisir **Only select repositories**, puis le dépôt des modpacks.
 4. Dans **Permissions → Repository permissions**, régler **Contents** sur **Read and write**.
 5. Cliquer sur **Generate token** et copier le jeton (il commence par `github_pat_`).
@@ -71,7 +71,7 @@ reconnecte-toi. ») : il suffit d’en créer un nouveau et de le coller à la p
 
 ## Les joueurs
 
-Les récepteurs suivent par défaut le dépôt `WolfGang-PRoxa/minecraft-modpack-manager`. Pour une publication sur un
+Les récepteurs suivent par défaut le dépôt `WolfGang-PRoxa/minecraft-modding-manager`. Pour une publication sur un
 autre dépôt, les joueurs doivent connaître son nom : ils le choisissent dans **Paramètres → Utilisation → Modpacks
 de** (voir [Suivre les modpacks d’un autre publieur](bibliotheque.md#suivre-les-modpacks-dun-autre-publieur)).
 

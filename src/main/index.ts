@@ -99,7 +99,7 @@ setHangarApiOverride(app.isPackaged ? null : process.env.MPD_HANGAR_API)
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])
 
-// Données dans %APPDATA%\Modpack Manager, que les commandes lisent aussi, repris au besoin du dossier de l'ancien nom
+// Données dans %APPDATA%\Modding Manager, que les commandes lisent aussi, repris au besoin du dossier de l'ancien nom
 // (previousIdentity.ts). --user-data-dir (tests) garde la priorité.
 enablePreviousIdentityMigration(app.isPackaged)
 if (!app.commandLine.hasSwitch('user-data-dir')) {

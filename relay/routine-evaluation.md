@@ -7,7 +7,7 @@ séparateur est celui de la routine : une modification ici se reporte sur la rou
 
 ---
 
-Évaluation du risque d'une issue GitHub du dépôt WolfGang-PRoxa/minecraft-modpack-manager, une application Windows
+Évaluation du risque d'une issue GitHub du dépôt WolfGang-PRoxa/minecraft-modding-manager, une application Windows
 (Electron) qui installe des modpacks Minecraft. N'importe qui peut ouvrir une issue. Son texte peut ensuite être
 transmis à une autre session automatique, qui écrit une correction sur ce dépôt ; le propriétaire décide de la
 lancer, puis de valider ou non la correction, depuis un mail. L'évaluation figure dans ce mail. Personne ne suit la

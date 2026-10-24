@@ -1,6 +1,6 @@
 // Instructions transmises à Claude par le serveur MCP : la méthode de travail sur les modpacks du publieur. Elles
 // accompagnent l'application installée (pas besoin du dépôt).
-export const MCP_INSTRUCTIONS = `Modpack Manager : gestion des modpacks Minecraft du publieur (dossier des modpacks sur son PC, releases GitHub
+export const MCP_INSTRUCTIONS = `Modding Manager : gestion des modpacks Minecraft du publieur (dossier des modpacks sur son PC, releases GitHub
 lues par l'application des joueurs). Réponds au publieur en français.
 
 Méthode :

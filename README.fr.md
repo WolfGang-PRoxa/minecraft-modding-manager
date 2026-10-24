@@ -1,13 +1,15 @@
-# Modpack Manager
+# Modding Manager
 
 [![English](https://img.shields.io/badge/lang-English-0366d6)](README.md)
 [![Français](https://img.shields.io/badge/langue-Fran%C3%A7ais-2ea44f)](README.fr.md)
 
-Application Windows qui installe en un clic les modpacks Minecraft publiés sur GitHub. Chaque modpack apparaît
-directement dans CurseForge, prêt à être lancé, et se met à jour sans perte des mondes ni des réglages. Les auteurs de
-modpacks les publient avec le Studio, dans la même application.
+Application Windows (anciennement **Modpack Manager**) qui installe en un clic les modpacks Minecraft publiés sur
+GitHub. Chaque modpack apparaît directement dans CurseForge, prêt à être lancé, et se met à jour sans perte des mondes
+ni des réglages ; les mods, packs de ressources et shaders publiés à côté s'y ajoutent en un clic. Les auteurs publient
+leurs modpacks, mods, packs de ressources, shaders et plugins de serveur avec le Studio, dans la même application
+(GitHub, CurseForge, Modrinth, Hangar).
 
-**[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest)**
+**[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest)**
 · [Documentation](docs/README.md) · [Nouveautés](CHANGELOG.md)
 
 ## Fonctionnalités
@@ -32,8 +34,8 @@ modpacks les publient avec le Studio, dans la même application.
 ## Installation
 
 1. Installer [CurseForge](https://www.curseforge.com/download/app) s'il ne l'est pas déjà.
-2. Télécharger **Modpack-Manager-Setup-x.y.z.exe** depuis la
-   [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest), puis le lancer.
+2. Télécharger **Modding-Manager-Setup-x.y.z.exe** depuis la
+   [dernière version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest), puis le lancer.
    L'installeur n'est pas signé pour l'instant (voir
    [Politique de signature du code](#politique-de-signature-du-code)) : Windows affiche « Windows a protégé votre
    ordinateur ». Cliquer sur **Informations complémentaires**, puis **Exécuter quand même**. L'installeur ne se
@@ -144,7 +146,7 @@ Seuls les installeurs construits par GitHub Actions à partir de ce dépôt sero
 
 ### Confidentialité
 
-Modpack Manager ne collecte aucune donnée, ne contient ni statistiques d'utilisation ni publicité, et n'envoie rien
+Modding Manager ne collecte aucune donnée, ne contient ni statistiques d'utilisation ni publicité, et n'envoie rien
 à ses auteurs de lui-même. Il ne transmet d'informations qu'aux services nécessaires à ce que l'utilisateur lui
 demande :
 

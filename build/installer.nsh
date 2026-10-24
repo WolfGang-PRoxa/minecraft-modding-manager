@@ -10,6 +10,10 @@
 ; comporte comme un installeur « en un clic » : aucune question (sauf si l'application est déjà installée ou ouverte),
 ; pour l'utilisateur seul, sans page de fin, et l'application s'ouvre quand c'est terminé.
 
+; Nom affiché par les installations précédentes (« Modpack Manager » jusqu'à la 1.9.x, sous deux identités) : leur
+; entrée des « Applications installées » s'appelle « Modpack Manager x.y.z ». Voir src/shared/previousIdentity.ts.
+!define MPD_PREVIOUS_PRODUCT_NAME "Modpack Manager"
+
 ; Installation pour l'utilisateur seul : la page « pour qui installer » n'est jamais montrée.
 !macro customInstallMode
   StrCpy $isForceCurrentInstall "1"
@@ -53,7 +57,7 @@
   StrCpy $mpd.procPath ""
   Call ${MPD_FN}mpdCloseApp
   !ifndef BUILD_UNINSTALLER
-    ; Ancienne identité de l'application (avant la 1.9.0) : elle est fermée et désinstallée avant que la nouvelle ne
+    ; Ancienne identité de l'application (avant la 2.0.0) : elle est fermée et désinstallée avant que la nouvelle ne
     ; pose ses fichiers et ses raccourcis (voir mpdFindPrevious).
     ${If} $mpd.previousExe != ""
       StrCpy $mpd.procPath $mpd.previousExe
@@ -596,17 +600,18 @@ Var mpd.procPath
       ${EndIf}
     FunctionEnd
 
-    ; Ancienne identité de l'application (avant la 1.9.0 : autre appId, donc autre clé de désinstallation, autre dossier
-    ; et autre exécutable) : une entrée de « Applications installées » du même éditeur, au nom du même produit (« Modpack
-    ; Manager 1.8.3 »), dont l'exécutable et le désinstalleur existent encore. Elle compte comme une mise à jour, de sa
-    ; version à celle-ci. À retirer avec src/shared/previousIdentity.ts.
+    ; Ancienne identité de l'application (avant la 2.0.0 : autre appId, donc autre clé de désinstallation, autre dossier
+    ; et autre exécutable) : une entrée de « Applications installées » du même éditeur, à l'ancien nom du produit
+    ; (« Modpack Manager 1.9.3 », ou « Modpack Manager 1.8.3 » sous l'identité d'avant la 1.9.0), dont l'exécutable et
+    ; le désinstalleur existent encore. Elle compte comme une mise à jour, de sa version à celle-ci. À retirer avec
+    ; src/shared/previousIdentity.ts.
     Function mpdFindPrevious
       Push $1
       Push $2
       Push $3
       Push $4
       StrCpy $mpd.previousExe ""
-      StrLen $4 "${PRODUCT_NAME} "
+      StrLen $4 "${MPD_PREVIOUS_PRODUCT_NAME} "
       StrCpy $1 0
       ${Do}
         EnumRegKey $2 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall" $1
@@ -623,7 +628,7 @@ Var mpd.procPath
         ${EndIf}
         ReadRegStr $3 HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\$2" "DisplayName"
         StrCpy $3 $3 $4
-        ${If} $3 != "${PRODUCT_NAME} "
+        ${If} $3 != "${MPD_PREVIOUS_PRODUCT_NAME} "
           ${Continue}
         ${EndIf}
         ; DisplayIcon : « <exécutable>,0 ».

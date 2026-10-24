@@ -75,7 +75,7 @@ async function api<T>(config: RelayConfig, method: string, path: string, body?: 
       headers: {
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'modpack-manager-relay',
+        'User-Agent': 'modding-manager-relay',
         Authorization: `Bearer ${config.githubToken}`,
         ...(body === undefined ? {} : { 'Content-Type': 'application/json' })
       },

@@ -87,7 +87,7 @@ l’application ne trouve pas les profils. Voir [Le dossier des instances](curse
 
 ## Raccourci
 
-Indique si Modpack Manager a un raccourci sur le bureau.
+Indique si Modding Manager a un raccourci sur le bureau.
 
 - **Ajouter au bureau** (ou **Recréer sur le bureau**) crée le raccourci sur le bureau, ou le remplace. Le recréer
   répare aussi une icône restée vide.

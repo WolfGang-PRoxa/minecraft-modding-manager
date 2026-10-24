@@ -4,7 +4,7 @@
 // (« **/*.log » : tous les .log). La casse est ignorée, comme sous Windows. Le fichier du profil
 // (minecraftinstance.json, à la racine) n'est jamais exclu : sans lui, il n'y a plus d'instance.
 import { CURSEFORGE_INSTANCE_FILE, INSTANCE_MARKER_FILE } from './config'
-import { PREVIOUS_IDENTITY } from './previousIdentity'
+import { PREVIOUS_INSTANCE_MARKERS } from './previousIdentity'
 
 /** Données propres à la partie du publieur, jamais publiées quand une version est créée depuis CurseForge. */
 export const DEFAULT_EXCLUSIONS = [
@@ -35,7 +35,7 @@ export const DEFAULT_EXCLUSIONS = [
   // Identité du profil du publieur (son guid) : chaque installation reçoit la sienne.
   '.curseclient',
   INSTANCE_MARKER_FILE,
-  PREVIOUS_IDENTITY.instanceMarker
+  ...PREVIOUS_INSTANCE_MARKERS
 ]
 
 /** Met un chemin saisi au format des exclusions ; null s'il est vide ou s'il sortirait de l'instance. */

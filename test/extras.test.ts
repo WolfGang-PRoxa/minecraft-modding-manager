@@ -102,7 +102,7 @@ describe('contenus publiés', () => {
 describe('ajouts dans un profil', () => {
   let root: { dir: string; cleanup: () => Promise<void> }
   let profile: string
-  const marker = (): Promise<InstanceMarker> => readFile(join(profile, '.modpack-manager.json'), 'utf8').then((t) => JSON.parse(t) as InstanceMarker)
+  const marker = (): Promise<InstanceMarker> => readFile(join(profile, '.modding-manager.json'), 'utf8').then((t) => JSON.parse(t) as InstanceMarker)
 
   before(async () => {
     root = await tempDir()
@@ -116,7 +116,7 @@ describe('ajouts dans un profil', () => {
   it('refuse un profil qui n’a pas été installé par l’application', async () => {
     const r = releaseOf('1.1.0')
     await assert.rejects(() => installExtra(profile, r, r.files[0], download), /pas été installé par l’application/)
-    await writeFile(join(profile, '.modpack-manager.json'), JSON.stringify({ id: 'lma-26-3', version: '18', tag: 'pack-lma-26-3-v18', installedAt: '', managedEntries: ['mods'] }))
+    await writeFile(join(profile, '.modding-manager.json'), JSON.stringify({ id: 'lma-26-3', version: '18', tag: 'pack-lma-26-3-v18', installedAt: '', managedEntries: ['mods'] }))
   })
 
   it('ajoute un mod, puis le remplace par sa nouvelle version', async () => {

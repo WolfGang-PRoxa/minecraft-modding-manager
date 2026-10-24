@@ -112,7 +112,8 @@ export async function runServerTest(profilePath: string, options: ServerTestOpti
       'enforce-secure-profile=false',
       'white-list=false',
       'enforce-whitelist=false',
-      'motd=Test Modpack Manager',
+      'motd=Test Modding Manager',
+      // Graine d'avant le renommage en 2.0.0 : les tests restent comparables à ceux déjà faits.
       'level-seed=modpack-manager',
       'view-distance=6',
       'simulation-distance=6',

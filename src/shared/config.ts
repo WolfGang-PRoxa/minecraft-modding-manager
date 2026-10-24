@@ -1,17 +1,20 @@
 import type { RepoRef } from './types'
 
-// Nom de l'application, affiché partout (aussi dans package.json et electron-builder.yml), et nom de son dossier de
-// données (%APPDATA%\Modpack Manager) et de son exécutable. L'identité d'avant la 1.9.0 est dans previousIdentity.ts.
-export const APP_NAME = 'Modpack Manager'
+// Nom de l'application, affiché partout (aussi dans package.json et electron-builder.yml), et nom de ses dossiers de
+// données (%APPDATA%\Modding Manager, %LOCALAPPDATA%\Modding Manager) et de son exécutable. Les identités d'avant la
+// 2.0.0 sont dans previousIdentity.ts.
+export const APP_NAME = 'Modding Manager'
 // Identifiant de l'application pour Windows (barre des tâches, raccourcis, notifications) : l'appId d'electron-builder.yml.
-export const APP_USER_MODEL_ID = 'com.wolfgangproxa.modpackmanager'
+export const APP_USER_MODEL_ID = 'com.wolfgangproxa.moddingmanager'
+// Nom des dossiers temporaires de l'application (%TEMP%, à côté du dossier Instances de CurseForge).
+export const APP_TEMP_DIR = 'modding-manager'
 
 /** Page de soutien du développeur (bouton « Offrir un café » de la barre de titre). */
 export const SUPPORT_URL = 'https://buymeacoffee.com/wolfgang_proxa'
 
 // Dépôt de l'application : ses mises à jour (tags app-v*) en viennent toujours,
 // et c'est la source des modpacks par défaut. Un publieur peut en choisir une autre.
-export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modpack-manager' }
+export const APP_REPO: RepoRef = { owner: 'WolfGang-PRoxa', name: 'minecraft-modding-manager' }
 export const APP_REPO_URL = `https://github.com/${APP_REPO.owner}/${APP_REPO.name}`
 
 // Conventions de tags :
@@ -28,7 +31,7 @@ export const MODPACK_MANIFEST_ASSET = 'modpack.json'
 export const CONTENT_MANIFEST_ASSET = 'content.json'
 
 // Fichier déposé dans chaque instance installée par l'application.
-export const INSTANCE_MARKER_FILE = '.modpack-manager.json'
+export const INSTANCE_MARKER_FILE = '.modding-manager.json'
 
 // Suffixe de la copie d'essai d'un profil, où les mises à jour sont appliquées et testées.
 export const TRIAL_PROFILE_SUFFIX = ' (essai)'

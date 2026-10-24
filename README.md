@@ -1,13 +1,15 @@
-# Modpack Manager
+# Modding Manager
 
 [![English](https://img.shields.io/badge/lang-English-2ea44f)](README.md)
 [![Français](https://img.shields.io/badge/langue-Fran%C3%A7ais-0366d6)](README.fr.md)
 
-Windows application that installs Minecraft modpacks published on GitHub in one click. Each modpack appears directly
-in CurseForge, ready to play, and updates without losing worlds or settings. Modpack authors publish their modpacks
-with the Studio, in the same application.
+Windows application (formerly **Modpack Manager**) that installs Minecraft modpacks published on GitHub in one click.
+Each modpack appears directly in CurseForge, ready to play, and updates without losing worlds or settings; the mods,
+resource packs and shaders published alongside are added to it in one click. Authors publish their modpacks, mods,
+resource packs, shaders and server plugins with the Studio, in the same application (GitHub, CurseForge, Modrinth,
+Hangar).
 
-**[Download the latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest)**
+**[Download the latest version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest)**
 · [Documentation (French)](docs/README.md) · [Changelog (French)](CHANGELOG.md)
 
 ## Features
@@ -33,8 +35,8 @@ The application and its documentation are in French.
 ## Installation
 
 1. Install [CurseForge](https://www.curseforge.com/download/app) if it is not installed yet.
-2. Download **Modpack-Manager-Setup-x.y.z.exe** from the
-   [latest version](https://github.com/WolfGang-PRoxa/minecraft-modpack-manager/releases/latest) and run it. The
+2. Download **Modding-Manager-Setup-x.y.z.exe** from the
+   [latest version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest) and run it. The
    installer is not code-signed for now (see [Code signing policy](#code-signing-policy)): Windows shows "Windows
    protected your PC". Click **More info**, then **Run anyway**. Only download the installer from this page.
 3. On first launch, choose **Récepteur** (receiver, the default choice) to receive the modpacks published on this
@@ -43,7 +45,7 @@ The application and its documentation are in French.
 
 The application installs for the current Windows account, without administrator rights. Details are in
 [Installation et premier lancement](docs/installation.md); for problems, see [Dépannage](docs/depannage.md).
-Uninstalling is done from Windows settings (**Apps → Installed apps → Modpack Manager → Uninstall**).
+Uninstalling is done from Windows settings (**Apps → Installed apps → Modding Manager → Uninstall**).
 
 ## Documentation
 
@@ -144,7 +146,7 @@ Only installers built by GitHub Actions from this repository will be signed, aft
 
 ### Privacy
 
-Modpack Manager collects no data, contains no usage statistics or advertising, and sends nothing to its authors on
+Modding Manager collects no data, contains no usage statistics or advertising, and sends nothing to its authors on
 its own. It only transmits information to the services needed for what the user asks it to do:
 
 - **GitHub** (`api.github.com`, `github.com` and its file servers), for everyone: listing the modpacks and updates of

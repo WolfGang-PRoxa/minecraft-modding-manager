@@ -48,7 +48,7 @@ jobs:
             exit 1
           fi
           echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
-          echo "installer=Modpack-Manager-Setup-$PKG_VERSION.exe" >> "$GITHUB_OUTPUT"
+          echo "installer=Modding-Manager-Setup-$PKG_VERSION.exe" >> "$GITHUB_OUTPUT"
 
       - run: npm ci
 
@@ -119,7 +119,7 @@ jobs:
 
       - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
-          name: Modpack Manager ${{ needs.build.outputs.version }}
+          name: Modding Manager ${{ needs.build.outputs.version }}
           files: release/dist/${{ needs.build.outputs.installer }}
           make_latest: true
           body_path: release/release-notes.md
