@@ -1,7 +1,7 @@
 {
   "name": "minecraft-modding-manager",
   "productName": "Modding Manager",
-  "version": "1.9.3",
+  "version": "2.0.0",
   "description": "Installe les modpacks Minecraft publiés sur GitHub dans CurseForge, et aide leurs auteurs à les tenir à jour.",
   "author": "WolfGang-PRoxa",
   "license": "MIT",

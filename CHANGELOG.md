@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.0.0] - 2026-10-24
+
 <!-- moteur des mods, décrit avec leur interface : b49e265 -->
 
 ### Ajouts
@@ -371,7 +373,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.3...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.0.0...HEAD
+[2.0.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.3...app-v2.0.0
 [1.9.3]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.2...app-v1.9.3
 [1.9.2]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.1...app-v1.9.2
 [1.9.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.0...app-v1.9.1
