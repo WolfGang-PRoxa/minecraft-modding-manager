@@ -15,7 +15,7 @@ const modVersionParam = z
   .describe('Version : celle du jar pour un mod (« 1.2.0-26.3 »), le numéro pour un pack de ressources ou un shader (« 3 »), comme l’affiche « content versions ».')
 
 /** Un contenu qui n'est pas un modpack ; `kinds` : ceux acceptés par la commande. */
-async function modOf(ctx: CommandContext, ref: string, kinds: ContentKind[] = ['mod', 'resourcepack', 'shader']): Promise<PackView> {
+async function modOf(ctx: CommandContext, ref: string, kinds: ContentKind[] = ['mod', 'resourcepack', 'shader', 'plugin']): Promise<PackView> {
   const pack = await packOf(ctx, ref)
   if (!kinds.includes(pack.type)) {
     throw new StudioError(`${pack.folder} est un ${CONTENT_KINDS[pack.type].label} : cette commande vise les ${kinds.map((k) => CONTENT_KINDS[k].plural).join(' ou les ')}.`)
@@ -32,15 +32,16 @@ export const contentCreate = command({
     'Pack de ressources (resourcepack) ou shader : depuis le dossier du pack en cours de création (qui reste lié, et ' +
     'dont la v1 est zippée) ou depuis un zip (copié comme v1). Le dossier source n’est jamais modifié.',
   params: z.object({
-    source: z.string().min(1).describe('Chemin absolu : dossier des jars d’un mod, dossier ou zip d’un pack.'),
-    type: z.enum(['mod', 'resourcepack', 'shader']).optional().describe('Type de contenu (mod par défaut).'),
+    source: z.string().min(1).describe('Chemin absolu : dossier des jars d’un mod ou d’un plugin, dossier ou zip d’un pack.'),
+    type: z.enum(['mod', 'resourcepack', 'shader', 'plugin']).optional().describe('Type de contenu (mod par défaut).'),
     versions: z.array(z.string().min(1)).optional().describe('Mod : versions à importer ; par défaut la plus récente.')
   }),
   kind: 'write',
   async run({ source, type, versions }, ctx) {
     if (!isAbsolute(source)) throw new StudioError('Donne un chemin absolu.')
     const kind = type ?? 'mod'
-    const folder = kind === 'mod' ? await ctx.service.createModFromSource(source, versions) : await ctx.service.createPackContent(kind, source)
+    const folder =
+      kind === 'mod' || kind === 'plugin' ? await ctx.service.createModFromSource(source, versions, kind) : await ctx.service.createPackContent(kind, source)
     return { folder, type: kind }
   },
   print: (r) => `${CONTENT_KINDS[r.type].label.replace(/^./, (c) => c.toUpperCase())} créé : ${r.folder}.`
@@ -60,12 +61,14 @@ export const contentZip = command({
 
 export const contentMinecraft = command({
   name: 'content minecraft',
-  summary: 'Donne les versions de Minecraft d’un pack de ressources ou d’un shader (un shader ne les déclare pas).',
-  description: 'Elles remplacent celles lues dans le zip (pack.mcmeta) ; une liste vide revient à celles du zip. CurseForge et Modrinth les exigent.',
+  summary: 'Donne les versions de Minecraft d’un pack de ressources, d’un shader ou d’un plugin.',
+  description:
+    'Elles remplacent celles du fichier (pack.mcmeta, api-version d’un plugin, qui n’est que la plus ancienne visée) ; ' +
+    'une liste vide revient à celles du fichier. Un shader ne les déclare pas. CurseForge, Modrinth et Hangar les exigent.',
   params: z.object({ pack: modParam, versions: z.array(z.string().min(1)).describe('Versions de Minecraft (« 26.3 »).') }),
   kind: 'write',
   async run({ pack: ref, versions }, ctx) {
-    const pack = await modOf(ctx, ref, ['resourcepack', 'shader'])
+    const pack = await modOf(ctx, ref, ['resourcepack', 'shader', 'plugin'])
     return { folder: pack.folder, versions: await ctx.service.setMinecraftVersions(pack.folder, versions) }
   },
   print: (r) => (r.versions.length ? `${r.folder} : Minecraft ${r.versions.join(', ')}.` : `${r.folder} : versions lues dans le zip.`)
@@ -108,7 +111,7 @@ export const contentImport = command({
   params: z.object({ pack: modParam, versions: z.array(z.string().min(1)).optional().describe('Versions à importer.') }),
   kind: 'write',
   async run({ pack: ref, versions }, ctx) {
-    const pack = await modOf(ctx, ref, ['mod'])
+    const pack = await modOf(ctx, ref, ['mod', 'plugin'])
     return { folder: pack.folder, imported: await ctx.service.importModVersions(pack.folder, versions) }
   },
   print: (r) => `Importé dans ${r.folder} : ${r.imported.join(', ')}.`
@@ -163,7 +166,7 @@ export const contentDelete = command({
 
 export const contentCurseforge = command({
   name: 'content curseforge',
-  summary: 'Met une version d’un mod, d’un pack de ressources ou d’un shader en ligne sur son projet CurseForge (elle passe ensuite en modération).',
+  summary: 'Met une version d’un mod, d’un pack de ressources ou d’un shader en ligne sur son projet CurseForge (elle passe ensuite en modération). Pas les plugins.',
   description:
     'Chaque fichier est envoyé (nommé comme le jar sans « .jar » pour un mod, « <nom> v<N> » pour un pack), avec ses versions de Minecraft, son chargeur, son côté ' +
     '(client, serveur) et ses dépendances obligatoires dont l’identifiant est aussi un projet CurseForge (fabric-api…). ' +

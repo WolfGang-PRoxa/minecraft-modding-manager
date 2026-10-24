@@ -6,6 +6,7 @@ import { resolveInstancesDir } from '../curseforge'
 import { CurseForgeClient } from '../curseforgeApi'
 import { CurseForgeUploader } from '../curseforgeUpload'
 import { ModrinthClient } from '../modrinth'
+import { HangarClient } from '../hangar'
 import type { MaintenanceLauncher } from '../maintenance/scheduledTask'
 import { maintenanceLock, operationTools } from '../operations'
 import { moveToRecycleBin } from '../powershell'
@@ -70,6 +71,7 @@ export async function createCommandRuntime(options: ContextOptions): Promise<{
     getCurseForgeClient: () => CurseForgeClient.create({ dotenvDir: options.dotenvDir }),
     getCurseForgeUploader: () => CurseForgeUploader.create({ dotenvDir: options.dotenvDir }),
     getModrinthClient: () => ModrinthClient.create({ dotenvDir: options.dotenvDir }),
+    getHangarClient: () => HangarClient.create({ dotenvDir: options.dotenvDir }),
     ...operationTools(options.holder)
   })
   const lock = maintenanceLock(options.holder)

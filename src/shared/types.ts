@@ -417,6 +417,15 @@ export interface ModrinthAuthStatus extends CurseForgeSecretStatus {
   username: string | null
 }
 
+/** Clé d'API Hangar du publieur (plugins). */
+export type HangarAuthStatus = ModrinthAuthStatus
+
+export interface HangarAuthApi {
+  getHangarAuth(): Promise<HangarAuthStatus>
+  /** Vérifie puis enregistre (chiffrée) la clé ; null la retire. */
+  saveHangarKey(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+}
+
 export interface ModrinthAuthApi {
   getModrinthAuth(): Promise<ModrinthAuthStatus>
   /** Vérifie puis enregistre (chiffré) le jeton ; null le retire. */
@@ -431,7 +440,7 @@ export interface ExtrasApi {
 }
 
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi, ExtrasApi {
+export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi, HangarAuthApi, ExtrasApi {
   getLaunchInfo(): Promise<LaunchInfo>
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
   onActivated(listener: (view: AppView | null) => void): () => void

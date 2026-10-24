@@ -66,12 +66,12 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
 | `versions strip` | Retire d’un zip les fichiers exclus dans les réglages. |
 | `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
-| `content create` | Crée un [mod](studio.md#les-mods) (depuis le dossier de ses jars), un [pack de ressources ou un shader](studio.md#les-packs-de-ressources-et-les-shaders) (depuis son dossier ou un zip) : `--type mod`, `resourcepack` ou `shader`. |
+| `content create` | Crée un [mod](studio.md#les-mods) ou un [plugin](studio.md#les-plugins) (depuis le dossier de ses jars), un [pack de ressources ou un shader](studio.md#les-packs-de-ressources-et-les-shaders) (depuis son dossier ou un zip) : `--type mod`, `resourcepack`, `shader` ou `plugin`. |
 | `content versions` | Les versions d’un mod, d’un pack de ressources ou d’un shader (état sur GitHub et CurseForge), et pour un mod celles de son dossier lié à importer. |
-| `content import` | Mod : copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
+| `content import` | Mod ou plugin : copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
 | `content zip` | Pack de ressources ou shader : zippe le dossier lié comme version suivante. |
 | `content source` | Lie un contenu à un autre dossier, ou retire ce lien (`--unlink`). |
-| `content minecraft` | Donne les versions de Minecraft d’un pack de ressources ou d’un shader. |
+| `content minecraft` | Donne les versions de Minecraft d’un pack de ressources, d’un shader ou d’un plugin. |
 | `content notes` | Écrit les notes d’une version d’un contenu. |
 | `content delete` | Supprime une version d’un contenu (fichiers à la corbeille, release retirée de GitHub). |
 | `content curseforge` | Met une version d’un contenu en ligne sur son projet CurseForge (elle passe en modération). |
@@ -100,9 +100,13 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `modrinth link` | Lie un mod à son projet Modrinth (adresse, slug ou identifiant), ou retire ce lien (`--unlink`). |
 | `modrinth publish` | Met une version d’un mod en ligne sur son projet Modrinth. |
 | `modrinth versions` | Les versions du projet Modrinth d’un mod, rapprochées des versions locales. |
+| `hangar link` | Lie un plugin à son projet Hangar (adresse ou nom), ou retire ce lien (`--unlink`). |
+| `hangar publish` | Met une version d’un plugin en ligne sur Hangar, pour Paper. |
+| `hangar versions` | Les versions du projet Hangar d’un plugin. |
 | `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
 | `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
 | `modrinth status` | Si le jeton Modrinth est là et accepté, et à quel compte il appartient (sans jamais l’afficher). |
+| `hangar status` | Si la clé d’API Hangar est là et acceptée, et à quel compte elle appartient (sans jamais l’afficher). |
 | `journal` | Les dernières opérations, de l’application comme des commandes. |
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :
@@ -166,7 +170,9 @@ dossier ou d’un zip, `content zip` en fait la version suivante et `content min
 (voir [Les packs de ressources et les shaders](studio.md#les-packs-de-ressources-et-les-shaders)). Tous se publient
 sur GitHub comme les modpacks (`publish plan`, `publish apply`). `curseforge link` les lie à leur projet CurseForge,
 puis `content curseforge` y envoie une version. De même, `modrinth link` les lie à leur projet Modrinth et
-`modrinth publish` y envoie une version (jeton dans [Compte Modrinth](parametres.md#compte-modrinth)).
+`modrinth publish` y envoie une version (jeton dans [Compte Modrinth](parametres.md#compte-modrinth)). Un **plugin**
+(`content create --type plugin`) se publie sur Modrinth et sur Hangar : `hangar link`, puis `hangar publish` (clé dans
+[Compte Hangar](parametres.md#compte-hangar)).
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,
 pour chaque modpack, `updates check`, `updates apply`, `tests check` et `tests players` sur l’essai, puis laisse la

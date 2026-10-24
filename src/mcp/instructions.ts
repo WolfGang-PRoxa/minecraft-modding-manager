@@ -43,6 +43,9 @@ Méthode :
   packs_show : si elle n'est pas « passed », propose tests_all sur son profil. curseforge_versions liste les versions
   du projet (aussi celles mises en ligne depuis le site) et suit la modération. github: false (curseforge_targets) =
   seulement sur CurseForge.
+- Plugins (type plugin) : comme un mod (content_create avec type plugin depuis le dossier de ses jars), versions de
+  Minecraft à donner par content_minecraft (api-version n'est que la plus ancienne), publication sur Modrinth et sur
+  Hangar (hangar_link puis hangar_publish, irréversible ; hangar_status dit si la clé est là). Pas de CurseForge.
 - Mods, packs de ressources et shaders (type dans packs_list) : content_create (mod depuis le dossier où son projet
   dépose ses jars ; pack de ressources ou shader depuis son dossier en cours de création ou un zip), content_versions,
   content_import (mod) ou content_zip (pack : version suivante depuis le dossier lié), content_minecraft (versions

@@ -16,6 +16,7 @@ import { AnalysisCache, describeError, StudioError } from '../core/studio/analyz
 import { CurseForgeClient } from '../core/curseforgeApi'
 import { CurseForgeUploader } from '../core/curseforgeUpload'
 import { ModrinthClient } from '../core/modrinth'
+import { HangarClient } from '../core/hangar'
 import { listProfiles } from '../core/profiles'
 import { StudioService } from '../core/studio/service'
 import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
@@ -136,6 +137,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     getCurseForgeClient: () => CurseForgeClient.create(),
     getCurseForgeUploader: () => CurseForgeUploader.create(),
     getModrinthClient: () => ModrinthClient.create(),
+    getHangarClient: () => HangarClient.create(),
     ...operationTools('l’application')
   })
   registerCoverProtocol()
@@ -230,10 +232,11 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     const result = parent() ? await dialog.showOpenDialog(parent()!, options) : await dialog.showOpenDialog(options)
     return result.canceled || !result.filePaths[0] ? null : result.filePaths[0]
   }
-  ipcMain.handle('studio:createModFromSource', () =>
+  ipcMain.handle('studio:createModFromSource', (_e, kind?: string) =>
     outcomeOf(async () => {
-      const source = await pickModSource('Dossier où le projet du mod dépose ses jars (releases, build/libs…)')
-      return { folder: source ? await service.createModFromSource(source) : null }
+      const type = kind === 'plugin' ? 'plugin' : 'mod'
+      const source = await pickModSource(`Dossier où le projet du ${type} dépose ses jars (releases, build/libs, target…)`)
+      return { folder: source ? await service.createModFromSource(source, undefined, type) : null }
     })
   )
   ipcMain.handle('studio:availableModVersions', (_e, folder: string) =>
@@ -340,13 +343,14 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
   ipcMain.handle('studio:cancelTest', () => testController?.abort())
   ipcMain.handle('studio:lastTests', (_e, profilePath: string) => service.lastTests(profilePath))
   ipcMain.handle('studio:linkCurseForge', (_e, folder: string, ref: string) => outcome(() => service.linkCurseForge(folder, ref)))
-  ipcMain.handle('studio:updatePublishTargets', (_e, folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }) =>
+  ipcMain.handle('studio:updatePublishTargets', (_e, folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean; unlinkHangar?: boolean }) =>
     action(() =>
       service.updatePublishTargets(folder, {
         overrides: Array.isArray(changes?.overrides) ? changes.overrides.filter((o) => typeof o === 'string') : undefined,
         github: typeof changes?.github === 'boolean' ? changes.github : undefined,
         unlinkCurseForge: changes?.unlinkCurseForge === true,
-        unlinkModrinth: changes?.unlinkModrinth === true
+        unlinkModrinth: changes?.unlinkModrinth === true,
+        unlinkHangar: changes?.unlinkHangar === true
       })
     )
   )
@@ -375,6 +379,15 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
       )
     )
   )
+  ipcMain.handle('studio:linkHangar', (_e, folder: string, ref: string) => outcome(() => service.linkHangar(folder, String(ref ?? ''))))
+  ipcMain.handle('studio:publishHangar', (_e, folder: string, version: string, releaseType: string) =>
+    outcome(() =>
+      service.publishToHangar(folder, String(version), releaseType === 'beta' || releaseType === 'alpha' ? releaseType : 'release', (text) =>
+        send('studio:curseforge-progress', text)
+      )
+    )
+  )
+  ipcMain.handle('studio:hangarVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.hangarVersions(folder) })))
   ipcMain.handle('studio:modrinthVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.modrinthVersions(folder) })))
   ipcMain.handle('studio:curseForgeVersions', (_e, folder: string) => outcome(async () => ({ versions: await service.curseForgeVersions(folder) })))
   ipcMain.handle('studio:linkProfile', (_e, folder: string, profilePath: string | null) =>

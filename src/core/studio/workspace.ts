@@ -7,6 +7,7 @@ import {
   DEFAULT_PACK_UPDATES,
   type DisabledMod,
   type PackCurseForge,
+  type PackHangar,
   type PackModrinth,
   type PackProfileLink,
   type PackSettings,
@@ -20,6 +21,7 @@ import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, githubSizeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
 import { scanModFolder, type LocalJar, type LocalContentVersion } from './mods'
 import { scanPackFolder } from './packFiles'
+import { analyzePluginJar } from './pluginFiles'
 
 /** Métadonnées d'un modpack, gérées par le studio dans son dossier. */
 export const PACK_FILE = 'pack.json'
@@ -48,6 +50,8 @@ export interface PackFile extends PackSettings {
   curseforge: PackCurseForge | null
   /** Mod : son projet Modrinth, s'il en a un. */
   modrinth: PackModrinth | null
+  /** Plugin : son projet Hangar, s'il en a un. */
+  hangar: PackHangar | null
   /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
   updates: PackUpdates
   /**
@@ -136,6 +140,7 @@ function defaultPackFile(folder: string): PackFile {
     github: true,
     curseforge: null,
     modrinth: null,
+    hangar: null,
     updates: DEFAULT_PACK_UPDATES,
     source: null,
     minecraftVersions: [],
@@ -200,6 +205,7 @@ async function readPackFile(
       github: data.github !== false,
       curseforge: normalizeCurseForge(data.curseforge),
       modrinth: normalizeModrinth(data.modrinth),
+      hangar: normalizeHangar(data.hangar),
       updates: normalizePackUpdates(data.updates),
       source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
       minecraftVersions: normalizeMinecraftVersions(data.minecraftVersions),
@@ -258,6 +264,17 @@ export function normalizeModrinth(value: unknown): PackModrinth | null {
   }
 }
 
+export function normalizeHangar(value: unknown): PackHangar | null {
+  const data = value as Partial<PackHangar> | null | undefined
+  if (typeof data?.slug !== 'string' || !/^[A-Za-z0-9_.-]{1,64}$/.test(data.slug) || typeof data.owner !== 'string' || !data.owner) return null
+  return {
+    slug: data.slug,
+    owner: data.owner,
+    url: typeof data.url === 'string' && /^https:\/\//.test(data.url) ? data.url : `https://hangar.papermc.io/${data.owner}/${data.slug}`,
+    versions: Array.isArray(data.versions) ? data.versions.filter((v): v is string => typeof v === 'string') : []
+  }
+}
+
 const FREQUENCIES: UpdateFrequency[] = ['weekly', 'biweekly', 'monthly', 'manual', 'never']
 
 /** Réglages des mises à jour lus dans pack.json (ou reçus d'une commande), remis au propre. */
@@ -281,7 +298,7 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, updates, source, minecraftVersions, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, hangar, updates, source, minecraftVersions, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -297,6 +314,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
     ...(modrinth ? { modrinth } : {}),
+    ...(hangar ? { hangar } : {}),
     ...(isDefaultUpdates(updates) ? {} : { updates }),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),
@@ -386,8 +404,12 @@ async function scanPack(
       errors: [...errors, ...scan.errors]
     }
   }
-  if (meta.type === 'mod') {
-    const mods = await scanModFolder(dir)
+  if (meta.type === 'mod' || meta.type === 'plugin') {
+    const mods = await scanModFolder(dir, meta.type === 'plugin' ? analyzePluginJar : undefined)
+    // Plugin : les versions de Minecraft données à la main remplacent l'api-version du jar.
+    if (meta.type === 'plugin' && meta.minecraftVersions.length) {
+      for (const version of mods.versions) for (const file of version.files) file.analysis = { ...file.analysis, minecraftVersions: meta.minecraftVersions }
+    }
     return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], contentVersions: mods.versions, badJars: mods.badJars, maxNumber: 0, errors: [...errors, ...mods.errors] }
   }
 

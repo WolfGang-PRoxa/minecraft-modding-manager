@@ -4,6 +4,7 @@ import { APP_NAME } from '../shared/config'
 import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setModrinthApiOverride } from '../core/modrinth'
+import { setHangarApiOverride } from '../core/hangar'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
@@ -93,6 +94,7 @@ async function createWindow(): Promise<void> {
 setGitHubApiOverride(app.isPackaged ? null : process.env.MPD_GITHUB_API)
 setCurseForgeApiOverride(app.isPackaged ? null : process.env.MPD_CURSEFORGE_API)
 setModrinthApiOverride(app.isPackaged ? null : process.env.MPD_MODRINTH_API)
+setHangarApiOverride(app.isPackaged ? null : process.env.MPD_HANGAR_API)
 
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])

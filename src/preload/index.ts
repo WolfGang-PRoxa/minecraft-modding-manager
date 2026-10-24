@@ -37,6 +37,8 @@ const api: RendererApi = {
   getCurseForgeAuth: () => ipcRenderer.invoke('cfauth:status'),
   saveCurseForgeSecret: (kind, value) => ipcRenderer.invoke('cfauth:save', kind, value),
   getModrinthAuth: () => ipcRenderer.invoke('mrauth:status'),
+  getHangarAuth: () => ipcRenderer.invoke('hangarauth:status'),
+  saveHangarKey: (value) => ipcRenderer.invoke('hangarauth:save', value),
   installExtra: (profilePath, kind, id, version) => ipcRenderer.invoke('extras:install', profilePath, kind, id, version),
   removeExtra: (profilePath, kind, id) => ipcRenderer.invoke('extras:remove', profilePath, kind, id),
   saveModrinthToken: (value) => ipcRenderer.invoke('mrauth:save', value),
@@ -82,7 +84,7 @@ const studio: StudioApi = {
 
   deleteVersion: (folder, version) => ipcRenderer.invoke('studio:deleteVersion', folder, version),
   deleteModVersion: (folder, version) => ipcRenderer.invoke('studio:deleteModVersion', folder, version),
-  createModFromSource: () => ipcRenderer.invoke('studio:createModFromSource'),
+  createModFromSource: (kind) => ipcRenderer.invoke('studio:createModFromSource', kind),
   availableModVersions: (folder) => ipcRenderer.invoke('studio:availableModVersions', folder),
   importModVersions: (folder, versions) => ipcRenderer.invoke('studio:importModVersions', folder, versions),
   linkModSource: (folder, mode) => ipcRenderer.invoke('studio:linkModSource', folder, mode),
@@ -93,6 +95,9 @@ const studio: StudioApi = {
   linkModrinth: (folder, ref) => ipcRenderer.invoke('studio:linkModrinth', folder, ref),
   publishModrinth: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishModrinth', folder, version, releaseType),
   modrinthVersions: (folder) => ipcRenderer.invoke('studio:modrinthVersions', folder),
+  linkHangar: (folder, ref) => ipcRenderer.invoke('studio:linkHangar', folder, ref),
+  publishHangar: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishHangar', folder, version, releaseType),
+  hangarVersions: (folder) => ipcRenderer.invoke('studio:hangarVersions', folder),
   deletePack: (folder) => ipcRenderer.invoke('studio:deletePack', folder),
   deleteReleases: (tags) => ipcRenderer.invoke('studio:deleteReleases', tags),
 

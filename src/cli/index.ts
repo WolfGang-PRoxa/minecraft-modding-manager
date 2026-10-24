@@ -19,6 +19,7 @@ import { printPlan } from '../core/commands/publish'
 import type { Command, CommandContext } from '../core/commands/registry'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setModrinthApiOverride } from '../core/modrinth'
+import { setHangarApiOverride } from '../core/hangar'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { describeError, StudioError } from '../core/studio/analyze'
 import { startMcpServer } from '../mcp/server'
@@ -168,6 +169,7 @@ async function main(): Promise<void> {
     setGitHubApiOverride(process.env.MPD_GITHUB_API)
     setCurseForgeApiOverride(process.env.MPD_CURSEFORGE_API)
     setModrinthApiOverride(process.env.MPD_MODRINTH_API)
+    setHangarApiOverride(process.env.MPD_HANGAR_API)
   }
   const { globals, rest } = splitGlobals(process.argv.slice(2))
   const repo = globals.repo ? parseRepo(globals.repo) : undefined

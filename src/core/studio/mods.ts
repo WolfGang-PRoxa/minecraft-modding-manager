@@ -150,11 +150,14 @@ export async function listJars(dir: string): Promise<JarFile[]> {
   return jars
 }
 
-async function analyzed(jars: JarFile[]): Promise<LocalJar[]> {
+/** Lit un jar : celui d'un mod (analyzeJar) ou d'un plugin (analyzePluginJar). */
+export type JarAnalyzer = (file: JarFile) => Promise<ContentAnalysis>
+
+async function analyzed(jars: JarFile[], analyze: JarAnalyzer): Promise<LocalJar[]> {
   const result: LocalJar[] = []
   for (const jar of jars) {
     try {
-      result.push({ ...jar, analysis: await analyzeJar(jar), error: null })
+      result.push({ ...jar, analysis: await analyze(jar), error: null })
     } catch (err) {
       result.push({ ...jar, analysis: null, error: describeError(err) })
     }
@@ -169,15 +172,15 @@ const loaderKey = (analysis: ContentAnalysis) => [...analysis.loaders].sort().jo
  * premier jar. Les erreurs bloquent la publication de tout le mod (on ne sait pas à quelle version appartient un jar
  * illisible) ; un jar en double est signalé.
  */
-export async function scanModFolder(dir: string): Promise<{ versions: LocalContentVersion[]; badJars: LocalJar[]; errors: string[] }> {
-  const jars = await analyzed(await listJars(dir))
+export async function scanModFolder(dir: string, analyze: JarAnalyzer = analyzeJar): Promise<{ versions: LocalContentVersion[]; badJars: LocalJar[]; errors: string[] }> {
+  const jars = await analyzed(await listJars(dir), analyze)
   const errors: string[] = []
   const badJars = jars.filter((j) => !j.analysis)
   const good = jars.filter((j): j is LocalJar & { analysis: ContentAnalysis } => j.analysis !== null)
 
   const ids = [...new Set(good.map((j) => j.analysis.contentId))]
-  if (ids.length > 1) errors.push(`Ce dossier mélange plusieurs mods (${ids.join(', ')}) : un dossier par mod.`)
-  if (badJars.length) errors.push(`${badJars.map((j) => j.fileName).join(', ')} : ${badJars.length > 1 ? 'illisibles' : 'illisible'} ou pas un mod. Retire ${badJars.length > 1 ? 'ces fichiers' : 'ce fichier'} du dossier.`)
+  if (ids.length > 1) errors.push(`Ce dossier mélange plusieurs mods ou plugins (${ids.join(', ')}) : un dossier par mod.`)
+  if (badJars.length) errors.push(`${badJars.map((j) => j.fileName).join(', ')} : ${badJars.length > 1 ? 'illisibles' : 'illisible'} ou pas un mod (ni un plugin). Retire ${badJars.length > 1 ? 'ces fichiers' : 'ce fichier'} du dossier.`)
 
   const byVersion = new Map<string, LocalContentVersion>()
   for (const jar of good) {
@@ -201,9 +204,9 @@ export interface SourceVersion {
  * Versions du dossier lié, de la plus récente à la plus ancienne. Un même jar copié sous un autre nom
  * (`lma-latest.jar`) n'est compté qu'une fois, sous le nom qui cite sa version.
  */
-export async function sourceVersions(sourceDir: string, modId: string | null): Promise<SourceVersion[]> {
+export async function sourceVersions(sourceDir: string, modId: string | null, analyze: JarAnalyzer = analyzeJar): Promise<SourceVersion[]> {
   if (!(await pathExists(sourceDir))) throw new StudioError(`Le dossier lié ${sourceDir} est introuvable.`)
-  const jars = (await analyzed(await listJars(sourceDir))).filter((j): j is LocalJar & { analysis: ContentAnalysis } => j.analysis !== null)
+  const jars = (await analyzed(await listJars(sourceDir), analyze)).filter((j): j is LocalJar & { analysis: ContentAnalysis } => j.analysis !== null)
   const bySha = new Map<string, LocalJar & { analysis: ContentAnalysis }>()
   for (const jar of jars) {
     if (modId && jar.analysis.contentId !== modId) continue

@@ -14,6 +14,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   du mod dépose ses jars, qui reste lié : ses nouvelles versions s’y repèrent et s’importent en un clic. Chaque
   version devient une release GitHub, et s’envoie sur CurseForge avec sa version de Minecraft, son chargeur et ses
   dépendances. Aussi depuis le terminal et Claude Code (commandes `content`).
+- Studio : les **plugins** de serveur (Paper, Spigot, Bukkit, Purpur, Folia) se publient aussi, depuis le dossier où
+  leur projet dépose ses jars, sur GitHub, Modrinth et **Hangar** (clé dans Paramètres → **Compte Hangar** ;
+  commandes `hangar`).
 - Bibliothèque : les **mods**, **packs de ressources** et **shaders** publiés s’affichent sous les modpacks. Ils
   s’ajoutent en un clic aux profils installés par l’application, où ils restent quand le modpack se met à jour ; une
   autre version s’installe ou se retire depuis leur fiche.

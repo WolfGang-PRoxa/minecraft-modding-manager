@@ -4,8 +4,13 @@ import { APP_REPO } from '../../shared/config'
 import { CONTENT_KINDS, contentTag, parseContentTag } from '../../shared/content'
 import { copyVersions, extractModIcon, sourceVersions, type SourceVersion } from './mods'
 import { extractPackIcon, packMarker, readPackZip } from './packFiles'
+import { analyzePluginJar } from './pluginFiles'
+
+/** Lecteur des jars d'un mod ou d'un plugin. */
+const jarAnalyzer = (kind: string) => (kind === 'plugin' ? analyzePluginJar : undefined)
 import { modrinthVersionViews, publishToModrinth, resolveModrinthProject } from './modrinthPublish'
 import type { ModrinthClient } from '../modrinth'
+import type { HangarClient } from '../hangar'
 import { compareVersions, modpackTag } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
 import {
@@ -35,7 +40,8 @@ import {
   type ZipAnalysis,
   type ZipContents,
   type ZipEntryPreview,
-  type ModrinthVersionView
+  type ModrinthVersionView,
+  type HangarVersionView
 } from '../../shared/studio'
 import type { RepoRef, Settings } from '../../shared/types'
 import type { Credential } from '../auth'
@@ -164,6 +170,8 @@ export interface StudioServiceOptions {
   getCurseForgeUploader?(): Promise<CurseForgeUploader>
   /** Client Modrinth avec le jeton du publieur (publication des mods). */
   getModrinthClient?(): Promise<ModrinthClient>
+  /** Client Hangar avec la clé du publieur (publication des plugins). */
+  getHangarClient?(): Promise<HangarClient>
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -408,6 +416,7 @@ export class StudioService {
       github: pack.meta.github,
       curseforge: pack.meta.curseforge,
       modrinth: pack.meta.modrinth,
+      hangar: pack.meta.hangar,
       updates: pack.meta.updates,
       source: pack.meta.source,
       minecraftVersions: pack.meta.minecraftVersions,
@@ -737,23 +746,27 @@ export class StudioService {
    * Crée le dossier d'un mod à partir du dossier où son projet dépose ses builds, qui lui reste lié : nom, identifiant
    * et description viennent du jar le plus récent, dont la version est importée (ou celles demandées).
    */
-  createModFromSource(sourceDir: string, versions?: string[]): Promise<string> {
+  createModFromSource(sourceDir: string, versions?: string[], kind: 'mod' | 'plugin' = 'mod'): Promise<string> {
+    const label = CONTENT_KINDS[kind].label
     return this.exclusive(
-      `la création d’un mod depuis ${sourceDir}`,
+      `la création d’un ${label} depuis ${sourceDir}`,
       async () => {
         this.requireWorkspace()
-        const available = await sourceVersions(sourceDir, null)
-        if (!available.length) throw new StudioError(`Aucun jar de mod dans ${sourceDir}.`)
+        const available = await sourceVersions(sourceDir, null, jarAnalyzer(kind))
+        if (!available.length) throw new StudioError(`Aucun jar de ${label} dans ${sourceDir}.`)
         const latest = available[0].files[0].analysis
         const others = available.filter((v) => v.files.some((f) => f.analysis.contentId !== latest.contentId))
-        if (others.length) throw new StudioError(`Ce dossier contient plusieurs mods (${[...new Set(available.flatMap((v) => v.files.map((f) => f.analysis.contentId)))].join(', ')}) : choisis le dossier d’un seul mod.`)
+        if (others.length) {
+          const ids = [...new Set(available.flatMap((v) => v.files.map((f) => f.analysis.contentId)))].join(', ')
+          throw new StudioError(`Ce dossier contient plusieurs ${CONTENT_KINDS[kind].plural} (${ids}) : choisis le dossier d’un seul ${label}.`)
+        }
         const chosen = versions?.length ? available.filter((v) => versions.includes(v.version)) : [available[0]]
         if (!chosen.length) throw new StudioError(`Aucune de ces versions dans ${sourceDir} : ${versions!.join(', ')}.`)
         const id = latest.contentId.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
-        const folder = await createPack((await this.scan())!, latest.name ?? latest.contentId, { type: 'mod', id, description: latest.description ?? '', source: sourceDir })
+        const folder = await createPack((await this.scan())!, latest.name ?? latest.contentId, { type: kind, id, description: latest.description ?? '', source: sourceDir })
         await copyVersions(join(this.requireWorkspace(), folder), chosen)
         // L'icône du mod devient son image (sans elle, une vignette est dessinée d'après son nom).
-        await extractModIcon(available[0].files[0].path, join(this.requireWorkspace(), folder)).catch(() => false)
+        if (kind === 'mod') await extractModIcon(available[0].files[0].path, join(this.requireWorkspace(), folder)).catch(() => false)
         return folder
       },
       (folder) => ({ ok: true, detail: folder })
@@ -764,11 +777,11 @@ export class StudioService {
   async availableModVersions(folder: string): Promise<SourceVersion[]> {
     const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
     if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
-    if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+    if (pack.meta.type !== 'mod' && pack.meta.type !== 'plugin') throw new StudioError(`${folder} n’est ni un mod ni un plugin.`)
     if (!pack.meta.source) throw new StudioError(`${pack.meta.name} n’est lié à aucun dossier : lie-le au dossier où son projet dépose ses jars.`)
     const present = new Set(pack.contentVersions.map((v) => v.version))
     const modId = pack.contentVersions[0]?.files[0]?.analysis.contentId ?? null
-    return (await sourceVersions(pack.meta.source, modId)).filter((v) => !present.has(v.version))
+    return (await sourceVersions(pack.meta.source, modId, jarAnalyzer(pack.meta.type))).filter((v) => !present.has(v.version))
   }
 
   /** Copie dans le dossier du mod des versions de son dossier lié (par défaut la plus récente qui manque). */
@@ -855,7 +868,7 @@ export class StudioService {
     const normalized = normalizeMinecraftVersions(versions)
     await this.logged(`les versions de Minecraft de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-      if (meta.type !== 'resourcepack' && meta.type !== 'shader') throw new StudioError(`${folder} n’est ni un pack de ressources ni un shader.`)
+      if (meta.type === 'modpack' || meta.type === 'mod') throw new StudioError(`${folder} déclare ses versions de Minecraft dans ses fichiers.`)
       await writePackFile(dir, { ...meta, minecraftVersions: normalized })
     })
     return normalized
@@ -949,19 +962,102 @@ export class StudioService {
   /** Réglages de publication : fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait d'un lien. */
   async updatePublishTargets(
     folder: string,
-    changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }
+    changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean; unlinkHangar?: boolean }
   ): Promise<void> {
     await this.logged(`les cibles de publication de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       if (changes.overrides && !meta.curseforge) throw new StudioError('Lie d’abord ce modpack à son projet CurseForge.')
       const curseforge = changes.unlinkCurseForge ? null : meta.curseforge && { ...meta.curseforge, overrides: changes.overrides ?? meta.curseforge.overrides }
       const modrinth = changes.unlinkModrinth ? null : meta.modrinth
+      const hangar = changes.unlinkHangar ? null : meta.hangar
       const github = changes.github ?? meta.github
-      if (!github && !curseforge && !modrinth) {
+      if (!github && !curseforge && !modrinth && !hangar) {
         throw new StudioError(`Un ${CONTENT_KINDS[meta.type].label} doit être publié quelque part : sur GitHub, sur CurseForge${meta.type === 'mod' ? ', sur Modrinth' : ''}, ou plusieurs.`)
       }
-      await writePackFile(dir, { ...meta, github, curseforge, modrinth })
+      await writePackFile(dir, { ...meta, github, curseforge, modrinth, hangar })
     })
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Publication sur Hangar (plugins)
+
+  private async hangar(): Promise<HangarClient> {
+    if (!this.options.getHangarClient) throw new StudioError('Publication sur Hangar impossible depuis ce programme.')
+    return this.options.getHangarClient()
+  }
+
+  /** Lie un plugin à son projet Hangar (adresse hangar.papermc.io/<auteur>/<projet>, ou slug). */
+  async linkHangar(folder: string, ref: string): Promise<{ slug: string; owner: string; url: string }> {
+    const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (current.type !== 'plugin') throw new StudioError(`Seuls les plugins se publient sur Hangar : ${folder} n’en est pas un.`)
+    const slug = /hangar\.papermc\.io\/[^/]+\/([^/?#]+)/i.exec(ref.trim())?.[1] ?? ref.trim()
+    if (!slug) throw new StudioError('Donne l’adresse du projet Hangar, ou son nom.')
+    const project = await (await this.hangar()).getProject(slug)
+    if (!project) throw new StudioError(`Aucun projet Hangar « ${slug} ».`)
+    const link = { slug: project.namespace.slug, owner: project.namespace.owner, url: `https://hangar.papermc.io/${project.namespace.owner}/${project.namespace.slug}` }
+    await this.logged(`le lien de ${folder} au projet Hangar ${link.slug}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      const versions = meta.hangar?.slug === link.slug ? meta.hangar.versions : []
+      await writePackFile(dir, { ...meta, hangar: { ...link, versions } })
+    })
+    return link
+  }
+
+  /** Met en ligne une version d'un plugin sur Hangar, pour Paper et les versions de Minecraft du plugin. */
+  publishToHangar(folder: string, version: string, releaseType: 'release' | 'beta' | 'alpha', onStep: (text: string) => void): Promise<{ version: string }> {
+    return this.exclusive(
+      `la publication de la version ${version} de ${folder} sur Hangar`,
+      async () => {
+        this.requireWorkspace()
+        const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
+        if (!pack) throw new StudioError(`Le plugin ${folder} est introuvable.`)
+        if (pack.meta.type !== 'plugin') throw new StudioError(`${folder} n’est pas un plugin.`)
+        if (pack.errors.length) throw new StudioError(`Corrige d’abord ${pack.meta.name} : ${pack.errors[0]}`)
+        const hangar = pack.meta.hangar
+        if (!hangar) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet Hangar.`)
+        const local = pack.contentVersions.find((v) => v.version === version)
+        if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
+        if (hangar.versions.includes(version)) throw new StudioError(`La version ${version} est déjà sur Hangar.`)
+        const minecraft = [...new Set(local.files.flatMap((f) => f.analysis.minecraftVersions))]
+        if (!minecraft.length) throw new StudioError('Ce plugin ne dit pas pour quelles versions de Minecraft il est fait : Hangar l’exige. Donne-les dans « Versions de Minecraft ».')
+        const client = await this.hangar()
+        onStep('Versions déjà sur Hangar')
+        if ((await client.projectVersions(hangar.slug)).some((v) => v.name === version)) {
+          throw new StudioError(`La version ${version} est déjà sur Hangar : publie une nouvelle version du plugin.`)
+        }
+        onStep('Envoi vers Hangar')
+        await client.uploadVersion(hangar.slug, {
+          version,
+          // Canaux par défaut d'un projet Hangar : Release et Snapshot.
+          channel: releaseType === 'release' ? 'Release' : 'Snapshot',
+          description: (pack.meta.notes[version] ?? '').trim() || `Version ${version}`,
+          platformDependencies: { PAPER: minecraft },
+          files: local.files.map((f) => ({ path: f.path, platforms: ['PAPER'] }))
+        })
+        const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+        if (meta.hangar) await writePackFile(dir, { ...meta, hangar: { ...meta.hangar, versions: [...meta.hangar.versions, version] } })
+        return { version }
+      },
+      (result) => ({ ok: true, detail: `version Hangar ${result.version}` })
+    )
+  }
+
+  /** Versions du projet Hangar lié, rapprochées des versions locales par leur nom. */
+  async hangarVersions(folder: string): Promise<HangarVersionView[]> {
+    const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
+    if (!meta.hangar) return []
+    const hangar = meta.hangar
+    const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
+    const local = new Set((pack?.contentVersions ?? []).map((v) => v.version))
+    return (await (await this.hangar()).projectVersions(hangar.slug)).map((v) => ({
+      name: v.name,
+      channel: v.channel?.name ?? '',
+      date: v.createdAt || null,
+      platforms: v.platformDependencies ?? {},
+      version: local.has(v.name) ? v.name : null,
+      sentByApp: hangar.versions.includes(v.name),
+      url: `${hangar.url}/versions/${encodeURIComponent(v.name)}`
+    }))
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -975,7 +1071,7 @@ export class StudioService {
   /** Lie un mod à son projet Modrinth (adresse, slug ou identifiant). */
   async linkModrinth(folder: string, ref: string): Promise<{ projectId: string; slug: string; url: string }> {
     const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
-    if (current.type === 'modpack' || current.type === 'plugin') throw new StudioError(`Les ${CONTENT_KINDS[current.type].plural} ne se publient pas encore sur Modrinth.`)
+    if (current.type === 'modpack') throw new StudioError('Les modpacks ne se publient pas encore sur Modrinth.')
     const project = await resolveModrinthProject(await this.modrinth(), ref, current.type)
     await this.logged(`le lien de ${folder} au projet Modrinth ${project.slug}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
@@ -1112,6 +1208,7 @@ export class StudioService {
         const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
         if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
         if (pack.meta.type === 'modpack') throw new StudioError(`${folder} est un modpack.`)
+        if (pack.meta.type === 'plugin') throw new StudioError('Les plugins ne se publient pas sur CurseForge depuis l’application : utilise Modrinth ou Hangar.')
         if (pack.errors.length) throw new StudioError(`Corrige d’abord ${pack.meta.name} : ${pack.errors[0]}`)
         const curseforge = pack.meta.curseforge
         if (!curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)

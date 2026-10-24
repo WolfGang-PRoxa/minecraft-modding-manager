@@ -1,7 +1,7 @@
 // Un mod, un pack de ressources ou un shader dans le Studio : son dossier lié (où son projet dépose ses jars, ou le
 // dossier du pack en cours de création), ses versions, et leur publication sur GitHub, CurseForge et Modrinth.
 import { useEffect, useState } from 'react'
-import { Blocks, FileArchive, FolderOpen, FolderSync, Gamepad2, Hourglass, Image, Link2Off, NotebookPen, PackagePlus, Pencil, Sun, Trash2, Upload } from 'lucide-react'
+import { Blocks, FileArchive, FolderOpen, FolderSync, Gamepad2, Hourglass, Image, Link2Off, NotebookPen, PackagePlus, Pencil, Server, Sun, Trash2, Upload } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CONTENT_KINDS, LOADER_LABELS, type ContentKind, type ContentLoader } from '../../../shared/content'
 import type { AvailableModVersion, CurseForgeVersion, ContentVersionView, PackView } from '../../../shared/studio'
@@ -10,6 +10,7 @@ import { Cover } from '../components/Cover'
 import { formatBytes, formatDate } from '../lib/format'
 import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
 import { ModrinthLine, ModrinthVersionStatus, useModrinthVersions, type ModrinthVersions } from './ModrinthPanel'
+import { HangarLine, HangarVersionStatus, useHangarVersions, type HangarVersions } from './HangarPanel'
 import { Field, Modal, Spinner, TextInput } from './Modal'
 import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
 import { openPath, useStudio } from './store'
@@ -25,8 +26,12 @@ const SIDES = { client: 'client seulement', server: 'serveur seulement', both: '
 export const KIND_UI: Partial<Record<ContentKind, { icon: LucideIcon; badge: string }>> = {
   mod: { icon: Blocks, badge: 'Mod' },
   resourcepack: { icon: Image, badge: 'Pack de ressources' },
-  shader: { icon: Sun, badge: 'Shader' }
+  shader: { icon: Sun, badge: 'Shader' },
+  plugin: { icon: Server, badge: 'Plugin' }
 }
+
+/** Mod ou plugin : jars, version déclarée, dossier lié dont on importe les versions. */
+const jarBased = (pack: PackView) => pack.type === 'mod' || pack.type === 'plugin'
 
 /** Versions numérotées par le Studio (pack de ressources, shader) : « v3 ». */
 const numbered = (pack: PackView) => CONTENT_KINDS[pack.type].versioning === 'number'
@@ -70,13 +75,15 @@ function ModVersionRow({
   version,
   latest,
   curseforge,
-  modrinth
+  modrinth,
+  hangar
 }: {
   pack: PackView
   version: ContentVersionView
   latest: boolean
   curseforge: CurseForgeVersions
   modrinth: ModrinthVersions
+  hangar: HangarVersions
 }) {
   const openDialog = useStudio((s) => s.openDialog)
   const status = STATUS[version.remote]
@@ -119,6 +126,7 @@ function ModVersionRow({
         )}
         <ModCurseForgeStatus pack={pack} version={version} latest={latest} curseforge={curseforge} />
         <ModrinthVersionStatus pack={pack} version={version} latest={latest} modrinth={modrinth} />
+        <HangarVersionStatus pack={pack} version={version} latest={latest} hangar={hangar} />
       </div>
       {version.remote === 'update' &&
         version.changes.map((change) => (
@@ -134,7 +142,7 @@ function ModVersionRow({
 function SourceLine({ pack, available }: { pack: PackView; available: AvailableModVersion[] | null }) {
   const openDialog = useStudio((s) => s.openDialog)
   const run = useStudio((s) => s.run)
-  const mod = pack.type === 'mod'
+  const mod = jarBased(pack)
   return (
     <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
       <FolderSync size={14} className="shrink-0 text-ink-400" />
@@ -172,7 +180,7 @@ function useAvailableVersions(pack: PackView): AvailableModVersion[] | null {
   const key = JSON.stringify([pack.source, pack.contentVersions.map((v) => v.version)])
   useEffect(() => {
     setAvailable(null)
-    if (!pack.source || pack.type !== 'mod') return
+    if (!pack.source || !jarBased(pack)) return
     let alive = true
     void window.studio.availableModVersions(pack.folder).then((r) => alive && setAvailable(r.ok ? r.versions : []))
     return () => {
@@ -193,10 +201,12 @@ function MinecraftLine({ pack }: { pack: PackView }) {
       {shown.length ? (
         <span>
           Minecraft {shown.join(', ')}
-          <span className="text-ink-500">{pack.minecraftVersions.length ? ' (données à la main)' : ' (d’après pack.mcmeta)'}</span>
+          <span className="text-ink-500">
+            {pack.minecraftVersions.length ? ' (données à la main)' : pack.type === 'plugin' ? ' (d’après api-version : la plus ancienne visée)' : ' (d’après pack.mcmeta)'}
+          </span>
         </span>
       ) : (
-        <span className="text-amber-glow">Versions de Minecraft à préciser : CurseForge et Modrinth les exigent.</span>
+        <span className="text-amber-glow">Versions de Minecraft à préciser : les sites de publication les exigent.</span>
       )}
       <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'minecraft-versions', folder: pack.folder })}>
         Changer
@@ -212,6 +222,7 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
   const label = CONTENT_KINDS[pack.type].label
   const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
   const modrinth = useModrinthVersions(pack.folder, pack.modrinth)
+  const hangar = useHangarVersions(pack.folder, pack.hangar)
   const available = useAvailableVersions(pack)
   const empty = !pack.contentVersions.length && !pack.remoteOnly.length && !pack.pending.length
 
@@ -250,18 +261,19 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
           )}
           <SourceLine pack={pack} available={available} />
           {pack.type !== 'mod' && <MinecraftLine pack={pack} />}
-          <CurseForgeLine pack={pack} curseforge={curseforge} />
+          {pack.type !== 'plugin' && <CurseForgeLine pack={pack} curseforge={curseforge} />}
           <ModrinthLine pack={pack} modrinth={modrinth} />
+          {pack.type === 'plugin' && <HangarLine pack={pack} hangar={hangar} />}
           <div className="mt-auto flex flex-wrap gap-2 pt-4">
             <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>
               Infos et image
             </Button>
-            {pack.source && pack.type === 'mod' && (
+            {pack.source && jarBased(pack) && (
               <Button size="sm" icon={PackagePlus} disabled={!available?.length} onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}>
                 Importer des versions
               </Button>
             )}
-            {pack.source && pack.type !== 'mod' && (
+            {pack.source && !jarBased(pack) && (
               <Button size="sm" icon={PackagePlus} onClick={() => void run(window.studio.zipContentVersion(pack.folder), `v${pack.nextVersion} créée depuis le dossier du pack`)}>
                 Créer la v{pack.nextVersion} depuis le dossier
               </Button>
@@ -314,7 +326,7 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
           </Row>
         ))}
         {pack.contentVersions.map((version, i) => (
-          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} modrinth={modrinth} />
+          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} modrinth={modrinth} hangar={hangar} />
         ))}
         {pack.remoteOnly.map((version) => (
           <RemoteOnlyRow key={version.tag} pack={pack} version={version} />
@@ -329,7 +341,7 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
           <div className="flex items-center gap-4 px-4 py-5 text-sm text-ink-400">
             <FileArchive size={22} className="shrink-0 text-ink-500" />
             <span>
-              {pack.type === 'mod'
+              {jarBased(pack)
                 ? 'Aucune version pour l’instant : importe-en une depuis le dossier lié, ou dépose ses jars dans son dossier.'
                 : 'Aucune version pour l’instant : crée-la depuis le dossier lié, ou dépose ses zips dans son dossier.'}
             </span>
@@ -585,7 +597,9 @@ export function MinecraftVersionsDialog({ folder }: { folder: string }) {
         hint={
           pack.type === 'shader'
             ? 'Un shader ne dit pas pour quelles versions il est fait : donne-les, séparées par des virgules (« 1.21.1, 26.3 »).'
-            : `Lues dans pack.mcmeta : ${fromZip.join(', ') || 'aucune reconnue'}. À donner seulement pour les remplacer.`
+            : pack.type === 'plugin'
+              ? `Son api-version (${fromZip.join(', ') || 'absente'}) ne donne que la plus ancienne visée : donne toutes celles où il fonctionne (« 1.21.4, 1.21.8 »).`
+              : `Lues dans pack.mcmeta : ${fromZip.join(', ') || 'aucune reconnue'}. À donner seulement pour les remplacer.`
         }
       >
         <TextInput value={text} onChange={(e) => setText(e.target.value)} placeholder="26.3" autoFocus />
@@ -638,6 +652,11 @@ export function NewContentDialog() {
         { label: 'Choisir le dossier…', run: () => void create(() => window.studio.createPackContent('shader', 'folder'), 'Shader') },
         { label: 'Choisir un zip…', run: () => void create(() => window.studio.createPackContent('shader', 'zip'), 'Shader') }
       ]
+    },
+    {
+      kind: 'plugin',
+      text: 'Un plugin de serveur (Paper, Spigot…), depuis le dossier où son projet dépose ses jars (target, build/libs…), qui reste lié. Il se publie sur Modrinth et Hangar.',
+      actions: [{ label: 'Choisir le dossier des jars…', run: () => void create(() => window.studio.createModFromSource('plugin'), 'Plugin') }]
     }
   ]
 

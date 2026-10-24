@@ -275,6 +275,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `github: false` (seulement CurseForge : `computePlan` met le modpack de côté, ses releases ne sont jamais retirées).
     Interface : `studio/CurseForgePanel.tsx` (ligne « Publié sur… », réglages, pastille par version, bouton sur la
     dernière version).
+- Plugins : `studio/pluginFiles.ts` (`parsePluginYml` : clés de premier niveau et listes seulement ; `analyzePluginJar` :
+  `plugin.yml` ou `paper-plugin.yml`, plateformes paper/spigot/bukkit/purpur (+ folia), `api-version` en version de
+  Minecraft de départ, refus d'une version non remplie `${…}`). Même circuit que les mods (`scanModFolder` /
+  `sourceVersions` reçoivent l'analyseur). Pas de CurseForge (dev.bukkit.org), SpigotMC sans API. Hangar :
+  `core/hangar.ts` (clé chiffrée `hangar-auth.json`, `HANGAR_API_KEY`, `POST /api/v1/authenticate?apiKey=` → JWT,
+  en-tête `Authorization: HangarAuth <jwt>` ; upload multipart `versionUpload` JSON + `files`, plateforme `PAPER`,
+  canaux Release / Snapshot ; `MPD_HANGAR_API` en test, `test/support/fakeHangar.ts`). `pack.json` `hangar`.
+  Interface `studio/HangarPanel.tsx`, Paramètres → Compte Hangar ; commandes `hangar *`.
 - Bibliothèque des contenus : `shared/contentReleases.ts` (`contentReleaseFrom` : release `mod-`/`rp-`/`shader-` +
   `content.json` cohérent avec le tag, chaque fichier avec SHA-256 ; `groupContents` ; `incompatibility` : version de
   Minecraft, chargeur, Quilt accepte Fabric). `Catalog.contents` (github.ts, content.json lu par l'URL publique et

@@ -3,12 +3,12 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès qu’il est modifié.
 
-Les sections **Dossier des modpacks**, **Compte CurseForge**, **Compte Modrinth**, **Mises à jour automatiques** et
-**Claude Code et terminal** n’apparaissent qu’en mode publieur.
+Les sections **Dossier des modpacks**, **Compte CurseForge**, **Compte Modrinth**, **Compte Hangar**, **Mises à jour
+automatiques** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
 colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des
-instances, compte) et Modrinth,
+instances, compte), Modrinth et Hangar,
 puis le Studio (dossier des modpacks, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
 
@@ -116,6 +116,13 @@ data**, **Read projects**, **Read versions** et **Create versions**.
 Le coller, puis cliquer sur **Vérifier et enregistrer** : Modrinth doit l’accepter, sinon rien n’est enregistré.
 L’état indique le compte Modrinth du jeton. **Retirer** le supprime. Il est chiffré par Windows comme la connexion
 GitHub ; ni l’application, ni le terminal, ni Claude ne l’affichent.
+
+## Compte Hangar
+
+Réservé aux publieurs : la **clé d’API** qui met les [plugins](studio.md#les-plugins) en ligne sur Hangar
+(hangar.papermc.io). Elle se crée dans les réglages du compte Hangar (**Clés d’API**), avec le droit
+`create_version`. Comme le jeton Modrinth : **Vérifier et enregistrer** la fait accepter par Hangar (l’état indique le
+compte), **Retirer** la supprime, et elle est chiffrée par Windows sans jamais être affichée.
 
 ## Mises à jour automatiques
 

@@ -7,8 +7,10 @@ export type ContentKind = 'modpack' | 'mod' | 'resourcepack' | 'shader' | 'plugi
 
 /** Chargeurs qu'un mod peut viser. */
 export type ModLoader = 'fabric' | 'quilt' | 'forge' | 'neoforge'
-/** Ce qui fait tourner un contenu : le chargeur d'un mod, celui des shaders (Iris, OptiFine). */
-export type ContentLoader = ModLoader | 'iris' | 'optifine'
+/** Serveurs qui chargent un plugin. */
+export type PluginPlatform = 'paper' | 'spigot' | 'bukkit' | 'purpur' | 'folia'
+/** Ce qui fait tourner un contenu : le chargeur d'un mod, celui des shaders (Iris, OptiFine), le serveur d'un plugin. */
+export type ContentLoader = ModLoader | 'iris' | 'optifine' | PluginPlatform
 
 export const LOADER_LABELS: Record<ContentLoader, string> = {
   fabric: 'Fabric',
@@ -16,7 +18,12 @@ export const LOADER_LABELS: Record<ContentLoader, string> = {
   forge: 'Forge',
   neoforge: 'NeoForge',
   iris: 'Iris',
-  optifine: 'OptiFine'
+  optifine: 'OptiFine',
+  paper: 'Paper',
+  spigot: 'Spigot',
+  bukkit: 'Bukkit',
+  purpur: 'Purpur',
+  folia: 'Folia'
 }
 
 /** Un fichier d'une version publiée (content.json). */
@@ -80,7 +87,7 @@ export const CONTENT_KINDS: Record<ContentKind, ContentKindInfo> = {
     modrinth: 'resourcepack'
   },
   shader: { label: 'shader', plural: 'shaders', tagPrefix: 'shader-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'number', supported: true, extension: '.zip', modrinth: 'shader' },
-  plugin: { label: 'plugin', plural: 'plugins', tagPrefix: 'plugin-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: false, extension: '.jar', modrinth: 'plugin' }
+  plugin: { label: 'plugin', plural: 'plugins', tagPrefix: 'plugin-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: true, extension: '.jar', modrinth: 'plugin' }
 }
 
 export const CONTENT_KIND_IDS = Object.keys(CONTENT_KINDS) as ContentKind[]

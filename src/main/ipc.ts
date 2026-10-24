@@ -6,6 +6,7 @@ import { registerClaudeCodeIpc } from './claudeCode'
 import { registerExtrasIpc } from './extrasIpc'
 import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth'
 import { modrinthAuthStatus, saveModrinthToken } from '../core/modrinth'
+import { hangarAuthStatus, saveHangarKey } from '../core/hangar'
 import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
 import { getCatalog } from './github'
 import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
@@ -29,6 +30,15 @@ export function registerIpc(
   registerExtrasIpc()
   ipcMain.handle('cfauth:status', () => curseForgeAuthStatus())
   ipcMain.handle('mrauth:status', () => modrinthAuthStatus())
+  ipcMain.handle('hangarauth:status', () => hangarAuthStatus())
+  ipcMain.handle('hangarauth:save', async (_e, value: string | null) => {
+    try {
+      await saveHangarKey(typeof value === 'string' ? value : null)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+    }
+  })
   ipcMain.handle('mrauth:save', async (_e, value: string | null) => {
     try {
       await saveModrinthToken(typeof value === 'string' ? value : null)

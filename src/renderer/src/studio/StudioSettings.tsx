@@ -1,7 +1,7 @@
 import { AlarmClock, Bot, CircleCheck, CircleX, FolderCog, FolderOpen, KeyRound, Plug, RotateCcw, TerminalSquare, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import type { MaintenanceTask } from '../../../shared/studio'
-import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus, ModrinthAuthStatus } from '../../../shared/types'
+import type { ClaudeCodeStatus, CurseForgeAuthStatus, CurseForgeSecretKind, CurseForgeSecretStatus, HangarAuthStatus, ModrinthAuthStatus } from '../../../shared/types'
 import { Button } from '../components/Button'
 import { Toggle } from '../components/Toggle'
 import { formatDate } from '../lib/format'
@@ -291,6 +291,86 @@ export function ModrinthAccountSetting() {
       </div>
       <p className="mt-3 text-xs leading-relaxed text-ink-400">
         Vérifié par Modrinth avant d’être enregistré, chiffré par Windows pour ton compte : ni l’application, ni le terminal, ni
+        Claude ne l’affichent.
+      </p>
+    </>
+  )
+}
+
+/** Paramètres → Compte Hangar (publieurs) : la clé d'API qui met les plugins en ligne sur Hangar. */
+export function HangarAccountSetting() {
+  const pushToast = useStore((s) => s.pushToast)
+  const [status, setStatus] = useState<HangarAuthStatus | null>(null)
+  const [value, setValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const load = useCallback(() => void window.api.getHangarAuth().then(setStatus), [])
+  useEffect(load, [load])
+
+  async function save(next: string | null) {
+    setBusy(true)
+    try {
+      const result = await window.api.saveHangarKey(next)
+      if (result.ok) {
+        pushToast({ kind: 'success', title: next === null ? 'Clé Hangar retirée' : 'Clé Hangar enregistrée' })
+        setValue('')
+      } else {
+        pushToast({ kind: 'error', title: 'Enregistrement impossible', message: result.error })
+      }
+    } finally {
+      setBusy(false)
+      load()
+    }
+  }
+
+  const state = !status
+    ? 'Vérification…'
+    : !status.source
+      ? 'Absente.'
+      : status.valid
+        ? `${status.source === 'saved' ? 'Enregistrée' : status.source === 'env' ? 'Trouvée dans une variable d’environnement' : 'Trouvée dans un fichier .env'}, compte ${status.username ?? '?'}.`
+        : status.valid === false
+          ? 'Refusée par Hangar : remplace-la.'
+          : (status.error ?? 'Non vérifié.')
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink-100">Clé d’API</p>
+          <p className="mt-0.5 text-xs text-ink-400">
+            Pour mettre tes plugins en ligne sur leur projet Hangar. À créer sur{' '}
+            <button type="button" className="font-semibold text-grass-300 hover:text-grass-400" onClick={() => void window.api.openExternal('https://hangar.papermc.io/auth/settings/api-keys')}>
+              hangar.papermc.io (Paramètres → Clés d’API)
+            </button>{' '}
+            avec le droit « create_version ».
+          </p>
+        </div>
+        <span className={`flex shrink-0 items-center gap-1.5 text-xs ${status?.valid ? 'text-grass-400' : status?.valid === false ? 'text-red-300' : 'text-ink-400'}`}>
+          {status?.valid ? <CircleCheck size={14} /> : status?.valid === false ? <CircleX size={14} /> : null}
+          {state}
+        </span>
+      </div>
+      <div className="mt-2.5 flex gap-2">
+        <input
+          type="password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={status?.source === 'saved' ? 'Coller pour remplacer…' : 'Coller ici…'}
+          autoComplete="off"
+          spellCheck={false}
+          className="min-w-0 flex-1 rounded-lg bg-ink-950/60 px-3 py-1.5 font-mono text-sm text-ink-100 ring-1 ring-tint/10 outline-none placeholder:font-sans placeholder:text-ink-500 focus:ring-grass-400/50"
+        />
+        <Button size="sm" icon={KeyRound} disabled={busy || !value.trim()} onClick={() => void save(value)}>
+          Vérifier et enregistrer
+        </Button>
+        {status?.source === 'saved' && (
+          <Button size="sm" variant="ghost" icon={Trash2} disabled={busy} onClick={() => void save(null)}>
+            Retirer
+          </Button>
+        )}
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-ink-400">
+        Vérifiée par Hangar avant d’être enregistrée, chiffrée par Windows pour ton compte : ni l’application, ni le terminal, ni
         Claude ne l’affichent.
       </p>
     </>

@@ -6,7 +6,7 @@ transite sur le réseau, ce qui reste sur le PC, et comment l’application prot
 ## Ce qui est envoyé, et à qui
 
 L’application contacte GitHub : `api.github.com`, `github.com` et ses serveurs de fichiers. En mode publieur, elle
-contacte aussi CurseForge et Modrinth, avec la clé et les jetons que le publieur lui a confiés, et, pour les tests,
+contacte aussi CurseForge, Modrinth et Hangar, avec les clés et les jetons que le publieur lui a confiés, et, pour les tests,
 les serveurs de Minecraft et de ses chargeurs. Elle ne contient ni statistiques d’utilisation ni publicité.
 
 | Quand | Ce qui est demandé à GitHub |
@@ -32,6 +32,12 @@ les serveurs de Minecraft et de ses chargeurs. Elle ne contient ni statistiques 
 | À la liaison d’un mod à son projet, ou à l’affichage de ses versions | Le projet et ses versions, et les projets de ses dépendances. |
 | À la publication d’une version d’un mod sur Modrinth | Ses jars, ses notes, son numéro et son type. |
 
+| Quand | Ce qui est demandé à Hangar (`hangar.papermc.io`, publieurs), avec la clé du publieur |
+|---|---|
+| À l’enregistrement de la clé, et avant chaque échange | La clé, échangée contre un jeton de session. |
+| À la liaison d’un plugin à son projet, ou à l’affichage de ses versions | Le projet et ses versions. |
+| À la publication d’une version d’un plugin | Son jar, ses notes, sa version et ses versions de Minecraft. |
+
 | Quand | Ce qui est demandé ailleurs (publieurs) |
 |---|---|
 | Au premier test d’un profil sur un serveur | Le serveur de son chargeur : `meta.fabricmc.net` (Fabric), `maven.minecraftforge.net` (Forge) ou `maven.neoforged.net` (NeoForge), puis le serveur de Minecraft et ses bibliothèques (`piston-data.mojang.com`, `libraries.minecraft.net`, et `maven.fabricmc.net` pour Fabric). |
@@ -51,7 +57,8 @@ transmise à un autre système.
 - **La connexion GitHub** : le jeton est chiffré par Windows (DPAPI), avec une clé liée à la session Windows. Un
   autre compte Windows, ou une copie du fichier sur un autre PC, ne peut pas le relire. **Se déconnecter** le
   supprime.
-- **La clé de l’API CurseForge, le jeton d’auteur et le jeton Modrinth** (publieurs) : chiffrés de la même façon.
+- **La clé de l’API CurseForge, le jeton d’auteur, le jeton Modrinth et la clé Hangar** (publieurs) : chiffrés de la
+  même façon.
   **Retirer** les supprime.
 - **Ce que l’application lit pour fonctionner**, sans jamais l’envoyer : l’emplacement de CurseForge (dans le
   registre de Windows), le dossier de ses profils (dans ses journaux), la liste des profils et de leurs mods, et la

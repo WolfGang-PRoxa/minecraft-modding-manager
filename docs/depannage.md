@@ -212,13 +212,11 @@ identifiant tiré du nom du dossier (vérifier qu’il est identique à l’anci
 L’identifiant doit être fait de lettres minuscules, de chiffres et de tirets, et être propre à un seul dossier.
 Corriger le champ `id` de `pack.json`.
 
-**« Type « … » inconnu dans pack.json »**Le champ `type` de `pack.json` ne désigne aucun type connu. Le retirer pour un modpack (voir
+**« Type « … » inconnu dans pack.json »**Le champ `type` de `pack.json` ne désigne aucun type connu (`mod`, `resourcepack`, `shader`, `plugin`). Le retirer
+pour un modpack (voir
 [Le fichier pack.json](studio.md#le-fichier-packjson)).
 
-**« Les plugins ne sont pas encore pris en charge par le Studio : ce dossier est ignoré. »**Le `type` de `pack.json` désigne un contenu que le Studio ne publie pas encore (plugins). Le dossier reste affiché mais rien n’en est publié, et ses releases sur GitHub ne sont pas touchées. Pour un
-modpack, retirer le champ `type`.
-
-**« Deux jars pour la version 1.2.0 (…) : n’en garde qu’un. »** ou **« … : illisible ou pas un mod. »**Le dossier d’un [mod](studio.md#les-mods) contient deux fichiers de la même version, ou un fichier qui n’est pas un jar
+**« Deux jars pour la version 1.2.0 (…) : n’en garde qu’un. »** ou **« … : illisible ou pas un mod (ni un plugin). »**Le dossier d’un [mod](studio.md#les-mods) contient deux fichiers de la même version, ou un fichier qui n’est pas un jar
 de mod. Tant que ce n’est pas corrigé, rien de ce mod n’est publié ni retiré de GitHub.
 
 **« Plusieurs zips pour la v3 (…) : n’en garde qu’un. »**\

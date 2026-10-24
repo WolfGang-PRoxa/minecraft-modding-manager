@@ -9,6 +9,7 @@ import {
   maintenanceValidate
 } from './maintenance'
 import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth'
+import { hangarLink, hangarPublish, hangarStatus, hangarVersions } from './hangar'
 import { contentCreate, contentCurseforge, contentDelete, contentImport, contentMinecraft, contentNotes, contentSource, contentVersions, contentZip } from './content'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
@@ -72,8 +73,12 @@ export const COMMANDS = [
   modrinthLink,
   modrinthPublish,
   modrinthVersions,
+  hangarLink,
+  hangarPublish,
+  hangarVersions,
   releasesDelete,
   curseforgeStatus,
   modrinthStatus,
+  hangarStatus,
   journal
 ] as unknown as Command[]

@@ -62,7 +62,7 @@ boutons :
 
 - **Guide** ouvre cette page de l’aide ;
 - **Nouveau modpack** crée le dossier d’un nouveau modpack ;
-- **Nouveau contenu** crée un [mod](#les-mods), un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders) ;
+- **Nouveau contenu** crée un [mod](#les-mods), un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders), ou un [plugin](#les-plugins) ;
 - **Ranger les zips** numérote les zips déposés (le nombre de zips à ranger est indiqué) ;
 - **Publier sur GitHub** affiche les changements à publier, puis les applique (leur nombre est indiqué).
 
@@ -313,6 +313,31 @@ CurseForge ou Modrinth, qui les exigent. Pour un pack de ressources, elles peuve
 Minecraft et `Client` ; sur Modrinth, sous le même nom, avec le chargeur `minecraft` (pack de ressources) ou `iris` et
 `optifine` (shader).
 
+## Les plugins
+
+Les plugins de serveur du publieur (Paper, Spigot, Bukkit…) se publient comme ses mods, et apparaissent dans la
+colonne de gauche sous **Plugins**. **Nouveau contenu**, puis **Plugin**, demande le dossier où le projet du plugin
+dépose ses jars (`target`, `build/libs`…), qui reste lié : le Studio y lit `plugin.yml` (ou `paper-plugin.yml`) du jar
+le plus récent pour le nom, la version et la description, et ses nouvelles versions s’importent comme celles d’un mod.
+Un jar dont la version n’a pas été remplie au build (`${project.version}`) est laissé de côté.
+
+Un plugin déclare seulement son `api-version`, la plus ancienne version de Minecraft qu’il vise. Les versions où il
+fonctionne se donnent avec **Changer**, sur la ligne « Minecraft » de sa carte : Modrinth et Hangar les exigent.
+Le plugin vise Paper, Spigot, Bukkit et Purpur (avec `paper-plugin.yml` : Paper et Purpur seulement), et Folia s’il le
+déclare (`folia-supported: true`).
+
+À la publication, chaque version devient une release `plugin-<id>-v<version>` sur GitHub. Il se publie aussi :
+
+- sur **Modrinth** (projet de type plugin), comme un mod ;
+- sur **Hangar** (hangar.papermc.io), le site des plugins de Paper : **Publier aussi sur Hangar** le lie à son projet
+  (adresse `hangar.papermc.io/<auteur>/<projet>` ou nom), puis **Publier sur Hangar**, sur la version la plus récente,
+  envoie le jar pour Paper, avec ses versions de Minecraft et ses notes, dans le canal **Release** ou **Snapshot**. Il
+  faut la clé d’API Hangar ([Compte Hangar](parametres.md#compte-hangar)).
+
+CurseForge (dev.bukkit.org) et SpigotMC ne sont pas pris en charge : SpigotMC n’a pas d’API d’envoi, le jar s’y met
+en ligne à la main. Les plugins n’apparaissent pas dans la Bibliothèque des joueurs : ils vont sur un serveur, pas
+dans un profil CurseForge.
+
 ## Le fichier pack.json
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :
@@ -320,9 +345,10 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 | Champ | Contenu |
 |---|---|
 | `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
-| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders). `plugin` est réservé à une prochaine version : un dossier qui le déclare est affiché, mais ignoré à la publication. |
-| `source` | Mod : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié. |
-| `minecraftVersions` | Pack de ressources ou shader : les versions de Minecraft visées, à la place de celles de son zip. Absent sinon. |
+| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders), `plugin` pour un [plugin](#les-plugins). |
+| `source` | Mod ou plugin : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié. |
+| `minecraftVersions` | Pack de ressources, shader ou plugin : les versions de Minecraft visées, à la place de celles de son fichier. Absent sinon. |
+| `modrinth`, `hangar` | Son projet Modrinth (mod, pack de ressources, shader, plugin) ou Hangar (plugin), et les versions envoyées par l’application. Absents s’il n’y en a pas. |
 | `name` | Le nom affiché aux joueurs. |
 | `description` | La description courte. |
 | `lastVersion` | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé. |

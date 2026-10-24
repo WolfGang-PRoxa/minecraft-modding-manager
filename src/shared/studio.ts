@@ -194,6 +194,29 @@ export interface PackModrinth {
   versions: Record<string, string>
 }
 
+/** Le projet Hangar d'un plugin (pack.json). */
+export interface PackHangar {
+  /** Slug du projet (« MonPlugin »). */
+  slug: string
+  owner: string
+  url: string
+  /** Versions envoyées par l'application (leur nom sur Hangar est la version du plugin). */
+  versions: string[]
+}
+
+/** Une version du projet Hangar. */
+export interface HangarVersionView {
+  name: string
+  channel: string
+  date: string | null
+  /** Versions de Minecraft, par plateforme. */
+  platforms: Record<string, string[]>
+  /** Version locale de même nom, sinon null. */
+  version: string | null
+  sentByApp: boolean
+  url: string
+}
+
 /** Une version du projet Modrinth : envoyée par l'application, ou mise en ligne depuis le site. */
 export interface ModrinthVersionView {
   versionId: string
@@ -228,6 +251,8 @@ export interface PackView {
   curseforge: PackCurseForge | null
   /** Mod : son projet Modrinth, s'il en a un. */
   modrinth: PackModrinth | null
+  /** Plugin : son projet Hangar, s'il en a un. */
+  hangar: PackHangar | null
   updates: PackUpdates
   /** Mod : dossier d'où il importe ses versions ; pack de ressources ou shader : dossier du pack, zippé à chaque version. */
   source: string | null
@@ -710,7 +735,7 @@ export interface StudioApi {
   deleteModVersion(folder: string, version: string): Promise<PublishResult>
 
   /** Choisit le dossier où le projet d'un mod dépose ses jars, puis crée le mod avec sa version la plus récente. */
-  createModFromSource(): Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>
+  createModFromSource(kind?: 'mod' | 'plugin'): Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>
   /** Versions du dossier lié d'un mod qui ne sont pas encore dans le Studio. */
   availableModVersions(folder: string): Promise<{ ok: true; versions: AvailableModVersion[] } | { ok: false; error: string }>
   importModVersions(folder: string, versions: string[]): Promise<{ ok: true; imported: string[] } | { ok: false; error: string }>
@@ -735,6 +760,10 @@ export interface StudioApi {
     releaseType: 'release' | 'beta' | 'alpha'
   ): Promise<{ ok: true; versionId: string; unknownDependencies: string[] } | { ok: false; error: string }>
   modrinthVersions(folder: string): Promise<{ ok: true; versions: ModrinthVersionView[] } | { ok: false; error: string }>
+  /** Lie un plugin à son projet Hangar (adresse ou nom). */
+  linkHangar(folder: string, ref: string): Promise<{ ok: true; slug: string; owner: string; url: string } | { ok: false; error: string }>
+  publishHangar(folder: string, version: string, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; version: string } | { ok: false; error: string }>
+  hangarVersions(folder: string): Promise<{ ok: true; versions: HangarVersionView[] } | { ok: false; error: string }>
   /** Dossier à la corbeille et toutes les releases du modpack retirées de GitHub. */
   deletePack(folder: string): Promise<PublishResult>
   /** Releases sans zip dans le dossier, retirées sans attendre la publication. */
@@ -761,7 +790,10 @@ export interface StudioApi {
     ref: string
   ): Promise<{ ok: true; projectId: number; name: string; highestVersion: number; overrides: string[] } | { ok: false; error: string }>
   /** Fichiers joints à l'export CurseForge, publication sur GitHub, ou retrait du lien. */
-  updatePublishTargets(folder: string, changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean }): Promise<ActionResult>
+  updatePublishTargets(
+    folder: string,
+    changes: { overrides?: string[]; github?: boolean; unlinkCurseForge?: boolean; unlinkModrinth?: boolean; unlinkHangar?: boolean }
+  ): Promise<ActionResult>
   publishCurseForge(folder: string, version: number, releaseType: 'release' | 'beta' | 'alpha'): Promise<{ ok: true; fileId: number } | { ok: false; error: string }>
   onCurseForgeProgress(listener: (text: string) => void): () => void
   /** Toutes les versions du projet CurseForge du modpack, de la plus récente à la plus ancienne. */

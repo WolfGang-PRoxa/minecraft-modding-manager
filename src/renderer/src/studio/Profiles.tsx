@@ -112,7 +112,8 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
 const CONTENT_SECTIONS = [
   { kind: 'mod', title: 'Mods' },
   { kind: 'resourcepack', title: 'Packs de ressources' },
-  { kind: 'shader', title: 'Shaders' }
+  { kind: 'shader', title: 'Shaders' },
+  { kind: 'plugin', title: 'Plugins' }
 ] as const
 
 export function ProfilesSidebar() {
@@ -221,7 +222,7 @@ export function ProfilesSidebar() {
                     <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
                       <Icon size={15} className="shrink-0 text-ink-400" />
                       <span className="flex-1 truncate">{pack.name}</span>
-                      {latest && <span className="text-xs text-ink-500">{kind === 'mod' ? latest.split('-')[0] : `v${latest}`}</span>}
+                      {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? latest.split('-')[0] : `v${latest}`}</span>}
                     </SidebarItem>
                   )
                 })}

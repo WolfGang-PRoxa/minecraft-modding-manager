@@ -26,6 +26,7 @@ import { ContentsDialog } from './ContentsDialog'
 import { DeleteDialog } from './DeleteDialog'
 import { MinecraftVersionsDialog, ModCard, ModImportDialog, NewContentDialog, PublishModCurseForgeDialog } from './ModCard'
 import { ModrinthDialog, PublishModrinthDialog } from './ModrinthPanel'
+import { HangarDialog, PublishHangarDialog } from './HangarPanel'
 import { PackCard } from './PackCard'
 import { CurseForgeDialog, CurseForgeVersionsDialog, PublishCurseForgeDialog } from './CurseForgePanel'
 import { UpdatesDialog } from './MaintenancePanel'
@@ -344,7 +345,7 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
           <Button icon={FolderPlus} onClick={() => openDialog({ kind: 'new-pack' })}>
             Nouveau modpack
           </Button>
-          <Button icon={Blocks} onClick={() => openDialog({ kind: 'new-content' })} title="Un mod, un pack de ressources ou un shader">
+          <Button icon={Blocks} onClick={() => openDialog({ kind: 'new-content' })} title="Un mod, un pack de ressources, un shader ou un plugin">
             Nouveau contenu
           </Button>
           <Button
@@ -463,6 +464,10 @@ function Dialogs() {
       return <NewContentDialog />
     case 'minecraft-versions':
       return <MinecraftVersionsDialog key={dialog.folder} folder={dialog.folder} />
+    case 'hangar':
+      return <HangarDialog key={dialog.folder} folder={dialog.folder} />
+    case 'hangar-publish':
+      return <PublishHangarDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
     case 'modrinth':
       return <ModrinthDialog key={dialog.folder} folder={dialog.folder} />
     case 'modrinth-publish':

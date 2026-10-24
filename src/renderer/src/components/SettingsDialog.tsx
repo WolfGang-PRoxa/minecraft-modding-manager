@@ -8,7 +8,7 @@ import { formatDate } from '../lib/format'
 import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
-import { ClaudeCodeSetting, CurseForgeAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
+import { ClaudeCodeSetting, CurseForgeAccountSetting, HangarAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { PlayerUsageSection } from './Usage'
 import { AppearanceSection } from './Appearance'
 import { APP_NAME } from '../../../shared/config'
@@ -233,6 +233,11 @@ export function SettingsDialog() {
       <ModrinthAccountSetting />
     </Section>
   )
+  const hangarAccount = (
+    <Section key="hangar-account" title="Compte Hangar">
+      <HangarAccountSetting />
+    </Section>
+  )
   const maintenance = (
     <Section key="maintenance" title="Mises à jour automatiques">
       <MaintenanceSetting />
@@ -254,12 +259,12 @@ export function SettingsDialog() {
     : wide
       ? [
           [usage, appearanceSection, shortcutSection, about],
-          [curseForgeSection, instances, curseForgeAccount, modrinthAccount],
+          [curseForgeSection, instances, curseForgeAccount, modrinthAccount, hangarAccount],
           [workspace, maintenance, claude]
         ]
       : [
           [usage, appearanceSection, curseForgeSection, instances],
-          [workspace, curseForgeAccount, modrinthAccount, maintenance, claude, shortcutSection, about]
+          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, shortcutSection, about]
         ]
 
   return (
