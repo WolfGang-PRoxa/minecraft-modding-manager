@@ -18,7 +18,8 @@ import {
 } from '../../shared/studio'
 import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
 import { AnalysisCache, analyzeZip, describeError, githubSizeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
-import { scanModFolder, type LocalJar, type LocalModVersion } from './mods'
+import { scanModFolder, type LocalJar, type LocalContentVersion } from './mods'
+import { scanPackFolder } from './packFiles'
 
 /** Métadonnées d'un modpack, gérées par le studio dans son dossier. */
 export const PACK_FILE = 'pack.json'
@@ -49,8 +50,13 @@ export interface PackFile extends PackSettings {
   modrinth: PackModrinth | null
   /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
   updates: PackUpdates
-  /** Mod : dossier d'où viennent ses versions (`releases/`, `build/libs/` de son projet), écrit seulement s'il est lié. */
+  /**
+   * Mod : dossier d'où viennent ses versions (`releases/`, `build/libs/` de son projet). Pack de ressources ou shader :
+   * dossier du pack en cours de création, zippé à chaque version. Écrit seulement s'il est lié.
+   */
   source: string | null
+  /** Pack de ressources ou shader : versions de Minecraft visées, à la place de celles du zip (écrit si donné). */
+  minecraftVersions: string[]
 }
 
 export interface LocalFile {
@@ -87,7 +93,7 @@ export interface LocalPack {
   /** Zips pas encore numérotés, du plus ancien au plus récent. */
   pending: LocalZip[]
   /** Mod : ses versions, de la plus ancienne à la plus récente (vide pour un modpack). */
-  modVersions: LocalModVersion[]
+  contentVersions: LocalContentVersion[]
   /** Mod : jars illisibles ou qui ne sont pas un mod. */
   badJars: LocalJar[]
   /** Plus grand numéro trouvé dans les noms de fichiers (doublons compris). */
@@ -132,6 +138,7 @@ function defaultPackFile(folder: string): PackFile {
     modrinth: null,
     updates: DEFAULT_PACK_UPDATES,
     source: null,
+    minecraftVersions: [],
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -195,6 +202,7 @@ async function readPackFile(
       modrinth: normalizeModrinth(data.modrinth),
       updates: normalizePackUpdates(data.updates),
       source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
+      minecraftVersions: normalizeMinecraftVersions(data.minecraftVersions),
       ...normalizePackSettings(data)
     }
     const error =
@@ -228,6 +236,12 @@ export function normalizeCurseForge(value: unknown): PackCurseForge | null {
     overrides: Array.isArray(data?.overrides) ? normalizeExclusions(data.overrides.filter((o): o is string => typeof o === 'string')) : [],
     files
   }
+}
+
+/** Versions de Minecraft données par le publieur (« 1.21.1 », « 26.3 »), dédoublonnées. */
+export function normalizeMinecraftVersions(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((v): v is string => typeof v === 'string').map((v) => v.trim()).filter((v) => /^\d+(\.\d+)+$/.test(v)))]
 }
 
 export function normalizeModrinth(value: unknown): PackModrinth | null {
@@ -267,7 +281,7 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, updates, source, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, updates, source, minecraftVersions, ...info } = meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -279,6 +293,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     notes,
     ...(profile ? { profile } : {}),
     ...(source ? { source } : {}),
+    ...(minecraftVersions.length ? { minecraftVersions } : {}),
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
     ...(modrinth ? { modrinth } : {}),
@@ -351,11 +366,29 @@ async function scanPack(
   // Type que le Studio ne sait pas encore lire : le dossier est montré, ses fichiers ne sont ni analysés ni publiés.
   if (!CONTENT_KINDS[meta.type].supported) {
     errors.push(`Les ${CONTENT_KINDS[meta.type].plural} ne sont pas encore pris en charge par le Studio : ce dossier est ignoré.`)
-    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], modVersions: [], badJars: [], maxNumber: 0, errors }
+    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], contentVersions: [], badJars: [], maxNumber: 0, errors }
+  }
+  if (meta.type === 'resourcepack' || meta.type === 'shader') {
+    const scan = await scanPackFolder(dir, meta.type, meta.minecraftVersions)
+    return {
+      folder,
+      dir,
+      meta,
+      hasPackFile: exists,
+      packFileError: error,
+      cover,
+      versions: [],
+      // Zips déposés à la main : le rangement les numérote, comme ceux d'un modpack.
+      pending: scan.pending.map((zip) => ({ fileName: zip.fileName, path: zip.path, size: zip.size, mtimeMs: zip.mtimeMs, analysis: null, error: zip.error })),
+      contentVersions: scan.versions,
+      badJars: scan.badFiles,
+      maxNumber: scan.maxNumber,
+      errors: [...errors, ...scan.errors]
+    }
   }
   if (meta.type === 'mod') {
     const mods = await scanModFolder(dir)
-    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], modVersions: mods.versions, badJars: mods.badJars, maxNumber: 0, errors: [...errors, ...mods.errors] }
+    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], contentVersions: mods.versions, badJars: mods.badJars, maxNumber: 0, errors: [...errors, ...mods.errors] }
   }
 
   const byNumber = new Map<number, LocalFile[]>()
@@ -388,7 +421,7 @@ async function scanPack(
     cover,
     versions,
     pending,
-    modVersions: [],
+    contentVersions: [],
     badJars: [],
     maxNumber: Math.max(0, ...byNumber.keys()),
     errors

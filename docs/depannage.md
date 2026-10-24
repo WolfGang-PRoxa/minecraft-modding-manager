@@ -215,8 +215,7 @@ Corriger le champ `id` de `pack.json`.
 **« Type « … » inconnu dans pack.json »**Le champ `type` de `pack.json` ne désigne aucun type connu. Le retirer pour un modpack (voir
 [Le fichier pack.json](studio.md#le-fichier-packjson)).
 
-**« Les packs de ressources ne sont pas encore pris en charge par le Studio : ce dossier est ignoré. »**Le `type` de `pack.json` désigne un contenu que le Studio ne publie pas encore (packs de ressources, shaders,
-plugins). Le dossier reste affiché mais rien n’en est publié, et ses releases sur GitHub ne sont pas touchées. Pour un
+**« Les plugins ne sont pas encore pris en charge par le Studio : ce dossier est ignoré. »**Le `type` de `pack.json` désigne un contenu que le Studio ne publie pas encore (plugins). Le dossier reste affiché mais rien n’en est publié, et ses releases sur GitHub ne sont pas touchées. Pour un
 modpack, retirer le champ `type`.
 
 **« Deux jars pour la version 1.2.0 (…) : n’en garde qu’un. »** ou **« … : illisible ou pas un mod. »**Le dossier d’un [mod](studio.md#les-mods) contient deux fichiers de la même version, ou un fichier qui n’est pas un jar

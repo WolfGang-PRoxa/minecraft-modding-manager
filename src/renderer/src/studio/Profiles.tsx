@@ -2,7 +2,6 @@
 // profil face au modpack qui en vient.
 import { useMemo, useState, type ReactNode } from 'react'
 import {
-  Blocks,
   ChevronDown,
   ChevronRight,
   CircleCheck,
@@ -23,6 +22,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { PackView, ProfileState, ProfileView } from '../../../shared/studio'
 import { Button } from '../components/Button'
+import { KIND_UI } from './ModCard'
 import { Select } from '../components/Select'
 import { formatLoader, formatRelative } from '../lib/format'
 import { PackCard } from './PackCard'
@@ -108,6 +108,13 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
 }
 
 /** Arborescence : tous les modpacks, les dossiers de CurseForge et leurs profils, les modpacks sans profil. */
+/** Sections de la colonne de gauche pour les contenus qui ne sont pas des modpacks. */
+const CONTENT_SECTIONS = [
+  { kind: 'mod', title: 'Mods' },
+  { kind: 'resourcepack', title: 'Packs de ressources' },
+  { kind: 'shader', title: 'Shaders' }
+] as const
+
 export function ProfilesSidebar() {
   const library = useStudio((s) => s.library)
   const overview = useStudio((s) => s.overview)
@@ -131,7 +138,6 @@ export function ProfilesSidebar() {
     }
   }
   const packName = (folder: string) => overview?.packs.find((p) => p.folder === folder)?.name ?? folder
-  const mods = overview?.packs.filter((p) => p.type === 'mod') ?? []
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-tint/[0.05] bg-ink-900/40">
@@ -200,21 +206,28 @@ export function ProfilesSidebar() {
           )
         })}
 
-        {mods.length > 0 && !wanted && (
-          <div>
-            <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">Mods</p>
-            {mods.map((pack) => {
-              const target: Selection = { kind: 'pack', folder: pack.folder }
-              return (
-                <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
-                  <Blocks size={15} className="shrink-0 text-ink-400" />
-                  <span className="flex-1 truncate">{pack.name}</span>
-                  {pack.modVersions[0] && <span className="text-xs text-ink-500">{pack.modVersions[0].version.split('-')[0]}</span>}
-                </SidebarItem>
-              )
-            })}
-          </div>
-        )}
+        {!wanted &&
+          CONTENT_SECTIONS.map(({ kind, title }) => {
+            const items = (overview?.packs ?? []).filter((p) => p.type === kind)
+            if (!items.length) return null
+            const Icon = KIND_UI[kind]!.icon
+            return (
+              <div key={kind}>
+                <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">{title}</p>
+                {items.map((pack) => {
+                  const target: Selection = { kind: 'pack', folder: pack.folder }
+                  const latest = pack.contentVersions[0]?.version
+                  return (
+                    <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                      <Icon size={15} className="shrink-0 text-ink-400" />
+                      <span className="flex-1 truncate">{pack.name}</span>
+                      {latest && <span className="text-xs text-ink-500">{kind === 'mod' ? latest.split('-')[0] : `v${latest}`}</span>}
+                    </SidebarItem>
+                  )
+                })}
+              </div>
+            )
+          })}
 
         {library && library.packsWithoutProfile.length > 0 && !wanted && (
           <div>

@@ -6,21 +6,22 @@ import { createReadStream } from 'node:fs'
 import { copyFile, readdir, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { compareVersions } from '../../shared/releases'
-import type { ModLoader } from '../../shared/content'
+import type { ContentLoader, ModLoader } from '../../shared/content'
 import { BUILTIN_IDS, readModJar, type LoaderPreference } from '../gameTests/modMetadata'
 import { pathExists } from '../fsutil'
 import { openEntry, openZip, readEntries } from '../zip'
 import { describeError, StudioError } from './analyze'
 
-export interface JarAnalysis {
+export interface ContentAnalysis {
   sha256: string
   sha1: string
-  modId: string
+  /** Identifiant déclaré : celui du mod (fabric.mod.json, mods.toml). */
+  contentId: string
   name: string | null
   description: string | null
   /** Version déclarée par le jar. */
   version: string
-  loaders: ModLoader[]
+  loaders: ContentLoader[]
   /** Versions de Minecraft que le jar déclare (vide si sa plage ne se résume pas à des versions précises). */
   minecraftVersions: string[]
   /** La plage telle qu'écrite dans le jar (`~26.3`, `[1.20.1,1.21)`). */
@@ -38,14 +39,14 @@ export interface JarFile {
 }
 
 export interface LocalJar extends JarFile {
-  analysis: JarAnalysis | null
+  analysis: ContentAnalysis | null
   error: string | null
 }
 
-export interface LocalModVersion {
+export interface LocalContentVersion {
   version: string
   /** Jars de cette version, analysés. */
-  files: Array<LocalJar & { analysis: JarAnalysis }>
+  files: Array<LocalJar & { analysis: ContentAnalysis }>
 }
 
 /** Fichiers de métadonnées de chaque chargeur, dans l'ordre où un jar multi-chargeurs est lu. */
@@ -97,10 +98,10 @@ function nextPatch(version: string): string | null {
   return parts.join('.')
 }
 
-const memo = new Map<string, { size: number; mtimeMs: number; analysis: JarAnalysis }>()
+const memo = new Map<string, { size: number; mtimeMs: number; analysis: ContentAnalysis }>()
 
 /** Lit un jar de mod (mis en mémoire tant que sa taille et sa date ne changent pas). */
-export async function analyzeJar(file: JarFile): Promise<JarAnalysis> {
+export async function analyzeJar(file: JarFile): Promise<ContentAnalysis> {
   const known = memo.get(file.path)
   if (known && known.size === file.size && known.mtimeMs === file.mtimeMs) return known.analysis
 
@@ -122,9 +123,9 @@ export async function analyzeJar(file: JarFile): Promise<JarAnalysis> {
   if (!meta || !mod) throw new StudioError('Ce jar ne déclare aucun mod (ni fabric.mod.json, ni mods.toml).')
   if (!mod.version) throw new StudioError(`Le mod « ${mod.id} » ne déclare pas sa version.`)
   const minecraft = mod.relations.find((r) => r.id === 'minecraft' && r.kind === 'required')?.versions ?? null
-  const analysis: JarAnalysis = {
+  const analysis: ContentAnalysis = {
     ...(await hashes(file.path)),
-    modId: mod.id,
+    contentId: mod.id,
     name: mod.name ?? null,
     description: mod.description ?? null,
     version: mod.version,
@@ -161,24 +162,24 @@ async function analyzed(jars: JarFile[]): Promise<LocalJar[]> {
   return result
 }
 
-const loaderKey = (analysis: JarAnalysis) => [...analysis.loaders].sort().join('+')
+const loaderKey = (analysis: ContentAnalysis) => [...analysis.loaders].sort().join('+')
 
 /**
  * Lit le dossier d'un mod. `modId` : identifiant attendu dans les jars (celui de pack.json), null pour l'accepter du
  * premier jar. Les erreurs bloquent la publication de tout le mod (on ne sait pas à quelle version appartient un jar
  * illisible) ; un jar en double est signalé.
  */
-export async function scanModFolder(dir: string): Promise<{ versions: LocalModVersion[]; badJars: LocalJar[]; errors: string[] }> {
+export async function scanModFolder(dir: string): Promise<{ versions: LocalContentVersion[]; badJars: LocalJar[]; errors: string[] }> {
   const jars = await analyzed(await listJars(dir))
   const errors: string[] = []
   const badJars = jars.filter((j) => !j.analysis)
-  const good = jars.filter((j): j is LocalJar & { analysis: JarAnalysis } => j.analysis !== null)
+  const good = jars.filter((j): j is LocalJar & { analysis: ContentAnalysis } => j.analysis !== null)
 
-  const ids = [...new Set(good.map((j) => j.analysis.modId))]
+  const ids = [...new Set(good.map((j) => j.analysis.contentId))]
   if (ids.length > 1) errors.push(`Ce dossier mélange plusieurs mods (${ids.join(', ')}) : un dossier par mod.`)
   if (badJars.length) errors.push(`${badJars.map((j) => j.fileName).join(', ')} : ${badJars.length > 1 ? 'illisibles' : 'illisible'} ou pas un mod. Retire ${badJars.length > 1 ? 'ces fichiers' : 'ce fichier'} du dossier.`)
 
-  const byVersion = new Map<string, LocalModVersion>()
+  const byVersion = new Map<string, LocalContentVersion>()
   for (const jar of good) {
     const entry = byVersion.get(jar.analysis.version) ?? { version: jar.analysis.version, files: [] }
     const twin = entry.files.find((f) => loaderKey(f.analysis) === loaderKey(jar.analysis) && f.analysis.minecraftVersions.join() === jar.analysis.minecraftVersions.join())
@@ -193,7 +194,7 @@ export async function scanModFolder(dir: string): Promise<{ versions: LocalModVe
 /** Une version trouvée dans le dossier lié, pas encore dans le Studio. */
 export interface SourceVersion {
   version: string
-  files: Array<LocalJar & { analysis: JarAnalysis }>
+  files: Array<LocalJar & { analysis: ContentAnalysis }>
 }
 
 /**
@@ -202,12 +203,12 @@ export interface SourceVersion {
  */
 export async function sourceVersions(sourceDir: string, modId: string | null): Promise<SourceVersion[]> {
   if (!(await pathExists(sourceDir))) throw new StudioError(`Le dossier lié ${sourceDir} est introuvable.`)
-  const jars = (await analyzed(await listJars(sourceDir))).filter((j): j is LocalJar & { analysis: JarAnalysis } => j.analysis !== null)
-  const bySha = new Map<string, LocalJar & { analysis: JarAnalysis }>()
+  const jars = (await analyzed(await listJars(sourceDir))).filter((j): j is LocalJar & { analysis: ContentAnalysis } => j.analysis !== null)
+  const bySha = new Map<string, LocalJar & { analysis: ContentAnalysis }>()
   for (const jar of jars) {
-    if (modId && jar.analysis.modId !== modId) continue
+    if (modId && jar.analysis.contentId !== modId) continue
     const other = bySha.get(jar.analysis.sha256)
-    const cites = (j: LocalJar & { analysis: JarAnalysis }) => j.fileName.includes(j.analysis.version.split('-')[0])
+    const cites = (j: LocalJar & { analysis: ContentAnalysis }) => j.fileName.includes(j.analysis.version.split('-')[0])
     if (!other || (cites(jar) && !cites(other)) || (cites(jar) === cites(other) && jar.fileName.length < other.fileName.length)) bySha.set(jar.analysis.sha256, jar)
   }
   const byVersion = new Map<string, SourceVersion>()

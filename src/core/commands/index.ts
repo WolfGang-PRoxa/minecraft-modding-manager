@@ -9,7 +9,7 @@ import {
   maintenanceValidate
 } from './maintenance'
 import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth'
-import { modsCreate, modsCurseforge, modsDelete, modsImport, modsNotes, modsSource, modsVersions } from './mods'
+import { contentCreate, contentCurseforge, contentDelete, contentImport, contentMinecraft, contentNotes, contentSource, contentVersions, contentZip } from './content'
 import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
@@ -36,13 +36,15 @@ export const COMMANDS = [
   versionsFile,
   versionsStrip,
   versionsDelete,
-  modsCreate,
-  modsVersions,
-  modsImport,
-  modsSource,
-  modsNotes,
-  modsDelete,
-  modsCurseforge,
+  contentCreate,
+  contentVersions,
+  contentImport,
+  contentZip,
+  contentSource,
+  contentMinecraft,
+  contentNotes,
+  contentDelete,
+  contentCurseforge,
   updatesCheck,
   updatesChangelog,
   updatesApply,

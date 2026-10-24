@@ -250,9 +250,27 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
   ipcMain.handle('studio:linkModSource', (_e, folder: string, mode: 'pick' | null) =>
     action(async () => {
       if (mode !== 'pick') return service.linkModSource(folder, null)
-      const source = await pickModSource('Dossier où le projet du mod dépose ses jars')
+      const source = await pickModSource('Dossier où le contenu est créé (jars d’un mod, dossier d’un pack)')
       if (source) await service.linkModSource(folder, source)
     })
+  )
+  // Packs de ressources et shaders : depuis le dossier du pack en cours de création, ou depuis un zip.
+  ipcMain.handle('studio:createPackContent', (_e, kind: string, from: string) =>
+    outcomeOf(async () => {
+      const type = kind === 'shader' ? 'shader' : 'resourcepack'
+      const label = type === 'shader' ? 'du shader' : 'du pack de ressources'
+      const options: Electron.OpenDialogOptions =
+        from === 'zip'
+          ? { title: `Zip ${label}`, properties: ['openFile'], filters: [{ name: 'Zip', extensions: ['zip'] }] }
+          : { title: `Dossier ${label} en cours de création`, properties: ['openDirectory'] }
+      const result = parent() ? await dialog.showOpenDialog(parent()!, options) : await dialog.showOpenDialog(options)
+      const source = result.canceled ? null : (result.filePaths[0] ?? null)
+      return { folder: source ? await service.createPackContent(type, source) : null }
+    })
+  )
+  ipcMain.handle('studio:zipContentVersion', (_e, folder: string) => outcomeOf(async () => ({ number: await service.zipContentVersion(folder) })))
+  ipcMain.handle('studio:setMinecraftVersions', (_e, folder: string, versions: string[]) =>
+    outcomeOf(async () => ({ versions: await service.setMinecraftVersions(folder, Array.isArray(versions) ? versions.filter((v) => typeof v === 'string') : []) }))
   )
   ipcMain.handle('studio:deleteReleases', (_e, tags: string[]) => unpublished(() => service.deleteReleases(tags)))
 

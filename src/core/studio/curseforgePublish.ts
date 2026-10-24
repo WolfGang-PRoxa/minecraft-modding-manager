@@ -158,6 +158,8 @@ export async function projectVersions(client: CurseForgeClient, curseforge: Pack
 export interface ModUploadFile {
   path: string
   fileName: string
+  /** Nom affiché sur CurseForge (contentDisplayName). */
+  displayName: string
   loaders: string[]
   minecraftVersions: string[]
   side: 'client' | 'server' | 'both'
@@ -176,6 +178,11 @@ export interface ModPublishInput {
 
 /** Nom affiché d'un jar sur CurseForge : son nom sans « .jar », comme à la mise en ligne depuis le site. */
 export const modDisplayName = (fileName: string) => fileName.replace(/\.jar$/i, '')
+
+/** Nom affiché d'un fichier : celui du jar pour un mod, « <nom> v<N> » pour un pack numéroté par le Studio. */
+export function contentDisplayName(kind: ContentKind, name: string, version: string, fileName: string): string {
+  return CONTENT_KINDS[kind].versioning === 'number' ? `${name} v${version}` : modDisplayName(fileName)
+}
 
 /**
  * Projets CurseForge des dépendances obligatoires : un mod dont l'identifiant est aussi un slug de mod sur
@@ -202,9 +209,11 @@ export async function publishModVersion(
 ): Promise<{ fileIds: number[]; unknownDependencies: string[] }> {
   if (input.curseforge.files[input.version]) throw new StudioError(`La version ${input.version} est déjà sur CurseForge.`)
   for (const file of input.files) {
-    const same = input.published.find((v) => v.displayName === modDisplayName(file.fileName))
-    if (same) throw new StudioError(`${file.fileName} est déjà sur CurseForge (« ${same.displayName} ») : publie une nouvelle version du mod.`)
-    if (!file.minecraftVersions.length) throw new StudioError(`${file.fileName} ne dit pas pour quelle version de Minecraft il est fait : CurseForge l’exige.`)
+    const same = input.published.find((v) => v.displayName === file.displayName)
+    if (same) throw new StudioError(`${file.fileName} est déjà sur CurseForge (« ${same.displayName} ») : publie une nouvelle version.`)
+    if (!file.minecraftVersions.length) {
+      throw new StudioError(`${file.fileName} ne dit pas pour quelle version de Minecraft il est fait : CurseForge l’exige. Donne-les dans « Versions de Minecraft ».`)
+    }
   }
   onStep('Dépendances sur CurseForge')
   const { slugs, unknown } = await dependencyProjects(client, input.files.flatMap((f) => f.dependencies))
@@ -216,7 +225,7 @@ export async function publishModVersion(
     const relations = slugs.filter((slug) => file.dependencies.some((d) => d.toLowerCase().replace(/_/g, '-') === slug || d === slug))
     fileIds.push(
       await uploader.upload(input.curseforge.projectId, file.path, {
-        displayName: modDisplayName(file.fileName),
+        displayName: file.displayName,
         changelog: input.notes.trim() || `Version ${input.version}`,
         releaseType: input.releaseType,
         gameVersions,

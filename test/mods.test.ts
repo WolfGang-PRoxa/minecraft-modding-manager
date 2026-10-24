@@ -118,9 +118,9 @@ describe('mods dans le Studio', () => {
 
     const mod = (await service.overview()).packs.find((p) => p.folder === folder)!
     assert.deepEqual(mod.errors, [])
-    assert.equal(mod.modVersions.length, 1)
-    const [file] = mod.modVersions[0].files
-    assert.equal(mod.modVersions[0].version, '1.2.0-26.3')
+    assert.equal(mod.contentVersions.length, 1)
+    const [file] = mod.contentVersions[0].files
+    assert.equal(mod.contentVersions[0].version, '1.2.0-26.3')
     assert.deepEqual(file.loaders, ['fabric'])
     assert.deepEqual(file.minecraftVersions, ['26.3'])
     assert.deepEqual(file.dependencies, ['fabric-api', 'fabric-language-kotlin'])
@@ -160,7 +160,7 @@ describe('mods dans le Studio', () => {
 
     assert.deepEqual((await service.freshPlan()).view.actions, [])
     const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
-    assert.deepEqual(mod.modVersions.map((v) => v.remote), ['published', 'published'])
+    assert.deepEqual(mod.contentVersions.map((v) => v.remote), ['published', 'published'])
   })
 
   it('ne renvoie que le texte de la release quand les notes changent', async () => {
@@ -209,7 +209,7 @@ describe('mods dans le Studio', () => {
     assert.equal(saved.curseforge.files['1.2.0-26.3'], result.fileIds[0])
     await assert.rejects(() => service.publishModToCurseForge('LMA', '1.2.0-26.3', 'release', noProgress), /déjà sur CurseForge/)
     const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
-    assert.equal(mod.modVersions[0].curseforgeFileId, result.fileIds[0])
+    assert.equal(mod.contentVersions[0].curseforgeFileId, result.fileIds[0])
   })
 
   it('vérifie le jeton Modrinth', async () => {
@@ -244,7 +244,7 @@ describe('mods dans le Studio', () => {
     assert.deepEqual(sent.files.map((f) => f.name), ['lma-26.3-1.2.0.jar'])
     await assert.rejects(() => service.publishModToModrinth('LMA', '1.2.0-26.3', 'release', noProgress), /déjà sur Modrinth/)
     const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
-    assert.equal(mod.modVersions[0].modrinthVersionId, result.versionId)
+    assert.equal(mod.contentVersions[0].modrinthVersionId, result.versionId)
     assert.equal((await service.modrinthVersions('LMA'))[0].version, '1.2.0-26.3')
   })
 

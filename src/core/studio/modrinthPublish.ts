@@ -1,18 +1,20 @@
 // Publication d'un mod sur Modrinth : lien avec son projet (créé une fois sur le site), versions du projet, mise en
 // ligne d'une version avec ses jars, ses versions de Minecraft, ses chargeurs et ses dépendances obligatoires.
+import { CONTENT_KINDS, type ContentKind } from '../../shared/content'
 import type { ModrinthVersionView, PackModrinth } from '../../shared/studio'
 import type { ModrinthClient, MrVersion } from '../modrinth'
 import { StudioError } from './analyze'
 
 /** Identifiant ou slug d'un projet d'après sa page (modrinth.com/mod/<slug>), son slug ou son identifiant. */
-export async function resolveModrinthProject(client: ModrinthClient, ref: string): Promise<PackModrinth> {
+export async function resolveModrinthProject(client: ModrinthClient, ref: string, kind: ContentKind = 'mod'): Promise<PackModrinth> {
+  const type = CONTENT_KINDS[kind].modrinth
   const text = ref.trim()
   const key = /modrinth\.com\/[a-z]+\/([^/?#]+)/i.exec(text)?.[1] ?? text
   if (!key) throw new StudioError('Donne l’adresse du projet Modrinth, son slug ou son identifiant.')
   const project = await client.getProject(key)
   if (!project) throw new StudioError(`Aucun projet Modrinth « ${key} » (s’il n’est pas encore approuvé, le jeton doit pouvoir lire tes projets).`)
-  if (project.project_type !== 'mod') throw new StudioError(`« ${project.title} » n’est pas un mod sur Modrinth (${project.project_type}).`)
-  return { projectId: project.id, slug: project.slug, url: `https://modrinth.com/mod/${project.slug}`, versions: {} }
+  if (project.project_type !== type) throw new StudioError(`« ${project.title} » n’est pas un ${CONTENT_KINDS[kind].label} sur Modrinth (${project.project_type}).`)
+  return { projectId: project.id, slug: project.slug, url: `https://modrinth.com/${type}/${project.slug}`, versions: {} }
 }
 
 export interface ModrinthUploadFile {
@@ -24,6 +26,7 @@ export interface ModrinthUploadFile {
 }
 
 export interface ModrinthPublishInput {
+  /** Nom de la version sur Modrinth. */
   name: string
   version: string
   files: ModrinthUploadFile[]
@@ -54,20 +57,21 @@ export async function publishToModrinth(
 ): Promise<{ versionId: string; unknownDependencies: string[] }> {
   if (input.modrinth.versions[input.version]) throw new StudioError(`La version ${input.version} est déjà sur Modrinth.`)
   const same = input.published.find((v) => v.version_number === input.version || input.files.some((f) => v.files.some((x) => x.filename === f.fileName)))
-  if (same) throw new StudioError(`La version ${input.version} est déjà sur Modrinth (« ${same.name} ») : publie une nouvelle version du mod.`)
+  if (same) throw new StudioError(`La version ${input.version} est déjà sur Modrinth (« ${same.name} ») : publie une nouvelle version.`)
   const gameVersions = [...new Set(input.files.flatMap((f) => f.minecraftVersions))]
-  if (!gameVersions.length) throw new StudioError('Ses jars ne disent pas pour quelle version de Minecraft ils sont faits : Modrinth l’exige.')
+  if (!gameVersions.length) throw new StudioError('Ses fichiers ne disent pas pour quelle version de Minecraft ils sont faits : Modrinth l’exige. Donne-les dans « Versions de Minecraft ».')
   onStep('Dépendances sur Modrinth')
   const { projects, unknown } = await modrinthDependencies(client, input.files.flatMap((f) => f.dependencies))
   onStep('Envoi vers Modrinth')
   const created = await client.createVersion({
     projectId: input.modrinth.projectId,
-    name: `${input.name} ${input.version}`,
+    name: input.name,
     versionNumber: input.version,
     changelog: input.notes.trim() || `Version ${input.version}`,
     versionType: input.releaseType,
     gameVersions,
-    loaders: [...new Set(input.files.flatMap((f) => f.loaders))],
+    // Un pack de ressources n'a pas de chargeur : pour Modrinth, c'est « minecraft ».
+    loaders: [...new Set(input.files.flatMap((f) => f.loaders))].concat(input.files.every((f) => !f.loaders.length) ? ['minecraft'] : []),
     dependencies: projects,
     files: input.files.map((f) => f.path)
   })

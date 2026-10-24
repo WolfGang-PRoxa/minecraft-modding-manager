@@ -1,7 +1,9 @@
+import { copyFile, rm, stat } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 import { APP_REPO } from '../../shared/config'
 import { CONTENT_KINDS, contentTag, parseContentTag } from '../../shared/content'
 import { copyVersions, extractModIcon, sourceVersions, type SourceVersion } from './mods'
+import { extractPackIcon, packMarker, readPackZip } from './packFiles'
 import { modrinthVersionViews, publishToModrinth, resolveModrinthProject } from './modrinthPublish'
 import type { ModrinthClient } from '../modrinth'
 import { compareVersions, modpackTag } from '../../shared/releases'
@@ -42,7 +44,7 @@ import { forgetTrial } from '../maintenance/state'
 import { isGameRunningFrom, withCurseForgeClosed } from '../curseforge'
 import type { CurseForgeClient } from '../curseforgeApi'
 import type { CurseForgeUploader } from '../curseforgeUpload'
-import { exportToFile, inspectProject, modDisplayName, projectVersions, publishModVersion, publishVersion, resolveProject } from './curseforgePublish'
+import { contentDisplayName, exportToFile, inspectProject, projectVersions, publishModVersion, publishVersion, resolveProject } from './curseforgePublish'
 import type { Journal } from '../journal'
 import { listGroups, listProfiles, modsOf, readProfile } from '../profiles'
 import { applyToTrial, promoteTrial, trialPathOf } from '../trialUpdates'
@@ -53,7 +55,7 @@ import { checkProfileFiles } from '../gameTests/staticChecks'
 import { checkUpdates } from '../updates'
 import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, MAX_ASSET_SIZE, StudioError, type CachedAnalysis } from './analyze'
-import { findExcludedInZip, stripExcludedFromZip, zipInstance } from './archive'
+import { findExcludedInZip, stripExcludedFromZip, zipFolder, zipInstance } from './archive'
 import { previewZipEntry, readZipContents } from './contents'
 import { GitHubClient } from './githubApi'
 import { buildLibrary } from './library'
@@ -64,6 +66,7 @@ import {
   importFiles,
   loadPackMeta,
   nextVersionNumber,
+  normalizeMinecraftVersions,
   normalizePackSettings,
   normalizePackUpdates,
   planRanger,
@@ -407,7 +410,8 @@ export class StudioService {
       modrinth: pack.meta.modrinth,
       updates: pack.meta.updates,
       source: pack.meta.source,
-      modVersions: [...pack.modVersions].reverse().map((v) => {
+      minecraftVersions: pack.meta.minecraftVersions,
+      contentVersions: [...pack.contentVersions].reverse().map((v) => {
         const status = plan?.statuses.get(contentTag(pack.meta.type, pack.meta.id, v.version))
         return {
           version: v.version,
@@ -608,7 +612,7 @@ export class StudioService {
   deleteModVersion(folder: string, version: string): Promise<PublishResult> {
     return this.unpublish(`la suppression de la version ${version} de ${folder}`, true, async (workspace) => {
       const pack = workspace.packs.find((p) => p.folder === folder)
-      const local = pack?.modVersions.find((v) => v.version === version)
+      const local = pack?.contentVersions.find((v) => v.version === version)
       if (!pack || !local) throw new StudioError(`La version ${version} de ${folder} est introuvable : le dossier a changé.`)
       if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
       for (const file of local.files) await this.trash(file.path)
@@ -741,12 +745,12 @@ export class StudioService {
         const available = await sourceVersions(sourceDir, null)
         if (!available.length) throw new StudioError(`Aucun jar de mod dans ${sourceDir}.`)
         const latest = available[0].files[0].analysis
-        const others = available.filter((v) => v.files.some((f) => f.analysis.modId !== latest.modId))
-        if (others.length) throw new StudioError(`Ce dossier contient plusieurs mods (${[...new Set(available.flatMap((v) => v.files.map((f) => f.analysis.modId)))].join(', ')}) : choisis le dossier d’un seul mod.`)
+        const others = available.filter((v) => v.files.some((f) => f.analysis.contentId !== latest.contentId))
+        if (others.length) throw new StudioError(`Ce dossier contient plusieurs mods (${[...new Set(available.flatMap((v) => v.files.map((f) => f.analysis.contentId)))].join(', ')}) : choisis le dossier d’un seul mod.`)
         const chosen = versions?.length ? available.filter((v) => versions.includes(v.version)) : [available[0]]
         if (!chosen.length) throw new StudioError(`Aucune de ces versions dans ${sourceDir} : ${versions!.join(', ')}.`)
-        const id = latest.modId.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
-        const folder = await createPack((await this.scan())!, latest.name ?? latest.modId, { type: 'mod', id, description: latest.description ?? '', source: sourceDir })
+        const id = latest.contentId.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '')
+        const folder = await createPack((await this.scan())!, latest.name ?? latest.contentId, { type: 'mod', id, description: latest.description ?? '', source: sourceDir })
         await copyVersions(join(this.requireWorkspace(), folder), chosen)
         // L'icône du mod devient son image (sans elle, une vignette est dessinée d'après son nom).
         await extractModIcon(available[0].files[0].path, join(this.requireWorkspace(), folder)).catch(() => false)
@@ -762,8 +766,8 @@ export class StudioService {
     if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
     if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
     if (!pack.meta.source) throw new StudioError(`${pack.meta.name} n’est lié à aucun dossier : lie-le au dossier où son projet dépose ses jars.`)
-    const present = new Set(pack.modVersions.map((v) => v.version))
-    const modId = pack.modVersions[0]?.files[0]?.analysis.modId ?? null
+    const present = new Set(pack.contentVersions.map((v) => v.version))
+    const modId = pack.contentVersions[0]?.files[0]?.analysis.contentId ?? null
     return (await sourceVersions(pack.meta.source, modId)).filter((v) => !present.has(v.version))
   }
 
@@ -787,9 +791,74 @@ export class StudioService {
     if (sourceDir && !(await pathExists(sourceDir))) throw new StudioError(`Le dossier ${sourceDir} est introuvable.`)
     await this.logged(sourceDir ? `le lien de ${folder} au dossier ${sourceDir}` : `le retrait du dossier lié de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-      if (meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
+      if (meta.type === 'modpack') throw new StudioError(`${folder} est un modpack : sa source est un profil CurseForge.`)
       await writePackFile(dir, { ...meta, source: sourceDir })
     })
+  }
+
+  /**
+   * Crée un pack de ressources ou un shader : depuis le dossier du pack en cours de création (il reste lié, et sa v1
+   * en est zippée), ou depuis un zip (copié comme v1). Nom d'après le dossier ou le zip ; description et icône
+   * d'après pack.mcmeta et pack.png.
+   */
+  createPackContent(kind: 'resourcepack' | 'shader', source: string): Promise<string> {
+    return this.exclusive(
+      `la création d’un ${CONTENT_KINDS[kind].label} depuis ${source}`,
+      async () => {
+        const root = this.requireWorkspace()
+        const info = await stat(source).catch(() => null)
+        if (!info) throw new StudioError(`${source} est introuvable.`)
+        const zipped = info.isFile()
+        if (zipped && !/\.zip$/i.test(source)) throw new StudioError('Choisis le dossier du pack, ou son zip.')
+        const name = basename(source).replace(/\.zip$/i, '').replace(/[_]+/g, ' ').trim()
+        const folder = await createPack((await this.scan())!, name, { type: kind, source: zipped ? null : source })
+        const dir = join(root, folder)
+        const target = join(dir, versionFileName(folder, 1))
+        try {
+          if (zipped) await copyFile(source, target)
+          else await zipFolder(source, target, packMarker(kind))
+          const read = await readPackZip(target, kind)
+          await writePackFile(dir, { ...(await loadPackMeta(root, folder)).meta, lastVersion: 1, description: read.description ?? '' })
+          if (kind === 'resourcepack') await extractPackIcon(target, dir).catch(() => false)
+        } catch (err) {
+          // Pas un pack : le dossier tout juste créé ne doit pas rester.
+          await rm(dir, { recursive: true, force: true })
+          throw err
+        }
+        return folder
+      },
+      (folder) => ({ ok: true, detail: folder })
+    )
+  }
+
+  /** Zippe le dossier lié d'un pack de ressources ou d'un shader comme sa version suivante. */
+  zipContentVersion(folder: string): Promise<number> {
+    return this.exclusive(
+      `la création de la version suivante de ${folder}`,
+      async () => {
+        const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
+        if (!pack) throw new StudioError(`${folder} est introuvable.`)
+        if (pack.meta.type !== 'resourcepack' && pack.meta.type !== 'shader') throw new StudioError(`${folder} n’est ni un pack de ressources ni un shader.`)
+        if (!pack.meta.source) throw new StudioError(`${pack.meta.name} n’est lié à aucun dossier : lie-le au dossier du pack en cours de création.`)
+        if (pack.packFileError) throw new StudioError(pack.packFileError)
+        const number = nextVersionNumber(pack)
+        await zipFolder(pack.meta.source, join(pack.dir, versionFileName(pack.folder, number)), packMarker(pack.meta.type))
+        await writePackFile(pack.dir, { ...pack.meta, lastVersion: number })
+        return number
+      },
+      (number) => ({ ok: true, detail: `v${number}` })
+    )
+  }
+
+  /** Versions de Minecraft d'un pack de ressources ou d'un shader, à la place de celles du zip ([] : celles du zip). */
+  async setMinecraftVersions(folder: string, versions: string[]): Promise<string[]> {
+    const normalized = normalizeMinecraftVersions(versions)
+    await this.logged(`les versions de Minecraft de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      if (meta.type !== 'resourcepack' && meta.type !== 'shader') throw new StudioError(`${folder} n’est ni un pack de ressources ni un shader.`)
+      await writePackFile(dir, { ...meta, minecraftVersions: normalized })
+    })
+    return normalized
   }
 
   /** Crée un modpack depuis un profil CurseForge, avec sa v1 : le profil devient sa source. */
@@ -860,7 +929,7 @@ export class StudioService {
   async linkCurseForge(folder: string, ref: string): Promise<{ projectId: number; name: string; highestVersion: number; overrides: string[] }> {
     const client = await this.curseForge()
     const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
-    if (current.type !== 'modpack' && current.type !== 'mod') throw new StudioError(`Les ${CONTENT_KINDS[current.type].plural} ne se publient pas encore sur CurseForge.`)
+    if (current.type === 'plugin') throw new StudioError(`Les ${CONTENT_KINDS[current.type].plural} ne se publient pas encore sur CurseForge.`)
     const project = await resolveProject(client, ref, current.type)
     // Un mod n'a ni numérotation « _V<N> » ni fichiers joints : seul le lien compte.
     const { highestVersion, overrides } = current.type === 'modpack' ? await inspectProject(client, project.id) : { highestVersion: 0, overrides: [] }
@@ -906,8 +975,8 @@ export class StudioService {
   /** Lie un mod à son projet Modrinth (adresse, slug ou identifiant). */
   async linkModrinth(folder: string, ref: string): Promise<{ projectId: string; slug: string; url: string }> {
     const { meta: current } = await loadPackMeta(this.requireWorkspace(), folder)
-    if (current.type !== 'mod') throw new StudioError(`Seuls les mods se publient sur Modrinth pour l’instant : ${folder} n’en est pas un.`)
-    const project = await resolveModrinthProject(await this.modrinth(), ref)
+    if (current.type === 'modpack' || current.type === 'plugin') throw new StudioError(`Les ${CONTENT_KINDS[current.type].plural} ne se publient pas encore sur Modrinth.`)
+    const project = await resolveModrinthProject(await this.modrinth(), ref, current.type)
     await this.logged(`le lien de ${folder} au projet Modrinth ${project.slug}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
       const versions = meta.modrinth?.projectId === project.projectId ? meta.modrinth.versions : {}
@@ -929,19 +998,19 @@ export class StudioService {
         this.requireWorkspace()
         const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
         if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
-        if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
-        if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
+        if (pack.meta.type === 'modpack') throw new StudioError(`${folder} est un modpack.`)
+        if (pack.errors.length) throw new StudioError(`Corrige d’abord ${pack.meta.name} : ${pack.errors[0]}`)
         const modrinth = pack.meta.modrinth
         if (!modrinth) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet Modrinth.`)
-        const local = pack.modVersions.find((v) => v.version === version)
+        const local = pack.contentVersions.find((v) => v.version === version)
         if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
-        const newer = pack.modVersions.filter((v) => modrinth.versions[v.version] && compareVersions(v.version, version) > 0)
+        const newer = pack.contentVersions.filter((v) => modrinth.versions[v.version] && compareVersions(v.version, version) > 0)
         if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur Modrinth : une version plus ancienne n’y a plus sa place.`)
         const client = await this.modrinth()
         const result = await publishToModrinth(
           client,
           {
-            name: pack.meta.name,
+            name: CONTENT_KINDS[pack.meta.type].versioning === 'number' ? `${pack.meta.name} v${version}` : `${pack.meta.name} ${version}`,
             version,
             files: local.files.map((f) => ({
               path: f.path,
@@ -970,7 +1039,7 @@ export class StudioService {
     const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
     if (!meta.modrinth) return []
     const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
-    const localFiles = new Map((pack?.modVersions ?? []).flatMap((v) => v.files.map((f) => [f.fileName, v.version] as const)))
+    const localFiles = new Map((pack?.contentVersions ?? []).flatMap((v) => v.files.map((f) => [f.fileName, v.version] as const)))
     return modrinthVersionViews(await (await this.modrinth()).projectVersions(meta.modrinth.projectId), meta.modrinth, localFiles)
   }
 
@@ -1042,13 +1111,13 @@ export class StudioService {
         if (!this.options.getCurseForgeUploader) throw new StudioError('Publication sur CurseForge impossible depuis ce programme.')
         const pack = (await this.scan())!.packs.find((p) => p.folder === folder)
         if (!pack) throw new StudioError(`Le mod ${folder} est introuvable.`)
-        if (pack.meta.type !== 'mod') throw new StudioError(`${folder} n’est pas un mod.`)
-        if (pack.errors.length) throw new StudioError(`Corrige d’abord ce mod : ${pack.errors[0]}`)
+        if (pack.meta.type === 'modpack') throw new StudioError(`${folder} est un modpack.`)
+        if (pack.errors.length) throw new StudioError(`Corrige d’abord ${pack.meta.name} : ${pack.errors[0]}`)
         const curseforge = pack.meta.curseforge
         if (!curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)
-        const local = pack.modVersions.find((v) => v.version === version)
+        const local = pack.contentVersions.find((v) => v.version === version)
         if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
-        const newer = pack.modVersions.filter((v) => curseforge.files[v.version] && compareVersions(v.version, version) > 0)
+        const newer = pack.contentVersions.filter((v) => curseforge.files[v.version] && compareVersions(v.version, version) > 0)
         if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur CurseForge : une version plus ancienne n’y a plus sa place.`)
         const client = await this.curseForge()
         const result = await publishModVersion(
@@ -1059,6 +1128,7 @@ export class StudioService {
             files: local.files.map((f) => ({
               path: f.path,
               fileName: f.fileName,
+              displayName: contentDisplayName(pack.meta.type, pack.meta.name, version, f.fileName),
               loaders: f.analysis.loaders,
               minecraftVersions: f.analysis.minecraftVersions,
               side: f.analysis.side,
@@ -1088,9 +1158,11 @@ export class StudioService {
     const { meta } = await loadPackMeta(this.requireWorkspace(), folder)
     if (!meta.curseforge) return []
     const versions = await projectVersions(await this.curseForge(), meta.curseforge)
-    if (meta.type !== 'mod') return versions
+    if (meta.type === 'modpack') return versions
     const pack = (await this.scan())?.packs.find((p) => p.folder === folder)
-    const byName = new Map((pack?.modVersions ?? []).flatMap((v) => v.files.map((f) => [modDisplayName(f.fileName), v.version] as const)))
+    const byName = new Map(
+      (pack?.contentVersions ?? []).flatMap((v) => v.files.map((f) => [contentDisplayName(meta.type, meta.name, v.version, f.fileName), v.version] as const))
+    )
     const sent = new Map(Object.entries(meta.curseforge.files).map(([version, id]) => [id, version]))
     return versions.map((v) => ({ ...v, number: null, version: sent.get(v.fileId) ?? byName.get(v.displayName) ?? null }))
   }

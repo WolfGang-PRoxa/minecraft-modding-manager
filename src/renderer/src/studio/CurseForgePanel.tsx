@@ -2,6 +2,7 @@
 // GitHub ou non), versions déjà sur le projet et leur état, et mise en ligne d'une version.
 import { useEffect, useMemo, useState } from 'react'
 import { ExternalLink, Link2, SlidersHorizontal, Upload } from 'lucide-react'
+import { CONTENT_KINDS } from '../../../shared/content'
 import type { CurseForgeVersion, PackCurseForge, PackView, VersionView } from '../../../shared/studio'
 import { Button, IconButton } from '../components/Button'
 import { Toggle } from '../components/Toggle'
@@ -9,6 +10,9 @@ import { formatDate } from '../lib/format'
 import { Field, Modal, Spinner, TextArea, TextInput } from './Modal'
 import { TestsPill } from './ProfileTests'
 import { openLink, useStudio } from './store'
+
+/** Chemin des pages de projet CurseForge de chaque type. */
+const CF_PATHS: Record<string, string> = { modpack: 'modpacks', mod: 'mc-mods', resourcepack: 'texture-packs', shader: 'shaders', plugin: 'bukkit-plugins' }
 
 function usePack(folder: string) {
   return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
@@ -265,7 +269,7 @@ export function CurseForgeDialog({ folder }: { folder: string }) {
       subtitle={
         pack.curseforge
           ? `« ${pack.name} » est lié à son projet CurseForge.`
-          : `Lie ce ${pack.type === 'mod' ? 'mod' : 'modpack'} au projet que tu as créé sur CurseForge.`
+          : `Lie ce ${CONTENT_KINDS[pack.type].label} au projet que tu as créé sur CurseForge.`
       }
       onClose={close}
       closable={!busy}
@@ -295,15 +299,15 @@ export function CurseForgeDialog({ folder }: { folder: string }) {
           <Field
             label="Projet CurseForge"
             hint={
-              pack.type === 'mod'
-                ? 'L’adresse de sa page (curseforge.com/minecraft/mc-mods/…), ou son numéro. Les versions déjà mises en ligne depuis le site sont reconnues au nom de leur fichier.'
+              pack.type !== 'modpack'
+                ? `L’adresse de sa page (curseforge.com/minecraft/${CF_PATHS[pack.type]}/…), ou son numéro. Les versions déjà mises en ligne depuis le site sont reconnues à leur nom.`
                 : 'L’adresse de sa page (curseforge.com/minecraft/modpacks/…), ou son numéro. Pour un projet qui a déjà des versions, la numérotation continue après la plus haute, et les fichiers joints sont ceux de sa dernière version.'
             }
           >
             <TextInput
               value={ref}
               onChange={(e) => setRef(e.target.value)}
-              placeholder={`https://www.curseforge.com/minecraft/${pack.type === 'mod' ? 'mc-mods' : 'modpacks'}/…`}
+              placeholder={`https://www.curseforge.com/minecraft/${CF_PATHS[pack.type]}/…`}
               autoFocus
             />
           </Field>

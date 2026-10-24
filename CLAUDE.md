@@ -223,14 +223,23 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `curseforgePublish.ts` : nom affiché = jar sans `.jar`, versions `Client` / `Server` selon le côté, dépendances
     par slug = id du mod, `searchBySlug` classe 6). `computePlan` : étapes `create-content` / `update-content`
     (`mod-<id>-v<version>`, jars + image + `content.json`), retrait des releases `mod-` sous la même règle que `pack-`
-    (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx` ; commandes `mods *` (`commands/mods.ts`).
+    (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx`.
   - Modrinth (mods seulement) : `core/modrinth.ts` (jeton d'accès personnel chiffré `modrinth-auth.json`, ordre
     enregistré > `MODRINTH_TOKEN` > `.env`, vérifié par `GET /v2/user` ; `ModrinthClient` : en-tête `Authorization`
     sans « Bearer », `User-Agent` obligatoire ; `MPD_MODRINTH_API` en test) et `studio/modrinthPublish.ts`
     (`resolveModrinthProject` refuse un autre type que `mod`, `publishToModrinth` : version `<nom> <version>`,
     dépendances par slug = id du mod). `pack.json` `modrinth` (`projectId`, `slug`, `url`, `versions`). Service
     `linkModrinth`, `publishModToModrinth`, `modrinthVersions` ; `updatePublishTargets({ unlinkModrinth })`. Interface
-    `studio/ModrinthPanel.tsx`, Paramètres → Compte Modrinth ; commandes `modrinth *`. Faux serveur
+    `studio/ModrinthPanel.tsx`, Paramètres → Compte Modrinth ; commandes `modrinth *`.
+  - `packFiles.ts` : packs de ressources et shaders (`type: 'resourcepack' | 'shader'`), versions numérotées
+    (`<Dossier>-v<N>.zip`, zips non numérotés rangés par `planRanger` comme ceux d'un modpack). `readPackZip` (`pack.mcmeta`
+    à la racine ou sous un dossier ; shader : dossier `shaders/`), `packFormats` (`min_format`/`max_format`,
+    `supported_formats`, `pack_format`) et `RESOURCE_PACK_FORMATS` (formats → versions de Minecraft, d'après
+    minecraft.wiki, à compléter à chaque version). `pack.json` `minecraftVersions` remplace celles du zip (obligatoire
+    pour un shader avant CurseForge / Modrinth). Service : `createPackContent` (dossier lié → v1 zippée par `zipFolder`,
+    ou zip copié), `zipContentVersion`, `setMinecraftVersions`. Les vues et le moteur parlent de `contentVersions` /
+    `ContentVersionView` pour mods, packs et shaders ; `ModCard.tsx` est la carte de ces trois types
+    (`KIND_UI`, `NewContentDialog`) ; commandes `content *` (`commands/content.ts`). Faux serveur
     `test/support/fakeModrinth.ts`. Le slug `lma` est pris sur Modrinth (modpack d'un autre). `pack.json` porte aussi les réglages des versions (`exclude`, `disabledMods`,
     `keepPlayerConfigs`, écrits seulement s'ils servent ; `normalizePackSettings`).
   - `analyze.ts` : validation d'un zip (instance CurseForge, refus des exports `manifest.json`), SHA-256, empreinte

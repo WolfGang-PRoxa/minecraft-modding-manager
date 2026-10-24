@@ -138,7 +138,7 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const run = useStudio((s) => s.run)
-  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : pack?.modVersions.find((v) => v.version === version)
+  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : pack?.contentVersions.find((v) => v.version === version)
   const label = typeof version === 'number' ? `v${version}` : `version ${version}`
   const [notes, setNotes] = useState(current?.notes ?? '')
   const [preview, setPreview] = useState(false)

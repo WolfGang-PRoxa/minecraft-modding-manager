@@ -9,7 +9,7 @@ import {
   parseContentTag,
   type ContentKind,
   type ContentManifest,
-  type ModLoader
+  type ContentLoader
 } from '../../shared/content'
 import { formatLoader } from '../../shared/format'
 import {
@@ -31,7 +31,7 @@ import {
 import type { ModpackManifest } from '../../shared/types'
 import { describeError, type AnalyzedMod, type CachedAnalysis } from './analyze'
 import { CancelledError, GitHubError, type GitHubClient, type UploadSource } from './githubApi'
-import type { LocalModVersion } from './mods'
+import type { LocalContentVersion } from './mods'
 import type { LocalPack, LocalVersion, LocalWorkspace } from './workspace'
 
 // ---------------------------------------------------------------------------------------------
@@ -189,6 +189,8 @@ function desiredFor(pack: LocalPack, version: LocalVersion & { analysis: CachedA
 
 /** Un fichier à joindre à la release d'un contenu. */
 export interface ContentAsset {
+  /** `file` : un fichier de la version (jar, zip) ; `cover` : l'image. */
+  role: 'file' | 'cover'
   name: string
   path: string
   size: number
@@ -199,7 +201,7 @@ export interface ContentAsset {
 /** Ce qui doit exister sur GitHub pour une version d'un contenu qui n'est pas un modpack (un mod…). */
 export interface ContentDesired {
   pack: LocalPack
-  version: LocalModVersion
+  version: LocalContentVersion
   tag: string
   releaseName: string
   body: string
@@ -209,15 +211,15 @@ export interface ContentDesired {
   manifest: ContentManifest
 }
 
-const JAR_TYPE = 'application/java-archive'
+const FILE_TYPES: Record<string, string> = { '.jar': 'application/java-archive', '.zip': 'application/zip' }
 
 /** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
-export function shownLoaders(loaders: ModLoader[]): string[] {
+export function shownLoaders(loaders: ContentLoader[]): string[] {
   const unique = [...new Set(loaders)]
   return unique.filter((l) => !(l === 'quilt' && unique.includes('fabric'))).map((l) => LOADER_LABELS[l])
 }
 
-function contentDesiredFor(pack: LocalPack, version: LocalModVersion, author: string): ContentDesired {
+function contentDesiredFor(pack: LocalPack, version: LocalContentVersion, author: string): ContentDesired {
   const { id, name, description, notes } = pack.meta
   const coverName = pack.cover ? `cover${extname(pack.cover.fileName).toLowerCase()}` : null
   const files = version.files.map((f) => ({
@@ -232,15 +234,23 @@ function contentDesiredFor(pack: LocalPack, version: LocalModVersion, author: st
   const loaders = [...new Set(files.flatMap((f) => f.loaders))]
   const footer = [minecraftVersions.length ? `Minecraft ${minecraftVersions.join(', ')}` : '', shownLoaders(loaders).join(', ')].filter(Boolean).join(' · ')
   const text = (notes[version.version] ?? '').trim()
-  const assets: ContentAsset[] = version.files.map((f) => ({ name: f.fileName, path: f.path, size: f.size, sha256: f.analysis.sha256, type: JAR_TYPE }))
+  const assets: ContentAsset[] = version.files.map((f) => ({
+    role: 'file',
+    name: f.fileName,
+    path: f.path,
+    size: f.size,
+    sha256: f.analysis.sha256,
+    type: FILE_TYPES[extname(f.fileName).toLowerCase()] ?? 'application/octet-stream'
+  }))
   if (pack.cover && coverName) {
-    assets.push({ name: coverName, path: pack.cover.path, size: pack.cover.size, sha256: pack.cover.sha256, type: IMAGE_TYPES[extname(coverName)] ?? 'image/png' })
+    assets.push({ role: 'cover', name: coverName, path: pack.cover.path, size: pack.cover.size, sha256: pack.cover.sha256, type: IMAGE_TYPES[extname(coverName)] ?? 'image/png' })
   }
   return {
     pack,
     version,
     tag: contentTag(pack.meta.type, id, version.version),
-    releaseName: `${name} ${version.version}`,
+    // Version numérotée par le Studio (pack de ressources, shader) : « v3 », comme un modpack.
+    releaseName: CONTENT_KINDS[pack.meta.type].versioning === 'number' ? `${name} v${version.version}` : `${name} ${version.version}`,
     body: `${text}${text && footer ? '\n\n---\n' : ''}${footer ? `_${footer}_` : ''}`,
     assets,
     manifest: {
@@ -395,7 +405,7 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
     if (pack.meta.type !== 'modpack') {
       if (!pack.meta.github) blockedContent.add(`${pack.meta.type}:${pack.meta.id}`)
       else {
-        for (const version of pack.modVersions) {
+        for (const version of pack.contentVersions) {
           const d = contentDesiredFor(pack, version, author)
           contentDesired.set(d.tag, d)
         }
@@ -526,7 +536,7 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
     const published = releases.find((r) => !r.draft)
     const drafts = releases.filter((r) => r !== published)
     const label = d.releaseName
-    const jars = d.assets.filter((a) => a.type === JAR_TYPE)
+    const jars = d.assets.filter((a) => a.role === 'file')
     if (!published) {
       const details = [`Nouvelle release : ${jars.map((f) => `${f.name} (${formatSize(f.size)})`).join(', ')}`]
       if (d.manifest.cover) details.push(`Image de couverture : ${d.pack.cover!.fileName}`)
@@ -553,14 +563,14 @@ export function computePlan(workspace: LocalWorkspace, remote: RemoteState, auth
     }
     const details: string[] = []
     const stepWarnings: string[] = []
-    const changedJars = replace.filter((a) => a.type === JAR_TYPE)
+    const changedJars = replace.filter((a) => a.role === 'file')
     if (changedJars.length) {
       const replaced = changedJars.filter((a) => published.assets.some((x) => x.name === a.name) && remoteSha.has(a.name))
       details.push(`${replaced.length ? 'Fichier remplacé' : 'Fichier envoyé'} : ${changedJars.map((a) => a.name).join(', ')}`)
-      if (replaced.length) stepWarnings.push(`Le contenu de la version ${d.version.version} a changé : pour une mise à jour, publie plutôt une nouvelle version du mod.`)
+      if (replaced.length) stepWarnings.push(`Le contenu de la version ${d.version.version} a changé : pour une mise à jour, publie plutôt une nouvelle version.`)
     }
-    if (replace.some((a) => a.type !== JAR_TYPE)) details.push('Nouvelle image de couverture')
-    if (manifest && !replace.length) details.push('Infos du mod mises à jour (nom, description…)')
+    if (replace.some((a) => a.role === 'cover')) details.push('Nouvelle image de couverture')
+    if (manifest && !replace.length) details.push(`Infos du ${CONTENT_KINDS[d.pack.meta.type].label} mises à jour (nom, description…)`)
     if (release_) details.push('Titre ou notes de version mis à jour')
     if (extraneous.length) details.push(`Fichiers en trop retirés : ${extraneous.map((a) => a.name).join(', ')}`)
     if (drafts.length) details.push('Brouillon abandonné supprimé')

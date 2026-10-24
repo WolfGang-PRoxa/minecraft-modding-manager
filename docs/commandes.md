@@ -66,13 +66,15 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
 | `versions strip` | Retire d’un zip les fichiers exclus dans les réglages. |
 | `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
-| `mods create` | Crée un [mod](studio.md#les-mods) depuis le dossier où son projet dépose ses jars, qui lui reste lié. |
-| `mods versions` | Les versions d’un mod (état sur GitHub et CurseForge) et celles de son dossier lié à importer. |
-| `mods import` | Copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
-| `mods source` | Lie un mod à un autre dossier de jars, ou retire ce lien (`--unlink`). |
-| `mods notes` | Écrit les notes d’une version d’un mod. |
-| `mods delete` | Supprime une version d’un mod (jars à la corbeille, release retirée de GitHub). |
-| `mods curseforge` | Met une version d’un mod en ligne sur son projet CurseForge (elle passe en modération). |
+| `content create` | Crée un [mod](studio.md#les-mods) (depuis le dossier de ses jars), un [pack de ressources ou un shader](studio.md#les-packs-de-ressources-et-les-shaders) (depuis son dossier ou un zip) : `--type mod`, `resourcepack` ou `shader`. |
+| `content versions` | Les versions d’un mod, d’un pack de ressources ou d’un shader (état sur GitHub et CurseForge), et pour un mod celles de son dossier lié à importer. |
+| `content import` | Mod : copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
+| `content zip` | Pack de ressources ou shader : zippe le dossier lié comme version suivante. |
+| `content source` | Lie un contenu à un autre dossier, ou retire ce lien (`--unlink`). |
+| `content minecraft` | Donne les versions de Minecraft d’un pack de ressources ou d’un shader. |
+| `content notes` | Écrit les notes d’une version d’un contenu. |
+| `content delete` | Supprime une version d’un contenu (fichiers à la corbeille, release retirée de GitHub). |
+| `content curseforge` | Met une version d’un contenu en ligne sur son projet CurseForge (elle passe en modération). |
 | `updates check` | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien. |
 | `updates changelog` | Les notes de version d’un fichier CurseForge, pour juger une mise à jour. |
 | `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
@@ -157,10 +159,13 @@ d’auteur doit être enregistré ([Compte CurseForge](parametres.md#compte-curs
   `curseforge versions` liste toutes les versions du projet (aussi celles mises en ligne depuis le site) et suit leur
   état. Un numéro déjà sur CurseForge ne s’y publie plus. Le pack serveur se joint encore à la main sur le site.
 
-Pour un **mod**, `mods create --source <dossier>` crée le mod depuis le dossier de ses jars (voir
-[Les mods](studio.md#les-mods)), `mods versions` montre ses versions et celles à importer, `mods import` les copie.
-Il se publie sur GitHub comme les modpacks (`publish plan`, `publish apply`). `curseforge link` le lie à son projet
-CurseForge, puis `mods curseforge` y envoie une version. De même, `modrinth link` le lie à son projet Modrinth et
+Pour un **mod**, `content create --source <dossier>` crée le mod depuis le dossier de ses jars (voir
+[Les mods](studio.md#les-mods)), `content versions` montre ses versions et celles à importer, `content import` les
+copie. Pour un **pack de ressources** ou un **shader**, `content create --type resourcepack` (ou `shader`) part de son
+dossier ou d’un zip, `content zip` en fait la version suivante et `content minecraft` donne ses versions de Minecraft
+(voir [Les packs de ressources et les shaders](studio.md#les-packs-de-ressources-et-les-shaders)). Tous se publient
+sur GitHub comme les modpacks (`publish plan`, `publish apply`). `curseforge link` les lie à leur projet CurseForge,
+puis `content curseforge` y envoie une version. De même, `modrinth link` les lie à leur projet Modrinth et
 `modrinth publish` y envoie une version (jeton dans [Compte Modrinth](parametres.md#compte-modrinth)).
 
 Les commandes **`maintenance`** font les [mises à jour automatiques](automatique.md) : `maintenance run` enchaîne,

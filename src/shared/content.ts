@@ -7,8 +7,17 @@ export type ContentKind = 'modpack' | 'mod' | 'resourcepack' | 'shader' | 'plugi
 
 /** Chargeurs qu'un mod peut viser. */
 export type ModLoader = 'fabric' | 'quilt' | 'forge' | 'neoforge'
+/** Ce qui fait tourner un contenu : le chargeur d'un mod, celui des shaders (Iris, OptiFine). */
+export type ContentLoader = ModLoader | 'iris' | 'optifine'
 
-export const LOADER_LABELS: Record<ModLoader, string> = { fabric: 'Fabric', quilt: 'Quilt', forge: 'Forge', neoforge: 'NeoForge' }
+export const LOADER_LABELS: Record<ContentLoader, string> = {
+  fabric: 'Fabric',
+  quilt: 'Quilt',
+  forge: 'Forge',
+  neoforge: 'NeoForge',
+  iris: 'Iris',
+  optifine: 'OptiFine'
+}
 
 /** Un fichier d'une version publiée (content.json). */
 export interface ContentFile {
@@ -16,7 +25,7 @@ export interface ContentFile {
   size: number
   sha256: string
   sha1: string
-  loaders: ModLoader[]
+  loaders: ContentLoader[]
   minecraftVersions: string[]
 }
 
@@ -30,7 +39,7 @@ export interface ContentManifest {
   version: string
   description: string
   minecraftVersions: string[]
-  loaders: ModLoader[]
+  loaders: ContentLoader[]
   files: ContentFile[]
   cover: string | null
   coverSha256: string | null
@@ -51,21 +60,27 @@ export interface ContentKindInfo {
   versioning: 'number' | 'declared'
   /** Le Studio sait déjà en lire et en publier les versions. */
   supported: boolean
+  /** Extension de ses fichiers. */
+  extension: '.zip' | '.jar'
+  /** Type de projet Modrinth (et chemin de sa page : modrinth.com/<type>/<slug>), si Modrinth le publie. */
+  modrinth: 'modpack' | 'mod' | 'resourcepack' | 'shader' | 'plugin'
 }
 
 export const CONTENT_KINDS: Record<ContentKind, ContentKindInfo> = {
-  modpack: { label: 'modpack', plural: 'modpacks', tagPrefix: MODPACK_TAG_PREFIX, manifest: MODPACK_MANIFEST_ASSET, versioning: 'number', supported: true },
-  mod: { label: 'mod', plural: 'mods', tagPrefix: 'mod-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: true },
+  modpack: { label: 'modpack', plural: 'modpacks', tagPrefix: MODPACK_TAG_PREFIX, manifest: MODPACK_MANIFEST_ASSET, versioning: 'number', supported: true, extension: '.zip', modrinth: 'modpack' },
+  mod: { label: 'mod', plural: 'mods', tagPrefix: 'mod-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: true, extension: '.jar', modrinth: 'mod' },
   resourcepack: {
     label: 'pack de ressources',
     plural: 'packs de ressources',
     tagPrefix: 'rp-',
     manifest: CONTENT_MANIFEST_ASSET,
     versioning: 'number',
-    supported: false
+    supported: true,
+    extension: '.zip',
+    modrinth: 'resourcepack'
   },
-  shader: { label: 'shader', plural: 'shaders', tagPrefix: 'shader-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'number', supported: false },
-  plugin: { label: 'plugin', plural: 'plugins', tagPrefix: 'plugin-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: false }
+  shader: { label: 'shader', plural: 'shaders', tagPrefix: 'shader-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'number', supported: true, extension: '.zip', modrinth: 'shader' },
+  plugin: { label: 'plugin', plural: 'plugins', tagPrefix: 'plugin-', manifest: CONTENT_MANIFEST_ASSET, versioning: 'declared', supported: false, extension: '.jar', modrinth: 'plugin' }
 }
 
 export const CONTENT_KIND_IDS = Object.keys(CONTENT_KINDS) as ContentKind[]

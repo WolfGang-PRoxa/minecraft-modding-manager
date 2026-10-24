@@ -62,6 +62,7 @@ boutons :
 
 - **Guide** ouvre cette page de l’aide ;
 - **Nouveau modpack** crée le dossier d’un nouveau modpack ;
+- **Nouveau contenu** crée un [mod](#les-mods), un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders) ;
 - **Ranger les zips** numérote les zips déposés (le nombre de zips à ranger est indiqué) ;
 - **Publier sur GitHub** affiche les changements à publier, puis les applique (leur nombre est indiqué).
 
@@ -254,7 +255,7 @@ Le Studio publie aussi les mods du publieur, à côté de ses modpacks. Un mod a
 modpacks, qui contient ses fichiers `.jar` ; il apparaît dans la colonne de gauche sous **Mods**, et sa carte se
 distingue par la mention **Mod**.
 
-**Nouveau mod** demande le dossier où le projet du mod dépose ses jars (`releases`, `build/libs`…). Le Studio y lit le
+**Nouveau contenu**, puis **Mod**, demande le dossier où le projet du mod dépose ses jars (`releases`, `build/libs`…). Le Studio y lit le
 jar le plus récent (`fabric.mod.json`, `quilt.mod.json` ou `mods.toml`) : le mod prend son nom, son identifiant, sa
 description et son icône, et sa version la plus récente est copiée. Le dossier du projet reste **lié** au mod : il
 n’est jamais modifié, et ses nouvelles versions s’y repèrent toutes seules (« 2 versions à importer »). **Importer des
@@ -285,6 +286,33 @@ comme numéro, ses versions de Minecraft, ses chargeurs, ses notes et ses dépen
 projets Modrinth. La version est visible tout de suite si le projet est approuvé. Il faut le jeton Modrinth
 ([Compte Modrinth](parametres.md#compte-modrinth)). Les modpacks ne se publient pas encore sur Modrinth.
 
+## Les packs de ressources et les shaders
+
+Les packs de ressources et les shaders du publieur se publient aussi, chacun dans son dossier, et apparaissent dans
+la colonne de gauche sous **Packs de ressources** et **Shaders**. Leurs versions sont numérotées par le Studio, comme
+celles d’un modpack : `Mon_Pack-v3.zip`.
+
+**Nouveau contenu**, puis **Pack de ressources** ou **Shader**, part :
+
+- **du dossier du pack en cours de création** (par exemple dans le dossier `resourcepacks` d’un profil), qui reste
+  lié : il doit contenir `pack.mcmeta` (pack de ressources) ou un dossier `shaders/` (shader). Sa v1 en est zippée,
+  et **Créer la v… depuis le dossier**, sur sa carte, zippe la suivante. Le dossier n’est jamais modifié ;
+- **ou d’un zip**, copié comme v1. Les zips suivants se déposent dans son dossier, puis **Ranger les zips** les
+  numérote.
+
+Le nom vient du dossier ou du zip ; pour un pack de ressources, la description et l’image viennent de `pack.mcmeta` et
+de `pack.png`.
+
+**Versions de Minecraft** : un pack de ressources les déclare dans `pack.mcmeta` (`pack_format`, `supported_formats`,
+ou `min_format` et `max_format`), traduites d’après la table des formats (de Minecraft 1.13 à 26.3). Un shader ne les
+déclare pas : il faut les donner avec **Changer**, sur la ligne « Minecraft » de sa carte, avant de l’envoyer sur
+CurseForge ou Modrinth, qui les exigent. Pour un pack de ressources, elles peuvent aussi y être remplacées.
+
+À la publication, chaque version devient une release `rp-<id>-v<N>` (pack de ressources) ou `shader-<id>-v<N>`
+(shader), avec son zip, l’image et `content.json`. Sur CurseForge, elle s’affiche sous le nom `<nom> v<N>`, pour
+Minecraft et `Client` ; sur Modrinth, sous le même nom, avec le chargeur `minecraft` (pack de ressources) ou `iris` et
+`optifine` (shader).
+
 ## Le fichier pack.json
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :
@@ -292,8 +320,9 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 | Champ | Contenu |
 |---|---|
 | `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
-| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods). Les autres types (`resourcepack`, `shader`, `plugin`) sont réservés aux prochaines versions : un dossier qui en déclare un est affiché, mais ignoré à la publication. |
-| `source` | Mod : le dossier où son projet dépose ses jars. Absent s’il n’est pas lié. |
+| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders). `plugin` est réservé à une prochaine version : un dossier qui le déclare est affiché, mais ignoré à la publication. |
+| `source` | Mod : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié. |
+| `minecraftVersions` | Pack de ressources ou shader : les versions de Minecraft visées, à la place de celles de son zip. Absent sinon. |
 | `name` | Le nom affiché aux joueurs. |
 | `description` | La description courte. |
 | `lastVersion` | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé. |

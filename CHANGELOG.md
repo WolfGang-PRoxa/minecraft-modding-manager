@@ -10,10 +10,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ### Ajouts
 
-- Studio : les **mods** du publieur se publient comme ses modpacks. **Nouveau mod** part du dossier où le projet du
-  mod dépose ses jars, qui reste lié : ses nouvelles versions s’y repèrent et s’importent en un clic. Chaque version
-  devient une release GitHub, et s’envoie sur CurseForge avec sa version de Minecraft, son chargeur et ses
-  dépendances. Aussi depuis le terminal et Claude Code (commandes `mods`).
+- Studio : les **mods** du publieur se publient comme ses modpacks. **Nouveau contenu** part du dossier où le projet
+  du mod dépose ses jars, qui reste lié : ses nouvelles versions s’y repèrent et s’importent en un clic. Chaque
+  version devient une release GitHub, et s’envoie sur CurseForge avec sa version de Minecraft, son chargeur et ses
+  dépendances. Aussi depuis le terminal et Claude Code (commandes `content`).
+- Studio : les **packs de ressources** et les **shaders** se publient aussi, depuis le dossier du pack en cours de
+  création (zippé à chaque version) ou depuis des zips. Les versions de Minecraft d’un pack de ressources sont lues
+  dans son `pack.mcmeta` ; celles d’un shader se donnent à la main.
 - Studio : les mods se publient aussi sur **Modrinth**, avec un jeton enregistré dans Paramètres → **Compte Modrinth**
   (commandes `modrinth`).
 - Paramètres → **Apparence** : six styles de couleurs au choix (dont **Neige**, un style clair, et **Contraste

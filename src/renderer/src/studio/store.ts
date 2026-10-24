@@ -19,6 +19,10 @@ export type Dialog =
   | { kind: 'mod-curseforge-publish'; folder: string; version: string }
   /** Lien d'un mod avec son projet Modrinth, et mise en ligne d'une version. */
   | { kind: 'modrinth'; folder: string }
+  /** Versions de Minecraft d'un pack de ressources ou d'un shader. */
+  | { kind: 'minecraft-versions'; folder: string }
+  /** Créer un mod, un pack de ressources ou un shader. */
+  | { kind: 'new-content' }
   | { kind: 'modrinth-publish'; folder: string; version: string }
   /** Créer la version suivante depuis CurseForge ; `profilePath` : profil déjà choisi. */
   | { kind: 'import'; folder: string; profilePath?: string }

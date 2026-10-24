@@ -53,6 +53,24 @@ export async function zipInstance(instanceDir: string, destination: string, opti
   if (!files.some((f) => f.rel === CURSEFORGE_INSTANCE_FILE)) {
     throw new StudioError(`${CURSEFORGE_INSTANCE_FILE} introuvable : ce dossier n’est pas une instance CurseForge.`)
   }
+  await writeZip(files, destination, options)
+}
+
+/**
+ * Zippe un dossier tel quel (pack de ressources, shader en cours de création), sauf les fichiers cachés ; `marker` :
+ * fichier qui doit s'y trouver (pack.mcmeta, dossier shaders/…), sans quoi le dossier n'est pas ce qu'on croit.
+ */
+export async function zipFolder(dir: string, destination: string, options: { marker: (rel: string) => boolean; markerLabel: string; signal?: AbortSignal }): Promise<void> {
+  const files = (await collectFiles(dir, [])).filter((f) => !f.rel.split('/').some((part) => part.startsWith('.')))
+  if (!files.some((f) => options.marker(f.rel))) throw new StudioError(`${options.markerLabel} introuvable dans ${dir}.`)
+  await writeZip(files, destination, { signal: options.signal })
+}
+
+async function writeZip(
+  files: Array<{ path: string; rel: string; size: number }>,
+  destination: string,
+  options: Pick<ZipInstanceOptions, 'maxSize' | 'onProgress' | 'signal'>
+): Promise<void> {
   const total = files.reduce((sum, f) => sum + f.size, 0)
   const partial = `${destination}.part`
   const out = createWriteStream(partial)

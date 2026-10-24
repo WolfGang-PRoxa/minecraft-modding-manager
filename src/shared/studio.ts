@@ -1,5 +1,5 @@
 // Types du Studio : l'outil de l'auteur pour ranger ses zips et les publier sur GitHub.
-import type { ContentKind, ModLoader } from './content'
+import type { ContentKind, ContentLoader } from './content'
 import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {
@@ -89,11 +89,11 @@ export interface VersionTests {
 }
 
 /** Un fichier (.jar) d'une version de mod. */
-export interface ModFileView {
+export interface ContentFileView {
   fileName: string
   path: string
   size: number
-  loaders: ModLoader[]
+  loaders: ContentLoader[]
   minecraftVersions: string[]
   /** Côté où le mod fonctionne. */
   side: 'client' | 'server' | 'both'
@@ -102,10 +102,10 @@ export interface ModFileView {
 }
 
 /** Une version d'un mod : un ou plusieurs jars (un par chargeur ou par version de Minecraft) de même version déclarée. */
-export interface ModVersionView {
+export interface ContentVersionView {
   /** Version déclarée par le jar (`1.2.0-26.3`). */
   version: string
-  files: ModFileView[]
+  files: ContentFileView[]
   modifiedAt: string
   notes: string
   remote: RemoteStatus
@@ -229,10 +229,12 @@ export interface PackView {
   /** Mod : son projet Modrinth, s'il en a un. */
   modrinth: PackModrinth | null
   updates: PackUpdates
-  /** Dossier d'où un mod importe ses versions (mods seulement). */
+  /** Mod : dossier d'où il importe ses versions ; pack de ressources ou shader : dossier du pack, zippé à chaque version. */
   source: string | null
+  /** Pack de ressources ou shader : versions de Minecraft données à la main (vide : celles du zip). */
+  minecraftVersions: string[]
   /** Versions d'un mod, de la plus récente à la plus ancienne (vide pour un modpack). */
-  modVersions: ModVersionView[]
+  contentVersions: ContentVersionView[]
   badJars: BadJar[]
   /** Versions numérotées, de la plus récente à la plus ancienne. */
   versions: VersionView[]
@@ -639,7 +641,7 @@ export type ActionResult = { ok: true } | { ok: false; error: string }
 /** Une version du dossier lié d'un mod, pas encore dans le Studio. */
 export interface AvailableModVersion {
   version: string
-  files: Array<{ fileName: string; loaders: ModLoader[]; minecraftVersions: string[] }>
+  files: Array<{ fileName: string; loaders: ContentLoader[]; minecraftVersions: string[] }>
 }
 
 /** Fichier d'un zip de modpack, chemin relatif au dossier de l'instance. */
@@ -712,8 +714,14 @@ export interface StudioApi {
   /** Versions du dossier lié d'un mod qui ne sont pas encore dans le Studio. */
   availableModVersions(folder: string): Promise<{ ok: true; versions: AvailableModVersion[] } | { ok: false; error: string }>
   importModVersions(folder: string, versions: string[]): Promise<{ ok: true; imported: string[] } | { ok: false; error: string }>
-  /** Lie un mod à un autre dossier (choisi dans une fenêtre), ou retire le lien (null). */
+  /** Lie un mod, un pack de ressources ou un shader à un autre dossier (choisi dans une fenêtre), ou retire le lien (null). */
   linkModSource(folder: string, mode: 'pick' | null): Promise<ActionResult>
+  /** Crée un pack de ressources ou un shader depuis un dossier (qui reste lié) ou un zip, choisi dans une fenêtre. */
+  createPackContent(kind: 'resourcepack' | 'shader', from: 'folder' | 'zip'): Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>
+  /** Zippe le dossier lié d'un pack comme sa version suivante. */
+  zipContentVersion(folder: string): Promise<{ ok: true; number: number } | { ok: false; error: string }>
+  /** Versions de Minecraft d'un pack, à la place de celles de son zip ([] : celles du zip). */
+  setMinecraftVersions(folder: string, versions: string[]): Promise<{ ok: true; versions: string[] } | { ok: false; error: string }>
   publishModCurseForge(
     folder: string,
     version: string,

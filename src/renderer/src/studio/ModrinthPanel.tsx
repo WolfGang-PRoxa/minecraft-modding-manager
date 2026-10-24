@@ -1,7 +1,8 @@
 // Publication d'un mod sur Modrinth depuis sa carte : lien avec le projet, versions du projet, mise en ligne.
 import { useEffect, useState } from 'react'
 import { ExternalLink, Link2, Upload } from 'lucide-react'
-import type { ModrinthVersionView, ModVersionView, PackModrinth, PackView } from '../../../shared/studio'
+import { CONTENT_KINDS } from '../../../shared/content'
+import type { ModrinthVersionView, ContentVersionView, PackModrinth, PackView } from '../../../shared/studio'
 import { Button } from '../components/Button'
 import { Field, Modal, Spinner, TextInput } from './Modal'
 import { Pill } from './PackCard'
@@ -32,7 +33,7 @@ const LIVE = 'bg-modrinth/15 text-modrinth ring-modrinth/30'
 const OTHER = 'bg-tint/[0.04] text-ink-300 ring-tint/10'
 
 /** État sur Modrinth d'une version, ou bouton pour l'y mettre en ligne (la plus récente seulement). */
-export function ModrinthVersionStatus({ pack, version, latest, modrinth }: { pack: PackView; version: ModVersionView; latest: boolean; modrinth: ModrinthVersions }) {
+export function ModrinthVersionStatus({ pack, version, latest, modrinth }: { pack: PackView; version: ContentVersionView; latest: boolean; modrinth: ModrinthVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
   if (!pack.modrinth) return null
   const found = modrinth.versions?.find((v) => v.version === version.version)
@@ -120,7 +121,7 @@ export function ModrinthDialog({ folder }: { folder: string }) {
   return (
     <Modal
       title="Publication sur Modrinth"
-      subtitle={pack.modrinth ? `« ${pack.name} » est lié à son projet Modrinth.` : 'Lie ce mod au projet que tu as créé sur Modrinth.'}
+      subtitle={pack.modrinth ? `« ${pack.name} » est lié à son projet Modrinth.` : `Lie ce ${CONTENT_KINDS[pack.type].label} au projet que tu as créé sur Modrinth.`}
       onClose={close}
       closable={!busy}
       footer={
@@ -153,8 +154,11 @@ export function ModrinthDialog({ folder }: { folder: string }) {
         </div>
       ) : (
         <div className="space-y-4">
-          <Field label="Projet Modrinth" hint="L’adresse de sa page (modrinth.com/mod/…), son slug ou son identifiant. Le projet se crée une fois sur le site.">
-            <TextInput value={ref} onChange={(e) => setRef(e.target.value)} placeholder="https://modrinth.com/mod/…" autoFocus />
+          <Field
+            label="Projet Modrinth"
+            hint={`L’adresse de sa page (modrinth.com/${CONTENT_KINDS[pack.type].modrinth}/…), son slug ou son identifiant. Le projet se crée une fois sur le site.`}
+          >
+            <TextInput value={ref} onChange={(e) => setRef(e.target.value)} placeholder={`https://modrinth.com/${CONTENT_KINDS[pack.type].modrinth}/…`} autoFocus />
           </Field>
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => openLink('https://modrinth.com/dashboard/projects')}>
@@ -180,7 +184,7 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
   const [busy, setBusy] = useState(false)
   const [step, setStep] = useState<string | null>(null)
   useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
-  const view = pack?.modVersions.find((v) => v.version === version)
+  const view = pack?.contentVersions.find((v) => v.version === version)
   if (!pack || !view) return null
   const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
   const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
@@ -205,7 +209,7 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
 
   return (
     <Modal
-      title={`Publier la version ${version} sur Modrinth`}
+      title={`Publier la ${CONTENT_KINDS[pack.type].versioning === 'number' ? `v${version}` : `version ${version}`} sur Modrinth`}
       subtitle="Ses jars sont envoyés sur le projet du mod, visibles tout de suite si le projet est approuvé. Une version envoyée se retire depuis le site."
       onClose={close}
       closable={!busy}
@@ -229,13 +233,14 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
     >
       <div className="space-y-4 text-sm">
         <p className="text-ink-300">
-          Nom : <span className="text-ink-100">{`${pack.name} ${version}`}</span> · numéro <span className="font-mono text-ink-100">{version}</span>
+          Nom : <span className="text-ink-100">{CONTENT_KINDS[pack.type].versioning === 'number' ? `${pack.name} v${version}` : `${pack.name} ${version}`}</span> · numéro{' '}
+          <span className="font-mono text-ink-100">{version}</span>
         </p>
         <p className="text-ink-300">
           Fichiers : <span className="font-mono text-ink-100">{view.files.map((f) => f.fileName).join(', ')}</span>
         </p>
         <p className="text-ink-300">
-          Minecraft <span className="text-ink-100">{minecraft.join(', ') || '?'}</span> · chargeurs <span className="text-ink-100">{loaders.join(', ')}</span>
+          Minecraft <span className="text-ink-100">{minecraft.join(', ') || '?'}</span> · chargeurs <span className="text-ink-100">{loaders.join(', ') || 'minecraft'}</span>
         </p>
         <p className="text-ink-300">
           Dépendances obligatoires : <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>

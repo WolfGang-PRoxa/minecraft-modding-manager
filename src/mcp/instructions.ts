@@ -43,12 +43,13 @@ Méthode :
   packs_show : si elle n'est pas « passed », propose tests_all sur son profil. curseforge_versions liste les versions
   du projet (aussi celles mises en ligne depuis le site) et suit la modération. github: false (curseforge_targets) =
   seulement sur CurseForge.
-- Mods (dossier de type mod : packs_list le montre) : mods_create depuis le dossier où le projet du mod dépose ses
-  jars (il reste lié), mods_versions puis mods_import pour les nouvelles versions, mods_notes, publish_plan pour
-  GitHub, curseforge_link puis mods_curseforge, modrinth_link puis modrinth_publish (irréversibles : montre la
-  version et ses notes avant ; modrinth_status dit si le jeton est là). Une version de
-  mod est celle de son jar (« 1.2.0-26.3 »). Les outils de profils, de tests et de maintenance ne concernent que les
-  modpacks.
+- Mods, packs de ressources et shaders (type dans packs_list) : content_create (mod depuis le dossier où son projet
+  dépose ses jars ; pack de ressources ou shader depuis son dossier en cours de création ou un zip), content_versions,
+  content_import (mod) ou content_zip (pack : version suivante depuis le dossier lié), content_minecraft (versions
+  de Minecraft d'un shader, qui ne les déclare pas), content_notes, publish_plan pour GitHub, curseforge_link puis
+  content_curseforge, modrinth_link puis modrinth_publish (irréversibles : montre la version et ses notes avant ;
+  modrinth_status dit si le jeton est là). Une version de mod est celle de son jar (« 1.2.0-26.3 ») ; celle d'un pack,
+  son numéro (« 3 »). Les outils de profils, de tests et de maintenance ne concernent que les modpacks.
 - Avant de régler disabledMods, regarde les mods de la dernière version (versions_contents).
 - Les suppressions (packs_delete, versions_delete, releases_delete, publish_apply qui supprime) sont définitives sur
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.

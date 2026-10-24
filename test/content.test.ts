@@ -73,8 +73,8 @@ describe('dossier d’un autre type que le modpack', () => {
     await mkdir(join(workspace, 'Mon_Mod'), { recursive: true })
     await writeFile(join(workspace, 'Mon_Mod', 'pack.json'), JSON.stringify({ type: 'mod', id: 'mon-mod', name: 'Mon mod', description: '', lastVersion: 0, notes: {} }))
     await writeFile(join(workspace, 'Mon_Mod', 'mon-mod-1.0.0.jar'), 'jar')
-    await mkdir(join(workspace, 'Textures'), { recursive: true })
-    await writeFile(join(workspace, 'Textures', 'pack.json'), JSON.stringify({ type: 'resourcepack', id: 'textures', name: 'Textures' }))
+    await mkdir(join(workspace, 'Outils'), { recursive: true })
+    await writeFile(join(workspace, 'Outils', 'pack.json'), JSON.stringify({ type: 'plugin', id: 'outils', name: 'Outils' }))
     await mkdir(join(workspace, 'Bizarre'), { recursive: true })
     await writeFile(join(workspace, 'Bizarre', 'pack.json'), JSON.stringify({ type: 'datapack', id: 'bizarre', name: 'Bizarre' }))
     // Release d'un mod déjà sur GitHub : la publication des modpacks ne doit jamais la retirer.
@@ -96,9 +96,9 @@ describe('dossier d’un autre type que le modpack', () => {
 
   it('montre le dossier avec son type, sans le publier tant que le type n’est pas pris en charge', async () => {
     const overview = await service.overview({ refreshRemote: true })
-    const textures = overview.packs.find((p) => p.folder === 'Textures')!
-    assert.equal(textures.type, 'resourcepack')
-    assert.match(textures.errors.join(' '), /packs de ressources ne sont pas encore pris en charge/)
+    const plugin = overview.packs.find((p) => p.folder === 'Outils')!
+    assert.equal(plugin.type, 'plugin')
+    assert.match(plugin.errors.join(' '), /plugins ne sont pas encore pris en charge/)
 
     // Un jar illisible bloque tout le mod : on ne sait pas à quelle version il appartient.
     const mod = overview.packs.find((p) => p.folder === 'Mon_Mod')!
