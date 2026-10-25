@@ -1,19 +1,30 @@
 import { spawn } from 'node:child_process'
 
 /**
+ * Entrée et sortie du script en UTF-8, comme les écrit et les lit Node : Windows PowerShell 5.1 prend sinon la page de
+ * code de la console (850, 1252…), et un chemin accentué (« Lumière », « MA3D – Plants ») arrive déformé.
+ */
+const UTF8_CONSOLE = '[Console]::InputEncoding=[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding $false; '
+
+/**
  * Lance un script PowerShell sans fenêtre et renvoie sa sortie. `input` arrive sur l'entrée standard du script
  * (`[Console]::In.ReadToEnd()`) : jamais dans la ligne de commande, où un chemin ou un secret pourrait être mal
  * interprété ou rester visible.
  */
 export function powershell(script: string, input = ''): Promise<string> {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true })
-    let out = ''
-    let err = ''
-    child.stdout.on('data', (d: Buffer) => (out += d.toString()))
-    child.stderr.on('data', (d: Buffer) => (err += d.toString()))
+    const child = spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', UTF8_CONSOLE + script], { windowsHide: true })
+    // Décodés une fois à la fin : un caractère sur deux morceaux de sortie reste entier.
+    const out: Buffer[] = []
+    const err: Buffer[] = []
+    child.stdout.on('data', (d: Buffer) => out.push(d))
+    child.stderr.on('data', (d: Buffer) => err.push(d))
     child.on('error', reject)
-    child.on('close', (code) => (code === 0 ? resolvePromise(out.trim()) : reject(new Error(err.trim() || `PowerShell ${code}`))))
+    child.on('close', (code) => {
+      const text = (chunks: Buffer[]) => Buffer.concat(chunks).toString('utf8').trim()
+      if (code === 0) resolvePromise(text(out))
+      else reject(new Error(text(err) || `PowerShell ${code}`))
+    })
     child.stdin.end(input)
   })
 }

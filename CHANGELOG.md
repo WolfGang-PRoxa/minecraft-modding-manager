@@ -14,6 +14,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   des sous-dossiers repliables de la colonne de gauche. Le groupe se donne dans **Infos et image** (champ **Groupe**),
   ou par la commande `packs group`. Rien ne bouge sur le disque ni chez les joueurs.
 
+### Corrections
+
+- Studio : un modpack, un contenu ou une version dont le nom a un accent ou un tiret long (« Lumière »,
+  « MA3D – Plants ») se supprime de nouveau : sa mise à la corbeille échouait avec « introuvable ».
+
 ## [2.0.0] - 2026-10-24
 
 <!-- moteur des mods, décrit avec leur interface : b49e265 -->
