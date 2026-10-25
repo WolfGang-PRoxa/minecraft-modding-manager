@@ -72,6 +72,7 @@ import {
   importFiles,
   loadPackMeta,
   nextVersionNumber,
+  normalizeGroup,
   normalizeMinecraftVersions,
   normalizePackSettings,
   normalizePackUpdates,
@@ -420,6 +421,7 @@ export class StudioService {
       updates: pack.meta.updates,
       source: pack.meta.source,
       minecraftVersions: pack.meta.minecraftVersions,
+      group: pack.meta.group,
       contentVersions: [...pack.contentVersions].reverse().map((v) => {
         const status = plan?.statuses.get(contentTag(pack.meta.type, pack.meta.id, v.version))
         return {
@@ -1449,13 +1451,25 @@ export class StudioService {
     return buildLibrary(overview.packs, profiles, groups, instancesDir)
   }
 
-  async updatePackInfo(folder: string, info: { name: string; description: string }): Promise<void> {
+  /** Fiche d'un modpack ou d'un contenu ; `group` absent : groupe inchangé, vide ou null : retiré de son groupe. */
+  async updatePackInfo(folder: string, info: { name: string; description: string; group?: string | null }): Promise<void> {
     const name = info.name.trim().replace(/\s+/g, ' ')
     if (!name) throw new StudioError('Le nom ne peut pas être vide.')
     await this.logged(`la fiche de ${folder}`, async () => {
       const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
-      await writePackFile(dir, { ...meta, name, description: info.description.trim() })
+      const group = info.group === undefined ? meta.group : normalizeGroup(info.group)
+      await writePackFile(dir, { ...meta, name, description: info.description.trim(), group })
     })
+  }
+
+  /** Range un modpack ou un contenu dans un groupe du Studio (null ou vide : l'en sort). Rend le groupe retenu. */
+  async setPackGroup(folder: string, group: string | null): Promise<string | null> {
+    const normalized = normalizeGroup(group)
+    await this.logged(`le groupe de ${folder}`, async () => {
+      const { dir, meta } = await loadPackMeta(this.requireWorkspace(), folder)
+      await writePackFile(dir, { ...meta, group: normalized })
+    })
+    return normalized
   }
 
   /** Enregistre les réglages des versions d'un modpack (fichiers exclus, mods désactivés, configurations). */

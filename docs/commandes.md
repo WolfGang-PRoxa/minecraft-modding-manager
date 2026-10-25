@@ -55,6 +55,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 | `packs show` | Un modpack en détail : fiche, réglages, versions et notes. |
 | `packs create` | Crée un modpack, éventuellement depuis un profil CurseForge (avec sa v1). |
 | `packs edit` | Change le nom ou la description d’un modpack. |
+| `packs group` | Range un modpack ou un contenu dans un [groupe](studio.md#ranger-dans-des-groupes) de la colonne de gauche, ou l’en sort (sans `--group`). |
 | `packs settings` | [Réglages des versions](reglages.md) : fichiers exclus, mods désactivés chez les joueurs, configurations gardées. |
 | `packs notes` | Écrit les notes d’une version. |
 | `packs cover` | Change ou retire l’image d’un modpack. |

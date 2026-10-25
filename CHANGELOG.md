@@ -8,6 +8,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Studio : les mods, packs de ressources, shaders, plugins et modpacks sans profil se rangent dans des **groupes**,
+  des sous-dossiers repliables de la colonne de gauche. Le groupe se donne dans **Infos et image** (champ **Groupe**),
+  ou par la commande `packs group`. Rien ne bouge sur le disque ni chez les joueurs.
+
 ## [2.0.0] - 2026-10-24
 
 <!-- moteur des mods, décrit avec leur interface : b49e265 -->

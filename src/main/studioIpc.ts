@@ -166,8 +166,15 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     })
   )
   ipcMain.handle('studio:createPack', (_e, name: string) => action(() => service.createPack(name)))
-  ipcMain.handle('studio:updatePackInfo', (_e, folder: string, info: { name: string; description: string }) =>
-    action(() => service.updatePackInfo(folder, info))
+  ipcMain.handle('studio:updatePackInfo', (_e, folder: string, info: { name: string; description: string; group?: string | null }) =>
+    action(() =>
+      service.updatePackInfo(folder, {
+        name: String(info?.name ?? ''),
+        description: String(info?.description ?? ''),
+        // Groupe seulement s'il est donné : absent, il reste tel quel.
+        ...(info && 'group' in info ? { group: typeof info.group === 'string' ? info.group : null } : {})
+      })
+    )
   )
   ipcMain.handle('studio:updatePackSettings', (_e, folder: string, settings: PackSettings) =>
     action(() => service.updatePackSettings(folder, settings))

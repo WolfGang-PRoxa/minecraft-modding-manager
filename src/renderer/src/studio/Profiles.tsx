@@ -107,6 +107,55 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
   )
 }
 
+/**
+ * Éléments d'une section : d'abord ses groupes (`group` de pack.json), en sous-dossiers repliables, puis ceux qui n'ont
+ * pas de groupe. Un groupe qui contient la sélection reste ouvert.
+ */
+function GroupedItems({
+  section,
+  packs,
+  closed,
+  toggle,
+  isSelected,
+  render
+}: {
+  section: string
+  packs: PackView[]
+  closed: Set<string>
+  toggle: (key: string) => void
+  isSelected: (pack: PackView) => boolean
+  render: (pack: PackView) => ReactNode
+}) {
+  const groups = new Map<string, PackView[]>()
+  for (const pack of packs) if (pack.group) groups.set(pack.group, [...(groups.get(pack.group) ?? []), pack])
+  const names = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }))
+  return (
+    <>
+      {names.map((name) => {
+        const items = groups.get(name)!
+        const key = `group:${section}:${name}`
+        const open = !closed.has(key) || items.some(isSelected)
+        return (
+          <div key={key}>
+            <button
+              type="button"
+              onClick={() => toggle(key)}
+              className="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left text-sm text-ink-300 transition hover:bg-tint/[0.05] hover:text-ink-100"
+            >
+              {open ? <ChevronDown size={14} className="shrink-0" /> : <ChevronRight size={14} className="shrink-0" />}
+              {open ? <FolderOpen size={14} className="shrink-0 text-ink-400" /> : <Folder size={14} className="shrink-0 text-ink-400" />}
+              <span className="flex-1 truncate font-medium">{name}</span>
+              <span className="text-xs text-ink-500">{items.length}</span>
+            </button>
+            {open && <div className="mt-0.5 ml-4 space-y-0.5 border-l border-tint/[0.06] pl-1.5">{items.map(render)}</div>}
+          </div>
+        )
+      })}
+      {packs.filter((p) => !p.group).map(render)}
+    </>
+  )
+}
+
 /** Arborescence : tous les modpacks, les dossiers de CurseForge et leurs profils, les modpacks sans profil. */
 /** Sections de la colonne de gauche pour les contenus qui ne sont pas des modpacks. */
 const CONTENT_SECTIONS = [
@@ -138,7 +187,6 @@ export function ProfilesSidebar() {
       // préférence facultative
     }
   }
-  const packName = (folder: string) => overview?.packs.find((p) => p.folder === folder)?.name ?? folder
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-tint/[0.05] bg-ink-900/40">
@@ -215,17 +263,24 @@ export function ProfilesSidebar() {
             return (
               <div key={kind}>
                 <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">{title}</p>
-                {items.map((pack) => {
-                  const target: Selection = { kind: 'pack', folder: pack.folder }
-                  const latest = pack.contentVersions[0]?.version
-                  return (
-                    <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
-                      <Icon size={15} className="shrink-0 text-ink-400" />
-                      <span className="flex-1 truncate">{pack.name}</span>
-                      {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? latest.split('-')[0] : `v${latest}`}</span>}
-                    </SidebarItem>
-                  )
-                })}
+                <GroupedItems
+                  section={kind}
+                  packs={items}
+                  closed={closed}
+                  toggle={toggle}
+                  isSelected={(pack) => sameSelection(selection, { kind: 'pack', folder: pack.folder })}
+                  render={(pack) => {
+                    const target: Selection = { kind: 'pack', folder: pack.folder }
+                    const latest = pack.contentVersions[0]?.version
+                    return (
+                      <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                        <Icon size={15} className="shrink-0 text-ink-400" />
+                        <span className="flex-1 truncate">{pack.name}</span>
+                        {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? latest.split('-')[0] : `v${latest}`}</span>}
+                      </SidebarItem>
+                    )
+                  }}
+                />
               </div>
             )
           })}
@@ -233,14 +288,21 @@ export function ProfilesSidebar() {
         {library && library.packsWithoutProfile.length > 0 && !wanted && (
           <div>
             <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">Modpacks sans profil</p>
-            {library.packsWithoutProfile.map((folder) => {
-              const target: Selection = { kind: 'pack', folder }
-              return (
-                <SidebarItem key={folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
-                  <span className="truncate">{packName(folder)}</span>
-                </SidebarItem>
-              )
-            })}
+            <GroupedItems
+              section="modpack"
+              packs={library.packsWithoutProfile.flatMap((folder) => overview?.packs.find((p) => p.folder === folder) ?? [])}
+              closed={closed}
+              toggle={toggle}
+              isSelected={(pack) => sameSelection(selection, { kind: 'pack', folder: pack.folder })}
+              render={(pack) => {
+                const target: Selection = { kind: 'pack', folder: pack.folder }
+                return (
+                  <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                    <span className="truncate">{pack.name}</span>
+                  </SidebarItem>
+                )
+              }}
+            />
           </div>
         )}
       </nav>

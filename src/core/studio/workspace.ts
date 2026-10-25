@@ -61,6 +61,8 @@ export interface PackFile extends PackSettings {
   source: string | null
   /** Pack de ressources ou shader : versions de Minecraft visées, à la place de celles du zip (écrit si donné). */
   minecraftVersions: string[]
+  /** Groupe du Studio : sous-dossier de la colonne de gauche qui le range avec d'autres (écrit s'il est donné). */
+  group: string | null
 }
 
 export interface LocalFile {
@@ -144,6 +146,7 @@ function defaultPackFile(folder: string): PackFile {
     updates: DEFAULT_PACK_UPDATES,
     source: null,
     minecraftVersions: [],
+    group: null,
     exclude: [],
     disabledMods: [],
     keepPlayerConfigs: false
@@ -209,6 +212,7 @@ async function readPackFile(
       updates: normalizePackUpdates(data.updates),
       source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
       minecraftVersions: normalizeMinecraftVersions(data.minecraftVersions),
+      group: normalizeGroup(data.group),
       ...normalizePackSettings(data)
     }
     const error =
@@ -242,6 +246,13 @@ export function normalizeCurseForge(value: unknown): PackCurseForge | null {
     overrides: Array.isArray(data?.overrides) ? normalizeExclusions(data.overrides.filter((o): o is string => typeof o === 'string')) : [],
     files
   }
+}
+
+/** Nom de groupe du Studio : espaces resserrés, 64 caractères au plus ; vide ou invalide → aucun groupe. */
+export function normalizeGroup(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const group = value.trim().replace(/\s+/g, ' ').slice(0, 64).trim()
+  return group || null
 }
 
 /** Versions de Minecraft données par le publieur (« 1.21.1 », « 26.3 »), dédoublonnées. */
@@ -298,7 +309,8 @@ const isDefaultUpdates = (u: PackUpdates) =>
   u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, hangar, updates, source, minecraftVersions, ...info } = meta
+  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, hangar, updates, source, minecraftVersions, group, ...info } =
+    meta
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
@@ -311,6 +323,7 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...(profile ? { profile } : {}),
     ...(source ? { source } : {}),
     ...(minecraftVersions.length ? { minecraftVersions } : {}),
+    ...(group ? { group } : {}),
     ...(github ? {} : { github: false }),
     ...(curseforge ? { curseforge } : {}),
     ...(modrinth ? { modrinth } : {}),

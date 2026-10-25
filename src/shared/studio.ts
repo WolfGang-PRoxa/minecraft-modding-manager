@@ -258,6 +258,8 @@ export interface PackView {
   source: string | null
   /** Pack de ressources ou shader : versions de Minecraft données à la main (vide : celles du zip). */
   minecraftVersions: string[]
+  /** Groupe du Studio : sous-dossier de la colonne de gauche où il est rangé (null : aucun). */
+  group: string | null
   /** Versions d'un mod, de la plus récente à la plus ancienne (vide pour un modpack). */
   contentVersions: ContentVersionView[]
   badJars: BadJar[]
@@ -714,7 +716,8 @@ export interface StudioApi {
   useDefaultWorkspace(): Promise<ActionResult>
 
   createPack(name: string): Promise<ActionResult>
-  updatePackInfo(folder: string, info: { name: string; description: string }): Promise<ActionResult>
+  /** Fiche ; `group` absent : groupe inchangé, vide ou null : retiré de son groupe. */
+  updatePackInfo(folder: string, info: { name: string; description: string; group?: string | null }): Promise<ActionResult>
   updatePackSettings(folder: string, settings: PackSettings): Promise<ActionResult>
   pickCover(folder: string): Promise<ActionResult>
   removeCover(folder: string): Promise<ActionResult>

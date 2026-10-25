@@ -170,4 +170,27 @@ describe('packs de ressources et shaders dans le Studio', () => {
     await service.publishModToModrinth(folder, '1', 'release', noProgress)
     assert.deepEqual(modrinth.created.at(-1)!.data.loaders, ['iris', 'optifine'])
   })
+
+  it('range des contenus dans un groupe du Studio, sans rien toucher d’autre', async () => {
+    const zip = join(root.dir, 'MA3D – Plants.zip')
+    await writeFile(zip, await makeJar({ 'pack.mcmeta': JSON.stringify({ pack: { pack_format: 34, description: 'Cultures en 3D' } }) }))
+    const folder = await service.createPackContent('resourcepack', zip)
+    const packFile = async () => JSON.parse(await readFile(join(workspace, folder, 'pack.json'), 'utf8')) as Record<string, unknown>
+    const view = async () => (await service.overview()).packs.find((p) => p.folder === folder)!
+    assert.equal((await view()).group, null)
+    assert.ok(!('group' in (await packFile())), 'sans groupe, pack.json n’a pas de champ group')
+
+    assert.equal(await service.setPackGroup(folder, '  Mystical   Agriculture 3D '), 'Mystical Agriculture 3D')
+    assert.equal((await packFile()).group, 'Mystical Agriculture 3D')
+    assert.equal((await view()).group, 'Mystical Agriculture 3D')
+    assert.equal((await view()).contentVersions.length, 1, 'ses versions restent là')
+
+    // La fiche garde le groupe quand elle ne le donne pas, et le retire quand il est vide.
+    await service.updatePackInfo(folder, { name: 'MA3D – Plants', description: 'Cultures en 3D' })
+    assert.equal((await view()).group, 'Mystical Agriculture 3D')
+    await service.updatePackInfo(folder, { name: 'MA3D – Plants', description: 'Cultures en 3D', group: '   ' })
+    assert.equal((await view()).group, null)
+    assert.ok(!('group' in (await packFile())))
+    assert.equal(await service.setPackGroup(folder, null), null)
+  })
 })

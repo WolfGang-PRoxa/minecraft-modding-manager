@@ -11,7 +11,7 @@ import {
 import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth'
 import { hangarLink, hangarPublish, hangarStatus, hangarVersions } from './hangar'
 import { contentCreate, contentCurseforge, contentDelete, contentImport, contentMinecraft, contentNotes, contentSource, contentVersions, contentZip } from './content'
-import { packsCover, packsCreate, packsDelete, packsEdit, packsList, packsNotes, packsSettings, packsShow } from './packs'
+import { packsCover, packsCreate, packsDelete, packsEdit, packsGroup, packsList, packsNotes, packsSettings, packsShow } from './packs'
 import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
 import { packsLink, profilesList } from './profiles'
 import type { Command } from './registry'
@@ -26,6 +26,7 @@ export const COMMANDS = [
   packsShow,
   packsCreate,
   packsEdit,
+  packsGroup,
   packsSettings,
   packsNotes,
   packsCover,

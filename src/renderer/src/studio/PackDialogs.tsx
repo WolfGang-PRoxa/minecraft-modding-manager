@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Eye, FolderPlus, ImagePlus, PackagePlus, PencilLine, Trash2 } from 'lucide-react'
 import type { CurseForgeInstanceInfo, ZipProgress } from '../../../shared/studio'
 import { Button } from '../components/Button'
@@ -67,12 +67,19 @@ export function PackInfoDialog({ folder }: { folder: string }) {
   const run = useStudio((s) => s.run)
   const [name, setName] = useState(pack?.name ?? '')
   const [description, setDescription] = useState(pack?.description ?? '')
+  const [group, setGroup] = useState(pack?.group ?? '')
+  const packs = useStudio((s) => s.overview?.packs)
+  // Groupes déjà utilisés par les contenus du même type : proposés à la saisie.
+  const groups = useMemo(
+    () => [...new Set((packs ?? []).filter((p) => p.type === pack?.type && p.group).map((p) => p.group!))].sort((a, b) => a.localeCompare(b, 'fr')),
+    [packs, pack?.type]
+  )
   const [saving, setSaving] = useState(false)
   if (!pack) return null
 
   async function save() {
     setSaving(true)
-    if (await run(window.studio.updatePackInfo(folder, { name, description }), 'Infos enregistrées')) close()
+    if (await run(window.studio.updatePackInfo(folder, { name, description, group: group.trim() || null }), 'Infos enregistrées')) close()
     setSaving(false)
   }
 
@@ -124,6 +131,17 @@ export function PackInfoDialog({ folder }: { folder: string }) {
         </Field>
         <Field label="Description courte" hint="Une ou deux phrases, affichées sous le nom du modpack.">
           <TextArea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Survie difficile, donjons et technologie…" />
+        </Field>
+        <Field
+          label="Groupe"
+          hint="Range ce contenu dans un sous-dossier de la colonne de gauche, avec les autres du même groupe. Vide : aucun groupe. Rien ne change pour les joueurs."
+        >
+          <TextInput value={group} onChange={(e) => setGroup(e.target.value)} list="studio-groups" maxLength={64} placeholder="Aucun groupe" />
+          <datalist id="studio-groups">
+            {groups.map((g) => (
+              <option key={g} value={g} />
+            ))}
+          </datalist>
         </Field>
         <p className="text-xs text-ink-500">
           Identifiant : <span className="font-mono text-ink-300 select-text">{pack.id}</span> · utilisé dans les tags GitHub et pour

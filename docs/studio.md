@@ -55,7 +55,8 @@ modpack**) et l’ignore. Les dossiers dont le nom commence par un point sont ig
 ## L’écran du Studio
 
 À gauche, l’arborescence des [profils CurseForge](#les-profils-curseforge), avec en tête **Tous mes modpacks**. À
-droite, ce qui y est sélectionné : tous les modpacks, ou un profil et son modpack.
+droite, ce qui y est sélectionné : tous les modpacks, ou un profil et son modpack. Les contenus d’une même section
+peuvent y être réunis dans des [groupes](#ranger-dans-des-groupes).
 
 En haut de la partie droite, **Mes modpacks** et le chemin du dossier (un clic l’ouvre dans l’Explorateur), puis les
 boutons :
@@ -338,6 +339,20 @@ CurseForge (dev.bukkit.org) et SpigotMC ne sont pas pris en charge : SpigotMC n�
 en ligne à la main. Les plugins n’apparaissent pas dans la Bibliothèque des joueurs : ils vont sur un serveur, pas
 dans un profil CurseForge.
 
+## Ranger dans des groupes
+
+Dans la colonne de gauche, les contenus d’une même section (**Mods**, **Packs de ressources**, **Shaders**,
+**Plugins**, **Modpacks sans profil**) peuvent être réunis dans des **groupes** : des sous-dossiers repliables, placés
+en tête de leur section et suivis des contenus qui n’ont pas de groupe. Par exemple, les packs de ressources d’un même
+projet, publiés en plusieurs modules, tiennent sous un seul groupe.
+
+Le groupe se donne avec **Infos et image**, sur la carte du contenu, champ **Groupe** : les groupes déjà utilisés dans la
+section y sont proposés, et un champ vide retire le contenu de son groupe. Un clic sur un groupe le replie ou le
+déplie, et le Studio s’en souvient ; un groupe qui contient le contenu sélectionné reste ouvert.
+
+Un groupe sert seulement à ranger le Studio : les dossiers ne bougent pas sur le disque, et rien ne change dans les
+publications ni chez les joueurs. Depuis le terminal ou Claude Code : `packs group` ([commandes](commandes.md)).
+
 ## Le fichier pack.json
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :
@@ -346,6 +361,7 @@ Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio 
 |---|---|
 | `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
 | `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders), `plugin` pour un [plugin](#les-plugins). |
+| `group` | Le [groupe](#ranger-dans-des-groupes) où il est rangé dans la colonne de gauche du Studio (64 caractères au plus). Absent s’il n’en a pas. |
 | `source` | Mod ou plugin : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié. |
 | `minecraftVersions` | Pack de ressources, shader ou plugin : les versions de Minecraft visées, à la place de celles de son fichier. Absent sinon. |
 | `modrinth`, `hangar` | Son projet Modrinth (mod, pack de ressources, shader, plugin) ou Hangar (plugin), et les versions envoyées par l’application. Absents s’il n’y en a pas. |

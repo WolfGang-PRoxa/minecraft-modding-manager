@@ -38,6 +38,7 @@ export const packsList = command({
       id: pack.id,
       type: pack.type,
       name: pack.name,
+      group: pack.group,
       versions: pack.versions.length,
       latest: pack.versions[0] ? versionSummary(pack.versions[0]) : null,
       nextVersion: pack.nextVersion,
@@ -75,6 +76,7 @@ export const packsShow = command({
       id: pack.id,
       name: pack.name,
       description: pack.description,
+      group: pack.group,
       settings: pack.settings,
       nextVersion: pack.nextVersion,
       versions: pack.versions.map((v) => ({
@@ -138,6 +140,25 @@ export const packsEdit = command({
     return { folder: pack.folder }
   },
   print: ({ folder }) => `Fiche de ${folder} enregistrée.`
+})
+
+export const packsGroup = command({
+  name: 'packs group',
+  summary: 'Range un modpack ou un contenu dans un groupe du Studio, ou l’en sort.',
+  description:
+    'Un groupe est un sous-dossier de la colonne de gauche du Studio, dans la section de son type (Packs de ressources, ' +
+    'Mods…) : les contenus du même groupe y sont réunis. Rien ne bouge sur le disque ni chez les joueurs. Sans group ' +
+    '(ou vide) : retiré de son groupe.',
+  params: z.object({
+    pack: packParam,
+    group: z.string().optional().describe('Nom du groupe (« Mystical Agriculture 3D ») ; absent ou vide pour l’en sortir.')
+  }),
+  kind: 'write',
+  async run({ pack: ref, group }, ctx) {
+    const pack = await packOf(ctx, ref)
+    return { folder: pack.folder, group: await ctx.service.setPackGroup(pack.folder, group ?? null) }
+  },
+  print: ({ folder, group }) => (group ? `${folder} rangé dans le groupe « ${group} ».` : `${folder} n’est plus dans un groupe.`)
 })
 
 /** Mods désignés par leur fichier ou leur projet CurseForge, retrouvés dans la dernière version du modpack. */
