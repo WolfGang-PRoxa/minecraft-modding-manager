@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.1.0] - 2026-10-26
+
 ### Ajouts
 
 - Studio : les mods, packs de ressources, shaders, plugins et modpacks sans profil se rangent dans des **groupes**,
@@ -384,7 +386,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.0.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.1.0...HEAD
+[2.1.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.0.0...app-v2.1.0
 [2.0.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.3...app-v2.0.0
 [1.9.3]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.2...app-v1.9.3
 [1.9.2]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v1.9.1...app-v1.9.2
