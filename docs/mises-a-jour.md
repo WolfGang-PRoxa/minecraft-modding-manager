@@ -1,7 +1,7 @@
 # Mises à jour de l’application
 
-Modding Manager se tient à jour tout seul : quand une nouvelle version sort, il la propose, la télécharge, la
-vérifie et l’installe en un clic, sans rien faire perdre.
+Modding Manager se tient à jour tout seul : quand une nouvelle version sort, il l’installe de lui-même à son
+démarrage, ou la propose et l’installe en un clic ; il la télécharge et la vérifie, sans rien faire perdre.
 
 ## Être prévenu
 
@@ -20,13 +20,26 @@ vue : « Nouvelle version disponible : 1.1.0 · tu utilises la 1.0.3 », avec la
 - **Plus tard** replie la barre en un petit rappel **Mise à jour** dans la barre de titre, jusqu’au prochain
   lancement. Un clic sur le rappel rouvre la proposition.
 
+## Mise à jour automatique au démarrage
+
+Avec **Paramètres → Démarrage et mises à jour → Se mettre à jour au démarrage** (activé par défaut), une nouvelle
+version trouvée au lancement de l’application s’installe d’elle-même : la notification **Mise à jour automatique**
+l’annonce, puis l’installation suit les étapes ci-dessous, sans clic. L’application redémarre dans la nouvelle
+version. Lancée avec Windows, elle se met à jour de la même façon et revient réduite dans la barre des tâches.
+
+Seul le lancement de l’application déclenche la mise à jour automatique : une version qui sort pendant qu’elle est
+ouverte est proposée en haut de la fenêtre, et s’installera d’elle-même au lancement suivant. Juste après une mise à
+jour, l’application ne s’en relance pas une autre. Si elle échoue, la notification **Mise à jour impossible** en
+donne la raison, comme pour une mise à jour lancée à la main.
+
 ## Installer la mise à jour
 
 1. **Mettre à jour** télécharge le nouvel installeur ; la barre affiche la progression, et **Annuler** l’interrompt.
 2. L’empreinte SHA-256 du fichier téléchargé est comparée à celle que GitHub publie pour cet installeur : un fichier
    abîmé ou modifié n’est jamais lancé.
 3. L’application se ferme. La fenêtre **Mise à jour** de l’installeur montre la progression, avec la version installée
-   et la nouvelle (`1.0.3 → 1.0.4`) : il remplace les fichiers sans rien demander, puis relance l’application.
+   et la nouvelle (`1.0.3 → 1.0.4`) : il remplace les fichiers sans rien demander, puis relance l’application
+   (réduite si elle l’était, par exemple lancée avec Windows).
 4. Une notification confirme la nouvelle version et propose **Voir les nouveautés**.
 
 Les réglages, la connexion GitHub, le raccourci sur le bureau et les modpacks installés ne bougent pas.

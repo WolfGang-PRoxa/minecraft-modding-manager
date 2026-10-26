@@ -67,6 +67,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     mod l'état que le joueur lui avait donné. `InstallResult.keptConfigs` est annoncé dans la notification.
   - `shortcut.ts` : raccourci `.lnk` de l'app (bureau ou emplacement choisi). Non packagée : cible
     `electron.exe "<projet>"` et icône `.ico` générée depuis `build/icon.png`.
+  - `startup.ts` : lancement avec Windows (réglage `launchAtStartup`, activé par défaut) : valeur `APP_NAME` de
+    `HKCU\…\CurrentVersion\Run`, `"<exe>" --minimized`, écrite par `setLoginItemSettings` seulement si elle manque ou
+    diffère, retirée seulement si elle existe (la réécrire réactiverait l'app désactivée dans le Gestionnaire des
+    tâches : `StartupApproved`), relue avec `reg query` ; packagée seulement. L'installeur la retire à la
+    désinstallation. `--minimized` : fenêtre réduite au lancement, agrandie à la première restauration.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
     fenêtre), télécharge l'installeur dans `%TEMP%\modding-manager`, compare son SHA-256 au `digest` publié par
     GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec `--updated`.
@@ -75,6 +80,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `noteRunningVersion` (réglage `lastRunVersion`) dit au lancement si l'app vient d'être mise à jour, et depuis
     quelle version (`LaunchInfo.previousVersion` : la page Nouveautés marque « Nouveau » ce qui a été reçu depuis).
     `AppUpdateInfo.releases` porte le texte de chaque release `app-v*` plus récente que l'app, jusqu'à celle proposée.
+    Mise à jour au démarrage (réglage `autoUpdate`, activé par défaut) : `autoUpdateOnLaunch` → `LaunchInfo.autoUpdate`
+    (jamais juste après une mise à jour ; packagée, ou en dev avec `MM_GITHUB_API`), le store lance `installAppUpdate`
+    après la première lecture du catalogue. Fenêtre réduite : l'installeur reçoit `--minimized` et relance l'app
+    avec `--updated --minimized`.
   - `report.ts` : signalement d'un problème (canaux `report:*`). Issue créée sur `APP_REPO` avec le compte GitHub
     connecté (`resolveCredential`) ; sans compte, ou si GitHub refuse, la page « nouvelle issue » s'ouvre préremplie
     dans le navigateur. Le corps (`src/shared/report.ts`) est du Markdown simple, lisible tel quel dans un mail ; les
@@ -608,7 +617,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   -c.extraMetadata.name=mm-test -c.extraMetadata.productName="MM Test" -c.nsis.shortcutName="MM Test"
   -c.directories.output=<dossier>`, plus `-c.extraMetadata.version=1.0.1` pour une autre version) : autre dossier
   d'installation (`Programs\mm-test`), autres clés de registre. Le `userData` vient d'`APP_NAME`, pas du nom du
-  produit : pour ne pas toucher au vrai `%APPDATA%\Modding Manager`, changer `APP_NAME` le temps du build (et
+  produit : pour ne pas toucher au vrai `%APPDATA%\Modding Manager`, changer `APP_NAME` le temps du build (« MM Test »,
+  qui nomme aussi la valeur de démarrage de la clé Run, et
   `-c.executableName` pour ne pas viser les vrais raccourcis), puis supprimer son dossier. Désinstaller ensuite avec
   `"Uninstall <exécutable>.exe" /currentuser /S`. Depuis PowerShell, mettre chaque
   argument `-c.…` entier entre guillemets (`"-c.productName=MM Test"`), sinon il est coupé au premier point.
@@ -623,6 +633,15 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `${U+00A0}` (insécable), sinon le `:` peut passer seul à la ligne. PowerShell prend l'apostrophe typographique `’`
   pour un délimiteur de chaîne.
 - Depuis Git Bash, un argument `/S` est converti en chemin : lancer l'installeur silencieux depuis PowerShell.
+- Fenêtre réduite au lancement : lancée par l'Explorateur (entrée de démarrage, `ExecShellAsUser` de l'installeur,
+  `Start-Process`), le premier affichage d'une fenêtre suit la façon dont il l'a lancée (`STARTUPINFO` : normale) et
+  ignore `minimize()` ; d'où le second `minimize()`. Playwright ne le montre pas (il lance sans `STARTUPINFO`) :
+  vérifier avec `Start-Process` et `IsIconic`.
+- `app.getLoginItemSettings` (Electron 44) ne liste pas une valeur Run écrite sous un nom choisi (`name`) :
+  `launchItems` vide, `openAtLogin` faux. D'où la lecture par `reg query`.
+- Faux installeur pour essayer la mise à jour : un exécutable 32 bits sans manifeste dont le nom contient « Setup »
+  est pris pour un installeur à élever (détection d'installeur de Windows) : `spawn … EACCES`. Lui donner un
+  manifeste `asInvoker` (le vrai installeur NSIS en a un).
   Un exécutable de l'app lancé depuis un outil hérite d'`ELECTRON_RUN_AS_NODE` (pas de fenêtre) : retirer la variable.
 - L'installeur est compilé avec `-INPUTCHARSET UTF8` : les messages accentués d'`installer.nsh` s'écrivent en UTF-8.
   Les avertissements NSIS font échouer le build (variable ou étiquette inutilisée…).

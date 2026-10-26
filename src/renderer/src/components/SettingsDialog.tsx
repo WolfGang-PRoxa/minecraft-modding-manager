@@ -187,6 +187,37 @@ export function SettingsDialog() {
     </Section>
   )
 
+  const startup = (
+    <Section key="startup" title="Démarrage et mises à jour">
+      <div className="flex items-center justify-between gap-6">
+        <div>
+          <div className="text-sm font-medium text-ink-100">Lancer avec Windows</div>
+          <div className="mt-0.5 text-xs text-ink-400">
+            Au démarrage du PC, l’application s’ouvre réduite dans la barre des tâches.
+          </div>
+        </div>
+        <Toggle
+          label="Lancer avec Windows"
+          checked={settings.launchAtStartup}
+          onChange={(value) => void updateSettings({ launchAtStartup: value })}
+        />
+      </div>
+      <div className="mt-5 flex items-center justify-between gap-6">
+        <div>
+          <div className="text-sm font-medium text-ink-100">Se mettre à jour au démarrage</div>
+          <div className="mt-0.5 text-xs text-ink-400">
+            Quand une nouvelle version est sortie, l’application l’installe d’elle-même en s’ouvrant, puis redémarre.
+          </div>
+        </div>
+        <Toggle
+          label="Se mettre à jour au démarrage"
+          checked={settings.autoUpdate}
+          onChange={(value) => void updateSettings({ autoUpdate: value })}
+        />
+      </div>
+    </Section>
+  )
+
   const about = (
     <Section key="about" title="À propos">
       <p className="text-sm text-ink-200">
@@ -196,7 +227,9 @@ export function SettingsDialog() {
       <p className="mt-1 text-xs leading-relaxed text-ink-400">
         {update
           ? `La version ${update.version} est disponible : elle est proposée en haut de la fenêtre.`
-          : 'Une nouvelle version est proposée en haut de la fenêtre dès qu’elle sort, et s’installe en un clic.'}
+          : settings.autoUpdate
+            ? 'Une nouvelle version s’installe d’elle-même au démarrage de l’application, ou en un clic dès qu’elle est proposée en haut de la fenêtre.'
+            : 'Une nouvelle version est proposée en haut de la fenêtre dès qu’elle sort, et s’installe en un clic.'}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" icon={RefreshCw} disabled={checking} onClick={() => void checkAppUpdate()}>
@@ -254,17 +287,17 @@ export function SettingsDialog() {
   const columns = !publisher
     ? [
         [usage, appearanceSection],
-        [curseForgeSection, instances, shortcutSection, about]
+        [curseForgeSection, instances, startup, shortcutSection, about]
       ]
     : wide
       ? [
-          [usage, appearanceSection, shortcutSection, about],
+          [usage, appearanceSection, startup, shortcutSection, about],
           [curseForgeSection, instances, curseForgeAccount, modrinthAccount, hangarAccount],
           [workspace, maintenance, claude]
         ]
       : [
           [usage, appearanceSection, curseForgeSection, instances],
-          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, shortcutSection, about]
+          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, startup, shortcutSection, about]
         ]
 
   return (

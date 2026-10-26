@@ -8,6 +8,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- L’application se lance au démarrage de Windows, réduite dans la barre des tâches. Un clic sur son icône l’ouvre en
+  grand. Désactivable dans **Paramètres → Démarrage et mises à jour → Lancer avec Windows**.
+- Une nouvelle version de l’application s’installe d’elle-même à son démarrage, puis l’application redémarre.
+  Désactivable dans **Paramètres → Démarrage et mises à jour → Se mettre à jour au démarrage** : la mise à jour reste
+  alors proposée en haut de la fenêtre.
+
 ## [2.2.1] - 2026-10-26
 
 ### Améliorations

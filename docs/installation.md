@@ -56,6 +56,10 @@ raccourci répare aussi une icône restée vide.
 Modding Manager se lance depuis le menu Démarrer ou depuis son raccourci. La fenêtre s’ouvre en grand, la barre des
 tâches restant visible ; `F11` passe en plein écran.
 
+L’application se lance aussi au démarrage de Windows, réduite dans la barre des tâches : un clic sur son icône l’ouvre
+en grand. Ce lancement se désactive dans
+[Paramètres → Démarrage et mises à jour](parametres.md#démarrage-et-mises-à-jour).
+
 L’application ne s’ouvre qu’une fois : la relancer alors qu’elle tourne déjà ramène simplement sa fenêtre au premier
 plan. Un publieur retrouve la dernière vue utilisée (Bibliothèque ou Studio).
 
@@ -90,7 +94,8 @@ Dans **Paramètres Windows → Applications → Applications installées**, cher
 **Désinstaller**. Une fenêtre demande confirmation : il faut cliquer sur **Désinstaller** (la touche `Entrée` ne
 suffit pas, pour éviter une fausse manœuvre) ; elle se ferme d’elle-même une fois l’application retirée. Si
 l’application est ouverte, la confirmation le signale : elle est fermée avant d’être retirée. Le raccourci du bureau
-est retiré avec l’application (un raccourci créé ailleurs reste à supprimer à la main).
+et le lancement au démarrage de Windows sont retirés avec l’application (un raccourci créé ailleurs reste à supprimer
+à la main).
 
 La désinstallation laisse en place :
 

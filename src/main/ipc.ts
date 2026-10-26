@@ -16,13 +16,14 @@ import { openReportInBrowser, reportInfo, submitReport } from './report'
 import { registerRoleIpc } from './roleIpc'
 import { getSettings, updateSettings } from '../core/settings'
 import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut'
+import { syncLaunchAtStartup } from './startup'
 import { studioTask } from './studioIpc'
 import { applyInterfaceScale, toggleMaximize } from './windowState'
 import { normalizeAppearance } from '../shared/appearance'
 
 export function registerIpc(
   getWindow: () => BrowserWindow | null,
-  launch: Pick<LaunchInfo, 'justUpdated' | 'previousVersion'>
+  launch: Pick<LaunchInfo, 'justUpdated' | 'previousVersion' | 'autoUpdate'>
 ): void {
   registerAuthIpc()
   registerRoleIpc()
@@ -95,11 +96,14 @@ export function registerIpc(
     }
     if (typeof patch.shortcutPrompted === 'boolean') allowed.shortcutPrompted = patch.shortcutPrompted
     if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView
+    if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate
+    if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup
     if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance)
     return updateSettings(allowed).then((settings) => {
       const win = getWindow()
       if (allowed.appearance && win) applyInterfaceScale(win, settings.appearance.scale)
-      return settings
+      if (allowed.launchAtStartup === undefined) return settings
+      return syncLaunchAtStartup(settings.launchAtStartup).then(() => settings)
     })
   })
   ipcMain.handle('settings:pickInstancesDir', async () => {
@@ -119,7 +123,7 @@ export function registerIpc(
   ipcMain.handle('app:launchInfo', (): LaunchInfo => {
     const info: LaunchInfo = { view: process.argv.includes('--studio') ? 'studio' : null, ...update }
     // Annoncé une seule fois, même si la fenêtre est rechargée.
-    update = { justUpdated: false, previousVersion: null }
+    update = { justUpdated: false, previousVersion: null, autoUpdate: false }
     return info
   })
 
@@ -144,6 +148,7 @@ export function registerIpc(
   ipcMain.handle('app:update', () =>
     installAppUpdate({
       busyWith: () => (isInstalling() ? 'l’installation d’un modpack' : studioTask()),
+      minimized: () => getWindow()?.isMinimized() ?? false,
       onProgress: (progress) => send('app:update-progress', progress)
     })
   )

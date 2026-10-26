@@ -237,6 +237,10 @@ export interface Settings {
   lastRunVersion: string | null
   /** Un passage automatique qui échoue est confié à Claude Code, qui en cherche la cause. */
   maintenanceClaude: boolean
+  /** Au démarrage, une nouvelle version de l'application s'installe d'elle-même. */
+  autoUpdate: boolean
+  /** L'application s'ouvre, réduite, au démarrage de Windows. */
+  launchAtStartup: boolean
   /** Style de couleurs, styles personnalisés et taille de l'interface. */
   appearance: AppearanceSettings
 }
@@ -342,6 +346,8 @@ export interface LaunchInfo {
   justUpdated: boolean
   /** Version utilisée avant cette mise à jour : ses nouveautés depuis sont mises en avant (null si inconnue). */
   previousVersion: string | null
+  /** La version proposée doit s'installer d'elle-même (réglage autoUpdate) : une seule fois, au démarrage. */
+  autoUpdate: boolean
 }
 
 export type ReportKind = 'bug' | 'suggestion'

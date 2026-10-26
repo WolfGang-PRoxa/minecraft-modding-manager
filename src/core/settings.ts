@@ -17,6 +17,8 @@ const DEFAULTS: Settings = {
   lastView: 'library',
   lastRunVersion: null,
   maintenanceClaude: false,
+  autoUpdate: true,
+  launchAtStartup: true,
   appearance: DEFAULT_APPEARANCE
 }
 
@@ -47,6 +49,8 @@ export async function getSettings(): Promise<Settings> {
     lastView: stored?.lastView === 'studio' ? 'studio' : 'library',
     lastRunVersion: typeof stored?.lastRunVersion === 'string' && stored.lastRunVersion ? stored.lastRunVersion : null,
     maintenanceClaude: stored?.maintenanceClaude === true,
+    autoUpdate: stored?.autoUpdate !== false,
+    launchAtStartup: stored?.launchAtStartup !== false,
     appearance: normalizeAppearance(stored?.appearance)
   }
 }

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu, protocol, session, shell, type Session } from 'electron'
 import { join } from 'node:path'
 import { APP_NAME } from '../shared/config'
-import { cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
+import { autoUpdateOnLaunch, cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setModrinthApiOverride } from '../core/modrinth'
 import { setHangarApiOverride } from '../core/hangar'
@@ -13,6 +13,7 @@ import { findTheme, windowBackground } from '../shared/appearance'
 import { enablePreviousIdentityMigration, migrateDataDir } from '../core/previousIdentity'
 import { migratePreviousInstallation } from './previousIdentity'
 import { WINDOWS_APP_ID } from './shortcut'
+import { startsMinimized, syncLaunchAtStartup } from './startup'
 import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
 import { applyInterfaceScale, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
 
@@ -50,10 +51,20 @@ async function createWindow(): Promise<void> {
     }
   })
 
-  // Ouverte en grand, la barre des tâches restant visible : le plein écran est au bout de F11.
+  // Ouverte en grand, la barre des tâches restant visible : le plein écran est au bout de F11. Lancée avec Windows,
+  // elle s'ouvre réduite dans la barre des tâches, et en grand la première fois qu'on la rouvre.
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.maximize()
-    mainWindow?.show()
+    if (!mainWindow) return
+    if (startsMinimized()) {
+      mainWindow.minimize()
+      // Lancée par l'Explorateur (démarrage de Windows, relance par l'installeur), le premier affichage de la fenêtre
+      // suit la façon dont il l'a lancée (fenêtre normale) et non celle demandée : elle est réduite une seconde fois.
+      if (!mainWindow.isMinimized()) mainWindow.minimize()
+      mainWindow.once('restore', () => mainWindow?.maximize())
+    } else {
+      mainWindow.maximize()
+      mainWindow.show()
+    }
   })
   watchWindowState(mainWindow)
   // Taille de l'interface : le zoom est réappliqué à chaque chargement de la page (Chromium le retient par origine).
@@ -133,9 +144,11 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     Menu.setApplicationMenu(null)
     restrictPermissions(session.defaultSession)
     const launch = await noteRunningVersion()
+    const settings = await getSettings()
+    void syncLaunchAtStartup(settings.launchAtStartup)
     cleanAppUpdateDownloads()
     void migratePreviousInstallation()
-    registerIpc(() => mainWindow, launch)
+    registerIpc(() => mainWindow, { ...launch, autoUpdate: autoUpdateOnLaunch(settings.autoUpdate, launch.justUpdated) })
     await registerStudio(() => mainWindow)
     await createWindow()
   })

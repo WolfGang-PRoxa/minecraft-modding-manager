@@ -9,6 +9,7 @@ import { downloadFile } from './download'
 import { removeQuietly } from '../core/fsutil'
 import { getCatalog } from './github'
 import { getSettings, updateSettings } from '../core/settings'
+import { MINIMIZED_SWITCH } from './startup'
 
 const INSTALLER_PREFIX = 'Modding-Manager-Setup-'
 const downloadDir = () => join(app.getPath('temp'), APP_TEMP_DIR)
@@ -44,6 +45,15 @@ export async function noteRunningVersion(): Promise<{ justUpdated: boolean; prev
 }
 
 /**
+ * La version proposée s'installe-t-elle d'elle-même à ce lancement (réglage autoUpdate) ? Pas juste après une mise à
+ * jour, qui ne doit pas pouvoir se relancer en boucle. Seulement depuis l'application installée, ou en développement
+ * avec un faux serveur (MM_GITHUB_API) : depuis le dépôt, le vrai installeur remplacerait l'installation réelle.
+ */
+export function autoUpdateOnLaunch(enabled: boolean, justUpdated: boolean): boolean {
+  return enabled && !justUpdated && (app.isPackaged || Boolean(process.env.MM_GITHUB_API))
+}
+
+/**
  * Supprime, sans retarder le démarrage, les installeurs laissés par les mises à jour précédentes. Celui qui vient
  * de relancer l'application peut encore tourner : s'il reste verrouillé, il partira au lancement suivant.
  */
@@ -63,14 +73,15 @@ function describeError(err: unknown): string {
 }
 
 /** Lance l'installeur détaché de l'application (il doit lui survivre) et attend qu'il ait bien démarré. */
-function launchInstaller(path: string): Promise<void> {
+function launchInstaller(path: string, minimized: boolean): Promise<void> {
   return new Promise((resolve, reject) => {
     const fail = (err: unknown) =>
       reject(new Error(`L’installeur n’a pas pu être lancé (${err instanceof Error ? err.message : String(err)}).`))
     try {
       // --updated : l'installeur sait qu'il s'agit d'une mise à jour demandée par l'application. Il ne pose
       // alors aucune question (application déjà installée, application en cours d'exécution) et la relance à la fin.
-      const child = spawn(path, ['--updated'], { detached: true, stdio: 'ignore' })
+      // --minimized : elle est relancée réduite, comme elle l'était (lancement avec Windows).
+      const child = spawn(path, ['--updated', ...(minimized ? [MINIMIZED_SWITCH] : [])], { detached: true, stdio: 'ignore' })
       child.once('error', fail)
       child.once('spawn', () => {
         child.unref()
@@ -90,6 +101,8 @@ function launchInstaller(path: string): Promise<void> {
 export async function installAppUpdate(options: {
   /** Opération en cours que le redémarrage interromprait (« la publication »…), sinon null. */
   busyWith: () => string | null
+  /** La fenêtre est réduite : l'installeur relance l'application réduite. */
+  minimized: () => boolean
   onProgress: (progress: AppUpdateProgress) => void
 }): Promise<AppUpdateResult> {
   const failed = (error: string): AppUpdateResult => ({ ok: false, reason: 'failed', error })
@@ -126,7 +139,7 @@ export async function installAppUpdate(options: {
     signal.throwIfAborted()
 
     options.onProgress({ phase: 'installing', done: size, total: size })
-    await launchInstaller(destination)
+    await launchInstaller(destination, options.minimized())
     launched = true
     // Le temps d'afficher l'étape, puis l'application se ferme : l'installeur attend sa fermeture.
     setTimeout(() => app.quit(), 500)

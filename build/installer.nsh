@@ -19,11 +19,13 @@
   StrCpy $isForceCurrentInstall "1"
 !macroend
 
-; Le raccourci du bureau est créé par l'application (au premier lancement ou dans ses paramètres),
-; pas par l'installeur : on le retire à la désinstallation, mais pas lors d'une mise à jour.
+; Le raccourci du bureau et le lancement avec Windows (valeur « ${PRODUCT_NAME} » de la clé Run, src/main/startup.ts)
+; sont créés par l'application, pas par l'installeur : on les retire à la désinstallation, mais pas lors d'une mise à jour.
 !macro customUnInstall
   ${ifNot} ${isUpdated}
     Delete "$DESKTOP\${SHORTCUT_NAME}.lnk"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCT_NAME}"
+    DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" "${PRODUCT_NAME}"
   ${endIf}
   ; Pas de page de fin : la fenêtre se ferme d'elle-même.
   SetAutoClose true
@@ -34,14 +36,22 @@
 ; son icône. electron-builder ne refait cette demande qu'en créant lui-même le raccourci du bureau
 ; (createDesktopShortcut), ce qu'il ne fait pas ici : on la refait une fois les nouveaux fichiers en place.
 ; Ensuite, comme l'installeur « en un clic » : la fenêtre se ferme et l'application s'ouvre (avec --updated après une
-; mise à jour demandée par l'application, qui l'annonce alors).
+; mise à jour demandée par l'application, qui l'annonce alors, et --minimized si elle était réduite : lancée avec
+; Windows, elle le reste).
 !macro customInstall
   System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
   SetAutoClose true
   ${IfNot} ${Silent}
     HideWindow
     ${If} ${isUpdated}
-      ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated"
+      ${GetParameters} $R8
+      ClearErrors
+      ${GetOptions} $R8 "--minimized" $R9
+      ${If} ${Errors}
+        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated"
+      ${Else}
+        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated --minimized"
+      ${EndIf}
     ${Else}
       ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" ""
     ${EndIf}

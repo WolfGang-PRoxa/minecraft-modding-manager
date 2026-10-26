@@ -48,6 +48,8 @@ depuis les paramètres ; pour les modifier à la main, fermer d’abord l’appl
 | `lastView` | La dernière vue affichée (`library` ou `studio`), rouverte au lancement. |
 | `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
 | `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |
+| `autoUpdate` | Installer d’elle-même une nouvelle version de l’application à son démarrage (`true` par défaut). |
+| `launchAtStartup` | Lancer l’application, réduite, au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. |
 
 ## Dans un profil installé
 

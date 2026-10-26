@@ -7,7 +7,7 @@ Les sections **Dossier des contenus**, **Compte CurseForge**, **Compte Modrinth*
 automatiques** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
-colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des
+colonnes : l’application (utilisation, apparence, démarrage et mises à jour, raccourci, à propos), CurseForge (installation, dossier des
 instances, compte), Modrinth et Hangar,
 puis le Studio (dossier des contenus, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
@@ -85,6 +85,16 @@ Le dossier `Instances` de CurseForge, où les modpacks sont installés, et la fa
 
 À ne modifier que si le dossier d’installation a été changé dans les paramètres Minecraft de CurseForge et que
 l’application ne trouve pas les profils. Voir [Le dossier des instances](curseforge.md#le-dossier-des-instances).
+
+## Démarrage et mises à jour
+
+- **Lancer avec Windows** (activé par défaut) : au démarrage du PC, l’application s’ouvre réduite dans la barre des
+  tâches ; un clic sur son icône l’ouvre en grand. Elle s’inscrit pour cela dans les applications de démarrage de
+  Windows, où elle se désactive aussi (Gestionnaire des tâches, onglet **Applications de démarrage**). Désactivé,
+  l’application retire son inscription.
+- **Se mettre à jour au démarrage** (activé par défaut) : quand une nouvelle version est sortie, l’application
+  l’installe d’elle-même en s’ouvrant, puis redémarre. Désactivé, la mise à jour reste proposée en haut de la fenêtre
+  et s’installe en un clic. Voir [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique-au-démarrage).
 
 ## Raccourci
 
