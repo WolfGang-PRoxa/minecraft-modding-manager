@@ -1,6 +1,6 @@
 # Publier et supprimer
 
-Publier met les releases GitHub en accord avec le dossier des modpacks : nouvelles versions, mises à jour et
+Publier met les releases GitHub en accord avec le dossier des contenus : nouvelles versions, mises à jour et
 suppressions, en une seule opération, validée après en avoir vu le détail.
 
 ## Publier sur GitHub

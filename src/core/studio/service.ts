@@ -146,7 +146,7 @@ export interface PlayerTestRequest {
 }
 
 export interface StudioServiceOptions {
-  /** Dossier des modpacks (réglage propre au studio). */
+  /** Dossier des contenus (réglage propre au studio). */
   getWorkspaceDir(): string | null
   defaultWorkspaceDir: string
   /** Rôle et dépôt, relus à chaque fois dans les réglages de l'application. */
@@ -274,7 +274,7 @@ export class StudioService {
 
   private requireWorkspace(): string {
     const dir = this.workspaceDir
-    if (!dir) throw new StudioError('Choisis d’abord le dossier de tes modpacks.')
+    if (!dir) throw new StudioError('Choisis d’abord le dossier de tes contenus.')
     return dir
   }
 
@@ -524,7 +524,7 @@ export class StudioService {
       throw new StudioError(github.state === 'no-token' ? 'Pas de connexion GitHub : connecte-toi dans les paramètres.' : github.error!)
     }
     const workspace = await this.scan()
-    if (!workspace?.exists) throw new StudioError('Le dossier des modpacks est introuvable.')
+    if (!workspace?.exists) throw new StudioError('Le dossier des contenus est introuvable.')
     const plan = computePlan(workspace, this.remote, this.remoteRepo.owner)
     annotatePlan(plan, await this.findExcluded(workspace, plan), await reportsBySignature())
     return plan
@@ -707,13 +707,13 @@ export class StudioService {
   // ---------------------------------------------------------------------------------------------
   // Contenu des zips
 
-  /** Chemin d'un zip du dossier d'un modpack : jamais en dehors du dossier des modpacks. */
+  /** Chemin d'un zip du dossier d'un modpack : jamais en dehors du dossier des contenus. */
   private async packZip(folder: string, fileName: string): Promise<string> {
     const root = resolve(this.requireWorkspace())
     const dir = resolve(root, folder)
     const file = resolve(dir, fileName)
     if (dirname(dir) !== root || dirname(file) !== dir || !/\.zip$/i.test(file)) {
-      throw new StudioError('Ce zip n’est pas dans le dossier des modpacks.')
+      throw new StudioError('Ce zip n’est pas dans le dossier des contenus.')
     }
     if (!(await pathExists(file))) throw new StudioError(`${fileName} n’est plus dans le dossier ${folder}.`)
     return file

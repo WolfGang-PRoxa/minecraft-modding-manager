@@ -104,7 +104,7 @@ dépôt public seront signés, après une approbation manuelle du mainteneur. La
   (bouton **Copier** du code de connexion GitHub) est permise.
 - Les boutons **Ouvrir** n’ouvrent que des dossiers dans l’Explorateur, jamais un fichier ou un programme.
 - Les liens s’ouvrent dans le navigateur, et seulement s’ils sont en `https`.
-- Le Studio n’ouvre que les zips du dossier des modpacks.
+- Le Studio n’ouvre que les zips du dossier des contenus.
 - Une seule installation de modpack, et une seule opération du Studio, se font à la fois ; la mise à jour de
   l’application attend qu’elles soient terminées.
 

@@ -3,13 +3,13 @@
 Les paramètres s’ouvrent avec le bouton en forme d’engrenage, à droite de la barre de titre. `Échap`, la croix ou un
 clic à côté de la fenêtre les referment. Chaque réglage est enregistré dès qu’il est modifié.
 
-Les sections **Dossier des modpacks**, **Compte CurseForge**, **Compte Modrinth**, **Compte Hangar**, **Mises à jour
+Les sections **Dossier des contenus**, **Compte CurseForge**, **Compte Modrinth**, **Compte Hangar**, **Mises à jour
 automatiques** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
 colonnes : l’application (utilisation, apparence, raccourci, à propos), CurseForge (installation, dossier des
 instances, compte), Modrinth et Hangar,
-puis le Studio (dossier des modpacks, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
+puis le Studio (dossier des contenus, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
 
 ## Utilisation
@@ -30,7 +30,7 @@ permet d’en suivre un autre (voir
 
 Pour **passer en publieur**, cliquer sur l’onglet **Publieur** : le formulaire demande le dépôt et le compte GitHub
 (voir [Devenir publieur](publieur.md)). Pour **revenir en récepteur**, cliquer sur l’onglet **Récepteur** : l’onglet
-Studio disparaît, la Bibliothèque s’affiche. Le dossier des modpacks, la connexion GitHub et les releases ne sont pas
+Studio disparaît, la Bibliothèque s’affiche. Le dossier des contenus, la connexion GitHub et les releases ne sont pas
 touchés : repasser en publieur les retrouve.
 
 ## Apparence
@@ -58,10 +58,11 @@ style fourni. Sa fenêtre règle, avec un aperçu à côté :
 `Ctrl` + `+` et `Ctrl` + `-` passent au palier suivant ou précédent depuis n’importe quelle vue, `Ctrl` + `0` revient à
 100 %. La taille minimale de la fenêtre grandit avec l’interface, sans dépasser l’écran.
 
-## Dossier des modpacks
+## Dossier des contenus
 
-Réservé aux publieurs : le dossier où le Studio range les modpacks, un sous-dossier par modpack. **Changer…** en
-choisit un autre, **Ouvrir** l’affiche dans l’Explorateur. Voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks).
+Réservé aux publieurs : le dossier où le Studio range les contenus (modpacks, mods, packs de ressources, shaders,
+plugins), un sous-dossier par contenu. **Changer…** en choisit un autre, **Ouvrir** l’affiche dans l’Explorateur.
+Voir [Le Studio](studio.md#choisir-le-dossier-des-contenus).
 
 ## CurseForge
 

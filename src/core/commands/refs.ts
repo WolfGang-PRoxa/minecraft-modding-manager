@@ -33,7 +33,7 @@ export function findPack(overview: StudioOverview, ref: string): PackView {
 
 export async function packOf(ctx: CommandContext, ref: string): Promise<PackView> {
   const overview = await ctx.service.overview()
-  if (!overview.settings.workspaceDir) throw new StudioError('Aucun dossier de modpacks : choisis-le dans l’application.')
+  if (!overview.settings.workspaceDir) throw new StudioError('Aucun dossier des contenus : choisis-le dans l’application.')
   return findPack(overview, ref)
 }
 

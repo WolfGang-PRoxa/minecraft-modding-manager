@@ -74,7 +74,7 @@ interface StudioState {
   run(result: Promise<ActionResult>, success?: string): Promise<boolean>
   /** Notifications communes à toute l'application. */
   pushToast(toast: Omit<ToastItem, 'id'>): void
-  /** Paramètres communs de l'application (rôle, dépôt, compte, dossier des modpacks). */
+  /** Paramètres communs de l'application (rôle, dépôt, compte, dossier des contenus). */
   openSettings(): void
 }
 

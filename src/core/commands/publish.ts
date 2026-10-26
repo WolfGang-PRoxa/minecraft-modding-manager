@@ -21,7 +21,7 @@ export function printPlan(plan: SyncPlan): string {
 
 export const publishPlan = command({
   name: 'publish plan',
-  summary: 'Compare le dossier des modpacks avec GitHub et liste ce qu’une publication changerait.',
+  summary: 'Compare le dossier des contenus avec GitHub et liste ce qu’une publication changerait.',
   description:
     'Le dossier fait foi : une version sans zip local est supprimée de GitHub. Renvoie une empreinte (fingerprint) à ' +
     'passer à « publish apply » : la publication est refusée si le dossier ou GitHub change entre-temps.',

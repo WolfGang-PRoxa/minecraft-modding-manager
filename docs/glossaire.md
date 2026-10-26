@@ -16,9 +16,9 @@ dépôt de l’application (`WolfGang-PRoxa/minecraft-modding-manager`) contient
 **Dossier des instances** (ou dossier `Instances`)\
 Le dossier où CurseForge range ses profils, un sous-dossier par profil. L’application y installe les modpacks.
 
-**Dossier des modpacks**\
-Le dossier du publieur, avec un sous-dossier par modpack, que le Studio publie sur GitHub. Il fait foi : GitHub en
-est le miroir.
+**Dossier des contenus**\
+Le dossier du publieur, avec un sous-dossier par contenu (modpack, mod, pack de ressources, shader, plugin), que le
+Studio publie. Il fait foi : GitHub en est le miroir.
 
 **Empreinte (SHA-256)**\
 Un résumé de 64 caractères calculé à partir du contenu d’un fichier : la moindre modification change l’empreinte.
@@ -81,7 +81,7 @@ dernier numéro attribué. Voir [Le fichier pack.json](studio.md#le-fichier-pack
 Un modpack installé dans CurseForge, qui apparaît dans son onglet Minecraft. Chaque profil est une instance.
 
 **Publier**\
-Mettre les releases GitHub en accord avec le dossier des modpacks. Voir [Publier et supprimer](publication.md).
+Mettre les releases GitHub en accord avec le dossier des contenus. Voir [Publier et supprimer](publication.md).
 
 **Publieur**\
 Le rôle des auteurs de modpacks : la Bibliothèque et le Studio. Voir [Devenir publieur](publieur.md).

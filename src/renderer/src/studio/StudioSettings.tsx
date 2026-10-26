@@ -9,7 +9,7 @@ import { useStore } from '../store'
 import { useMaintenance } from './maintenanceStore'
 import { openPath, refreshStudioIfOpen } from './store'
 
-/** Réglage « Dossier des modpacks » (publieurs), dans les paramètres de l'application. */
+/** Réglage « Dossier des contenus » (publieurs), dans les paramètres de l'application. */
 export function WorkspaceFolderSetting() {
   const workspaceDir = useStore((s) => s.settings?.workspaceDir ?? null)
   const refreshLocal = useStore((s) => s.refreshLocal)
@@ -25,7 +25,7 @@ export function WorkspaceFolderSetting() {
       <div className="rounded-xl bg-ink-950/60 px-4 py-3 font-mono text-[13px] break-all text-ink-100 ring-1 ring-inset ring-tint/[0.06] select-text">
         {workspaceDir ?? 'Pas encore choisi : le Studio te le demandera.'}
       </div>
-      <p className="mt-2 text-xs text-ink-400">Un sous-dossier par modpack, avec les zips de ses mises à jour.</p>
+      <p className="mt-2 text-xs text-ink-400">Un sous-dossier par contenu (modpack, mod, pack de ressources, shader, plugin), avec ses versions.</p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" icon={FolderCog} onClick={() => void change()}>
           Changer…

@@ -2,9 +2,11 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { getSettings, updateSettings } from '../settings'
 
-export const defaultWorkspaceDir = (): string => join(homedir(), 'Modpacks')
+export const defaultWorkspaceDir = (): string => join(homedir(), 'Modding Manager')
+/** Dossier proposé par défaut jusqu'à la 2.2.0, encore cherché par les commandes quand aucun n'est choisi. */
+export const previousDefaultWorkspaceDir = (): string => join(homedir(), 'Modpacks')
 
-/** Dossier qui contient un sous-dossier par modpack (réglage commun à l'application et aux scripts). */
+/** Dossier qui contient un sous-dossier par contenu (réglage commun à l'application et aux scripts). */
 export async function loadWorkspaceDir(): Promise<string | null> {
   return (await getSettings()).workspaceDir
 }

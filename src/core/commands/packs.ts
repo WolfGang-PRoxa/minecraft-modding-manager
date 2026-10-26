@@ -26,7 +26,7 @@ const settingsSummary = (pack: PackView) => ({
 
 export const packsList = command({
   name: 'packs list',
-  summary: 'Liste les modpacks du dossier des modpacks, avec leur dernière version et son état sur GitHub.',
+  summary: 'Liste les modpacks du dossier des contenus, avec leur dernière version et son état sur GitHub.',
   description:
     'L’état sur GitHub (published, create, update…) n’est connu qu’une fois GitHub lu : passe refresh pour le relire.',
   params: z.object({ refresh: z.boolean().optional().describe('Relire GitHub avant de répondre.') }),
@@ -97,7 +97,7 @@ export const packsShow = command({
 
 export const packsCreate = command({
   name: 'packs create',
-  summary: 'Crée un modpack dans le dossier des modpacks, éventuellement depuis un profil CurseForge (avec sa v1).',
+  summary: 'Crée un modpack dans le dossier des contenus, éventuellement depuis un profil CurseForge (avec sa v1).',
   description:
     'Son identifiant publié est tiré du nom et ne change plus. Avec profile, le profil est zippé comme v1 et devient la ' +
     'source du modpack ; sans, ajoute ensuite une version avec « versions create ».',

@@ -44,13 +44,13 @@ function Centered({ children }: { children: ReactNode }) {
 
 function FolderTree() {
   const lines: Array<[string, string, string?]> = [
-    ['0', 'Modpacks/'],
+    ['0', 'Modding Manager/'],
     ['1', 'Hardcore_Endgame/'],
     ['2', 'Hardcore_Endgame-v1.zip', 'rangé'],
     ['2', 'Hardcore_Endgame-v2.zip', 'rangé'],
     ['2', 'ma-derniere-maj.zip', '→ deviendra la v3'],
     ['2', 'cover.png', 'image (facultatif)'],
-    ['1', 'Autre_Modpack/']
+    ['1', 'Mon_Mod/', 'mod, pack de ressources, shader, plugin…']
   ]
   return (
     <div className="mx-auto mt-8 w-full max-w-md rounded-2xl bg-ink-950/60 p-5 text-left font-mono text-[13px] ring-1 ring-inset ring-tint/[0.06]">
@@ -75,16 +75,16 @@ function Welcome({ overview }: { overview: StudioOverview }) {
         <Logo size={88} className="relative drop-shadow-2xl" />
       </div>
       <h1 className="mt-8 font-display text-4xl font-bold tracking-tight">
-        {missing ? 'Dossier des modpacks introuvable' : 'Bienvenue dans le Studio'}
+        {missing ? 'Dossier des contenus introuvable' : 'Bienvenue dans le Studio'}
       </h1>
       <p className="mt-3 max-w-xl text-ink-300">
         {missing ? (
           <>
             <span className="font-mono text-ink-200 select-text">{overview.settings.workspaceDir}</span> n’existe plus (disque
-            débranché, dossier déplacé ?). Choisis où se trouvent tes modpacks.
+            débranché, dossier déplacé ?). Choisis où se trouvent tes contenus.
           </>
         ) : (
-          'Choisis le dossier où tu ranges tes modpacks : un sous-dossier par modpack, dans lequel tu déposes le zip de chaque mise à jour. Le studio les numérote et les publie sur GitHub.'
+          'Choisis le dossier où tu ranges tes contenus : un sous-dossier par modpack, mod, pack de ressources, shader ou plugin, dans lequel tu déposes chaque nouvelle version. Le studio les numérote et les publie.'
         )}
       </p>
       {!missing && <FolderTree />}
@@ -507,7 +507,7 @@ function AnalyzingPill() {
   )
 }
 
-/** Vue Studio de la fenêtre (publieurs) : dossier des modpacks, rangement et publication. */
+/** Vue Studio de la fenêtre (publieurs) : dossier des contenus, rangement et publication. */
 export function StudioView() {
   const init = useStudio((s) => s.init)
   const overview = useStudio((s) => s.overview)
@@ -521,7 +521,7 @@ export function StudioView() {
     content = (
       <Centered>
         <Spinner size={28} className="text-grass-300" />
-        <p className="mt-4 text-ink-300">Lecture du dossier des modpacks…</p>
+        <p className="mt-4 text-ink-300">Lecture du dossier des contenus…</p>
       </Centered>
     )
   } else if (!overview.settings.workspaceDir || !overview.workspaceExists) {

@@ -463,7 +463,7 @@ async function scanPack(
   }
 }
 
-/** Lit le dossier de travail : un sous-dossier par modpack, ses zips, son image et son pack.json. */
+/** Lit le dossier des contenus : un sous-dossier par contenu, ses versions, son image et son pack.json. */
 export async function scanWorkspace(
   dir: string,
   cache: AnalysisCache | null,

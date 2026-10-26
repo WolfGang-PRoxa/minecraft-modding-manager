@@ -4,7 +4,7 @@ import { command } from './registry'
 
 export const status = command({
   name: 'status',
-  summary: 'État général : dossier des modpacks, connexion GitHub, modpacks, ce qui attend d’être rangé ou publié.',
+  summary: 'État général : dossier des contenus, connexion GitHub, modpacks, ce qui attend d’être rangé ou publié.',
   description: 'À appeler en premier. refresh relit GitHub (sinon l’état GitHub peut être « unchecked »).',
   params: z.object({ refresh: z.boolean().optional().describe('Relire GitHub.') }),
   kind: 'read',
@@ -27,9 +27,9 @@ export const status = command({
   },
   print: (s) =>
     [
-      `Dossier des modpacks : ${s.workspaceDir ?? 'non choisi'}${s.workspaceDir && !s.workspaceExists ? ' (introuvable)' : ''}`,
+      `Dossier des contenus : ${s.workspaceDir ?? 'non choisi'}${s.workspaceDir && !s.workspaceExists ? ' (introuvable)' : ''}`,
       `GitHub : ${s.repo} · ${s.github.state}${s.github.login ? ` (${s.github.login})` : ''}${s.github.error ? ` · ${s.github.error}` : ''}`,
-      `${s.packs} modpack(s)${s.zipsToRange ? ` · ${s.zipsToRange} zip(s) à ranger` : ''}${s.toPublish !== null ? ` · ${s.toPublish} changement(s) à publier` : ''}`,
+      `${s.packs} contenu(s)${s.zipsToRange ? ` · ${s.zipsToRange} zip(s) à ranger` : ''}${s.toPublish !== null ? ` · ${s.toPublish} changement(s) à publier` : ''}`,
       ...(s.busyElsewhere ? [`En cours ailleurs : ${s.busyElsewhere}`] : [])
     ].join('\n')
 })

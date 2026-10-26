@@ -91,7 +91,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     cite le cli.js de cette installation. `askClaude` : `claude -p` (demande par stdin), `--strict-mcp-config` avec
     le seul serveur MCP de cette installation, `--tools ""`, `--allowedTools` donnés, `--permission-mode dontAsk`.
   - `studioIpc.ts` : canaux `studio:*` (appellent `StudioService`), images via `studio-media://cover/`, surveillance du
-    dossier des modpacks (un changement fait par `mpm` ou Claude rafraîchit la vue). `studioTask` compte aussi
+    dossier des contenus (un changement fait par `mpm` ou Claude rafraîchit la vue). `studioTask` compte aussi
     l'opération d'un autre processus (verrou partagé) : la mise à jour de l'app l'attend.
   - `download.ts`, `ipc.ts`, `authIpc.ts` (canaux `auth:*`), `roleIpc.ts` (canaux `role:*`). `openFolder.ts` :
     `shell:openPath` et `studio:openPath` n'ouvrent qu'un dossier existant (un fichier serait lancé). `index.ts`
@@ -112,7 +112,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     lit la ligne de commande), qui charge `Curse.Plugin.dll` (surveillance et lecture des profils) ; sa fenêtre
     appartient à `Overwolf.exe`. Elle est arrêtée de force, puis on vérifie qu'Overwolf ne l'a pas relancée.
   - `settings.ts` (Node pur, sans cache) : `settings.json` du `userData` — `role` (`null` = premier lancement),
-    `repo`, `workspaceDir` (dossier des modpacks), `lastView` (vue rouverte au lancement), `lastRunVersion`…
+    `repo`, `workspaceDir` (dossier des contenus), `lastView` (vue rouverte au lancement), `lastRunVersion`…
     Lu aussi par les scripts (`%APPDATA%\Modding Manager\settings.json`).
   - `auth.ts` : connexion GitHub partagée app / commandes. Jeton chiffré par DPAPI via PowerShell
     (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
@@ -210,7 +210,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     écritures (fiche, réglages, notes, image) passent par `logged` (journal sans verrou).
 - `src/core/studio/` — le Studio. `StudioService` (`service.ts`) est l'unique point d'entrée de la fenêtre et des
   commandes ; ses options injectent ce qui dépend de l'hôte (`trashItem`, `lock`, `journal`, `blockedBy`, `coverUrl`).
-  - `workspace.ts` : lecture du dossier (un sous-dossier par modpack, `pack.json`, `cover.*`), rangement
+  - `workspace.ts` : lecture du dossier (un sous-dossier par contenu, `pack.json`, `cover.*`), rangement
     (`planRanger`/`applyRanger`). `pack.json` `type` (`ContentKind` de `shared/content.ts`, absent = modpack) : un
     type pas encore pris en charge (`supported: false`) est montré avec une erreur, sans analyse ni publication ;
     `requireModpack` refuse les opérations propres aux modpacks (profil source, zips, CurseForge, réglages, mises à
@@ -253,14 +253,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     releases existantes ne sont pas renvoyées pour rien (`comparable` : absent = vide = faux).
   - `contents.ts` : contenu d'un zip pour la fenêtre « Contenu » (`ContentsDialog`) : fichiers depuis le dossier de
     l'instance, mods nommés d'après `installedAddons` de `minecraftinstance.json`, aperçu d'un fichier (texte coupé à
-    256 Ko, image en `data:`, rien pour un binaire). Le service n'ouvre que des zips du dossier des modpacks.
+    256 Ko, image en `data:`, rien pour un binaire). Le service n'ouvre que des zips du dossier des contenus.
   - `githubApi.ts` : client d'écriture (dépôt configuré), envois en streaming.
   - `archive.ts` : zip d'une instance (`DEFAULT_EXCLUSIONS` + exclusions du modpack ; `maxSize` : 2 Go seulement si
     le modpack est publié sur GitHub, comme `githubSizeError` à l'analyse), fichiers exclus trouvés dans
     un zip (`findExcludedInZip`) et réécriture sans eux (`stripExcludedFromZip`, une entrée à la fois),
     `service.ts` : orchestration, verrou et journal ; les zips qui partiront à la prochaine publication sont
     cherchés pour des fichiers exclus (`findExcluded`, mémorisé) : avertissement sur la ligne et dans le plan
-    (`annotatePlan`). `settings.ts` : dossier des modpacks.
+    (`annotatePlan`). `settings.ts` : dossier des contenus.
   - `library.ts` (`buildLibrary`, pur) : la vue du publieur (`PublisherLibrary`) : dossiers de CurseForge puis « Sans
     dossier », chaque profil face au modpack qui en vient (`pack.json` `profile` : guid, sinon nom ; à défaut deviné :
     mêmes mods qu'une version, sinon même nom ; jamais un profil `installedPack`) et son état (`unlinked`,

@@ -25,7 +25,7 @@ async function modOf(ctx: CommandContext, ref: string, kinds: ContentKind[] = ['
 
 export const contentCreate = command({
   name: 'content create',
-  summary: 'Crée un mod, un pack de ressources ou un shader dans le dossier des modpacks.',
+  summary: 'Crée un mod, un pack de ressources ou un shader dans le dossier des contenus.',
   description:
     'Mod (type mod) : depuis le dossier où son projet dépose ses jars (releases, build/libs…), qui reste lié ; nom, ' +
     'identifiant, description et icône viennent du jar le plus récent, seule sa version est importée sauf versions. ' +

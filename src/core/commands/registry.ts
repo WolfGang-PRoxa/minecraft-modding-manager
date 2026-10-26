@@ -8,7 +8,7 @@ import type { StudioService } from '../studio/service'
 
 /**
  * - `read` : ne change rien ;
- * - `write` : change le dossier des modpacks ou les réglages, sans rien retirer de GitHub ;
+ * - `write` : change le dossier des contenus ou les réglages, sans rien retirer de GitHub ;
  * - `destructive` : supprime ou remplace quelque chose (sur le PC ou sur GitHub). La ligne de commande demande
  *   confirmation, le serveur MCP le signale au client.
  */

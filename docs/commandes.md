@@ -50,7 +50,7 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 
 | Commande | Effet |
 |---|---|
-| `status` | État général : dossier des modpacks, connexion GitHub, ce qui attend d’être rangé ou publié. |
+| `status` | État général : dossier des contenus, connexion GitHub, ce qui attend d’être rangé ou publié. |
 | `packs list` | Les modpacks, avec leur dernière version et son état sur GitHub. |
 | `packs show` | Un modpack en détail : fiche, réglages, versions et notes. |
 | `packs create` | Crée un modpack, éventuellement depuis un profil CurseForge (avec sa v1). |
@@ -191,15 +191,16 @@ vu dans l’aperçu.
 |---|---|
 | `--json` | Résultat en JSON, pour un programme. Une erreur donne `{ "ok": false, "error": "…" }`. |
 | `--yes`, `-y` | Ne demande pas de confirmation (suppressions, publication). |
-| `--dir <dossier>` | Dossier des modpacks à utiliser. |
+| `--dir <dossier>` | Dossier des contenus à utiliser. |
 | `--repo <propriétaire/dépôt>` | Dépôt GitHub sur lequel publier. |
 
-Depuis le code source, les options se placent après `--` : `npm run mpm -- publish plan --dir D:\Modpacks`.
+Depuis le code source, les options se placent après `--` : `npm run mpm -- publish plan --dir "D:\Modding Manager"`.
 
 ## Dossier, dépôt et connexion
 
-**Le dossier des modpacks** est, dans cet ordre : celui de l’option `--dir`, celui de la variable d’environnement
-`MODPACKS_DIR`, celui choisi dans l’application, et enfin `C:\Users\<nom>\Modpacks` s’il existe.
+**Le dossier des contenus** est, dans cet ordre : celui de l’option `--dir`, celui de la variable d’environnement
+`MODPACKS_DIR`, celui choisi dans l’application, et enfin `C:\Users\<nom>\Modding Manager` s’il existe (à défaut,
+l’ancien dossier par défaut `C:\Users\<nom>\Modpacks`).
 
 **Le dépôt** est celui de l’option `--repo`, sinon celui choisi dans l’application
 (**Paramètres → Utilisation**).

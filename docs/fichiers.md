@@ -21,7 +21,7 @@ Où Modding Manager range ce qu’il installe et ce qu’il retient, et comment 
 | `%LOCALAPPDATA%\Modding Manager\test-reports` | Publieurs : le dernier résultat de chaque test, par profil. |
 | Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
 | `.modding-manager`, à côté du dossier `Instances` | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre). |
-| Dossier des modpacks (publieurs) | Les modpacks du publieur, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-modpacks). |
+| Dossier des contenus (publieurs) | Les modpacks du publieur, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-contenus). |
 
 `%APPDATA%\Modding Manager` contient aussi les fichiers internes de la fenêtre de l’application (cache du
 navigateur intégré…). Tout ce dossier est conservé lors d’une mise à jour ou d’une désinstallation.
@@ -44,7 +44,7 @@ depuis les paramètres ; pour les modifier à la main, fermer d’abord l’appl
 | `instancesDir` | Le dossier `Instances` choisi à la main, ou `null` pour la détection automatique. |
 | `openCurseForgeAfterInstall` | Ouvrir CurseForge après une installation (`true` par défaut). |
 | `shortcutPrompted` | La proposition de raccourci a reçu une réponse. |
-| `workspaceDir` | Le dossier des modpacks du Studio. |
+| `workspaceDir` | Le dossier des contenus du Studio. |
 | `lastView` | La dernière vue affichée (`library` ou `studio`), rouverte au lancement. |
 | `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
 | `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |

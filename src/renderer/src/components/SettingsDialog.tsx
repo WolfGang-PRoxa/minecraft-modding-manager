@@ -219,7 +219,7 @@ export function SettingsDialog() {
   )
 
   const workspace = (
-    <Section key="workspace" title="Dossier des modpacks">
+    <Section key="workspace" title="Dossier des contenus">
       <WorkspaceFolderSetting />
     </Section>
   )

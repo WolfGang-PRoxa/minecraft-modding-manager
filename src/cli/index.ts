@@ -6,7 +6,7 @@
 //   mpm ranger | mpm publier   rangement et publication avec aperçu et confirmation
 //   mpm mcp                    serveur MCP (stdio)
 //
-// Options communes : --dir <dossier des modpacks>, --repo <propriétaire/dépôt>, --yes (pas de confirmation), --json.
+// Options communes : --dir <dossier des contenus>, --repo <propriétaire/dépôt>, --yes (pas de confirmation), --json.
 // Depuis le dépôt : npm run mpm -- <commande>. Dans l'application installée : mpm.cmd, à côté de l'exécutable.
 import { createInterface } from 'node:readline/promises'
 import { z } from 'zod'
@@ -77,7 +77,7 @@ function mainHelp(): string {
     `  ${'publier'.padEnd(width)}Aperçu puis publication sur GitHub (publish plan + publish apply).`,
     `  ${'mcp'.padEnd(width)}Serveur MCP pour Claude Code (stdio).`,
     '',
-    'Options : --json, --yes, --dir <dossier des modpacks>, --repo <propriétaire/dépôt>.',
+    'Options : --json, --yes, --dir <dossier des contenus>, --repo <propriétaire/dépôt>.',
     'Aide d’une commande : mpm <commande> --help'
   ].join('\n')
 }

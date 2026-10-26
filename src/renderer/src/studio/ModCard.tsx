@@ -661,7 +661,7 @@ export function NewContentDialog() {
   ]
 
   return (
-    <Modal title="Nouveau contenu" subtitle="Il aura son dossier dans le dossier des modpacks, comme un modpack." onClose={close} closable={!busy} width="max-w-3xl">
+    <Modal title="Nouveau contenu" subtitle="Il aura son dossier dans le dossier des contenus, comme un modpack." onClose={close} closable={!busy} width="max-w-3xl">
       <div className="space-y-3">
         {choices.map(({ kind, text, actions }) => {
           const ui = KIND_UI[kind]!

@@ -8,7 +8,7 @@ quelques clics. Il est réservé au rôle de publieur (voir [Devenir publieur](p
 
 ## Le principe : le dossier fait foi
 
-Le dossier des modpacks, sur le PC du publieur, est la référence. GitHub en est le miroir : à chaque publication, le
+Le dossier des contenus, sur le PC du publieur, est la référence. GitHub en est le miroir : à chaque publication, le
 Studio compare les deux et propose exactement les changements qui mettent GitHub en accord avec le dossier.
 
 | Sur le PC | Sur GitHub, à la publication |
@@ -24,28 +24,29 @@ Deux exceptions protègent ce qui est publié :
   GitHub tant que l’erreur n’est pas corrigée ;
 - les releases de l’application elle-même (`app-v…`) ne sont jamais touchées.
 
-## Choisir le dossier des modpacks
+## Choisir le dossier des contenus
 
 À la première ouverture, l’écran **Bienvenue dans le Studio** propose :
 
-- **Utiliser `C:\Users\<nom>\Modpacks`** : le dossier par défaut, créé s’il n’existe pas ;
+- **Utiliser `C:\Users\<nom>\Modding Manager`** : le dossier par défaut, créé s’il n’existe pas (jusqu’à la 2.2.0,
+  c’était `C:\Users\<nom>\Modpacks` ; un dossier déjà choisi reste en place) ;
 - **Choisir un autre dossier…** : n’importe quel dossier, sur n’importe quel disque.
 
-Le dossier se change ensuite dans [Paramètres → Dossier des modpacks](parametres.md#dossier-des-modpacks). S’il
-devient introuvable (disque débranché, dossier déplacé), le Studio affiche **Dossier des modpacks introuvable** et
+Le dossier se change ensuite dans [Paramètres → Dossier des contenus](parametres.md#dossier-des-contenus). S’il
+devient introuvable (disque débranché, dossier déplacé), le Studio affiche **Dossier des contenus introuvable** et
 demande où il se trouve.
 
-Ce dossier contient **un sous-dossier par modpack** :
+Ce dossier contient **un sous-dossier par contenu** (modpack, mod, pack de ressources, shader ou plugin) :
 
 ```
-Modpacks/
+Modding Manager/
   Hardcore_Endgame/
     Hardcore_Endgame-v1.zip     ← versions rangées (numérotées)
     Hardcore_Endgame-v2.zip
     ma-derniere-maj.zip         ← zip déposé, pas encore rangé
     cover.png                   ← image du modpack (facultative, 16:9)
     pack.json                   ← géré par le Studio : nom, description, notes, réglages
-  Autre_Modpack/
+  Mon_Mod/                       ← un autre contenu (mod, pack de ressources…)
   .studio-cache.json            ← analyses des zips, gardées en cache
 ```
 

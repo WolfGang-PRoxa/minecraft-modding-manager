@@ -97,6 +97,6 @@ La désinstallation laisse en place :
 - **les modpacks installés** : ce sont des profils CurseForge comme les autres, toujours jouables ;
 - **les réglages et la connexion GitHub**, dans `%APPDATA%\Modding Manager` : supprimer ce dossier pour ne rien
   laisser derrière (et pour effacer le jeton GitHub enregistré) ;
-- pour un publieur, **le dossier des modpacks** et les releases publiées sur GitHub.
+- pour un publieur, **le dossier des contenus** et les releases publiées sur GitHub.
 
 Le détail de chaque fichier est dans [Fichiers et dossiers](fichiers.md).

@@ -3,7 +3,7 @@ import type { ContentKind, ContentLoader } from './content'
 import type { CredentialSource, CurseForgeProfile, RepoRef, UserRole } from './types'
 
 export interface StudioSettings {
-  /** Dossier qui contient un sous-dossier par modpack (null tant qu'il n'a pas été choisi). */
+  /** Dossier qui contient un sous-dossier par contenu (null tant qu'il n'a pas été choisi). */
   workspaceDir: string | null
   defaultWorkspaceDir: string
   /** Rôle et dépôt choisis dans l'application (Paramètres → Utilisation). */

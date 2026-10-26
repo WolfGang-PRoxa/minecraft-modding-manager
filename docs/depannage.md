@@ -223,7 +223,7 @@ de mod. Tant que ce n’est pas corrigé, rien de ce mod n’est publié ni reti
 Deux fichiers portent le même numéro de version. Supprimer ou renommer l’un d’eux.
 
 **« Le dossier ne contient aucun modpack : publier supprimerait tout de GitHub. »**\
-Le dossier choisi est vide (mauvais dossier, disque débranché ?). Vérifier **Paramètres → Dossier des modpacks**
+Le dossier choisi est vide (mauvais dossier, disque débranché ?). Vérifier **Paramètres → Dossier des contenus**
 avant de publier.
 
 ## Signalement

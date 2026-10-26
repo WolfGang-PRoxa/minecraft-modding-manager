@@ -206,7 +206,7 @@ async function withRunLock<T>(options: MaintenanceOptions, run: () => Promise<T>
 export function runMaintenance(request: MaintenanceRequest, options: MaintenanceOptions): Promise<MaintenanceRecord[]> {
   return withRunLock(options, async () => {
     const overview = await options.service.overview()
-    if (!overview.settings.workspaceDir) throw new StudioError('Aucun dossier de modpacks : choisis-le dans l’application.')
+    if (!overview.settings.workspaceDir) throw new StudioError('Aucun dossier des contenus : choisis-le dans l’application.')
     const state = await readMaintenanceState()
     const now = new Date()
     const packs = overview.packs.filter((pack) => {

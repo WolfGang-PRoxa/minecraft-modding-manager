@@ -229,7 +229,7 @@ export interface Settings {
   role: UserRole | null
   /** Dépôt des modpacks : lu par l'application, géré par le studio pour un publieur. */
   repo: RepoRef
-  /** Dossier des modpacks du studio (un sous-dossier par modpack). */
+  /** Dossier des contenus du studio (un sous-dossier par contenu). */
   workspaceDir: string | null
   /** Dernière vue affichée, rouverte au lancement suivant. */
   lastView: AppView

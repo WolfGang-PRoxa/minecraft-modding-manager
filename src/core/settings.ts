@@ -20,7 +20,7 @@ const DEFAULTS: Settings = {
   appearance: DEFAULT_APPEARANCE
 }
 
-// Réglages de l'application (rôle, dépôt, dossier des modpacks…), lus aussi par les scripts `modpacks:*` :
+// Réglages de l'application (rôle, dépôt, dossier des contenus…), lus aussi par les scripts `modpacks:*` :
 // le fichier n'est pas gardé en mémoire, pour voir tout de suite un changement fait par un script.
 // Pour les commandes, le dossier des données de l'application, repris de l'ancien nom au besoin (previousIdentity.ts).
 let file: string | null = null

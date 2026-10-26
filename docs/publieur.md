@@ -81,7 +81,7 @@ Après chaque publication, ils voient les nouveautés en actualisant leur applic
 ## Changer de dépôt ou revenir en récepteur
 
 - **Changer de dépôt** : **Paramètres → Utilisation → Changer**, à la ligne du dépôt. Le compte connecté doit pouvoir
-  publier sur le nouveau dépôt. Le Studio relit alors GitHub : il compare le dossier des modpacks au nouveau dépôt.
+  publier sur le nouveau dépôt. Le Studio relit alors GitHub : il compare le dossier des contenus au nouveau dépôt.
 - **Revenir en récepteur** : l’onglet **Récepteur** de la même section. L’onglet Studio disparaît ; le dossier des
   modpacks, la connexion GitHub et les releases ne sont pas touchés.
 

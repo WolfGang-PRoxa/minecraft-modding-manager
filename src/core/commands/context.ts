@@ -13,13 +13,13 @@ import { moveToRecycleBin } from '../powershell'
 import { getSettings } from '../settings'
 import { StudioError } from '../studio/analyze'
 import { StudioService } from '../studio/service'
-import { defaultWorkspaceDir, loadWorkspaceDir } from '../studio/settings'
+import { defaultWorkspaceDir, loadWorkspaceDir, previousDefaultWorkspaceDir } from '../studio/settings'
 import type { CommandContext } from './registry'
 
 export interface ContextOptions {
   /** Qui agit, tel que le verrou et le journal l'afficheront (« la ligne de commande »…). */
   holder: string
-  /** Dossier des modpacks imposé (--dir, MODPACKS_DIR) ; sinon celui choisi dans l'application. */
+  /** Dossier des contenus imposé (--dir, MODPACKS_DIR) ; sinon celui choisi dans l'application. */
   workspaceDir?: string
   /** Dépôt imposé (--repo) ; sinon celui choisi dans l'application. */
   repo?: RepoRef
@@ -42,13 +42,13 @@ async function instancesDir(): Promise<string> {
   return dir
 }
 
-/** Dossier des modpacks : imposé, sinon celui de l'application, sinon ~/Modpacks s'il existe. */
+/** Dossier des contenus : imposé, sinon celui de l'application, sinon ~/Modding Manager (ou l'ancien ~/Modpacks) s'il existe. */
 async function findWorkspaceDir(forced?: string): Promise<string | null> {
   if (forced) return resolve(forced)
   if (process.env.MODPACKS_DIR) return resolve(process.env.MODPACKS_DIR)
   const chosen = await loadWorkspaceDir()
   if (chosen) return chosen
-  return existsSync(defaultWorkspaceDir()) ? defaultWorkspaceDir() : null
+  return [defaultWorkspaceDir(), previousDefaultWorkspaceDir()].find((dir) => existsSync(dir)) ?? null
 }
 
 /**

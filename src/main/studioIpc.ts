@@ -118,7 +118,7 @@ export function stopStudioTasks(): void {
   stopMaintenance()
 }
 
-/** Vue Studio : canaux `studio:*`, images des modpacks et surveillance du dossier des modpacks. */
+/** Vue Studio : canaux `studio:*`, images des modpacks et surveillance du dossier des contenus. */
 export async function registerStudio(window: () => BrowserWindow | null): Promise<void> {
   getWindow = window
   workspaceDir = await loadWorkspaceDir()
@@ -149,7 +149,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
 
   ipcMain.handle('studio:pickWorkspace', async () => {
     const options: Electron.OpenDialogOptions = {
-      title: 'Dossier de tes modpacks',
+      title: 'Dossier de tes contenus',
       defaultPath: workspaceDir ?? defaultWorkspaceDir(),
       properties: ['openDirectory', 'createDirectory']
     }

@@ -8,6 +8,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Studio : le dossier qui contient modpacks, mods, packs de ressources, shaders et plugins s’appelle désormais le
+  **dossier des contenus**, et le dossier proposé par défaut devient `C:\Users\<nom>\Modding Manager` (au lieu de
+  `Modpacks`). Un dossier déjà choisi ne change pas ; il se renomme ou se remplace dans **Paramètres → Dossier des
+  contenus**.
+
 ## [2.2.0] - 2026-10-26
 
 ### Corrections
