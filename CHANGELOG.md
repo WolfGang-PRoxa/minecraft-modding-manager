@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.3.0] - 2026-10-26
+
 ### Ajouts
 
 - L’application se lance au démarrage de Windows, réduite dans la barre des tâches. Un clic sur son icône l’ouvre en
@@ -410,7 +412,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.1...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.0...HEAD
+[2.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.1...app-v2.3.0
 [2.2.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.0...app-v2.2.1
 [2.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.1.0...app-v2.2.0
 [2.1.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.0.0...app-v2.1.0
