@@ -156,7 +156,7 @@ et le commentaire, après lecture des changements de l’action.
 
 ## Tester sans risque
 
-- **Sans GitHub** : un faux serveur de releases local et la variable `MPD_GITHUB_API=http://localhost:<port>/repos/o/r`
+- **Sans GitHub** : un faux serveur de releases local et la variable `MM_GITHUB_API=http://localhost:<port>/repos/o/r`
   (avec `GITHUB_TOKEN=x` pour le Studio et les scripts) remplacent l’API de GitHub. Cette variable est ignorée par
   l’application installée.
 - **Politique de sécurité de la page** : `src/renderer/index.html` porte celle de l’application compilée (aucun script

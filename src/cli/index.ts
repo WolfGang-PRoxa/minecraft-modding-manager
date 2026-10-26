@@ -164,12 +164,12 @@ async function interactive(name: 'ranger' | 'publier', runtime: Runtime, globals
 }
 
 async function main(): Promise<void> {
-  // Le faux GitHub des tests (MPD_GITHUB_API) n'est jamais pris en compte dans l'application installée.
+  // Le faux GitHub des tests (MM_GITHUB_API) n'est jamais pris en compte dans l'application installée.
   if (!/app\.asar/i.test(process.argv[1] ?? '')) {
-    setGitHubApiOverride(process.env.MPD_GITHUB_API)
-    setCurseForgeApiOverride(process.env.MPD_CURSEFORGE_API)
-    setModrinthApiOverride(process.env.MPD_MODRINTH_API)
-    setHangarApiOverride(process.env.MPD_HANGAR_API)
+    setGitHubApiOverride(process.env.MM_GITHUB_API)
+    setCurseForgeApiOverride(process.env.MM_CURSEFORGE_API)
+    setModrinthApiOverride(process.env.MM_MODRINTH_API)
+    setHangarApiOverride(process.env.MM_HANGAR_API)
   }
   const { globals, rest } = splitGlobals(process.argv.slice(2))
   const repo = globals.repo ? parseRepo(globals.repo) : undefined

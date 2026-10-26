@@ -16,7 +16,7 @@ const MODRINTH_API = 'https://api.modrinth.com'
 const USER_AGENT = `${APP_REPO.owner}/${APP_REPO.name} (github.com/${APP_REPO.owner}/${APP_REPO.name})`
 const ENV_NAME = 'MODRINTH_TOKEN'
 
-// En test, MPD_MODRINTH_API (http://127.0.0.1:<port>) remplace l'API.
+// En test, MM_MODRINTH_API (http://127.0.0.1:<port>) remplace l'API.
 let override: string | null = null
 
 export function setModrinthApiOverride(url: string | null | undefined): void {

@@ -90,11 +90,11 @@ async function createWindow(): Promise<void> {
   }
 }
 
-// En développement, MPD_GITHUB_API et MPD_CURSEFORGE_API permettent de pointer vers de faux serveurs.
-setGitHubApiOverride(app.isPackaged ? null : process.env.MPD_GITHUB_API)
-setCurseForgeApiOverride(app.isPackaged ? null : process.env.MPD_CURSEFORGE_API)
-setModrinthApiOverride(app.isPackaged ? null : process.env.MPD_MODRINTH_API)
-setHangarApiOverride(app.isPackaged ? null : process.env.MPD_HANGAR_API)
+// En développement, MM_GITHUB_API et MM_CURSEFORGE_API permettent de pointer vers de faux serveurs.
+setGitHubApiOverride(app.isPackaged ? null : process.env.MM_GITHUB_API)
+setCurseForgeApiOverride(app.isPackaged ? null : process.env.MM_CURSEFORGE_API)
+setModrinthApiOverride(app.isPackaged ? null : process.env.MM_MODRINTH_API)
+setHangarApiOverride(app.isPackaged ? null : process.env.MM_HANGAR_API)
 
 // Images des modpacks de la vue Studio : le protocole doit être déclaré avant `ready`.
 protocol.registerSchemesAsPrivileged([{ scheme: COVER_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true } }])

@@ -106,8 +106,8 @@ export async function createShortcut(
  */
 export function refreshShellIcons(): void {
   const script =
-    'Add-Type -Namespace Mpd -Name Shell -MemberDefinition \'[DllImport("shell32.dll")] public static extern void SHChangeNotify(int e, uint f, IntPtr a, IntPtr b);\';' +
-    ' [Mpd.Shell]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)'
+    'Add-Type -Namespace Mm -Name Shell -MemberDefinition \'[DllImport("shell32.dll")] public static extern void SHChangeNotify(int e, uint f, IntPtr a, IntPtr b);\';' +
+    ' [Mm.Shell]::SHChangeNotify(0x08000000, 0, [IntPtr]::Zero, [IntPtr]::Zero)'
   execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { windowsHide: true, timeout: 30_000 }, () => {
     // Sans conséquence : l'icône se mettra à jour au prochain rafraîchissement de l'Explorateur.
   })

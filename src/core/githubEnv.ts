@@ -1,7 +1,7 @@
 import { repoApiUrl } from '../shared/repo'
 import type { RepoRef } from '../shared/types'
 
-// En test, MPD_GITHUB_API (http://localhost:<port>/repos/o/r) remplace l'API de n'importe quel dépôt.
+// En test, MM_GITHUB_API (http://localhost:<port>/repos/o/r) remplace l'API de n'importe quel dépôt.
 let override: string | null = null
 
 export function setGitHubApiOverride(url: string | null | undefined): void {

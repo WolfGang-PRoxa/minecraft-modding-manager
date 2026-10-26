@@ -68,7 +68,7 @@ describe('commandes', () => {
       ]
     })
     process.env.GITHUB_TOKEN = 'jeton-de-test'
-    env = { APPDATA: appData, MPD_GITHUB_API: github.apiBase, GITHUB_TOKEN: 'jeton-de-test' }
+    env = { APPDATA: appData, MM_GITHUB_API: github.apiBase, GITHUB_TOKEN: 'jeton-de-test' }
   })
 
   after(async () => {

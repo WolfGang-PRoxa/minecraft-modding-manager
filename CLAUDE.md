@@ -118,7 +118,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     (`github-auth.json` à côté des réglages, relisible par les scripts). Ordre : connexion faite dans l'app >
     `GITHUB_TOKEN` > `.env` (scripts) > `gh auth token`. Vérifie le droit de publier (`permissions.push`) et gère la
     connexion par code (device flow, `GITHUB_OAUTH_CLIENT_ID`).
-  - `githubEnv.ts` : base de l'API d'un dépôt ; `MPD_GITHUB_API` la remplace pour tous les dépôts en test.
+  - `githubEnv.ts` : base de l'API d'un dépôt ; `MM_GITHUB_API` la remplace pour tous les dépôts en test.
   - `modsSignature.ts` (Node pur) : empreinte des mods d'une instance (nom et taille de chaque `.jar` posé dans
     `mods`), calculée à l'identique pour un zip (`analyze.ts`) et pour un profil CurseForge (`profiles.ts`,
     `listProfiles`, canal `curseforge:profiles`). Relu à chaque fois : ~30 ms pour 29 profils et 2 800 mods.
@@ -135,7 +135,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `/game/version-types` répond 504 à un jeton invalide). 403 = refusé. `curseforge-auth.json` à côté des réglages,
     chiffré ; ordre : enregistré > `CURSEFORGE_API_KEY` / `CURSEFORGE_UPLOAD_TOKEN` > `.env`. Enregistrés seulement
     par la fenêtre (Paramètres → Compte CurseForge, canaux `cfauth:*`), après vérification ; aucune commande ne les
-    reçoit ni ne les affiche (`curseforge status` dit seulement s'ils sont acceptés). `MPD_CURSEFORGE_API` remplace
+    reçoit ni ne les affiche (`curseforge status` dit seulement s'ils sont acceptés). `MM_CURSEFORGE_API` remplace
     les deux API en test (`setCurseForgeApiOverride`, ignoré une fois packagé).
   - `curseforgeApi.ts` (`CurseForgeClient`, clé du publieur) : `POST /v1/mods` (projets, `latestFilesIndexes` :
     dernier fichier par version de Minecraft, chargeur et type de version), `POST /v1/mods/files`, changelog (HTML).
@@ -228,7 +228,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx`.
   - Modrinth (mods seulement) : `core/modrinth.ts` (jeton d'accès personnel chiffré `modrinth-auth.json`, ordre
     enregistré > `MODRINTH_TOKEN` > `.env`, vérifié par `GET /v2/user` ; `ModrinthClient` : en-tête `Authorization`
-    sans « Bearer », `User-Agent` obligatoire ; `MPD_MODRINTH_API` en test) et `studio/modrinthPublish.ts`
+    sans « Bearer », `User-Agent` obligatoire ; `MM_MODRINTH_API` en test) et `studio/modrinthPublish.ts`
     (`resolveModrinthProject` refuse un autre type que `mod`, `publishToModrinth` : version `<nom> <version>`,
     dépendances par slug = id du mod). `pack.json` `modrinth` (`projectId`, `slug`, `url`, `versions`). Service
     `linkModrinth`, `publishModToModrinth`, `modrinthVersions` ; `updatePublishTargets({ unlinkModrinth })`. Interface
@@ -283,7 +283,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `sourceVersions` reçoivent l'analyseur). Pas de CurseForge (dev.bukkit.org), SpigotMC sans API. Hangar :
   `core/hangar.ts` (clé chiffrée `hangar-auth.json`, `HANGAR_API_KEY`, `POST /api/v1/authenticate?apiKey=` → JWT,
   en-tête `Authorization: HangarAuth <jwt>` ; upload multipart `versionUpload` JSON + `files`, plateforme `PAPER`,
-  canaux Release / Snapshot ; `MPD_HANGAR_API` en test, `test/support/fakeHangar.ts`). `pack.json` `hangar`.
+  canaux Release / Snapshot ; `MM_HANGAR_API` en test, `test/support/fakeHangar.ts`). `pack.json` `hangar`.
   Interface `studio/HangarPanel.tsx`, Paramètres → Compte Hangar ; commandes `hangar *`.
 - Bibliothèque des contenus : `shared/contentReleases.ts` (`contentReleaseFrom` : release `mod-`/`rp-`/`shader-` +
   `content.json` cohérent avec le tag, chaque fichier avec SHA-256 ; `groupContents` ; `incompatibility` : version de
@@ -322,7 +322,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `destructive` (sauf `--yes`), progression sur stderr, `--json` sur stdout. `mpm ranger` / `mpm publier` : aperçu,
   confirmation, opération. Compilé en `out/main/cli.js` (deuxième entrée de `electron.vite.config.ts`) ; l'app
   installée a `mpm.cmd` (`build/mpm.cmd`, `extraFiles`) qui lance l'exécutable avec `ELECTRON_RUN_AS_NODE=1`.
-  `MPD_GITHUB_API` ignoré quand cli.js est dans `app.asar`.
+  `MM_GITHUB_API` ignoré quand cli.js est dans `app.asar`.
 - `src/mcp/` — `server.ts` : chaque commande devient un outil (`registerTool`, schéma zod, annotations
   `readOnlyHint` / `destructiveHint`, progression par `notifications/progress`) ; `instructions.ts` : la méthode
   donnée à Claude (status d'abord, plan montré avant publication, suppressions confirmées). Rien d'autre que le
@@ -447,10 +447,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `customInit` vérifie au lancement si l'app est déjà installée et intacte (`DisplayVersion` du registre + exécutable
   présent) : même version → page Ouvrir / Réinstaller / Annuler ; version installée plus récente → page Ouvrir la vX /
   Installer la vY / Annuler ; plus ancienne → mise à jour sans question. Aucune page avec `/S` ni `--updated`, que
-  `appUpdate.ts` passe à l'installeur lors d'une mise à jour demandée par l'app. `mpdPackageDir` garde une nouvelle
+  `appUpdate.ts` passe à l'installeur lors d'une mise à jour demandée par l'app. `mmPackageDir` garde une nouvelle
   installation dans `Programs\<nom du paquet>` (en mode assisté, electron-builder prendrait le nom du produit).
   App ouverte : `customCheckAppRunning` remplace la boîte « … est en cours d'utilisation » d'electron-builder et ses
-  appels PowerShell. `mpdAppProcesses` repère les processus lancés depuis `$INSTDIR` (Toolhelp +
+  appels PowerShell. `mmAppProcesses` repère les processus lancés depuis `$INSTDIR` (Toolhelp +
   `QueryFullProcessImageNameW`) ; fermeture normale (`taskkill` sans `/F`), forcée au bout de 3 s, après accord sur la
   page « application ouverte » (installeur) ou la confirmation (désinstalleur). Avec `--updated`, l'app a 3 s pour se
   fermer d'elle-même.
@@ -555,9 +555,9 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   (GitHub redirige les anciennes adresses, que lisent les apps d'avant la 2.0.0). Les identités précédentes sont
   décrites dans `src/shared/previousIdentity.ts` (`PREVIOUS_IDENTITIES`, la plus récente d'abord, et
   `PREVIOUS_PRODUCT` : ce qu'elles partageaient) et reprises une fois : l'installeur trouve l'ancienne app
-  (`mpdFindPrevious` : entrée « Applications installées » du même éditeur dont le nom commence par
-  `MPD_PREVIOUS_PRODUCT_NAME`, autre clé), la ferme et la désinstalle sur place avec `--updated`
-  (`mpdUninstallPrevious`) avant de poser ses fichiers ; au lancement, `migrateDataDir` et `migrateLocalDataDir`
+  (`mmFindPrevious` : entrée « Applications installées » du même éditeur dont le nom commence par
+  `MM_PREVIOUS_PRODUCT_NAME`, autre clé), la ferme et la désinstalle sur place avec `--updated`
+  (`mmUninstallPrevious`) avant de poser ses fichiers ; au lancement, `migrateDataDir` et `migrateLocalDataDir`
   (core) déplacent les dossiers des données (aussi pour les commandes), `readInstanceMarker` renomme le marqueur d'un
   profil en le lisant, `currentRepoName` remplace l'ancien nom du dépôt dans les réglages, et
   `migratePreviousInstallation` (main, une fois : `previous-identity-2.done`, pas `previous-identity.done` venu de la
@@ -587,10 +587,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - TypeScript est épinglé en 6.x (la 7 est le compilateur natif, pas encore validé ici). archiver 8 est en ESM
   (exports nommés `ZipArchive`). lucide-react v1 n'a plus d'icônes de marques. Tailwind v4 : `px-0!`, `bg-linear-to-r`.
 - Tester sans CurseForge : `test/support/fakeCurseForge.ts` (clé `cle-de-test`, jeton `jeton-de-test`) et
-  `setCurseForgeApiOverride` / `MPD_CURSEFORGE_API`.
+  `setCurseForgeApiOverride` / `MM_CURSEFORGE_API`.
 - Tester sans GitHub : `test/support/fakeGitHub.ts` (releases en mémoire : lecture anonyme, écriture avec jeton,
   `upload_url` et téléchargement d'asset par redirection vers lui-même) et
-  `MPD_GITHUB_API=http://127.0.0.1:<port>/repos/o/r` (`setGitHubApiOverride` dans un test ; `GITHUB_TOKEN=x` pour
+  `MM_GITHUB_API=http://127.0.0.1:<port>/repos/o/r` (`setGitHubApiOverride` dans un test ; `GITHUB_TOKEN=x` pour
   le studio et les commandes). La surcharge est ignorée dans l'app packagée et par le cli.js d'`app.asar`.
 - Binaire Electron absent (script d'install bloqué par npm 11) : `node -e "require('electron')"` le télécharge.
 - Piloter l'app en test : Playwright `_electron` (installé hors du dépôt). `--user-data-dir=<dossier>` isole ses
@@ -604,21 +604,21 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   (`absolute inset-0`), sinon il ne remplit pas son cadre. Une image loin du 16:9 (rapport hors de 1,6–2) est réduite
   (`object-contain`) sur un fond flou tiré d'elle-même, calée à droite dans le héros (`align="right"`).
 - Tester l'installeur sans toucher à l'installation réelle : le compiler sous une autre identité
-  (`npx electron-builder --win --publish never -c.appId=com.wolfgangproxa.mpdtest -c.productName="MPD Test"
-  -c.extraMetadata.name=mpd-test -c.extraMetadata.productName="MPD Test" -c.nsis.shortcutName="MPD Test"
+  (`npx electron-builder --win --publish never -c.appId=com.wolfgangproxa.mmtest -c.productName="MM Test"
+  -c.extraMetadata.name=mm-test -c.extraMetadata.productName="MM Test" -c.nsis.shortcutName="MM Test"
   -c.directories.output=<dossier>`, plus `-c.extraMetadata.version=1.0.1` pour une autre version) : autre dossier
-  d'installation (`Programs\mpd-test`), autres clés de registre. Le `userData` vient d'`APP_NAME`, pas du nom du
+  d'installation (`Programs\mm-test`), autres clés de registre. Le `userData` vient d'`APP_NAME`, pas du nom du
   produit : pour ne pas toucher au vrai `%APPDATA%\Modding Manager`, changer `APP_NAME` le temps du build (et
   `-c.executableName` pour ne pas viser les vrais raccourcis), puis supprimer son dossier. Désinstaller ensuite avec
   `"Uninstall <exécutable>.exe" /currentuser /S`. Depuis PowerShell, mettre chaque
-  argument `-c.…` entier entre guillemets (`"-c.productName=MPD Test"`), sinon il est coupé au premier point.
+  argument `-c.…` entier entre guillemets (`"-c.productName=MM Test"`), sinon il est coupé au premier point.
   Les boutons des pages (textes nsDialogs) se cliquent en envoyant `WM_COMMAND` (`STN_CLICKED`, identifiant du texte)
   à leur dialogue ; les captures se font par `PrintWindow`. Le désinstalleur se recopie dans `%TEMP%` et s'y relance :
   suivre ses fenêtres par leur titre.
 - NSIS (installeur assisté) : un `Quit` lancé depuis un clic nsDialogs (`NSD_OnClick`) reste sans effet ; le clic
-  poste « Suivant » (`MPD_NEXT`) et la fonction de sortie de la page agit. La page « pour qui installer »
+  poste « Suivant » (`MM_NEXT`) et la fonction de sortie de la page agit. La page « pour qui installer »
   d'electron-builder (`PAGE_INSTALL_MODE`, jamais montrée) consomme les `MUI_PAGE_CUSTOMFUNCTION_*` définis avant elle
-  (d'où la propre `UninstPage instfiles` du désinstalleur) et recalcule `$INSTDIR` à son entrée (d'où `mpdPackageDir`
+  (d'où la propre `UninstPage instfiles` du désinstalleur) et recalcule `$INSTDIR` à son entrée (d'où `mmPackageDir`
   refait par la page suivante). `SetCtlColors` n'accepte que des couleurs écrites en dur ; l'espace avant un `:` s'écrit
   `${U+00A0}` (insécable), sinon le `:` peut passer seul à la ligne. PowerShell prend l'apostrophe typographique `’`
   pour un délimiteur de chaîne.
@@ -652,7 +652,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   texte suit le format de la CI, et `lastRunVersion` plus ancien dans `settings.json` pour simuler une mise à jour.
 - Tester la mise à jour de l'app de bout en bout : deux installeurs sous l'identité de test (une version ancienne,
   une récente), la récente servie par le faux serveur comme asset `.exe` d'une release `app-v<version>`. L'app
-  packagée ignorant `MPD_GITHUB_API`, compiler l'ancienne avec `setGitHubApiOverride(process.env.MPD_GITHUB_API)`
+  packagée ignorant `MM_GITHUB_API`, compiler l'ancienne avec `setGitHubApiOverride(process.env.MM_GITHUB_API)`
   le temps du build (à retirer aussitôt, ne jamais committer). Ne jamais cliquer « Mettre à jour » dans une app de
   test branchée sur le vrai GitHub : elle lancerait le vrai installeur, qui remplace l'installation réelle.
 - Tests : `npm test` (`test/*.test.ts`, lancés par `npm run build`, donc par la CI). Le moteur (`src/core`) se teste

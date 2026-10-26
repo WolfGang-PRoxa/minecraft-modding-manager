@@ -13,7 +13,7 @@ import { settingsDir } from './settings'
 const CURSEFORGE_API = 'https://api.curseforge.com'
 const CURSEFORGE_UPLOAD_API = 'https://minecraft.curseforge.com/api'
 
-// En test, MPD_CURSEFORGE_API (http://127.0.0.1:<port>) remplace les deux API : /v1/… et /api/…
+// En test, MM_CURSEFORGE_API (http://127.0.0.1:<port>) remplace les deux API : /v1/… et /api/…
 let override: string | null = null
 
 export function setCurseForgeApiOverride(url: string | null | undefined): void {

@@ -15,7 +15,7 @@ const HANGAR_API = 'https://hangar.papermc.io'
 const USER_AGENT = `${APP_REPO.owner}/${APP_REPO.name} (github.com/${APP_REPO.owner}/${APP_REPO.name})`
 const ENV_NAME = 'HANGAR_API_KEY'
 
-// En test, MPD_HANGAR_API (http://127.0.0.1:<port>) remplace l'API.
+// En test, MM_HANGAR_API (http://127.0.0.1:<port>) remplace l'API.
 let override: string | null = null
 
 export function setHangarApiOverride(url: string | null | undefined): void {
