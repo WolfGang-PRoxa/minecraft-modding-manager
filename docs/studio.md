@@ -310,9 +310,9 @@ déclare pas : il faut les donner avec **Changer**, sur la ligne « Minecraft »
 CurseForge ou Modrinth, qui les exigent. Pour un pack de ressources, elles peuvent aussi y être remplacées.
 
 À la publication, chaque version devient une release `rp-<id>-v<N>` (pack de ressources) ou `shader-<id>-v<N>`
-(shader), avec son zip, l’image et `content.json`. Sur CurseForge, elle s’affiche sous le nom `<nom> v<N>`, pour
-Minecraft et `Client` ; sur Modrinth, sous le même nom, avec le chargeur `minecraft` (pack de ressources) ou `iris` et
-`optifine` (shader).
+(shader), avec son zip, l’image et `content.json`. Sur CurseForge, elle s’affiche sous le nom `<nom> v<N>`, pour ses
+versions de Minecraft (sans `Client` ni `Server`, que CurseForge refuse sur ces projets) ; sur Modrinth, sous le même
+nom, avec le chargeur `minecraft` (pack de ressources) ou `iris` et `optifine` (shader).
 
 ## Les plugins
 

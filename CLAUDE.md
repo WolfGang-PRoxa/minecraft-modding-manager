@@ -221,7 +221,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     projet du mod dépose ses builds (`sourceVersions` : une copie sous un autre nom, `lma-latest.jar`, comptée une
     fois). Service : `createModFromSource` (nom, id, description et icône du jar → `cover.*`), `availableModVersions`,
     `importModVersions`, `linkModSource`, `deleteModVersion`, `publishModToCurseForge` (`publishModVersion` de
-    `curseforgePublish.ts` : nom affiché = jar sans `.jar`, versions `Client` / `Server` selon le côté, dépendances
+    `curseforgePublish.ts` : nom affiché = jar sans `.jar`, versions `Client` / `Server` selon le côté (mods seulement :
+    `side: null` pour un pack ou un shader, CurseForge y refuse ces tags), dépendances
     par slug = id du mod, `searchBySlug` classe 6). `computePlan` : étapes `create-content` / `update-content`
     (`mod-<id>-v<version>`, jars + image + `content.json`), retrait des releases `mod-` sous la même règle que `pack-`
     (bloqué si le mod est en erreur). Interface `studio/ModCard.tsx`.

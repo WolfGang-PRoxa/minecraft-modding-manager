@@ -8,6 +8,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Corrections
+
+- Studio : un pack de ressources ou un shader s’envoie de nouveau sur CurseForge. L’envoi échouait avec « Invalid game
+  version ID » : l’application le marquait `Client`, ce que CurseForge refuse sur ces projets.
+
 ## [2.1.0] - 2026-10-26
 
 ### Ajouts

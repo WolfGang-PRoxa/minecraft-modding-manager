@@ -1230,7 +1230,8 @@ export class StudioService {
               displayName: contentDisplayName(pack.meta.type, pack.meta.name, version, f.fileName),
               loaders: f.analysis.loaders,
               minecraftVersions: f.analysis.minecraftVersions,
-              side: f.analysis.side,
+              // Seuls les mods ont un côté sur CurseForge : un pack de ressources ou un shader n'accepte pas « Client ».
+              side: pack.meta.type === 'mod' ? f.analysis.side : null,
               dependencies: f.analysis.dependencies
             })),
             notes: pack.meta.notes[version] ?? '',

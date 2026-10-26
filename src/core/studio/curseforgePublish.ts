@@ -163,7 +163,8 @@ export interface ModUploadFile {
   displayName: string
   loaders: string[]
   minecraftVersions: string[]
-  side: 'client' | 'server' | 'both'
+  /** null : pas de côté sur CurseForge (pack de ressources, shader). */
+  side: 'client' | 'server' | 'both' | null
   dependencies: string[]
 }
 
@@ -221,7 +222,8 @@ export async function publishModVersion(
   const fileIds: number[] = []
   for (const file of input.files) {
     onStep(`Envoi de ${file.fileName}`)
-    const environments = file.side === 'client' ? (['Client'] as const) : file.side === 'server' ? (['Server'] as const) : (['Client', 'Server'] as const)
+    const environments =
+      file.side === null ? ([] as const) : file.side === 'client' ? (['Client'] as const) : file.side === 'server' ? (['Server'] as const) : (['Client', 'Server'] as const)
     const gameVersions = await uploader.gameVersionIds(file.minecraftVersions, file.loaders, [...environments])
     const relations = slugs.filter((slug) => file.dependencies.some((d) => d.toLowerCase().replace(/_/g, '-') === slug || d === slug))
     fileIds.push(

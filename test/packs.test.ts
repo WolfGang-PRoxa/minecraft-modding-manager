@@ -133,7 +133,8 @@ describe('packs de ressources et shaders dans le Studio', () => {
     await service.publishModToCurseForge('Textures_HD', '3', 'release', noProgress)
     const upload = curseforge.catalog.uploads.at(-1)!
     assert.equal(upload.metadata.displayName, 'Textures HD v3')
-    assert.deepEqual(upload.metadata.gameVersions, [12600, 9638])
+    // Pas de « Client » : CurseForge le refuse sur un pack de ressources (« invalid dependency »).
+    assert.deepEqual(upload.metadata.gameVersions, [12600])
     assert.equal(upload.metadata.relations, undefined)
 
     await assert.rejects(() => service.linkModrinth('Textures_HD', 'lumiere'), /n’est pas un pack de ressources sur Modrinth/)
