@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, protocol, session, shell, type Session } from 'electron'
+import { app, BrowserWindow, dialog, Menu, protocol, session, shell, type Session } from 'electron'
 import { join } from 'node:path'
 import { APP_NAME } from '../shared/config'
 import { autoUpdateOnLaunch, cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
@@ -14,7 +14,7 @@ import { enablePreviousIdentityMigration, migrateDataDir } from '../core/previou
 import { migratePreviousInstallation } from './previousIdentity'
 import { WINDOWS_APP_ID } from './shortcut'
 import { startsMinimized, syncLaunchAtStartup } from './startup'
-import { COVER_SCHEME, registerStudio, stopStudioTasks } from './studioIpc'
+import { COVER_SCHEME, registerStudio, stopStudioTasks, windowStudioTask } from './studioIpc'
 import { applyInterfaceScale, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
 
 let mainWindow: BrowserWindow | null = null
@@ -87,6 +87,30 @@ async function createWindow(): Promise<void> {
       event.preventDefault()
       toggleFullScreen(mainWindow!)
     }
+  })
+
+  // Une publication continue en arrière-plan : fermer la fenêtre l'interromprait sans que le publieur le voie.
+  let closeConfirmed = false
+  mainWindow.on('close', (event) => {
+    const task = windowStudioTask()
+    if (closeConfirmed || !task || !mainWindow) return
+    event.preventDefault()
+    void dialog
+      .showMessageBox(mainWindow, {
+        type: 'warning',
+        title: APP_NAME,
+        message: `${task.charAt(0).toUpperCase()}${task.slice(1)} est en cours.`,
+        detail: 'Fermer l’application l’interrompt proprement : ce qui est déjà fait est conservé, le reste sera repris la prochaine fois.',
+        buttons: ['Continuer', 'Fermer quand même'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true
+      })
+      .then(({ response }) => {
+        if (response !== 1 || !mainWindow) return
+        closeConfirmed = true
+        mainWindow.close()
+      })
   })
 
   mainWindow.on('closed', () => {

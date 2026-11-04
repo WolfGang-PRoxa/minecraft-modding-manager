@@ -34,6 +34,7 @@ import { FromProfileDialog, ImportDialog, NewPackDialog, NotesDialog, PackInfoDi
 import { PackSettingsDialog, StripDialog } from './PackSettingsDialog'
 import { ProfileDetail, ProfilesSidebar, UnlinkedPackDetail } from './Profiles'
 import { PublishDialog } from './PublishDialog'
+import { usePublications } from './publications'
 import { RangerDialog } from './RangerDialog'
 import { useStore } from '../store'
 import { openPath, useStudio } from './store'
@@ -151,6 +152,8 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
   const refresh = useStudio((s) => s.refresh)
   const openDialog = useStudio((s) => s.openDialog)
   const openSettings = useStudio((s) => s.openSettings)
+  const publishing = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null)
+  const follow = usePublications((s) => s.follow)
   const { github, plan } = overview
 
   if (checking && !plan) {
@@ -217,7 +220,20 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
 
   return (
     <div className="space-y-3">
-      {plan.actions.length === 0 ? (
+      {publishing ? (
+        <Panel
+          icon={RefreshCw}
+          tone="bg-sky-400/10 text-sky-300 ring-sky-400/25 [&>svg]:animate-spin"
+          action={
+            <Button size="sm" onClick={() => follow(true)}>
+              Suivre
+            </Button>
+          }
+        >
+          <strong className="font-semibold">Publication en cours :</strong>{' '}
+          <span className="text-ink-300">{publishing.subject} vers GitHub. Le Studio reste utilisable pendant l’envoi.</span>
+        </Panel>
+      ) : plan.actions.length === 0 ? (
         <Panel
           icon={CircleCheck}
           tone="bg-grass-400/10 text-grass-400 ring-grass-400/25"
@@ -320,6 +336,8 @@ function WorkspaceView({ overview }: { overview: StudioOverview }) {
 
 function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
   const openDialog = useStudio((s) => s.openDialog)
+  const publishing = usePublications((s) => s.running.some((p) => p.target === 'github'))
+  const follow = usePublications((s) => s.follow)
 
   const { plan, strayZips, orphanPacks, toRange, settings } = overview
   const changes = plan?.actions.length ?? 0
@@ -357,24 +375,30 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
             Ranger les zips
             {toRange > 0 && <Count tone="bg-tint/15 text-ink-100">{toRange}</Count>}
           </Button>
-          <Button
-            variant="primary"
-            icon={CloudUpload}
-            disabled={!plan || changes === 0 || settings.role !== 'publisher'}
-            title={
-              settings.role !== 'publisher'
-                ? 'Passe en mode publieur dans les paramètres'
-                : !plan
-                  ? 'GitHub n’est pas joignable'
-                  : changes === 0
-                    ? 'GitHub est déjà à jour'
-                    : undefined
-            }
-            onClick={() => openDialog({ kind: 'publish' })}
-          >
-            Publier sur GitHub
-            {changes > 0 && <Count tone="bg-ink-950/25 text-ink-950">{changes}</Count>}
-          </Button>
+          {publishing ? (
+            <Button variant="primary" icon={CloudUpload} onClick={() => follow(true)}>
+              Publication en cours…
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              icon={CloudUpload}
+              disabled={!plan || changes === 0 || settings.role !== 'publisher'}
+              title={
+                settings.role !== 'publisher'
+                  ? 'Passe en mode publieur dans les paramètres'
+                  : !plan
+                    ? 'GitHub n’est pas joignable'
+                    : changes === 0
+                      ? 'GitHub est déjà à jour'
+                      : undefined
+              }
+              onClick={() => openDialog({ kind: 'publish' })}
+            >
+              Publier sur GitHub
+              {changes > 0 && <Count tone="bg-ink-950/25 text-ink-950">{changes}</Count>}
+            </Button>
+          )}
         </div>
       </header>
 

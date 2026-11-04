@@ -1,14 +1,14 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Check, CircleCheck, CircleMinus, CircleX, Minus, Plus, RefreshCw, TriangleAlert, Upload } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import type { PublishProgress, PublishResult, SyncAction, SyncActionKind } from '../../../shared/studio'
+import type { PublishProgress, SyncAction, SyncActionKind } from '../../../shared/studio'
 import { Button } from '../components/Button'
 import { formatBytes, formatSpeed } from '../lib/format'
 import { Modal, ProgressBar, Spinner } from './Modal'
-import { useStore } from '../store'
-import { errorMessage, useStudio } from './store'
+import { useStudio } from './store'
+import { publishToGitHub, stopGitHubPublication, TARGET_NAMES, usePublications, useRunningPublication } from './publications'
 
-const KINDS: Record<SyncActionKind, { title: string; step: string; icon: LucideIcon; tone: string }> = {
+export const KINDS: Record<SyncActionKind, { title: string; step: string; icon: LucideIcon; tone: string }> = {
   create: { title: 'Nouvelles versions', step: 'Nouvelle version', icon: Plus, tone: 'bg-sky-400/15 text-sky-300' },
   update: { title: 'Mises à jour', step: 'Mise à jour', icon: RefreshCw, tone: 'bg-amber-glow/15 text-amber-glow' },
   delete: { title: 'Suppressions', step: 'Suppression', icon: Minus, tone: 'bg-red-500/15 text-red-300' }
@@ -55,7 +55,7 @@ const STEP_ICONS = {
   skipped: <CircleMinus size={16} className="text-ink-500" />
 }
 
-function ProgressView({ progress }: { progress: PublishProgress | null }) {
+export function ProgressView({ progress }: { progress: PublishProgress | null }) {
   if (!progress) {
     return (
       <div className="flex items-center gap-3 py-6 text-ink-300">
@@ -100,110 +100,100 @@ function ProgressView({ progress }: { progress: PublishProgress | null }) {
   )
 }
 
+/** Suivi de la publication sur GitHub, en cours ou terminée ; la fermer ne l'arrête pas. */
+export function PublishFollowDialog() {
+  const github = usePublications((s) => s.github)
+  const following = usePublications((s) => s.following)
+  const follow = usePublications((s) => s.follow)
+  const running = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null)
+  if (!following || !github) return null
+  const { result } = github
+  const hide = () => follow(false)
+
+  return (
+    <Modal
+      title={running ? 'Publication en cours' : result?.ok ? 'Publication terminée' : 'Publication interrompue'}
+      subtitle={running ? 'Elle continue en arrière-plan si cette fenêtre est fermée.' : undefined}
+      onClose={hide}
+      footer={
+        running ? (
+          <>
+            <p className="flex-1 text-xs text-ink-400">Arrêter laisse GitHub dans un état cohérent : l’étape en cours est annulée proprement.</p>
+            <Button variant="danger" disabled={running.stopping} onClick={stopGitHubPublication}>
+              {running.stopping ? 'Arrêt…' : 'Arrêter'}
+            </Button>
+            <Button variant="primary" onClick={hide}>
+              Masquer
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex-1" />
+            <Button variant="primary" onClick={hide}>
+              Fermer
+            </Button>
+          </>
+        )
+      }
+    >
+      {result && (
+        <div
+          className={`mb-5 flex items-start gap-3 rounded-2xl px-5 py-4 ring-1 ring-inset ${
+            result.ok ? 'bg-grass-400/10 ring-grass-400/30' : 'bg-red-500/10 ring-red-400/25'
+          }`}
+        >
+          {result.ok ? (
+            <CircleCheck size={22} className="mt-0.5 shrink-0 text-grass-400" />
+          ) : (
+            <CircleX size={22} className="mt-0.5 shrink-0 text-red-400" />
+          )}
+          <div>
+            <p className="font-semibold text-ink-100">
+              {result.ok
+                ? 'GitHub correspond maintenant à ton dossier.'
+                : result.cancelled
+                  ? 'Publication arrêtée.'
+                  : 'La publication s’est arrêtée sur une erreur.'}
+            </p>
+            <p className="mt-0.5 text-sm text-ink-300 select-text">
+              {result.ok
+                ? `${result.done} changement${result.done > 1 ? 's' : ''} appliqué${result.done > 1 ? 's' : ''}. Les joueurs le verront en actualisant leur application.`
+                : `${result.cancelled ? '' : `${result.error} `}Ce qui a été fait est conservé ; relance « Publier » pour terminer.`}
+            </p>
+          </div>
+        </div>
+      )}
+      <ProgressView progress={github.progress} />
+    </Modal>
+  )
+}
+
 export function PublishDialog() {
   const plan = useStudio((s) => s.overview?.plan ?? null)
   const github = useStudio((s) => s.overview?.github)
   const refresh = useStudio((s) => s.refresh)
   const close = useStudio((s) => s.closeDialog)
-  const [phase, setPhase] = useState<'checking' | 'plan' | 'running' | 'done'>('checking')
-  const [progress, setProgress] = useState<PublishProgress | null>(null)
-  const [result, setResult] = useState<PublishResult | null>(null)
-  const [stopping, setStopping] = useState(false)
+  const busy = useRunningPublication()
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     // L'aperçu repart d'un état de GitHub tout frais.
-    void refresh({ remote: true }).then(() => setPhase('plan'))
+    void refresh({ remote: true }).then(() => setChecking(false))
   }, [refresh])
-  useEffect(() => window.studio.onPublishProgress(setProgress), [])
 
-  async function start() {
+  function start() {
     if (!plan) return
-    setPhase('running')
-    setProgress(null)
-    let outcome: PublishResult
-    try {
-      outcome = await window.studio.publish(plan.fingerprint)
-    } catch (err) {
-      outcome = { ok: false, cancelled: false, error: errorMessage(err), done: 0 }
-    }
-    setResult(outcome)
-    setPhase('done')
-    void refresh()
-    // La bibliothèque montre aussitôt ce qui vient d'être publié.
-    if (outcome.done > 0) void useStore.getState().refresh(true)
+    // La fenêtre se ferme : la publication continue en arrière-plan, suivie dans l'encart des publications.
+    close()
+    void publishToGitHub(plan.fingerprint, plan.actions.length)
   }
 
-  if (phase === 'checking') {
+  if (checking) {
     return (
       <Modal title="Publier sur GitHub" onClose={close}>
         <div className="flex items-center gap-3 py-8 text-ink-300">
           <Spinner size={20} /> Comparaison du dossier avec GitHub…
         </div>
-      </Modal>
-    )
-  }
-
-  if (phase === 'running' || phase === 'done') {
-    const running = phase === 'running'
-    return (
-      <Modal
-        title={running ? 'Publication en cours' : result?.ok ? 'Publication terminée' : 'Publication interrompue'}
-        subtitle={running ? 'Garde le studio ouvert jusqu’à la fin.' : undefined}
-        onClose={close}
-        closable={!running}
-        footer={
-          running ? (
-            <>
-              <p className="flex-1 text-xs text-ink-400">Arrêter laisse GitHub dans un état cohérent : l’étape en cours est annulée proprement.</p>
-              <Button
-                variant="danger"
-                disabled={stopping}
-                onClick={() => {
-                  setStopping(true)
-                  void window.studio.cancelPublish()
-                }}
-              >
-                {stopping ? 'Arrêt…' : 'Arrêter'}
-              </Button>
-            </>
-          ) : (
-            <>
-              <div className="flex-1" />
-              <Button variant="primary" onClick={close}>
-                Fermer
-              </Button>
-            </>
-          )
-        }
-      >
-        {result && (
-          <div
-            className={`mb-5 flex items-start gap-3 rounded-2xl px-5 py-4 ring-1 ring-inset ${
-              result.ok ? 'bg-grass-400/10 ring-grass-400/30' : 'bg-red-500/10 ring-red-400/25'
-            }`}
-          >
-            {result.ok ? (
-              <CircleCheck size={22} className="mt-0.5 shrink-0 text-grass-400" />
-            ) : (
-              <CircleX size={22} className="mt-0.5 shrink-0 text-red-400" />
-            )}
-            <div>
-              <p className="font-semibold text-ink-100">
-                {result.ok
-                  ? 'GitHub correspond maintenant à ton dossier.'
-                  : result.cancelled
-                    ? 'Publication arrêtée.'
-                    : 'La publication s’est arrêtée sur une erreur.'}
-              </p>
-              <p className="mt-0.5 text-sm text-ink-300 select-text">
-                {result.ok
-                  ? `${result.done} changement${result.done > 1 ? 's' : ''} appliqué${result.done > 1 ? 's' : ''}. Les joueurs le verront en actualisant leur application.`
-                  : `${result.cancelled ? '' : `${result.error} `}Ce qui a été fait est conservé ; relance « Publier » pour terminer.`}
-              </p>
-            </div>
-          </div>
-        )}
-        <ProgressView progress={progress} />
       </Modal>
     )
   }
@@ -247,13 +237,22 @@ export function PublishDialog() {
           </>
         ) : (
           <>
-            <p className="flex-1 text-sm text-ink-400">
-              {plan.uploadBytes > 0 ? `${formatBytes(plan.uploadBytes)} à envoyer` : 'Rien à envoyer'}
+            <p className={`flex-1 text-sm ${busy ? 'text-amber-glow' : 'text-ink-400'}`}>
+              {busy
+                ? `Un envoi sur ${TARGET_NAMES[busy.target]} est en cours : publie une fois qu’il est terminé.`
+                : plan.uploadBytes > 0
+                  ? `${formatBytes(plan.uploadBytes)} à envoyer`
+                  : 'Rien à envoyer'}
             </p>
             <Button variant="ghost" onClick={close}>
               Annuler
             </Button>
-            <Button variant={deletions ? 'danger' : 'primary'} icon={Upload} onClick={() => void start()}>
+            <Button
+              variant={deletions ? 'danger' : 'primary'}
+              icon={Upload}
+              disabled={!!busy}
+              onClick={start}
+            >
               Publier {plan.actions.length} changement{plan.actions.length > 1 ? 's' : ''}
             </Button>
           </>

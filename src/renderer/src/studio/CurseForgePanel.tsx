@@ -9,6 +9,8 @@ import { Toggle } from '../components/Toggle'
 import { formatDate } from '../lib/format'
 import { Field, Modal, Spinner, TextArea, TextInput } from './Modal'
 import { TestsPill } from './ProfileTests'
+import { runPublication, useRunningPublication } from './publications'
+import { PublicationBusyNote } from './PublicationsTray'
 import { openLink, useStudio } from './store'
 
 /** Chemin des pages de projet CurseForge de chaque type. */
@@ -356,27 +358,22 @@ export function PublishCurseForgeDialog({ folder, version }: { folder: string; v
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
   const openDialog = useStudio((s) => s.openDialog)
   const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
-  const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState<string | null>(null)
-  useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
+  const busy = useRunningPublication()
   const view = pack?.versions.find((v) => v.number === version)
   if (!pack || !view) return null
 
-  async function publish() {
-    setBusy(true)
-    try {
-      const result = await window.studio.publishCurseForge(folder, version, releaseType)
-      if (result.ok) {
-        pushToast({ kind: 'success', title: `v${version} envoyée sur CurseForge`, message: 'Elle sera visible une fois acceptée par la modération.' })
-        close()
-      } else pushToast({ kind: 'error', title: 'Envoi impossible', message: result.error })
-    } finally {
-      setBusy(false)
-      void refresh()
-    }
+  function publish() {
+    // La fenêtre se ferme : l'envoi continue en arrière-plan.
+    close()
+    void runPublication({
+      target: 'curseforge',
+      subject: `${pack!.name}, v${version}`,
+      run: () => window.studio.publishCurseForge(folder, version, releaseType),
+      onSuccess: () =>
+        pushToast({ kind: 'success', title: `${pack!.name} v${version} envoyée sur CurseForge`, message: 'Elle sera visible une fois acceptée par la modération.' })
+    })
   }
 
   return (
@@ -384,19 +381,13 @@ export function PublishCurseForgeDialog({ folder, version }: { folder: string; v
       title={`Publier la v${version} sur CurseForge`}
       subtitle="Exportée au format de CurseForge, puis envoyée : elle passe en modération avant d’être visible. Une version envoyée ne se retire que depuis le site."
       onClose={close}
-      closable={!busy}
       footer={
         <>
-          {busy && (
-            <span className="flex flex-1 items-center gap-2 text-sm text-ink-300">
-              <Spinner /> {step ?? 'Préparation…'}
-            </span>
-          )}
-          {!busy && <div className="flex-1" />}
-          <Button variant="ghost" disabled={busy} onClick={close}>
+          <PublicationBusyNote busy={busy} />
+          <Button variant="ghost" onClick={close}>
             Annuler
           </Button>
-          <Button variant="primary" icon={Upload} disabled={busy} onClick={() => void publish()}>
+          <Button variant="primary" icon={Upload} disabled={!!busy} onClick={publish}>
             Publier sur CurseForge
           </Button>
         </>

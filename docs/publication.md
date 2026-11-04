@@ -11,12 +11,13 @@ suppressions, en une seule opération, validée après en avoir vu le détail.
    détail de chacun et la quantité de données à envoyer.
 3. Lire les avertissements, puis cliquer sur **Publier N changements**. Le bouton est rouge quand l’opération
    supprime des releases.
-4. Chaque étape s’affiche avec sa progression : envoi de chaque fichier, débit, étape en cours. Le Studio doit rester
-   ouvert jusqu’à la fin.
-5. « GitHub correspond maintenant à ton dossier. » : la Bibliothèque est rechargée aussitôt pour montrer le
-   résultat, et les joueurs le verront à leur prochaine actualisation.
+4. La fenêtre se ferme et la publication continue en arrière-plan : l’application reste utilisable pendant l’envoi
+   (voir [Publication en arrière-plan](#publication-en-arrière-plan)).
+5. Une notification annonce la fin : « Publication sur GitHub terminée », avec le nombre de changements appliqués. La
+   Bibliothèque est rechargée aussitôt pour montrer le résultat, et les joueurs le verront à leur prochaine
+   actualisation.
 
-**Arrêter** interrompt la publication proprement : l’étape en cours est annulée sans laisser de release incomplète,
+**Arrêter**, dans l’encart ou le suivi de la publication, l’interrompt proprement : l’étape en cours est annulée sans laisser de release incomplète,
 et ce qui a déjà été fait est conservé. Relancer **Publier** pour terminer.
 
 Si le dossier ou GitHub a changé entre l’aperçu et le clic, rien n’est fait : « Le dossier ou GitHub a changé depuis
@@ -104,14 +105,35 @@ suppression après coup, le dossier est déjà à jour : la release sera retiré
 > Une suppression sur GitHub est définitive : la release et son tag disparaissent. Seul le zip, sur le PC, peut être
 > récupéré dans la corbeille.
 
+## Publication en arrière-plan
+
+Une fois **Publier** cliqué, que ce soit vers GitHub, CurseForge, Modrinth ou Hangar, la fenêtre se ferme et l’envoi
+continue en arrière-plan. Le Studio, la Bibliothèque, l’aide et les paramètres restent utilisables pendant ce temps.
+
+Un encart en bas à droite de la fenêtre, au-dessus des notifications, suit l’envoi dans toutes les vues : sa
+destination, ce qui part, l’étape en cours et, pour GitHub, l’avancement du fichier envoyé. Pour une publication sur
+GitHub :
+
+- **Détails** (ou **Suivre**, dans l’encart des changements du Studio, ou le bouton **Publication en cours…**) ouvre
+  le suivi complet : chaque étape avec sa progression, son débit et son éventuelle erreur. **Masquer** le referme sans
+  arrêter la publication ;
+- **Arrêter** interrompt la publication proprement, comme depuis le suivi.
+
+La fin de l’envoi est annoncée par une notification. Un échec reste affiché jusqu’à ce qu’il soit fermé, avec son
+message d’erreur ; pour GitHub, **Voir le détail** rouvre le suivi pour voir quelle étape a échoué.
+
+Tant qu’un envoi est en cours, le bouton **Publier** des autres fenêtres de publication est grisé (« Un envoi sur …
+est en cours : publie une fois qu’il est terminé. ») : voir [Une opération à la fois](#une-opération-à-la-fois).
+
 ## Une opération à la fois
 
 Le rangement, la publication, une suppression, la création d’un zip et la copie de fichiers ne se font jamais en
 même temps : une opération lancée pendant une autre est refusée (« Patiente : la publication est en cours. »). Elles
 attendent aussi la fin d’une mise à jour de l’application, qui attend à son tour la leur.
 
-Fermer la fenêtre pendant une publication l’interrompt : les étapes terminées restent faites, la suite sera reprise
-à la publication suivante.
+Fermer la fenêtre pendant une publication, ou une autre opération du Studio, demande d’abord une confirmation
+(« … est en cours. ») : **Continuer** la laisse se terminer, **Fermer quand même** l’interrompt proprement. Les
+étapes terminées restent faites, la suite sera reprise à la publication suivante.
 
 ## Bonnes pratiques
 
@@ -151,7 +173,7 @@ Minecraft, son état de modération et un lien vers sa page. Les packs serveur n
 Sur la ligne de la dernière version, si son numéro dépasse le plus haut du projet, **Publier sur CurseForge** montre
 le nom affiché (`<nom>_V<N>.zip`), les fichiers joints, les notes de version et le bilan de ses tests, et demande le
 type (version stable, bêta, alpha). La version est exportée au format de CurseForge (la liste des mods et des
-fichiers, sans les mods eux-mêmes), puis envoyée. Elle passe ensuite en modération : la ligne affiche **En
+fichiers, sans les mods eux-mêmes), puis envoyée en arrière-plan. Elle passe ensuite en modération : la ligne affiche **En
 modération**, puis **Publiée sur CurseForge** une fois acceptée (ou **Refusée par CurseForge**). La pastille apparaît
 aussi sur une version dont le numéro est déjà sur CurseForge, mise en ligne depuis le site : ce numéro ne s’y publie
 plus. Une version envoyée ne se retire que depuis le site.

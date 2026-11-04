@@ -8,6 +8,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Studio : une fois **Publier** cliqué, vers GitHub, CurseForge, Modrinth ou Hangar, la fenêtre se ferme et l’envoi
+  continue en arrière-plan. L’application reste utilisable pendant ce temps : un encart en bas à droite suit l’envoi
+  dans toutes les vues (**Détails** et **Arrêter** pour GitHub), et une notification annonce la fin. Un échec reste
+  affiché jusqu’à ce qu’il soit fermé.
+- Fermer l’application pendant une publication demande d’abord une confirmation, au lieu de l’interrompre aussitôt.
+
 ## [2.3.0] - 2026-10-26
 
 ### Ajouts

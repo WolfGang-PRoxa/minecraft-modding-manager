@@ -365,7 +365,11 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   `studio/Profiles.tsx` : arborescence des profils (`ProfilesSidebar`, dossiers repliés gardés en `localStorage`),
   `ProfileDetail` (état et action : créer le modpack, créer la version suivante, lier, confirmer un lien deviné) et
   `UnlinkedPackDetail` ; `useStudio.selection` (`all` / `profile` / `pack`), `useStudio.library` relu avec l'aperçu.
-  `StudioView` : deux colonnes, chacune avec son défilement. `studio/ProfileUpdates.tsx` : mises à jour des mods du
+  `StudioView` : deux colonnes, chacune avec son défilement. `studio/publications.ts` : publications en arrière-plan
+  (GitHub, CurseForge, Modrinth, Hangar) : la fenêtre se ferme au clic sur « Publier », `PublicationsTray` (au-dessus
+  des notifications, dans toutes les vues) suit l'envoi, `PublishFollowDialog` en montre le détail pour GitHub ; le
+  résultat arrive en notification (échec : `sticky`). Fermer la fenêtre pendant une opération du studio demande
+  confirmation (`windowStudioTask`, `index.ts`). `studio/ProfileUpdates.tsx` : mises à jour des mods du
   profil (recherche, choix ; une mise à jour non téléchargeable n'est pas cochable) et essai en cours (relancer
   CurseForge, garder, abandonner) ; canaux `studio:checkUpdates`, `studio:applyUpdates` (+ `studio:update-progress`),
   `studio:promoteTrial`, `studio:discardTrial`. `FromProfileDialog` (PackDialogs) ; `ImportDialog`

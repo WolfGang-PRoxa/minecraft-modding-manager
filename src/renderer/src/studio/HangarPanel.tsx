@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react'
 import { ExternalLink, Link2, Upload } from 'lucide-react'
 import type { ContentVersionView, HangarVersionView, PackHangar, PackView } from '../../../shared/studio'
 import { Button } from '../components/Button'
-import { Field, Modal, Spinner, TextInput } from './Modal'
+import { Field, Modal, TextInput } from './Modal'
 import { Pill } from './PackCard'
 import { openLink, useStudio } from './store'
+import { runPublication, useRunningPublication } from './publications'
+import { PublicationBusyNote } from './PublicationsTray'
 
 export interface HangarVersions {
   versions: HangarVersionView[] | null
@@ -167,26 +169,21 @@ export function PublishHangarDialog({ folder, version }: { folder: string; versi
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
   const [releaseType, setReleaseType] = useState<'release' | 'beta'>('release')
-  const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState<string | null>(null)
-  useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
+  const busy = useRunningPublication()
   const view = pack?.contentVersions.find((v) => v.version === version)
   if (!pack || !view) return null
   const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
 
-  async function publish() {
-    setBusy(true)
-    try {
-      const result = await window.studio.publishHangar(folder, version, releaseType)
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Envoi impossible', message: result.error })
-      pushToast({ kind: 'success', title: `Version ${version} publiée sur Hangar` })
-      close()
-    } finally {
-      setBusy(false)
-      void refresh()
-    }
+  function publish() {
+    // La fenêtre se ferme : l'envoi continue en arrière-plan.
+    close()
+    void runPublication({
+      target: 'hangar',
+      subject: `${pack!.name}, version ${version}`,
+      run: () => window.studio.publishHangar(folder, version, releaseType),
+      onSuccess: () => pushToast({ kind: 'success', title: `${pack!.name} : version ${version} publiée sur Hangar` })
+    })
   }
 
   return (
@@ -194,20 +191,13 @@ export function PublishHangarDialog({ folder, version }: { folder: string; versi
       title={`Publier la version ${version} sur Hangar`}
       subtitle="Le jar est envoyé sur le projet du plugin, pour Paper. Une version envoyée se retire depuis le site."
       onClose={close}
-      closable={!busy}
       footer={
         <>
-          {busy ? (
-            <span className="flex flex-1 items-center gap-2 text-sm text-ink-300">
-              <Spinner /> {step ?? 'Préparation…'}
-            </span>
-          ) : (
-            <div className="flex-1" />
-          )}
-          <Button variant="ghost" disabled={busy} onClick={close}>
+          <PublicationBusyNote busy={busy} />
+          <Button variant="ghost" onClick={close}>
             Annuler
           </Button>
-          <Button variant="primary" icon={Upload} disabled={busy} onClick={() => void publish()}>
+          <Button variant="primary" icon={Upload} disabled={!!busy} onClick={publish}>
             Publier sur Hangar
           </Button>
         </>

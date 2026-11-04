@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { CircleCheck, CircleX, Info, X } from 'lucide-react'
 import { useStore } from '../store'
 
@@ -17,15 +18,21 @@ const STYLES = {
   info: { icon: Info, color: 'text-sky-300', ring: 'ring-sky-300/20' }
 }
 
-export function Toasts() {
+/** `children` : encarts posés au-dessus des notifications (publications en cours). */
+export function Toasts({ children }: { children?: ReactNode }) {
   const toasts = useStore((s) => s.toasts)
   const dismiss = useStore((s) => s.dismissToast)
-  return <ToastList toasts={toasts} dismiss={dismiss} />
+  return (
+    <ToastList toasts={toasts} dismiss={dismiss}>
+      {children}
+    </ToastList>
+  )
 }
 
-export function ToastList({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (id: number) => void }) {
+export function ToastList({ toasts, dismiss, children }: { toasts: ToastItem[]; dismiss: (id: number) => void; children?: ReactNode }) {
   return (
     <div className="pointer-events-none fixed right-6 bottom-6 z-[60] flex w-[400px] max-w-[calc(100vw-3rem)] flex-col gap-3">
+      {children}
       {toasts.map((toast) => {
         const { icon: Icon, color, ring } = STYLES[toast.kind]
         return (

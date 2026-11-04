@@ -13,6 +13,8 @@ import { UpdateBar } from './components/UpdateBar'
 import { SetupView } from './components/Usage'
 import { DocsCenter } from './docs/DocsCenter'
 import { useDocs } from './docs/store'
+import { PublicationsTray } from './studio/PublicationsTray'
+import { PublishFollowDialog } from './studio/PublishDialog'
 import { StudioView } from './studio/StudioView'
 import { useStore } from './store'
 import { applyAppearance } from './lib/appearance'
@@ -135,7 +137,10 @@ export function App() {
 
       <SettingsDialog />
       <ReportDialog />
-      <Toasts />
+      <PublishFollowDialog />
+      <Toasts>
+        <PublicationsTray />
+      </Toasts>
     </div>
   )
 }

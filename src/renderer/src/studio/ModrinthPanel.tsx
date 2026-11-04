@@ -4,9 +4,11 @@ import { ExternalLink, Link2, Upload } from 'lucide-react'
 import { CONTENT_KINDS } from '../../../shared/content'
 import type { ModrinthVersionView, ContentVersionView, PackModrinth, PackView } from '../../../shared/studio'
 import { Button } from '../components/Button'
-import { Field, Modal, Spinner, TextInput } from './Modal'
+import { Field, Modal, TextInput } from './Modal'
 import { Pill } from './PackCard'
 import { openLink, useStudio } from './store'
+import { runPublication, useRunningPublication } from './publications'
+import { PublicationBusyNote } from './PublicationsTray'
 
 export interface ModrinthVersions {
   versions: ModrinthVersionView[] | null
@@ -179,53 +181,44 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
   const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
-  const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState<string | null>(null)
-  useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
+  const busy = useRunningPublication()
   const view = pack?.contentVersions.find((v) => v.version === version)
   if (!pack || !view) return null
   const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
   const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
   const loaders = [...new Set(view.files.flatMap((f) => f.loaders))]
+  const label = CONTENT_KINDS[pack.type].versioning === 'number' ? `v${version}` : `version ${version}`
 
-  async function publish() {
-    setBusy(true)
-    try {
-      const result = await window.studio.publishModrinth(folder, version, releaseType)
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Envoi impossible', message: result.error })
-      pushToast({
-        kind: 'success',
-        title: `Version ${version} publiée sur Modrinth`,
-        message: result.unknownDependencies.length ? `Dépendances introuvables sur Modrinth, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.` : undefined
-      })
-      close()
-    } finally {
-      setBusy(false)
-      void refresh()
-    }
+  function publish() {
+    // La fenêtre se ferme : l'envoi continue en arrière-plan.
+    close()
+    void runPublication({
+      target: 'modrinth',
+      subject: `${pack!.name}, ${label}`,
+      run: () => window.studio.publishModrinth(folder, version, releaseType),
+      onSuccess: (result) =>
+        pushToast({
+          kind: 'success',
+          title: `${pack!.name} : ${label} publiée sur Modrinth`,
+          message: result.unknownDependencies.length ? `Dépendances introuvables sur Modrinth, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.` : undefined,
+          sticky: result.unknownDependencies.length > 0
+        })
+    })
   }
 
   return (
     <Modal
-      title={`Publier la ${CONTENT_KINDS[pack.type].versioning === 'number' ? `v${version}` : `version ${version}`} sur Modrinth`}
+      title={`Publier la ${label} sur Modrinth`}
       subtitle="Ses jars sont envoyés sur le projet du mod, visibles tout de suite si le projet est approuvé. Une version envoyée se retire depuis le site."
       onClose={close}
-      closable={!busy}
       footer={
         <>
-          {busy ? (
-            <span className="flex flex-1 items-center gap-2 text-sm text-ink-300">
-              <Spinner /> {step ?? 'Préparation…'}
-            </span>
-          ) : (
-            <div className="flex-1" />
-          )}
-          <Button variant="ghost" disabled={busy} onClick={close}>
+          <PublicationBusyNote busy={busy} />
+          <Button variant="ghost" onClick={close}>
             Annuler
           </Button>
-          <Button variant="primary" icon={Upload} disabled={busy} onClick={() => void publish()}>
+          <Button variant="primary" icon={Upload} disabled={!!busy} onClick={publish}>
             Publier sur Modrinth
           </Button>
         </>

@@ -110,6 +110,11 @@ export function studioTask(): string | null {
   return service?.currentTask ?? service?.otherProcessTask ?? maintenanceTask()
 }
 
+/** Opération du studio lancée depuis la fenêtre (« la publication »…), qui continue en arrière-plan ; sinon null. */
+export function windowStudioTask(): string | null {
+  return service?.currentTask ?? null
+}
+
 /** Arrête proprement une publication ou une création de zip en cours (fermeture de la fenêtre). */
 export function stopStudioTasks(): void {
   publishController?.abort()

@@ -14,6 +14,8 @@ import { HangarLine, HangarVersionStatus, useHangarVersions, type HangarVersions
 import { Field, Modal, Spinner, TextInput } from './Modal'
 import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
 import { openPath, useStudio } from './store'
+import { runPublication, useRunningPublication } from './publications'
+import { PublicationBusyNote } from './PublicationsTray'
 
 /** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
 function loadersLabel(loaders: ContentLoader[]): string {
@@ -454,32 +456,29 @@ export function PublishModCurseForgeDialog({ folder, version }: { folder: string
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
   const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
-  const [busy, setBusy] = useState(false)
-  const [step, setStep] = useState<string | null>(null)
-  useEffect(() => window.studio.onCurseForgeProgress(setStep), [])
+  const busy = useRunningPublication()
   const view = pack?.contentVersions.find((v) => v.version === version)
   if (!pack || !view) return null
   const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
 
-  async function publish() {
-    setBusy(true)
-    try {
-      const result = await window.studio.publishModCurseForge(folder, version, releaseType)
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Envoi impossible', message: result.error })
-      pushToast({
-        kind: 'success',
-        title: `${versionLabel(pack!, version).replace(/^./, (c) => c.toUpperCase())} envoyée sur CurseForge`,
-        message: result.unknownDependencies.length
-          ? `Elle sera visible une fois acceptée par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
-          : 'Elle sera visible une fois acceptée par la modération.'
-      })
-      close()
-    } finally {
-      setBusy(false)
-      void refresh()
-    }
+  function publish() {
+    // La fenêtre se ferme : l'envoi continue en arrière-plan.
+    close()
+    void runPublication({
+      target: 'curseforge',
+      subject: `${pack!.name}, ${versionLabel(pack!, version)}`,
+      run: () => window.studio.publishModCurseForge(folder, version, releaseType),
+      onSuccess: (result) =>
+        pushToast({
+          kind: 'success',
+          title: `${pack!.name} : ${versionLabel(pack!, version)} envoyée sur CurseForge`,
+          message: result.unknownDependencies.length
+            ? `Elle sera visible une fois acceptée par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
+            : 'Elle sera visible une fois acceptée par la modération.',
+          sticky: result.unknownDependencies.length > 0
+        })
+    })
   }
 
   return (
@@ -487,20 +486,13 @@ export function PublishModCurseForgeDialog({ folder, version }: { folder: string
       title={`Publier la ${versionLabel(pack, version)} sur CurseForge`}
       subtitle="Chaque fichier est envoyé sur le projet du mod et passe en modération avant d’être visible. Un fichier envoyé ne se retire que depuis le site."
       onClose={close}
-      closable={!busy}
       footer={
         <>
-          {busy ? (
-            <span className="flex flex-1 items-center gap-2 text-sm text-ink-300">
-              <Spinner /> {step ?? 'Préparation…'}
-            </span>
-          ) : (
-            <div className="flex-1" />
-          )}
-          <Button variant="ghost" disabled={busy} onClick={close}>
+          <PublicationBusyNote busy={busy} />
+          <Button variant="ghost" onClick={close}>
             Annuler
           </Button>
-          <Button variant="primary" icon={Upload} disabled={busy} onClick={() => void publish()}>
+          <Button variant="primary" icon={Upload} disabled={!!busy} onClick={publish}>
             Publier sur CurseForge
           </Button>
         </>

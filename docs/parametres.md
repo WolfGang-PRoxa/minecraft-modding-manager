@@ -168,8 +168,10 @@ Le numéro de la version installée et sa date de publication.
 - Les boutons de droite **réduisent**, **agrandissent** (ou ramènent au **niveau inférieur**) et **ferment** la
   fenêtre. En plein écran, le bouton du milieu en fait sortir.
 - `F11` passe en plein écran, et en fait sortir en retrouvant la taille d’avant.
-- Fermer la fenêtre quitte l’application. Une publication en cours est alors interrompue : ce qui n’était pas
-  terminé sera repris à la publication suivante (voir [Publier et supprimer](publication.md#publier-sur-github)).
+- Fermer la fenêtre quitte l’application. Pendant une publication (ou une autre opération du Studio), une
+  confirmation le demande d’abord : **Continuer** la laisse se terminer, **Fermer quand même** l’interrompt, et ce
+  qui n’était pas terminé sera repris à la publication suivante (voir
+  [Une opération à la fois](publication.md#une-opération-à-la-fois)).
 
 ## Raccourcis clavier
 
