@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.3.1] - 2026-11-04
+
 ### Améliorations
 
 - Studio : une fois **Publier** cliqué, vers GitHub, CurseForge, Modrinth ou Hangar, la fenêtre se ferme et l’envoi
@@ -420,7 +422,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.1...HEAD
+[2.3.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.0...app-v2.3.1
 [2.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.1...app-v2.3.0
 [2.2.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.0...app-v2.2.1
 [2.2.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.1.0...app-v2.2.0
