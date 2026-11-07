@@ -14,6 +14,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   quelques mégaoctets au lieu de l’installeur entier. L’application garde pour cela l’installeur de la version
   installée. Cela vaut à partir de la mise à jour qui suivra celle-ci : celle-ci est encore téléchargée en entier.
 
+### Corrections
+
+- Studio : un mod NeoForge pour Minecraft 1.20.4 ou plus ancien (fichier `mods.toml` qui dépend de NeoForge, seul ou à
+  côté de `neoforge.mods.toml`) n’est plus pris pour un mod Forge : il est publié sous NeoForge seulement sur
+  CurseForge et Modrinth.
+
 ## [2.3.1] - 2026-11-04
 
 ### Améliorations

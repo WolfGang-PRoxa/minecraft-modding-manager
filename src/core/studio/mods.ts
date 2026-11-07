@@ -122,6 +122,15 @@ export async function analyzeJar(file: JarFile): Promise<ContentAnalysis> {
   const mod = meta?.mods[0]
   if (!meta || !mod) throw new StudioError('Ce jar ne déclare aucun mod (ni fabric.mod.json, ni mods.toml).')
   if (!mod.version) throw new StudioError(`Le mod « ${mod.id} » ne déclare pas sa version.`)
+  // NeoForge jusqu'à la 1.20.4 ne lit que mods.toml : un jar NeoForge a alors ce seul fichier (qui dépend de neoforge),
+  // ou les deux pour couvrir aussi les versions suivantes. Ce n'est un mod Forge que si son mods.toml dépend de forge.
+  if (loaders.includes('forge')) {
+    const forgeMod = meta.loader === 'forge' ? mod : (await readModJar(file.path, 'forge'))?.mods[0]
+    const needs = (id: string) => forgeMod?.relations.some((r) => r.id === id && r.kind === 'required') ?? false
+    if (needs('neoforge') || (loaders.includes('neoforge') && !needs('forge'))) {
+      loaders.splice(0, loaders.length, ...new Set(loaders.map((l): ModLoader => (l === 'forge' ? 'neoforge' : l))))
+    }
+  }
   const minecraft = mod.relations.find((r) => r.id === 'minecraft' && r.kind === 'required')?.versions ?? null
   const analysis: ContentAnalysis = {
     ...(await hashes(file.path)),

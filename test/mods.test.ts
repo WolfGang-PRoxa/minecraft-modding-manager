@@ -1,7 +1,7 @@
 // Les mods dans le Studio : dossier lié au projet du mod, import des versions, publication sur GitHub (mod-<id>-v…,
 // content.json), suppression d'une version.
 import assert from 'node:assert/strict'
-import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import type { ContentManifest } from '../src/shared/content'
@@ -10,13 +10,13 @@ import { setCurseForgeApiOverride } from '../src/core/curseforgeAuth'
 import { CurseForgeUploader } from '../src/core/curseforgeUpload'
 import { checkModrinthToken, ModrinthClient, setModrinthApiOverride } from '../src/core/modrinth'
 import { setGitHubApiOverride } from '../src/core/githubEnv'
-import { minecraftVersionsOf } from '../src/core/studio/mods'
+import { analyzeJar, minecraftVersionsOf } from '../src/core/studio/mods'
 import { StudioService } from '../src/core/studio/service'
 import { startFakeCurseForge, VALID_API_KEY, VALID_UPLOAD_TOKEN, type FakeCurseForge } from './support/fakeCurseForge'
 import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub'
 import { startFakeModrinth, VALID_MODRINTH_TOKEN, type FakeModrinth } from './support/fakeModrinth'
 import { tempDir } from './support/fixtures'
-import { makeJar } from './support/jars'
+import { forgeToml, makeJar } from './support/jars'
 
 const noProgress = () => {}
 const signal = () => new AbortController().signal
@@ -47,6 +47,47 @@ describe('versions de Minecraft d’un jar', () => {
     assert.deepEqual(minecraftVersionsOf('[1.20.1,1.21)'), [])
     assert.deepEqual(minecraftVersionsOf('*'), [])
     assert.deepEqual(minecraftVersionsOf(null), [])
+  })
+})
+
+describe('chargeur d’un jar Forge ou NeoForge', () => {
+  let root: { dir: string; cleanup: () => Promise<void> }
+  before(async () => (root = await tempDir()))
+  after(() => root.cleanup())
+
+  const analyze = async (name: string, files: Record<string, string>) => {
+    const path = join(root.dir, name)
+    await writeFile(path, await makeJar(files))
+    const info = await stat(path)
+    return analyzeJar({ fileName: name, path, size: info.size, mtimeMs: info.mtimeMs })
+  }
+  const minecraft = { modId: 'minecraft', type: 'required', versionRange: '[1.20.4]' }
+
+  it('NeoForge 1.20.4 : neoforge.mods.toml et sa copie mods.toml, NeoForge seul', async () => {
+    const toml = forgeToml('neo', [{ modId: 'neoforge', type: 'required' }, minecraft])
+    const analysis = await analyze('neo-both.jar', { 'META-INF/neoforge.mods.toml': toml, 'META-INF/mods.toml': toml })
+    assert.deepEqual(analysis.loaders, ['neoforge'])
+    assert.deepEqual(analysis.minecraftVersions, ['1.20.4'])
+  })
+
+  it('NeoForge 1.20.4 : mods.toml seul qui dépend de neoforge, NeoForge', async () => {
+    const analysis = await analyze('neo-old.jar', { 'META-INF/mods.toml': forgeToml('neo', [{ modId: 'neoforge', type: 'required' }, minecraft]) })
+    assert.deepEqual(analysis.loaders, ['neoforge'])
+  })
+
+  it('Forge : mods.toml qui dépend de forge, Forge', async () => {
+    const analysis = await analyze('forge.jar', { 'META-INF/mods.toml': forgeToml('alpha', [{ modId: 'forge', mandatory: true }, minecraft]) })
+    assert.deepEqual(analysis.loaders, ['forge'])
+    const bare = await analyze('forge-bare.jar', { 'META-INF/mods.toml': forgeToml('beta') })
+    assert.deepEqual(bare.loaders, ['forge'])
+  })
+
+  it('un jar pour les deux, dont le mods.toml dépend de forge, garde Forge et NeoForge', async () => {
+    const analysis = await analyze('dual.jar', {
+      'META-INF/neoforge.mods.toml': forgeToml('dual', [{ modId: 'neoforge', type: 'required' }]),
+      'META-INF/mods.toml': forgeToml('dual', [{ modId: 'forge', mandatory: true }])
+    })
+    assert.deepEqual(analysis.loaders, ['neoforge', 'forge'])
   })
 })
 

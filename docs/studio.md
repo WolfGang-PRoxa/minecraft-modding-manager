@@ -267,7 +267,9 @@ se déposent à la main dans le dossier du mod.
 
 Une **version** de mod est celle que déclare son jar (`1.2.0-26.3`), pas un numéro donné par le Studio. Plusieurs
 jars de même version (un par chargeur ou par version de Minecraft) forment une seule version. Chaque ligne indique ses
-fichiers, la version de Minecraft, le chargeur et le côté où le mod fonctionne (client, serveur ou les deux).
+fichiers, la version de Minecraft, le chargeur et le côté où le mod fonctionne (client, serveur ou les deux). Un jar
+NeoForge pour Minecraft 1.20.4 ou plus ancien n’a souvent qu’un `mods.toml`, comme un jar Forge : sa dépendance à
+NeoForge le fait reconnaître comme NeoForge.
 
 À la publication, chaque version devient une release `mod-<id>-v<version>` avec ses jars, l’image du mod et un fichier
 `content.json` qui la décrit. Les règles sont celles des modpacks : le dossier fait foi, une version supprimée du
