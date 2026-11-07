@@ -8,6 +8,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Les mises à jour de l’application ne téléchargent plus que les parties de l’installeur qui ont changé, souvent
+  quelques mégaoctets au lieu de l’installeur entier. L’application garde pour cela l’installeur de la version
+  installée. Cela vaut à partir de la mise à jour qui suivra celle-ci : celle-ci est encore téléchargée en entier.
+
 ## [2.3.1] - 2026-11-04
 
 ### Améliorations

@@ -78,6 +78,16 @@ export interface AppUpdateInfo {
   installerSize: number
   /** Empreinte de l'installeur publiée par GitHub, comparée à celle du fichier téléchargé. */
   installerSha256: string | null
+  /**
+   * Mise à jour différentielle : blockmap du nouvel installeur et installeur de la version qui tourne (son empreinte
+   * et son blockmap), d'après sa release. Null si l'une des deux releases n'a pas de blockmap (avant la 2.3.2).
+   */
+  differential: {
+    blockmapUrl: string
+    baseVersion: string
+    baseSha256: string
+    baseBlockmapUrl: string
+  } | null
 }
 
 /** Un fichier d'une version publiée d'un mod, d'un pack de ressources ou d'un shader. */

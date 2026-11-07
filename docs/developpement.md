@@ -54,7 +54,7 @@ Une application [Electron](https://www.electronjs.org/) : un processus principal
 | `src/renderer` | L’interface : `src/` (Bibliothèque, composants, état), `src/studio/` (vue Studio), `src/docs/` (aide intégrée). |
 | `src/shared` | Code commun : types, configuration (`APP_REPO`…), format des releases, lecture de la documentation et de l’historique des versions. |
 | `test` | Les tests, et leurs outils (`support/` : faux GitHub, fausses instances CurseForge). |
-| `scripts` | Outils du dépôt : `changelog.ts`, `docs.ts`, et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
+| `scripts` | Outils du dépôt : `changelog.ts`, `docs.ts`, `blockmap.ts` (blockmap de l’installeur, recalculé par la CI après la signature), et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
 | `docs` | Cette documentation. |
 | `relay` | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)). |
 | `build` | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
@@ -142,8 +142,10 @@ par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publi
 
 Le workflow [`release-app.yml`](../.github/workflows/release-app.yml) vérifie que le tag correspond à `package.json`,
 tire les notes de `CHANGELOG.md` (il s’arrête si la version n’y figure pas), construit l’installeur, le fait signer
-par SignPath si la signature est configurée (pas encore le cas : approbation manuelle sur signpath.io) et publie la
-release. Les applications installées la proposent
+par SignPath si la signature est configurée (pas encore le cas : approbation manuelle sur signpath.io), recalcule son
+blockmap (`scripts/blockmap.ts`, avec le code d’electron-builder : la signature modifie l’installeur) et publie la
+release avec l’installeur et son `.blockmap`, qui sert aux
+[mises à jour différentielles](mises-a-jour.md#téléchargement-différentiel). Les applications installées la proposent
 alors en haut de leur fenêtre, avec ses nouveautés.
 
 Le workflow tient en deux jobs : `build` (lecture seule du dépôt) construit et fait signer, puis `publish`, seul à

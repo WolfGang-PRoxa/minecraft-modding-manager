@@ -15,7 +15,8 @@ Où Modding Manager range ce qu’il installe et ce qu’il retient, et comment 
 | `%APPDATA%\Modding Manager\maintenance.json` | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente). |
 | `%APPDATA%\Modding Manager\maintenance.lock` | Présent pendant un passage des mises à jour automatiques. |
 | `%APPDATA%\Modding Manager\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
-| `%TEMP%\modding-manager` | Les téléchargements en cours (zips de modpack, installeurs de l’application). Vidé automatiquement. |
+| `%TEMP%\modding-manager` | Les téléchargements en cours des zips de modpack. Vidé automatiquement. |
+| `%LOCALAPPDATA%\Modding Manager\mises-a-jour` | L’installeur de la version installée de l’application, gardé pour que la mise à jour suivante ne télécharge que ce qui a changé (voir [Téléchargement différentiel](mises-a-jour.md#téléchargement-différentiel)), et celui d’une mise à jour en cours. Les autres sont supprimés au lancement. |
 | `%LOCALAPPDATA%\Modding Manager\test-servers` | Publieurs : les serveurs Minecraft des [tests](studio.md#tester-un-profil), un par chargeur et par version, téléchargés une fois. |
 | `%LOCALAPPDATA%\Modding Manager\test-clients` | Publieurs : les dossiers de jeu des joueurs de la partie de test, vidés à chaque test. |
 | `%LOCALAPPDATA%\Modding Manager\test-reports` | Publieurs : le dernier résultat de chaque test, par profil. |
@@ -118,7 +119,8 @@ correspond pas, et vérifie l’empreinte de chaque fichier téléchargé. Les v
 qui ne connaissent que les modpacks, ne les affichent pas : elles n’ont ni le préfixe `pack-` ni `modpack.json`.
 
 Les releases `app-v<version>` du dépôt de l’application contiennent l’installeur de chaque version de l’application,
-et ses notes, tirées de l’[historique des versions](../CHANGELOG.md).
+son blockmap (`<installeur>.exe.blockmap`, depuis la 2.3.2 : la liste de ses blocs, qui permet de ne télécharger que
+ceux qui ont changé) et ses notes, tirées de l’[historique des versions](../CHANGELOG.md).
 
 ## L’empreinte des mods
 

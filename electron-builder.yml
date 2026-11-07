@@ -34,4 +34,7 @@ nsis:
   shortcutName: Modding Manager
   runAfterFinish: true
   deleteAppDataOnUninstall: false
+  # Application rangée dans l'installeur pour que deux versions partagent le plus de blocs possible, et blockmap écrit
+  # à côté (`<installeur>.exe.blockmap`, publié avec lui) : la mise à jour ne télécharge que les blocs changés.
+  differentialPackage: true
 publish: null

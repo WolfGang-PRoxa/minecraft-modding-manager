@@ -158,12 +158,15 @@ function findAppUpdate(releases: GhRelease[]): AppUpdateInfo | null {
     (release) => !release.draft && !release.prerelease && release.tag_name.startsWith(APP_TAG_PREFIX)
   )
   const versionOf = (release: GhRelease) => release.tag_name.slice(APP_TAG_PREFIX.length)
+  const uploaded = (asset: GhAsset) => (asset.state ?? 'uploaded') === 'uploaded'
+  const installerOf = (release: GhRelease) =>
+    release.assets.find((a) => a.name.toLowerCase().endsWith('.exe') && uploaded(a))
+  const blockmapOf = (release: GhRelease, installer: GhAsset) =>
+    release.assets.find((a) => a.name === `${installer.name}.blockmap` && uploaded(a))
   let best: { release: GhRelease; version: string; installer: GhAsset } | null = null
   for (const release of stable) {
     // Une release dont l'installeur n'est pas (encore) en ligne n'est pas proposée : il n'y aurait rien à installer.
-    const installer = release.assets.find(
-      (a) => a.name.toLowerCase().endsWith('.exe') && (a.state ?? 'uploaded') === 'uploaded'
-    )
+    const installer = installerOf(release)
     if (!installer) continue
     const version = versionOf(release)
     if (!best || compareVersions(version, best.version) > 0) best = { release, version, installer }
@@ -188,7 +191,25 @@ function findAppUpdate(releases: GhRelease[]): AppUpdateInfo | null {
     releaseUrl: best.release.html_url,
     installerUrl: best.installer.browser_download_url,
     installerSize: best.installer.size,
-    installerSha256: sha256FromDigest(best.installer.digest)
+    installerSha256: sha256FromDigest(best.installer.digest),
+    differential: differentialOf(best.release, best.installer)
+  }
+
+  // Les blockmaps de la nouvelle release et de celle de la version qui tourne : seuls les blocs changés seront
+  // téléchargés, le reste recopié depuis l'installeur de cette version, s'il a été gardé (appUpdate.ts).
+  function differentialOf(release: GhRelease, installer: GhAsset): AppUpdateInfo['differential'] {
+    const blockmap = blockmapOf(release, installer)
+    const current = stable.find((candidate) => versionOf(candidate) === app.getVersion())
+    const baseInstaller = current && installerOf(current)
+    const baseBlockmap = current && baseInstaller && blockmapOf(current, baseInstaller)
+    const baseSha256 = baseInstaller && sha256FromDigest(baseInstaller.digest)
+    if (!blockmap || !baseBlockmap || !baseSha256) return null
+    return {
+      blockmapUrl: blockmap.browser_download_url,
+      baseVersion: app.getVersion(),
+      baseSha256,
+      baseBlockmapUrl: baseBlockmap.browser_download_url
+    }
   }
 }
 

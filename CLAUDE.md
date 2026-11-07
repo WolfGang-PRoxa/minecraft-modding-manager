@@ -73,8 +73,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     tâches : `StartupApproved`), relue avec `reg query` ; packagée seulement. L'installeur la retire à la
     désinstallation. `--minimized` : fenêtre réduite au lancement, agrandie à la première restauration.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
-    fenêtre), télécharge l'installeur dans `%TEMP%\modding-manager`, compare son SHA-256 au `digest` publié par
-    GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec `--updated`.
+    fenêtre), télécharge l'installeur dans `%LOCALAPPDATA%\Modding Manager\mises-a-jour`, compare son SHA-256 au
+    `digest` publié par GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec
+    `--updated`. Différentiel (`core/differentialDownload.ts`) : l'installeur de la version qui tourne reste dans ce
+    dossier (`cleanAppUpdateDownloads` supprime les autres, et y range celui que la 2.3.1 laissait dans
+    `%TEMP%\modding-manager`) ; si son SHA-256 est celui de sa release et que les deux releases ont un
+    `<installeur>.exe.blockmap` (`AppUpdateInfo.differential`, depuis la 2.3.2), les blocs connus sont recopiés et
+    les autres téléchargés par `Range` ; tout échec, ou plus de 80 % à télécharger, fait télécharger l'installeur
+    entier.
     Refusée pendant une installation de modpack ou une opération du studio (`busyWith`) ; à l'inverse, tant qu'elle
     est en cours (`appUpdateTask`), `install:start` et le verrou du studio (`blockedBy`) refusent de démarrer.
     `noteRunningVersion` (réglage `lastRunVersion`) dit au lancement si l'app vient d'être mise à jour, et depuis
@@ -439,7 +445,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   Voir `relay/README.md` pour les variables et le déploiement.
 - `.github/workflows/release-app.yml` — deux jobs : `build` (`contents: read`, `actions: read` pour SignPath) puis
   `publish` (seul `contents: write`, n'exécute pas le code du dépôt) ; actions figées par commit, version en
-  commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z`, dont le texte vient de
+  commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z` (installeur + `.blockmap`, recalculé après la
+  signature par `scripts/blockmap.ts` avec le code d'electron-builder), dont le texte vient de
   `CHANGELOG.md` (`changelog.ts --notes`, la CI s'arrête si la version n'y figure pas). Signature par SignPath
   Foundation (gratuite, open source, licence MIT) si le secret `SIGNPATH_API_TOKEN` existe (candidature refusée le
   2026-10-20 faute de visibilité publique du projet, à renouveler plus tard ; installeur non signé d'ici là) : envoi de l'installeur

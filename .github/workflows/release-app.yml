@@ -1,5 +1,5 @@
-# Construit l'installeur Windows, le fait signer par SignPath (si c'est configuré) et le publie
-# quand un tag app-vX.Y.Z est poussé.
+# Construit l'installeur Windows, le fait signer par SignPath (si c'est configuré) et le publie avec son blockmap
+# (mises à jour différentielles) quand un tag app-vX.Y.Z est poussé.
 #
 # Chaque action externe est figée sur un commit (la version en commentaire) : une étiquette comme « v5 » peut être
 # déplacée par son auteur, ou par quiconque prendrait son compte. Le droit d'écrire sur le dépôt n'est donné qu'au
@@ -96,12 +96,20 @@ jobs:
           if ($signature.Status -ne 'Valid') { throw "Signature invalide : $($signature.StatusMessage)" }
           Write-Host "Signé par : $($signature.SignerCertificate.Subject)"
 
-      - name: Transmettre l'installeur et les notes au job de publication
+      # Le blockmap permet aux applications installées de ne télécharger que les blocs changés de l'installeur
+      # (mise à jour différentielle). Recalculé ici sur l'installeur publié : la signature modifie le fichier, et celui
+      # écrit par electron-builder décrirait encore l'installeur non signé.
+      - name: Blockmap de l'installeur publié
+        shell: bash
+        run: npx tsx scripts/blockmap.ts "dist/${{ steps.version.outputs.installer }}"
+
+      - name: Transmettre l'installeur, son blockmap et les notes au job de publication
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release
           path: |
             dist/${{ steps.version.outputs.installer }}
+            dist/${{ steps.version.outputs.installer }}.blockmap
             release-notes.md
           if-no-files-found: error
           retention-days: 1
@@ -120,6 +128,8 @@ jobs:
       - uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           name: Modding Manager ${{ needs.build.outputs.version }}
-          files: release/dist/${{ needs.build.outputs.installer }}
+          files: |
+            release/dist/${{ needs.build.outputs.installer }}
+            release/dist/${{ needs.build.outputs.installer }}.blockmap
           make_latest: true
           body_path: release/release-notes.md

@@ -1,18 +1,35 @@
 import { app } from 'electron'
 import { spawn } from 'node:child_process'
-import { readdir } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
+import { createReadStream } from 'node:fs'
+import { copyFile, mkdir, readdir } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
+import { pipeline } from 'node:stream/promises'
 import { APP_TEMP_DIR } from '../shared/config'
 import { compareVersions } from '../shared/releases'
-import type { AppUpdateProgress, AppUpdateResult } from '../shared/types'
+import type { AppUpdateInfo, AppUpdateProgress, AppUpdateResult } from '../shared/types'
 import { downloadFile } from './download'
-import { removeQuietly } from '../core/fsutil'
+import { pathExists, removeQuietly, renameWithRetry } from '../core/fsutil'
+import { downloadDifferential, parseBlockMap, planDifferential } from '../core/differentialDownload'
+import { migrateLocalDataDir } from '../core/previousIdentity'
 import { getCatalog } from './github'
 import { getSettings, updateSettings } from '../core/settings'
 import { MINIMIZED_SWITCH } from './startup'
 
 const INSTALLER_PREFIX = 'Modding-Manager-Setup-'
-const downloadDir = () => join(app.getPath('temp'), APP_TEMP_DIR)
+/** Où les versions jusqu'à la 2.3.1 téléchargeaient l'installeur. */
+const legacyDownloadDir = () => join(app.getPath('temp'), APP_TEMP_DIR)
+/**
+ * Les installeurs téléchargés, dans %LOCALAPPDATA%\Modding Manager\mises-a-jour. Celui de la version qui tourne y
+ * reste : la mise à jour suivante en recopie tout ce qui n'a pas changé, et ne télécharge que le reste.
+ */
+const downloadDir = () =>
+  join(migrateLocalDataDir(process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local')), 'mises-a-jour')
+const safeVersion = (version: string) => version.replace(/[^\w.+-]/g, '_')
+const installerName = (version: string) => `${INSTALLER_PREFIX}${safeVersion(version)}.exe`
+/** Au-delà de cette part du nouvel installeur à télécharger, autant le télécharger en entier. */
+const MAX_DIFFERENTIAL_SHARE = 0.8
 
 // Posé du clic sur « Mettre à jour » jusqu'à la fermeture de l'application (ou l'échec de la mise à jour).
 let controller: AbortController | null = null
@@ -53,16 +70,88 @@ export function autoUpdateOnLaunch(enabled: boolean, justUpdated: boolean): bool
   return enabled && !justUpdated && (app.isPackaged || Boolean(process.env.MM_GITHUB_API))
 }
 
+const isInstallerFile = (name: string) => name.startsWith(INSTALLER_PREFIX) && /\.exe(\.part)?$/i.test(name)
+
 /**
- * Supprime, sans retarder le démarrage, les installeurs laissés par les mises à jour précédentes. Celui qui vient
- * de relancer l'application peut encore tourner : s'il reste verrouillé, il partira au lancement suivant.
+ * Supprime, sans retarder le démarrage, les installeurs laissés par les mises à jour précédentes, sauf celui de la
+ * version qui tourne, gardé pour la prochaine mise à jour différentielle. Celui qu'une version jusqu'à la 2.3.1 a
+ * téléchargé dans %TEMP% est d'abord rangé avec les autres. Un installeur qui vient de relancer l'application peut
+ * encore tourner : s'il reste verrouillé, il partira au lancement suivant.
  */
 export function cleanAppUpdateDownloads(): void {
   cleaning = (async () => {
-    const names = await readdir(downloadDir()).catch(() => [] as string[])
-    const installers = names.filter((name) => name.startsWith(INSTALLER_PREFIX) && /\.exe$/i.test(name))
-    await Promise.all(installers.map((name) => removeQuietly(join(downloadDir(), name))))
-  })()
+    const keep = installerName(app.getVersion())
+    const dir = downloadDir()
+    const legacy = legacyDownloadDir()
+    const legacyNames = (await readdir(legacy).catch(() => [] as string[])).filter(isInstallerFile)
+    if (legacyNames.includes(keep) && !(await pathExists(join(dir, keep)))) {
+      await mkdir(dir, { recursive: true })
+        .then(() => renameWithRetry(join(legacy, keep), join(dir, keep), 2))
+        // Sur un autre disque, ou encore ouvert : recopié (il est vérifié avant de servir).
+        .catch(() => copyFile(join(legacy, keep), join(dir, keep)))
+        .catch(() => removeQuietly(join(dir, keep)))
+    }
+    await Promise.all(legacyNames.map((name) => removeQuietly(join(legacy, name))))
+    const names = (await readdir(dir).catch(() => [] as string[])).filter(isInstallerFile)
+    await Promise.all(names.filter((name) => name !== keep).map((name) => removeQuietly(join(dir, name))))
+  })().catch(() => {})
+}
+
+async function sha256Of(file: string): Promise<string> {
+  const hash = createHash('sha256')
+  await pipeline(createReadStream(file), hash)
+  return hash.digest('hex')
+}
+
+async function fetchBlockMap(url: string, signal: AbortSignal) {
+  const res = await fetch(url, { headers: { 'User-Agent': userAgent() }, redirect: 'follow', signal })
+  if (!res.ok) throw new Error(`Blockmap indisponible (HTTP ${res.status}).`)
+  return parseBlockMap(Buffer.from(await res.arrayBuffer()))
+}
+
+const userAgent = () => `ModdingManager/${app.getVersion()}`
+
+/**
+ * Mise à jour différentielle : l'installeur gardé de la version qui tourne, vérifié, fournit tous les blocs qui
+ * n'ont pas changé, et seuls les autres sont téléchargés. Renvoie false si ce n'est pas possible ou pas rentable
+ * (pas d'installeur gardé, pas de blockmap, trop de changements) ; toute erreur fait télécharger l'installeur entier.
+ */
+async function downloadChangedBlocks(
+  update: AppUpdateInfo,
+  destination: string,
+  signal: AbortSignal,
+  onProgress: (progress: AppUpdateProgress) => void
+): Promise<{ sha256: string; size: number } | null> {
+  const differential = update.differential
+  if (!differential || differential.baseVersion !== app.getVersion()) return null
+  const baseFile = join(downloadDir(), installerName(differential.baseVersion))
+  if (!(await pathExists(baseFile))) return null
+  try {
+    if ((await sha256Of(baseFile)) !== differential.baseSha256) {
+      await removeQuietly(baseFile)
+      return null
+    }
+    const [oldMap, newMap] = await Promise.all([
+      fetchBlockMap(differential.baseBlockmapUrl, signal),
+      fetchBlockMap(differential.blockmapUrl, signal)
+    ])
+    const plan = planDifferential(oldMap, newMap)
+    if (plan.size !== update.installerSize || plan.downloadSize > plan.size * MAX_DIFFERENTIAL_SHARE) return null
+    onProgress({ phase: 'downloading', done: 0, total: plan.downloadSize })
+    return await downloadDifferential({
+      baseFile,
+      url: update.installerUrl,
+      destination,
+      plan,
+      userAgent: userAgent(),
+      signal,
+      onProgress: ({ done, total }) => onProgress({ phase: 'downloading', done, total })
+    })
+  } catch (err) {
+    if (signal.aborted) throw err
+    console.warn('Mise à jour différentielle impossible, téléchargement complet :', err)
+    return null
+  }
 }
 
 function describeError(err: unknown): string {
@@ -124,14 +213,24 @@ export async function installAppUpdate(options: {
       return failed('Cette mise à jour ne peut pas être vérifiée (empreinte absente sur GitHub). Le bouton « Télécharger depuis GitHub » permet de l’installer à la main.')
     }
     // Le numéro de version vient du tag de la release : on n'en garde que ce qui convient à un nom de fichier.
-    const destination = join(downloadDir(), `${INSTALLER_PREFIX}${update.version.replace(/[^\w.+-]/g, '_')}.exe`)
-    const { sha256, size } = await downloadFile({
-      url: update.installerUrl,
-      destination,
-      expectedSize: update.installerSize,
-      signal,
-      onProgress: ({ done, total }) => options.onProgress({ phase: 'downloading', done, total })
-    })
+    const destination = join(downloadDir(), installerName(update.version))
+    let downloaded = await downloadChangedBlocks(update, destination, signal, options.onProgress)
+    if (downloaded && downloaded.sha256 !== update.installerSha256) {
+      console.warn('Installeur assemblé différent de celui publié, téléchargement complet.')
+      await removeQuietly(destination)
+      downloaded = null
+    }
+    if (!downloaded) {
+      options.onProgress({ phase: 'downloading', done: 0, total: update.installerSize })
+      downloaded = await downloadFile({
+        url: update.installerUrl,
+        destination,
+        expectedSize: update.installerSize,
+        signal,
+        onProgress: ({ done, total }) => options.onProgress({ phase: 'downloading', done, total })
+      })
+    }
+    const { sha256, size } = downloaded
     if (sha256 !== update.installerSha256) {
       await removeQuietly(destination)
       return failed('L’installeur téléchargé ne correspond pas à celui publié sur GitHub. Réessaie.')

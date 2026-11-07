@@ -35,6 +35,8 @@ donne la raison, comme pour une mise à jour lancée à la main.
 ## Installer la mise à jour
 
 1. **Mettre à jour** télécharge le nouvel installeur ; la barre affiche la progression, et **Annuler** l’interrompt.
+   Seules les parties de l’installeur qui ont changé depuis la version installée sont téléchargées : voir
+   [Téléchargement différentiel](#téléchargement-différentiel).
 2. L’empreinte SHA-256 du fichier téléchargé est comparée à celle que GitHub publie pour cet installeur : un fichier
    abîmé ou modifié n’est jamais lancé.
 3. L’application se ferme. La fenêtre **Mise à jour** de l’installeur montre la progression, avec la version installée
@@ -43,6 +45,19 @@ donne la raison, comme pour une mise à jour lancée à la main.
 4. Une notification confirme la nouvelle version et propose **Voir les nouveautés**.
 
 Les réglages, la connexion GitHub, le raccourci sur le bureau et les modpacks installés ne bougent pas.
+
+### Téléchargement différentiel
+
+Deux versions de l’application ont la plus grande partie de leur installeur en commun. L’application garde donc
+l’installeur de la version installée (dans `%LOCALAPPDATA%\Modding Manager\mises-a-jour`) et, à la mise à jour
+suivante, en recopie tout ce qui n’a pas changé : seul le reste est téléchargé, souvent quelques mégaoctets au lieu
+de l’installeur entier. Chaque release publie pour cela, à côté de l’installeur, son plan découpé en blocs (fichier
+`.blockmap`).
+
+L’installeur entier est téléchargé, comme avant, quand ce n’est pas possible : première mise à jour après une
+installation à la main (aucun installeur gardé), installeur gardé supprimé ou abîmé, release sans `.blockmap`
+(versions jusqu’à la 2.3.1), ou trop de changements. Dans tous les cas, le fichier obtenu est vérifié par son
+empreinte SHA-256 avant d’être lancé ; s’il ne correspond pas, l’installeur entier est téléchargé à son tour.
 
 > [!IMPORTANT]
 > Pour ne rien interrompre, la mise à jour ne démarre pas pendant l’installation d’un modpack ni pendant une
