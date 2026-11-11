@@ -297,4 +297,39 @@ describe('mods dans le Studio', () => {
     assert.ok(!(await service.freshPlan()).view.actions.some((a) => a.kind === 'delete'))
     await rm(join(workspace, 'LMA', 'lma-copie.jar'))
   })
+
+  it('publie l’une après l’autre les versions d’un groupe (1.3.0+26.3, 1.3.0+1.20.1), dans n’importe quel ordre', async () => {
+    const jar = (version: string, minecraft: string) =>
+      makeJar({
+        'fabric.mod.json': JSON.stringify({ schemaVersion: 1, id: 'lma', version, name: 'LMA', environment: '*', depends: { minecraft } }),
+        'com/exemple/Lma.class': `classe ${version}`
+      })
+    await writeFile(join(workspace, 'LMA', 'lma-1.3.0+26.3.jar'), await jar('1.3.0+26.3', '26.3'))
+    await writeFile(join(workspace, 'LMA', 'lma-1.3.0+1.20.1.jar'), await jar('1.3.0+1.20.1', '1.20.1'))
+    const mod = (await service.overview()).packs.find((p) => p.folder === 'LMA')!
+    assert.deepEqual(mod.errors, [])
+    assert.deepEqual(
+      mod.contentVersions.map((v) => v.version),
+      ['1.3.0+26.3', '1.3.0+1.20.1', '1.2.0-26.3']
+    )
+    // La version la plus récente du groupe d'abord : les autres du même groupe ne sont pas « plus anciennes ».
+    await service.publishModToCurseForge('LMA', '1.3.0+26.3', 'release', noProgress)
+    await service.publishModToCurseForge('LMA', '1.3.0+1.20.1', 'release', noProgress)
+    assert.deepEqual(curseforge.catalog.uploads.slice(-2).map((u) => u.fileName), ['lma-1.3.0+26.3.jar', 'lma-1.3.0+1.20.1.jar'])
+    await service.publishModToModrinth('LMA', '1.3.0+26.3', 'release', noProgress)
+    await service.publishModToModrinth('LMA', '1.3.0+1.20.1', 'release', noProgress)
+    // Une version Modrinth par jar, chacune avec sa version de Minecraft.
+    assert.deepEqual(
+      modrinth.created.slice(-2).map((c) => [c.data.version_number, c.data.game_versions, c.files.map((f) => f.name)]),
+      [
+        ['1.3.0+26.3', ['26.3'], ['lma-1.3.0+26.3.jar']],
+        ['1.3.0+1.20.1', ['1.20.1'], ['lma-1.3.0+1.20.1.jar']]
+      ]
+    )
+    // Une version d'un groupe plus ancien reste refusée.
+    await writeFile(join(workspace, 'LMA', 'lma-1.2.5+1.21.5.jar'), await jar('1.2.5+1.21.5', '1.21.5'))
+    await assert.rejects(() => service.publishModToCurseForge('LMA', '1.2.5+1.21.5', 'release', noProgress), /plus ancienne/)
+    await assert.rejects(() => service.publishModToModrinth('LMA', '1.2.5+1.21.5', 'release', noProgress), /plus ancienne/)
+    await rm(join(workspace, 'LMA', 'lma-1.2.5+1.21.5.jar'))
+  })
 })

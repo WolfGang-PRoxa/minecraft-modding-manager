@@ -481,7 +481,7 @@ function Dialogs() {
     case 'strip':
       return <StripDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />
     case 'notes':
-      return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+      return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
     case 'mod-import':
       return <ModImportDialog key={dialog.folder} folder={dialog.folder} />
     case 'new-content':
@@ -495,9 +495,9 @@ function Dialogs() {
     case 'modrinth':
       return <ModrinthDialog key={dialog.folder} folder={dialog.folder} />
     case 'modrinth-publish':
-      return <PublishModrinthDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+      return <PublishModrinthDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
     case 'mod-curseforge-publish':
-      return <PublishModCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+      return <PublishModCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
     case 'import':
       return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />
     case 'curseforge':

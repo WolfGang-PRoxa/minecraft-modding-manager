@@ -1,6 +1,6 @@
 // Un mod, un pack de ressources ou un shader dans le Studio : son dossier lié (où son projet dépose ses jars, ou le
 // dossier du pack en cours de création), ses versions, et leur publication sur GitHub, CurseForge et Modrinth.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Blocks, FileArchive, FolderOpen, FolderSync, Gamepad2, Hourglass, Image, Link2Off, NotebookPen, PackagePlus, Pencil, Server, Sun, Trash2, Upload } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CONTENT_KINDS, LOADER_LABELS, type ContentKind, type ContentLoader } from '../../../shared/content'
@@ -8,13 +8,14 @@ import type { AvailableModVersion, CurseForgeVersion, ContentVersionView, PackVi
 import { Button, IconButton } from '../components/Button'
 import { Cover } from '../components/Cover'
 import { formatBytes, formatDate } from '../lib/format'
+import { compareVersions, groupByRelease, releaseVersion } from '../../../shared/releases'
 import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
 import { ModrinthLine, ModrinthVersionStatus, useModrinthVersions, type ModrinthVersions } from './ModrinthPanel'
 import { HangarLine, HangarVersionStatus, useHangarVersions, type HangarVersions } from './HangarPanel'
 import { Field, Modal, Spinner, TextInput } from './Modal'
 import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
 import { openPath, useStudio } from './store'
-import { runPublication, useRunningPublication } from './publications'
+import { publishEach, runPublication, useRunningPublication } from './publications'
 import { PublicationBusyNote } from './PublicationsTray'
 
 /** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
@@ -53,85 +54,149 @@ function fileMeta(pack: PackView, file: ContentVersionView['files'][number]): st
 const CURSEFORGE_LIVE = 'bg-curseforge/15 text-curseforge ring-curseforge/30'
 const CURSEFORGE_REVIEW = 'bg-sky-400/15 text-sky-300 ring-sky-400/30'
 
-/** État sur CurseForge d'une version : rapprochée d'un fichier du projet, ou bouton pour l'y mettre en ligne. */
-function ModCurseForgeStatus({ pack, version, latest, curseforge }: { pack: PackView; version: ContentVersionView; latest: boolean; curseforge: CurseForgeVersions }) {
+/** Pastille d'un groupe : `n/total` quand une partie seulement de ses versions est en ligne. */
+const share = (sent: number, total: number) => (total > 1 && sent < total ? ` (${sent}/${total})` : '')
+
+/**
+ * État sur CurseForge d'une version, ou des versions d'un groupe (`1.0.0+26.3-fabric`, `1.0.0+1.21.5-forge`…) :
+ * rapprochées des fichiers du projet, ou bouton pour mettre en ligne celles qui n'y sont pas.
+ */
+function ModCurseForgeStatus({ pack, versions, latest, curseforge }: { pack: PackView; versions: ContentVersionView[]; latest: boolean; curseforge: CurseForgeVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
   if (!pack.curseforge) return null
-  const found: CurseForgeVersion | undefined = curseforge.versions?.find((v) => v.version === version.version)
-  if (found) {
-    const live = found.status === 4 || found.status === 10
-    return <Pill className={live ? CURSEFORGE_LIVE : CURSEFORGE_REVIEW}>{live ? 'Publiée sur CurseForge' : `CurseForge : ${found.label}`}</Pill>
+  const found = versions.map((version) => curseforge.versions?.find((v) => v.version === version.version))
+  const sent = found.filter((v): v is CurseForgeVersion => !!v)
+  const missing = versions.filter((_, i) => !found[i])
+  let pill: ReactNode = null
+  if (sent.length) {
+    const pending = sent.filter((v) => v.status !== 4 && v.status !== 10)
+    pill = (
+      <Pill className={pending.length ? CURSEFORGE_REVIEW : CURSEFORGE_LIVE}>
+        {pending.length ? `CurseForge : ${pending[0].label}${share(pending.length, versions.length)}` : `Publiée sur CurseForge${share(sent.length, versions.length)}`}
+      </Pill>
+    )
   }
-  if (!curseforge.versions) return version.curseforgeFileId ? <span className="text-xs text-ink-500">CurseForge…</span> : null
+  if (!missing.length) return pill
+  if (!curseforge.versions) return pill ?? (versions.some((v) => v.curseforgeFileId) ? <span className="text-xs text-ink-500">CurseForge…</span> : null)
   // Seule la version la plus récente se publie : une plus ancienne passerait après des versions déjà en ligne.
-  if (!latest || pack.errors.length) return null
+  if (!latest || pack.errors.length) return pill
   return (
-    <Button size="sm" variant="ghost" icon={Upload} className="text-curseforge" onClick={() => openDialog({ kind: 'mod-curseforge-publish', folder: pack.folder, version: version.version })}>
-      Publier sur CurseForge
-    </Button>
+    <>
+      {pill}
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={Upload}
+        className="text-curseforge"
+        onClick={() => openDialog({ kind: 'mod-curseforge-publish', folder: pack.folder, version: missing[0].version, versions: missing.length > 1 ? missing.map((v) => v.version) : undefined })}
+      >
+        {sent.length ? `Publier ${missing.length > 1 ? `les ${missing.length} autres` : 'l’autre'} sur CurseForge` : 'Publier sur CurseForge'}
+      </Button>
+    </>
   )
 }
 
+/** Version de Minecraft la plus récente visée par les jars d'une version (« 0 » si aucune). */
+const newestMinecraft = (version: ContentVersionView) => version.files.flatMap((f) => f.minecraftVersions).sort(compareVersions).at(-1) ?? '0'
+
+/** Ligne d'une version, ou d'un groupe de versions qui ne diffèrent que par ce qui suit « + » (une par jar). */
 function ModVersionRow({
   pack,
-  version,
+  release,
+  versions,
   latest,
   curseforge,
   modrinth,
   hangar
 }: {
   pack: PackView
-  version: ContentVersionView
+  /** Version de publication : celle de l'unique version, ou ce qui précède « + » pour un groupe. */
+  release: string
+  versions: ContentVersionView[]
   latest: boolean
   curseforge: CurseForgeVersions
   modrinth: ModrinthVersions
   hangar: HangarVersions
 }) {
   const openDialog = useStudio((s) => s.openDialog)
-  const status = STATUS[version.remote]
+  const group = versions.length > 1
+  const single = versions[0]
+  // Jars d'un groupe : de la version de Minecraft la plus récente à la plus ancienne, puis par nom.
+  const listed = group ? [...versions].sort((a, b) => compareVersions(newestMinecraft(b), newestMinecraft(a)) || a.files[0].fileName.localeCompare(b.files[0].fileName)) : versions
+  const withNotes = versions.filter((v) => v.notes).length
+  // Statuts GitHub du groupe, chacun une fois, avec leur nombre.
+  const statuses = [...new Set(versions.map((v) => v.remote))].map((remote) => ({ remote, count: versions.filter((v) => v.remote === remote).length }))
+  const changes = versions.flatMap((v) => (group ? v.changes.map((change) => `${v.version} : ${change}`) : v.changes))
   return (
     <Row
-      badge={<VersionBadge>{numbered(pack) ? `v${version.version}` : version.version.split('-')[0]}</VersionBadge>}
+      badge={<VersionBadge>{numbered(pack) ? `v${single.version}` : release.split('-')[0]}</VersionBadge>}
       aside={
         <>
           <Button
             size="sm"
             variant="ghost"
             icon={NotebookPen}
-            onClick={() => openDialog({ kind: 'notes', folder: pack.folder, version: version.version })}
-            className={version.notes ? 'text-grass-300' : ''}
+            onClick={() => openDialog({ kind: 'notes', folder: pack.folder, version: group ? release : single.version, versions: group ? versions.map((v) => v.version) : undefined })}
+            className={withNotes === versions.length ? 'text-grass-300' : withNotes ? 'text-amber-glow' : ''}
+            title={group && withNotes > 0 && withNotes < versions.length ? `Notes pour ${withNotes} versions sur ${versions.length}` : undefined}
           >
-            {version.notes ? 'Notes' : 'Ajouter des notes'}
+            {withNotes ? 'Notes' : 'Ajouter des notes'}
           </Button>
-          <IconButton
-            icon={Trash2}
-            size={16}
-            label={`Supprimer la ${versionLabel(pack, version.version)}`}
-            className={DANGER_HOVER}
-            onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: version.version } })}
-          />
+          {!group && (
+            <IconButton
+              icon={Trash2}
+              size={16}
+              label={`Supprimer la ${versionLabel(pack, single.version)}`}
+              className={DANGER_HOVER}
+              onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: single.version } })}
+            />
+          )}
         </>
       }
     >
-      <p className="font-medium text-ink-100 select-text">{numbered(pack) ? version.files[0]?.fileName : `Version ${version.version}`}</p>
-      {version.files.map((file) => (
-        <p key={file.fileName} className="mt-0.5 text-xs text-ink-400">
-          {!numbered(pack) && <span className="font-mono text-ink-300 select-text">{file.fileName} · </span>}
-          {fileMeta(pack, file)} · {formatDate(version.modifiedAt)}
-        </p>
+      <p className="font-medium text-ink-100 select-text">
+        {numbered(pack) ? single.files[0]?.fileName : `Version ${group ? release : single.version}`}
+        {group && (
+          <span className="ml-2 text-xs font-normal text-ink-400">
+            {versions.length} versions · {versions.reduce((n, v) => n + v.files.length, 0)} jars
+          </span>
+        )}
+      </p>
+      {listed.map((version) => (
+        <div key={version.version} className={group ? 'group/version flex items-start gap-1' : undefined}>
+          <div className="min-w-0">
+            {version.files.map((file) => (
+              <p key={file.fileName} className="mt-0.5 text-xs text-ink-400">
+                {!numbered(pack) && <span className="font-mono text-ink-300 select-text">{file.fileName} · </span>}
+                {fileMeta(pack, file)} · {formatDate(version.modifiedAt)}
+              </p>
+            ))}
+          </div>
+          {group && (
+            <IconButton
+              icon={Trash2}
+              size={13}
+              label={`Supprimer la ${versionLabel(pack, version.version)}`}
+              className={`size-5! shrink-0 opacity-0 transition group-hover/version:opacity-100 focus-visible:opacity-100 ${DANGER_HOVER}`}
+              onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: version.version } })}
+            />
+          )}
+        </div>
       ))}
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {pack.github && (
-          <Pill className={status.className} title={version.changes.join('\n') || undefined}>
-            {status.label}
-          </Pill>
-        )}
-        <ModCurseForgeStatus pack={pack} version={version} latest={latest} curseforge={curseforge} />
-        <ModrinthVersionStatus pack={pack} version={version} latest={latest} modrinth={modrinth} />
-        <HangarVersionStatus pack={pack} version={version} latest={latest} hangar={hangar} />
+        {pack.github &&
+          statuses.map(({ remote, count }) => (
+            <Pill key={remote} className={STATUS[remote].className} title={changes.join('\n') || undefined}>
+              {STATUS[remote].label}
+              {share(count, versions.length)}
+            </Pill>
+          ))}
+        <ModCurseForgeStatus pack={pack} versions={versions} latest={latest} curseforge={curseforge} />
+        <ModrinthVersionStatus pack={pack} versions={versions} latest={latest} modrinth={modrinth} />
+        <HangarVersionStatus pack={pack} versions={versions} latest={latest} hangar={hangar} />
       </div>
-      {version.remote === 'update' &&
-        version.changes.map((change) => (
+      {versions.some((v) => v.remote === 'update') &&
+        changes.map((change) => (
           <p key={change} className="mt-1 text-xs text-amber-glow/80">
             ↻ {change}
           </p>
@@ -327,8 +392,17 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
             {zip.error && <Message tone="error">{zip.error}</Message>}
           </Row>
         ))}
-        {pack.contentVersions.map((version, i) => (
-          <ModVersionRow key={version.version} pack={pack} version={version} latest={i === 0} curseforge={curseforge} modrinth={modrinth} hangar={hangar} />
+        {groupByRelease(pack.contentVersions).map((group, i) => (
+          <ModVersionRow
+            key={group.version}
+            pack={pack}
+            release={group.version}
+            versions={group.members}
+            latest={i === 0}
+            curseforge={curseforge}
+            modrinth={modrinth}
+            hangar={hangar}
+          />
         ))}
         {pack.remoteOnly.map((version) => (
           <RemoteOnlyRow key={version.tag} pack={pack} version={version} />
@@ -451,31 +525,38 @@ export function ModImportDialog({ folder }: { folder: string }) {
   )
 }
 
-/** Mise en ligne d'une version du mod sur CurseForge, après confirmation. */
-export function PublishModCurseForgeDialog({ folder, version }: { folder: string; version: string }) {
+/**
+ * Mise en ligne d'une version du mod sur CurseForge, après confirmation. `versions` : celles d'un groupe pas encore
+ * envoyées, qui partent l'une après l'autre ; `version` est alors l'une d'elles.
+ */
+export function PublishModCurseForgeDialog({ folder, version, versions }: { folder: string; version: string; versions?: string[] }) {
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
   const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
   const busy = useRunningPublication()
-  const view = pack?.contentVersions.find((v) => v.version === version)
-  if (!pack || !view) return null
-  const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
+  const wanted = versions ?? [version]
+  const views = pack?.contentVersions.filter((v) => wanted.includes(v.version)) ?? []
+  if (!pack || views.length !== wanted.length) return null
+  const group = views.length > 1
+  const label = group ? `${versionLabel(pack, releaseVersion(version))} (${views.length} versions)` : versionLabel(pack, version)
+  const dependencies = [...new Set(views.flatMap((v) => v.files.flatMap((f) => f.dependencies)))]
+  const notes = [...new Set(views.map((v) => v.notes))]
 
   function publish() {
     // La fenêtre se ferme : l'envoi continue en arrière-plan.
     close()
     void runPublication({
       target: 'curseforge',
-      subject: `${pack!.name}, ${versionLabel(pack!, version)}`,
-      run: () => window.studio.publishModCurseForge(folder, version, releaseType),
+      subject: `${pack!.name}, ${label}`,
+      run: () => publishEach(wanted, (v) => window.studio.publishModCurseForge(folder, v, releaseType)),
       onSuccess: (result) =>
         pushToast({
           kind: 'success',
-          title: `${pack!.name} : ${versionLabel(pack!, version)} envoyée sur CurseForge`,
+          title: `${pack!.name} : ${label} envoyée${group ? 's' : ''} sur CurseForge`,
           message: result.unknownDependencies.length
-            ? `Elle sera visible une fois acceptée par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
-            : 'Elle sera visible une fois acceptée par la modération.',
+            ? `${group ? 'Elles seront visibles' : 'Elle sera visible'} une fois acceptée${group ? 's' : ''} par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
+            : `${group ? 'Elles seront visibles' : 'Elle sera visible'} une fois acceptée${group ? 's' : ''} par la modération.`,
           sticky: result.unknownDependencies.length > 0
         })
     })
@@ -483,8 +564,8 @@ export function PublishModCurseForgeDialog({ folder, version }: { folder: string
 
   return (
     <Modal
-      title={`Publier la ${versionLabel(pack, version)} sur CurseForge`}
-      subtitle="Chaque fichier est envoyé sur le projet du mod et passe en modération avant d’être visible. Un fichier envoyé ne se retire que depuis le site."
+      title={`Publier la ${label} sur CurseForge`}
+      subtitle={`Chaque fichier est envoyé sur le projet du mod${group ? ', une version après l’autre,' : ''} et passe en modération avant d’être visible. Un fichier envoyé ne se retire que depuis le site.`}
       onClose={close}
       footer={
         <>
@@ -499,29 +580,24 @@ export function PublishModCurseForgeDialog({ folder, version }: { folder: string
       }
     >
       <div className="space-y-4 text-sm">
-        {view.files.map((file) => (
-          <div key={file.fileName} className="rounded-xl bg-ink-950/50 px-4 py-3 ring-1 ring-inset ring-tint/[0.06]">
-            <p className="text-ink-300">
-              Nom affiché :{' '}
-              <span className="font-mono text-ink-100 select-text">{numbered(pack) ? `${pack.name} v${version}` : file.fileName.replace(/\.jar$/i, '')}</span>
-            </p>
-            <p className="mt-1 text-xs text-ink-400">
-              {fileMeta(pack, file)}
-            </p>
-          </div>
-        ))}
+        <div className={group ? 'max-h-64 space-y-2 overflow-auto' : 'space-y-4'}>
+          {views.flatMap((view) =>
+            view.files.map((file) => (
+              <div key={file.fileName} className={`rounded-xl bg-ink-950/50 ring-1 ring-inset ring-tint/[0.06] ${group ? 'px-3 py-2' : 'px-4 py-3'}`}>
+                <p className="text-ink-300">
+                  Nom affiché :{' '}
+                  <span className="font-mono text-ink-100 select-text">{numbered(pack) ? `${pack.name} v${view.version}` : file.fileName.replace(/\.jar$/i, '')}</span>
+                </p>
+                <p className="mt-1 text-xs text-ink-400">{fileMeta(pack, file)}</p>
+              </div>
+            ))
+          )}
+        </div>
         <p className="text-ink-300">
           Dépendances obligatoires : <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>
           {dependencies.length > 0 && <span className="text-ink-400"> (liées à leur projet CurseForge quand il porte le même nom)</span>}
         </p>
-        <div>
-          <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
-          {view.notes ? (
-            <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{view.notes}</pre>
-          ) : (
-            <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
-          )}
-        </div>
+        <PublishNotes notes={notes} version={group ? releaseVersion(version) : version} />
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold tracking-widest text-ink-400 uppercase">Type</span>
           {(['release', 'beta', 'alpha'] as const).map((type) => (
@@ -531,9 +607,25 @@ export function PublishModCurseForgeDialog({ folder, version }: { folder: string
             </label>
           ))}
         </div>
-        <p className="text-xs text-ink-500">Modifiée le {formatDate(view.modifiedAt)}.</p>
+        {!group && <p className="text-xs text-ink-500">Modifiée le {formatDate(views[0].modifiedAt)}.</p>}
       </div>
     </Modal>
+  )
+}
+
+/** Notes envoyées avec une version, ou avec celles d'un groupe (`notes` : leurs notes, chacune une fois). */
+export function PublishNotes({ notes, version }: { notes: string[]; version: string }) {
+  const shown = notes.find(Boolean) ?? ''
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
+      {shown ? (
+        <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{shown}</pre>
+      ) : (
+        <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
+      )}
+      {notes.length > 1 && <p className="mt-1.5 text-xs text-amber-glow">Ces versions n’ont pas toutes les mêmes notes : chacune part avec les siennes.</p>}
+    </div>
   )
 }
 

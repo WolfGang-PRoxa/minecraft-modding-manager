@@ -11,19 +11,24 @@ export type Dialog =
   | { kind: 'pack-settings'; folder: string; tab?: SettingsTab }
   /** Retirer d'un zip les fichiers exclus dans les réglages ; `label` comme pour « contents ». */
   | { kind: 'strip'; folder: string; fileName: string; label: string }
-  /** Notes d'une version : numéro d'un modpack, ou version déclarée d'un mod. */
-  | { kind: 'notes'; folder: string; version: number | string }
+  /**
+   * Notes d'une version : numéro d'un modpack, ou version déclarée d'un mod. `versions` : toutes les versions d'un
+   * groupe (`1.0.0+26.3-fabric`, `1.0.0+1.21.5-forge`…), qui reçoivent les mêmes notes ; `version` est alors leur
+   * version de publication (`1.0.0`).
+   */
+  | { kind: 'notes'; folder: string; version: number | string; versions?: string[] }
   /** Importer des versions du dossier lié d'un mod. */
   | { kind: 'mod-import'; folder: string }
-  /** Mettre une version d'un mod en ligne sur CurseForge. */
-  | { kind: 'mod-curseforge-publish'; folder: string; version: string }
+  /** Mettre une version d'un mod en ligne sur CurseForge ; `versions` : celles d'un groupe, envoyées l'une après l'autre. */
+  | { kind: 'mod-curseforge-publish'; folder: string; version: string; versions?: string[] }
   /** Lien d'un mod avec son projet Modrinth, et mise en ligne d'une version. */
   | { kind: 'modrinth'; folder: string }
   /** Versions de Minecraft d'un pack de ressources ou d'un shader. */
   | { kind: 'minecraft-versions'; folder: string }
   /** Créer un mod, un pack de ressources ou un shader. */
   | { kind: 'new-content' }
-  | { kind: 'modrinth-publish'; folder: string; version: string }
+  /** Mettre une version d'un mod en ligne sur Modrinth ; `versions` : celles d'un groupe, envoyées l'une après l'autre. */
+  | { kind: 'modrinth-publish'; folder: string; version: string; versions?: string[] }
   /** Lien d'un plugin avec son projet Hangar, et mise en ligne d'une version. */
   | { kind: 'hangar'; folder: string }
   | { kind: 'hangar-publish'; folder: string; version: string }

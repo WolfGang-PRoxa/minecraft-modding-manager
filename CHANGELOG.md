@@ -10,6 +10,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ### Améliorations
 
+- Studio : les versions d’un mod qui ne diffèrent que par ce qui suit un `+` (`1.0.0+26.3-fabric`,
+  `1.0.0+1.21.5-forge`…, une par jar et par version de Minecraft) sont rangées sur une seule ligne, « Version 1.0.0 »,
+  avec tous leurs jars. Ses pastilles comptent les versions déjà en ligne, **Notes** écrit les mêmes notes pour toutes,
+  et un seul bouton publie sur CurseForge ou Modrinth celles qui n’y sont pas encore, l’une après l’autre. Chaque jar
+  reste une version à part sur Modrinth, et elles se publient dans n’importe quel ordre.
+
 - Les mises à jour de l’application ne téléchargent plus que les parties de l’installeur qui ont changé, souvent
   quelques mégaoctets au lieu de l’installeur entier. L’application garde pour cela l’installeur de la version
   installée. Cela vaut à partir de la mise à jour qui suivra celle-ci : celle-ci est encore téléchargée en entier.

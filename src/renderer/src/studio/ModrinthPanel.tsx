@@ -1,5 +1,5 @@
 // Publication d'un mod sur Modrinth depuis sa carte : lien avec le projet, versions du projet, mise en ligne.
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ExternalLink, Link2, Upload } from 'lucide-react'
 import { CONTENT_KINDS } from '../../../shared/content'
 import type { ModrinthVersionView, ContentVersionView, PackModrinth, PackView } from '../../../shared/studio'
@@ -7,7 +7,9 @@ import { Button } from '../components/Button'
 import { Field, Modal, TextInput } from './Modal'
 import { Pill } from './PackCard'
 import { openLink, useStudio } from './store'
-import { runPublication, useRunningPublication } from './publications'
+import { publishEach, runPublication, useRunningPublication } from './publications'
+import { PublishNotes } from './ModCard'
+import { releaseVersion } from '../../../shared/releases'
 import { PublicationBusyNote } from './PublicationsTray'
 
 export interface ModrinthVersions {
@@ -34,24 +36,42 @@ export function useModrinthVersions(folder: string, modrinth: PackModrinth | nul
 const LIVE = 'bg-modrinth/15 text-modrinth ring-modrinth/30'
 const OTHER = 'bg-tint/[0.04] text-ink-300 ring-tint/10'
 
-/** État sur Modrinth d'une version, ou bouton pour l'y mettre en ligne (la plus récente seulement). */
-export function ModrinthVersionStatus({ pack, version, latest, modrinth }: { pack: PackView; version: ContentVersionView; latest: boolean; modrinth: ModrinthVersions }) {
+/**
+ * État sur Modrinth d'une version, ou des versions d'un groupe, ou bouton pour mettre en ligne celles qui n'y sont
+ * pas (la plus récente seulement).
+ */
+export function ModrinthVersionStatus({ pack, versions, latest, modrinth }: { pack: PackView; versions: ContentVersionView[]; latest: boolean; modrinth: ModrinthVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
   if (!pack.modrinth) return null
-  const found = modrinth.versions?.find((v) => v.version === version.version)
-  if (found) {
-    return (
-      <Pill className={found.status === 'listed' ? LIVE : OTHER} title={`Modrinth : ${found.name} (${found.status})`}>
-        {found.status === 'listed' ? 'Publiée sur Modrinth' : `Modrinth : ${found.status}`}
+  const found = versions.map((version) => modrinth.versions?.find((v) => v.version === version.version))
+  const sent = found.filter((v): v is ModrinthVersionView => !!v)
+  const missing = versions.filter((_, i) => !found[i])
+  let pill: ReactNode = null
+  if (sent.length) {
+    const other = sent.find((v) => v.status !== 'listed')
+    pill = (
+      <Pill className={other ? OTHER : LIVE} title={sent.map((v) => `Modrinth : ${v.name} (${v.status})`).join('\n')}>
+        {other ? `Modrinth : ${other.status}` : 'Publiée sur Modrinth'}
+        {versions.length > 1 && missing.length ? ` (${sent.length}/${versions.length})` : ''}
       </Pill>
     )
   }
-  if (!modrinth.versions) return version.modrinthVersionId ? <span className="text-xs text-ink-500">Modrinth…</span> : null
-  if (!latest || pack.errors.length) return null
+  if (!missing.length) return pill
+  if (!modrinth.versions) return pill ?? (versions.some((v) => v.modrinthVersionId) ? <span className="text-xs text-ink-500">Modrinth…</span> : null)
+  if (!latest || pack.errors.length) return pill
   return (
-    <Button size="sm" variant="ghost" icon={Upload} className="text-modrinth" onClick={() => openDialog({ kind: 'modrinth-publish', folder: pack.folder, version: version.version })}>
-      Publier sur Modrinth
-    </Button>
+    <>
+      {pill}
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={Upload}
+        className="text-modrinth"
+        onClick={() => openDialog({ kind: 'modrinth-publish', folder: pack.folder, version: missing[0].version, versions: missing.length > 1 ? missing.map((v) => v.version) : undefined })}
+      >
+        {sent.length ? `Publier ${missing.length > 1 ? `les ${missing.length} autres` : 'l’autre'} sur Modrinth` : 'Publier sur Modrinth'}
+      </Button>
+    </>
   )
 }
 
@@ -177,18 +197,20 @@ export function ModrinthDialog({ folder }: { folder: string }) {
 }
 
 /** Mise en ligne d'une version du mod sur Modrinth, après confirmation. */
-export function PublishModrinthDialog({ folder, version }: { folder: string; version: string }) {
+export function PublishModrinthDialog({ folder, version, versions }: { folder: string; version: string; versions?: string[] }) {
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const pushToast = useStudio((s) => s.pushToast)
   const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
   const busy = useRunningPublication()
-  const view = pack?.contentVersions.find((v) => v.version === version)
-  if (!pack || !view) return null
-  const dependencies = [...new Set(view.files.flatMap((f) => f.dependencies))]
-  const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
-  const loaders = [...new Set(view.files.flatMap((f) => f.loaders))]
-  const label = CONTENT_KINDS[pack.type].versioning === 'number' ? `v${version}` : `version ${version}`
+  const wanted = versions ?? [version]
+  const views = pack?.contentVersions.filter((v) => wanted.includes(v.version)) ?? []
+  if (!pack || views.length !== wanted.length) return null
+  const group = views.length > 1
+  const numbered = CONTENT_KINDS[pack.type].versioning === 'number'
+  const dependencies = [...new Set(views.flatMap((v) => v.files.flatMap((f) => f.dependencies)))]
+  const label = group ? `version ${releaseVersion(version)} (${views.length} versions)` : numbered ? `v${version}` : `version ${version}`
+  const notes = [...new Set(views.map((v) => v.notes))]
 
   function publish() {
     // La fenêtre se ferme : l'envoi continue en arrière-plan.
@@ -196,11 +218,11 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
     void runPublication({
       target: 'modrinth',
       subject: `${pack!.name}, ${label}`,
-      run: () => window.studio.publishModrinth(folder, version, releaseType),
+      run: () => publishEach(wanted, (v) => window.studio.publishModrinth(folder, v, releaseType)),
       onSuccess: (result) =>
         pushToast({
           kind: 'success',
-          title: `${pack!.name} : ${label} publiée sur Modrinth`,
+          title: `${pack!.name} : ${label} publiée${group ? 's' : ''} sur Modrinth`,
           message: result.unknownDependencies.length ? `Dépendances introuvables sur Modrinth, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.` : undefined,
           sticky: result.unknownDependencies.length > 0
         })
@@ -210,7 +232,11 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
   return (
     <Modal
       title={`Publier la ${label} sur Modrinth`}
-      subtitle="Ses jars sont envoyés sur le projet du mod, visibles tout de suite si le projet est approuvé. Une version envoyée se retire depuis le site."
+      subtitle={
+        group
+          ? 'Chaque version devient une version Modrinth avec son jar, envoyées l’une après l’autre, visibles tout de suite si le projet est approuvé. Une version envoyée se retire depuis le site.'
+          : 'Ses jars sont envoyés sur le projet du mod, visibles tout de suite si le projet est approuvé. Une version envoyée se retire depuis le site.'
+      }
       onClose={close}
       footer={
         <>
@@ -225,27 +251,30 @@ export function PublishModrinthDialog({ folder, version }: { folder: string; ver
       }
     >
       <div className="space-y-4 text-sm">
-        <p className="text-ink-300">
-          Nom : <span className="text-ink-100">{CONTENT_KINDS[pack.type].versioning === 'number' ? `${pack.name} v${version}` : `${pack.name} ${version}`}</span> · numéro{' '}
-          <span className="font-mono text-ink-100">{version}</span>
-        </p>
-        <p className="text-ink-300">
-          Fichiers : <span className="font-mono text-ink-100">{view.files.map((f) => f.fileName).join(', ')}</span>
-        </p>
-        <p className="text-ink-300">
-          Minecraft <span className="text-ink-100">{minecraft.join(', ') || '?'}</span> · chargeurs <span className="text-ink-100">{loaders.join(', ') || 'minecraft'}</span>
-        </p>
+        <div className={group ? 'max-h-64 space-y-2 overflow-auto' : 'space-y-4'}>
+          {views.map((view) => {
+            const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
+            const loaders = [...new Set(view.files.flatMap((f) => f.loaders))]
+            return (
+              <div key={view.version} className={group ? 'rounded-xl bg-ink-950/50 px-3 py-2 ring-1 ring-inset ring-tint/[0.06]' : 'space-y-4'}>
+                <p className="text-ink-300">
+                  Nom : <span className="text-ink-100">{numbered ? `${pack.name} v${view.version}` : `${pack.name} ${view.version}`}</span> · numéro{' '}
+                  <span className="font-mono text-ink-100">{view.version}</span>
+                </p>
+                <p className={group ? 'mt-1 text-xs text-ink-400' : 'text-ink-300'}>
+                  Fichiers : <span className="font-mono text-ink-100">{view.files.map((f) => f.fileName).join(', ')}</span>
+                </p>
+                <p className={group ? 'mt-0.5 text-xs text-ink-400' : 'text-ink-300'}>
+                  Minecraft <span className="text-ink-100">{minecraft.join(', ') || '?'}</span> · chargeurs <span className="text-ink-100">{loaders.join(', ') || 'minecraft'}</span>
+                </p>
+              </div>
+            )
+          })}
+        </div>
         <p className="text-ink-300">
           Dépendances obligatoires : <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>
         </p>
-        <div>
-          <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
-          {view.notes ? (
-            <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{view.notes}</pre>
-          ) : (
-            <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
-          )}
-        </div>
+        <PublishNotes notes={notes} version={group ? releaseVersion(version) : version} />
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold tracking-widest text-ink-400 uppercase">Type</span>
           {(['release', 'beta', 'alpha'] as const).map((type) => (

@@ -152,12 +152,18 @@ export function PackInfoDialog({ folder }: { folder: string }) {
   )
 }
 
-export function NotesDialog({ folder, version }: { folder: string; version: number | string }) {
+/**
+ * Notes d'une version. `versions` : celles d'un groupe de versions d'un mod (une par jar), qui reçoivent toutes les
+ * mêmes notes ; `version` est alors leur version de publication (`1.0.0`).
+ */
+export function NotesDialog({ folder, version, versions }: { folder: string; version: number | string; versions?: string[] }) {
   const pack = usePack(folder)
   const close = useStudio((s) => s.closeDialog)
   const run = useStudio((s) => s.run)
-  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : pack?.contentVersions.find((v) => v.version === version)
+  const members = versions ? (pack?.contentVersions.filter((v) => versions.includes(v.version)) ?? []) : []
+  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : versions ? members.find((v) => v.notes) : pack?.contentVersions.find((v) => v.version === version)
   const label = typeof version === 'number' ? `v${version}` : `version ${version}`
+  const differ = new Set(members.map((v) => v.notes)).size > 1
   const [notes, setNotes] = useState(current?.notes ?? '')
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -165,14 +171,30 @@ export function NotesDialog({ folder, version }: { folder: string; version: numb
 
   async function save() {
     setSaving(true)
-    if (await run(window.studio.setNotes(folder, version, notes), 'Notes enregistrées')) close()
+    const saved = versions
+      ? await run(
+          (async () => {
+            for (const member of versions) {
+              const result = await window.studio.setNotes(folder, member, notes)
+              if (!result.ok) return result
+            }
+            return { ok: true as const }
+          })(),
+          `Notes enregistrées pour ${versions.length} versions`
+        )
+      : await run(window.studio.setNotes(folder, version, notes), 'Notes enregistrées')
+    if (saved) close()
     setSaving(false)
   }
 
   return (
     <Modal
       title={`Notes de la ${label}`}
-      subtitle={`${pack.name} · affichées aux joueurs dans « Nouveautés ». Envoyées à la prochaine publication.`}
+      subtitle={
+        versions
+          ? `${pack.name} · les mêmes notes pour ses ${versions.length} versions${differ ? ' : elles avaient des notes différentes, celles-ci les remplacent toutes' : ''}. Envoyées à la prochaine publication.`
+          : `${pack.name} · affichées aux joueurs dans « Nouveautés ». Envoyées à la prochaine publication.`
+      }
       onClose={close}
       width="max-w-3xl"
       footer={

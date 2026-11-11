@@ -267,7 +267,16 @@ se déposent à la main dans le dossier du mod.
 
 Une **version** de mod est celle que déclare son jar (`1.2.0-26.3`), pas un numéro donné par le Studio. Plusieurs
 jars de même version (un par chargeur ou par version de Minecraft) forment une seule version. Chaque ligne indique ses
-fichiers, la version de Minecraft, le chargeur et le côté où le mod fonctionne (client, serveur ou les deux). Un jar
+fichiers, la version de Minecraft, le chargeur et le côté où le mod fonctionne (client, serveur ou les deux).
+
+Un mod porté sur beaucoup de versions de Minecraft donne souvent à chaque jar sa propre version, avec des
+métadonnées de build après un `+` (`1.0.0+26.3-fabric`, `1.0.0+1.21.5-forge`) : chaque jar devient alors une
+version Modrinth à part, avec la seule version de Minecraft qu’il vise, et les lanceurs installent le bon. Le Studio
+range ces versions sur **une seule ligne**, celle de la version `1.0.0`, avec les jars d’une version `1.0.0` sans `+`
+s’il y en a. La ligne liste tous les jars (la corbeille d’un jar, au survol, supprime sa version), et ses pastilles
+comptent les versions déjà en ligne (« Publiée sur CurseForge (35/38) ») tant qu’elles ne le sont pas toutes.
+**Notes** y écrit les mêmes notes pour toutes ses versions. Une version d’un même groupe n’est jamais « plus
+ancienne » qu’une autre : elles se publient dans n’importe quel ordre. Un jar
 NeoForge pour Minecraft 1.20.4 ou plus ancien n’a souvent qu’un `mods.toml`, comme un jar Forge : sa dépendance à
 NeoForge le fait reconnaître comme NeoForge.
 
@@ -277,7 +286,9 @@ dossier est retirée de GitHub. Les applications des joueurs n’affichent pas c
 
 Pour CurseForge, le mod se lie à son projet par **Publier aussi sur CurseForge** (adresse
 `curseforge.com/minecraft/mc-mods/…` ou numéro). Les fichiers déjà mis en ligne depuis le site sont reconnus à leur
-nom. **Publier sur CurseForge**, sur la version la plus récente, envoie chaque jar sous son nom (sans `.jar`), avec
+nom. **Publier sur CurseForge**, sur la version la plus récente (pour un groupe : **Publier les 3 autres sur
+CurseForge**, qui envoie ses versions pas encore en ligne l’une après l’autre, de la plus ancienne à la plus récente),
+envoie chaque jar sous son nom (sans `.jar`), avec
 sa version de Minecraft, son chargeur, `Client` et `Server` selon le côté du mod, ses notes, et ses dépendances
 obligatoires qui sont aussi des projets CurseForge (Fabric API, Fabric Language Kotlin…). Une dépendance introuvable
 est signalée, pour l’ajouter depuis le site. Il faut la clé de l’API et le jeton d’auteur
@@ -285,7 +296,8 @@ est signalée, pour l’ajouter depuis le site. Il faut la clé de l’API et le
 
 Pour **Modrinth**, le projet se crée aussi une fois sur le site, puis **Publier aussi sur Modrinth** l’y lie (adresse
 `modrinth.com/mod/…`, slug ou identifiant ; un projet d’un autre type, comme un modpack, est refusé). **Publier sur
-Modrinth**, sur la version la plus récente, envoie ses jars sous le nom `<nom> <version>`, avec la version déclarée
+Modrinth**, sur la version la plus récente (ou sur les versions d’un groupe qui n’y sont pas encore, comme pour
+CurseForge), envoie ses jars sous le nom `<nom> <version>`, avec la version déclarée
 comme numéro, ses versions de Minecraft, ses chargeurs, ses notes et ses dépendances obligatoires qui sont aussi des
 projets Modrinth. La version est visible tout de suite si le projet est approuvé. Il faut le jeton Modrinth
 ([Compte Modrinth](parametres.md#compte-modrinth)). Les modpacks ne se publient pas encore sur Modrinth.

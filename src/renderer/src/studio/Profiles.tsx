@@ -23,6 +23,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { PackView, ProfileState, ProfileView } from '../../../shared/studio'
 import { Button } from '../components/Button'
 import { KIND_UI } from './ModCard'
+import { releaseVersion } from '../../../shared/releases'
 import { Select } from '../components/Select'
 import { formatLoader, formatRelative } from '../lib/format'
 import { PackCard } from './PackCard'
@@ -276,7 +277,7 @@ export function ProfilesSidebar() {
                       <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
                         <Icon size={15} className="shrink-0 text-ink-400" />
                         <span className="flex-1 truncate">{pack.name}</span>
-                        {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? latest.split('-')[0] : `v${latest}`}</span>}
+                        {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? releaseVersion(latest).split('-')[0] : `v${latest}`}</span>}
                       </SidebarItem>
                     )
                   }}

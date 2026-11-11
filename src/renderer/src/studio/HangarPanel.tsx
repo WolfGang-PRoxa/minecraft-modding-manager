@@ -32,17 +32,28 @@ export function useHangarVersions(folder: string, hangar: PackHangar | null): Ha
 const LIVE = 'bg-sky-400/15 text-sky-300 ring-sky-400/30'
 
 /** État sur Hangar d'une version, ou bouton pour l'y mettre en ligne (la plus récente seulement). */
-export function HangarVersionStatus({ pack, version, latest, hangar }: { pack: PackView; version: ContentVersionView; latest: boolean; hangar: HangarVersions }) {
+export function HangarVersionStatus({ pack, versions, latest, hangar }: { pack: PackView; versions: ContentVersionView[]; latest: boolean; hangar: HangarVersions }) {
   const openDialog = useStudio((s) => s.openDialog)
   if (!pack.hangar) return null
-  const found = hangar.versions?.find((v) => v.version === version.version)
-  if (found) return <Pill className={LIVE} title={`Hangar : canal ${found.channel}`}>Publiée sur Hangar</Pill>
-  if (!hangar.versions) return pack.hangar.versions.includes(version.version) ? <span className="text-xs text-ink-500">Hangar…</span> : null
-  if (!latest || pack.errors.length) return null
+  const found = versions.map((version) => hangar.versions?.find((v) => v.version === version.version))
+  const sent = found.filter((v) => !!v)
+  const missing = versions.filter((_, i) => !found[i])
+  const pill = sent.length ? (
+    <Pill className={LIVE} title={`Hangar : canal ${sent[0]!.channel}`}>
+      Publiée sur Hangar{versions.length > 1 && missing.length ? ` (${sent.length}/${versions.length})` : ''}
+    </Pill>
+  ) : null
+  if (!missing.length) return pill
+  if (!hangar.versions) return pill ?? (versions.some((v) => pack.hangar!.versions.includes(v.version)) ? <span className="text-xs text-ink-500">Hangar…</span> : null)
+  // Hangar se publie une version à la fois.
+  if (!latest || pack.errors.length || missing.length > 1) return pill
   return (
-    <Button size="sm" variant="ghost" icon={Upload} className="text-sky-300" onClick={() => openDialog({ kind: 'hangar-publish', folder: pack.folder, version: version.version })}>
-      Publier sur Hangar
-    </Button>
+    <>
+      {pill}
+      <Button size="sm" variant="ghost" icon={Upload} className="text-sky-300" onClick={() => openDialog({ kind: 'hangar-publish', folder: pack.folder, version: missing[0].version })}>
+        Publier sur Hangar
+      </Button>
+    </>
   )
 }
 

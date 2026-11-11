@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { compareVersions } from '../../../shared/releases'
 import type { PublishProgress, PublishResult } from '../../../shared/studio'
 import { useStore } from '../store'
 import { errorMessage, useStudio } from './store'
@@ -168,4 +169,24 @@ export async function runPublication<R extends { ok: true }>(options: {
       sticky: true
     })
   }
+}
+
+/**
+ * Envoie l'une après l'autre les versions d'un groupe (`1.0.0+26.3-fabric`, `1.0.0+1.21.5-forge`…), de la plus
+ * ancienne à la plus récente : la dernière envoyée est la plus récente sur le site. S'arrête à la première erreur,
+ * en disant combien sont déjà parties.
+ */
+export async function publishEach<R extends { ok: true; unknownDependencies: string[] }>(
+  versions: string[],
+  publish: (version: string) => Promise<R | { ok: false; error: string }>
+): Promise<{ ok: true; sent: number; unknownDependencies: string[] } | { ok: false; error: string }> {
+  const unknown = new Set<string>()
+  let sent = 0
+  for (const version of [...versions].sort(compareVersions)) {
+    const result = await publish(version)
+    if (!result.ok) return { ok: false, error: sent ? `${version} : ${result.error} (${sent} sur ${versions.length} déjà envoyées)` : result.error }
+    for (const dependency of result.unknownDependencies) unknown.add(dependency)
+    sent++
+  }
+  return { ok: true, sent, unknownDependencies: [...unknown] }
 }

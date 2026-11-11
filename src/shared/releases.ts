@@ -81,6 +81,30 @@ export function compareVersions(a: string, b: string): number {
   return 0
 }
 
+/**
+ * Version de publication d'une version déclarée : sans ses métadonnées de build (ce qui suit « + », comme en semver).
+ * `1.0.0+26.3-fabric` et `1.0.0+1.21.5-forge` sont deux fichiers de la version `1.0.0`.
+ */
+export function releaseVersion(version: string): string {
+  const plus = version.indexOf('+')
+  return plus > 0 ? version.slice(0, plus) : version
+}
+
+/**
+ * Regroupe des versions par version de publication (`releaseVersion`). Les groupes suivent l'ordre de leur première
+ * version, et chaque groupe garde l'ordre reçu.
+ */
+export function groupByRelease<T extends { version: string }>(versions: T[]): Array<{ version: string; members: T[] }> {
+  const groups = new Map<string, T[]>()
+  for (const item of versions) {
+    const key = releaseVersion(item.version)
+    const members = groups.get(key)
+    if (members) members.push(item)
+    else groups.set(key, [item])
+  }
+  return [...groups].map(([version, members]) => ({ version, members }))
+}
+
 export function isModpackManifest(value: unknown): value is ModpackManifest {
   if (!value || typeof value !== 'object') return false
   const m = value as Record<string, unknown>

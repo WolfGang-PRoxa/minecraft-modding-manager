@@ -11,7 +11,7 @@ const jarAnalyzer = (kind: string) => (kind === 'plugin' ? analyzePluginJar : un
 import { modrinthVersionViews, publishToModrinth, resolveModrinthProject } from './modrinthPublish'
 import type { ModrinthClient } from '../modrinth'
 import type { HangarClient } from '../hangar'
-import { compareVersions, modpackTag } from '../../shared/releases'
+import { compareVersions, modpackTag, releaseVersion } from '../../shared/releases'
 import { repoSlug, repoUrl, sameRepo } from '../../shared/repo'
 import {
   DEFAULT_PACK_UPDATES,
@@ -1102,7 +1102,7 @@ export class StudioService {
         if (!modrinth) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet Modrinth.`)
         const local = pack.contentVersions.find((v) => v.version === version)
         if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
-        const newer = pack.contentVersions.filter((v) => modrinth.versions[v.version] && compareVersions(v.version, version) > 0)
+        const newer = pack.contentVersions.filter((v) => modrinth.versions[v.version] && compareVersions(releaseVersion(v.version), releaseVersion(version)) > 0)
         if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur Modrinth : une version plus ancienne n’y a plus sa place.`)
         const client = await this.modrinth()
         const result = await publishToModrinth(
@@ -1216,7 +1216,7 @@ export class StudioService {
         if (!curseforge) throw new StudioError(`${pack.meta.name} n’est lié à aucun projet CurseForge.`)
         const local = pack.contentVersions.find((v) => v.version === version)
         if (!local) throw new StudioError(`${pack.meta.name} n’a pas de version ${version}.`)
-        const newer = pack.contentVersions.filter((v) => curseforge.files[v.version] && compareVersions(v.version, version) > 0)
+        const newer = pack.contentVersions.filter((v) => curseforge.files[v.version] && compareVersions(releaseVersion(v.version), releaseVersion(version)) > 0)
         if (newer.length) throw new StudioError(`La version ${newer[newer.length - 1].version} est déjà sur CurseForge : une version plus ancienne n’y a plus sa place.`)
         const client = await this.curseForge()
         const result = await publishModVersion(

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { modpackVersionFromRelease, sha256FromDigest, type GhAsset, type GhRelease } from '../src/shared/releases'
+import { groupByRelease, modpackVersionFromRelease, releaseVersion, sha256FromDigest, type GhAsset, type GhRelease } from '../src/shared/releases'
 import type { ModpackManifest } from '../src/shared/types'
 
 const HASH = 'ab'.repeat(32)
@@ -47,5 +47,26 @@ describe('empreinte d’une version de modpack', () => {
 
   it('reste sans empreinte quand aucune n’est connue : l’installation sera refusée', () => {
     assert.equal(modpackVersionFromRelease(release([asset('alpha-2.zip')]), null)?.archiveSha256, null)
+  })
+})
+
+describe('versions de publication', () => {
+  it('retire les métadonnées de build (après « + »)', () => {
+    assert.equal(releaseVersion('1.0.0+26.3-fabric'), '1.0.0')
+    assert.equal(releaseVersion('1.0.0'), '1.0.0')
+    assert.equal(releaseVersion('1.2.0-26.3'), '1.2.0-26.3')
+    assert.equal(releaseVersion('+bizarre'), '+bizarre')
+  })
+
+  it('regroupe les versions qui ne diffèrent que par ce qui suit « + », dans l’ordre reçu', () => {
+    const versions = ['1.1.0+26.3-fabric', '1.0.0+26.3-fabric', '1.0.0+1.21.5-forge', '1.0.0', '0.9.0-26.3'].map((version) => ({ version }))
+    assert.deepEqual(
+      groupByRelease(versions).map((g) => [g.version, g.members.map((m) => m.version)]),
+      [
+        ['1.1.0', ['1.1.0+26.3-fabric']],
+        ['1.0.0', ['1.0.0+26.3-fabric', '1.0.0+1.21.5-forge', '1.0.0']],
+        ['0.9.0-26.3', ['0.9.0-26.3']]
+      ]
+    )
   })
 })
