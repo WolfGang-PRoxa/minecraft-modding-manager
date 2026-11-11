@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.3.2] - 2026-11-11
+
 ### Améliorations
 
 - Studio : les versions d’un mod qui ne diffèrent que par ce qui suit un `+` (`1.0.0+26.3-fabric`,
@@ -440,7 +442,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.1...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.2...HEAD
+[2.3.2]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.1...app-v2.3.2
 [2.3.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.0...app-v2.3.1
 [2.3.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.1...app-v2.3.0
 [2.2.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.2.0...app-v2.2.1
