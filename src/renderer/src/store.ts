@@ -161,7 +161,8 @@ export const useStore = create<State>((set, get) => ({
       })
     }
     await Promise.all([get().refresh(), get().refreshLocal()])
-    // Paramètres → Démarrage et mises à jour : la version proposée s'installe d'elle-même au démarrage.
+    // Paramètres → Démarrage et mises à jour : la version proposée s'installe d'elle-même au lancement (ensuite, en
+    // arrière-plan : main/backgroundUpdate.ts).
     const update = get().catalog?.appUpdate
     if (launch.autoUpdate && update) {
       get().pushToast({ kind: 'info', title: 'Mise à jour automatique', message: `Installation de la version ${update.version}…` })

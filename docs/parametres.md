@@ -100,9 +100,11 @@ notification, et se rouvre aussitôt (clic sur l’icône, menu Démarrer, racco
 première fois, une bulle le rappelle. Pour la quitter vraiment : clic droit sur son icône, puis **Quitter Modding
 Manager**. Un publieur y trouve aussi **Ouvrir la Bibliothèque** et **Ouvrir le Studio**. Si une publication est en
 cours, quitter demande d’abord une confirmation.
-- **Se mettre à jour au démarrage** (activé par défaut) : quand une nouvelle version est sortie, l’application
-  l’installe d’elle-même en s’ouvrant, puis redémarre. Désactivé, la mise à jour reste proposée en haut de la fenêtre
-  et s’installe en un clic. Voir [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique-au-démarrage).
+- **Se mettre à jour automatiquement** (activé par défaut) : quand une nouvelle version est sortie, l’application
+  l’installe d’elle-même au lancement, ou pendant qu’elle tourne en arrière-plan (vérifié toutes les 6 heures et au
+  réveil du PC ; fenêtre ouverte, elle attend sa fermeture), puis redémarre. Désactivé, la mise à jour reste proposée
+  en haut de la fenêtre et s’installe en un clic. Voir
+  [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique).
 
 ## Fenêtre à l’ouverture
 

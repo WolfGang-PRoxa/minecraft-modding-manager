@@ -83,6 +83,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     lieu de la fermer, bulle la première fois (`backgroundHintShown`) ; seul quitter ferme vraiment, avec la
     confirmation d'une tâche du Studio en cours. `second-instance` montre la fenêtre (sauf `--minimized` /
     `--background`). L'installeur ferme l'app de force au bout de 3 s (le `WM_CLOSE` de taskkill ne fait que la cacher).
+  - `backgroundUpdate.ts` : l'app ne se fermant plus, relecture des releases toutes les 6 h (`CHECK_INTERVAL_MS`,
+    examen toutes les 15 min) et au réveil du PC (`powerMonitor` `resume`), réglage `autoUpdate` et app installée ;
+    version trouvée installée (`installAppUpdate` de `ipc.ts`, relance `--background`) seulement fenêtre cachée et
+    rien en cours (`nextStep`), examinée 1 min après chaque fermeture de la fenêtre.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
     fenêtre), télécharge l'installeur dans `%LOCALAPPDATA%\Modding Manager\mises-a-jour`, compare son SHA-256 au
     `digest` publié par GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec

@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, Menu, protocol, session, shell, type Sessio
 import { join } from 'node:path'
 import { APP_NAME } from '../shared/config'
 import { autoUpdateOnLaunch, cleanAppUpdateDownloads, noteRunningVersion } from './appUpdate'
+import { backgroundUpdateEnabled, startBackgroundUpdates } from './backgroundUpdate'
 import { setCurseForgeApiOverride } from '../core/curseforgeAuth'
 import { setModrinthApiOverride } from '../core/modrinth'
 import { setHangarApiOverride } from '../core/hangar'
@@ -23,6 +24,8 @@ let mainWindow: BrowserWindow | null = null
 // Fermer la fenêtre la cache : l'application continue en arrière-plan, avec son icône dans la zone de notification,
 // et se rouvre aussitôt. Elle ne se ferme vraiment qu'en la quittant (menu de l'icône, mise à jour, fin de session).
 let quitting = false
+/** Mise à jour régulière en arrière-plan : examinée peu après que la fenêtre se cache. */
+let backgroundUpdates: { soon(): void } | null = null
 
 /**
  * Montre la fenêtre (icône de la zone de notification, nouveau lancement, notification) et la met au premier plan.
@@ -42,6 +45,7 @@ async function showWindow(view: 'library' | 'studio' | null = null): Promise<voi
 /** Cache la fenêtre ; la première fois, une bulle rappelle que l'application tourne encore. */
 async function hideWindow(): Promise<void> {
   mainWindow?.hide()
+  backgroundUpdates?.soon()
   const settings = await getSettings()
   if (settings.backgroundHintShown) return
   announceBackground()
@@ -222,10 +226,15 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     void syncLaunchAtStartup(settings.launchAtStartup)
     cleanAppUpdateDownloads()
     void migratePreviousInstallation()
-    registerIpc(() => mainWindow, { ...launch, autoUpdate: autoUpdateOnLaunch(settings.autoUpdate, launch.justUpdated) })
+    const appUpdates = registerIpc(() => mainWindow, { ...launch, autoUpdate: autoUpdateOnLaunch(settings.autoUpdate, launch.justUpdated) })
     await registerStudio(() => mainWindow)
     await createWindow(launchWindow(process.argv, settings.launchMode))
     await createTray({ open: (view) => void showWindow(view), quit: () => app.quit() }).catch((err) => console.warn('Icône de la zone de notification impossible :', err))
+    backgroundUpdates = startBackgroundUpdates({
+      getWindow: () => mainWindow,
+      enabled: () => backgroundUpdateEnabled(autoUpdateOnLaunch(true, false)),
+      install: appUpdates.installAppUpdate
+    })
   })
 
   app.on('window-all-closed', () => app.quit())

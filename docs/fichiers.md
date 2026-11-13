@@ -49,7 +49,7 @@ depuis les paramètres ; pour les modifier à la main, fermer d’abord l’appl
 | `lastView` | La dernière vue affichée (`library` ou `studio`), rouverte au lancement. |
 | `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
 | `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |
-| `autoUpdate` | Installer d’elle-même une nouvelle version de l’application à son démarrage (`true` par défaut). |
+| `autoUpdate` | Installer d’elle-même une nouvelle version de l’application, au lancement et en arrière-plan (`true` par défaut). |
 | `launchAtStartup` | Lancer l’application au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, avec `--minimized`. |
 | `launchMode` | Lancée avec Windows : `background` (par défaut, en arrière-plan, icône de la zone de notification seulement) ou `window` (fenêtre réduite dans la barre des tâches). |
 | `window` | Taille et position de la fenêtre à l’ouverture : `mode` `maximized` (par défaut) ou `custom`, et `bounds` (`x`, `y`, `width`, `height`, en pixels Windows). |

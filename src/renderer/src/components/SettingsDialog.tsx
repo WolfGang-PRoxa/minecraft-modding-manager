@@ -230,13 +230,14 @@ export function SettingsDialog() {
       </p>
       <div className="mt-5 flex items-center justify-between gap-6">
         <div>
-          <div className="text-sm font-medium text-ink-100">Se mettre à jour au démarrage</div>
+          <div className="text-sm font-medium text-ink-100">Se mettre à jour automatiquement</div>
           <div className="mt-0.5 text-xs text-ink-400">
-            Quand une nouvelle version est sortie, l’application l’installe d’elle-même en s’ouvrant, puis redémarre.
+            Une nouvelle version s’installe d’elle-même au lancement, ou pendant que l’application tourne en arrière-plan
+            (vérifié toutes les 6 heures et au réveil du PC). Fenêtre ouverte, elle attend que tu la refermes.
           </div>
         </div>
         <Toggle
-          label="Se mettre à jour au démarrage"
+          label="Se mettre à jour automatiquement"
           checked={settings.autoUpdate}
           onChange={(value) => void updateSettings({ autoUpdate: value })}
         />
@@ -254,7 +255,7 @@ export function SettingsDialog() {
         {update
           ? `La version ${update.version} est disponible : elle est proposée en haut de la fenêtre.`
           : settings.autoUpdate
-            ? 'Une nouvelle version s’installe d’elle-même au démarrage de l’application, ou en un clic dès qu’elle est proposée en haut de la fenêtre.'
+            ? 'Une nouvelle version s’installe d’elle-même au lancement ou en arrière-plan, ou en un clic dès qu’elle est proposée en haut de la fenêtre.'
             : 'Une nouvelle version est proposée en haut de la fenêtre dès qu’elle sort, et s’installe en un clic.'}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">

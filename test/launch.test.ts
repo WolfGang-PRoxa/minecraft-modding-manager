@@ -2,6 +2,7 @@
 // après une mise à jour, lancement ordinaire.
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import { nextStep } from '../src/main/backgroundUpdate'
 import { launchWindow } from '../src/main/startup'
 
 describe('ouverture de la fenêtre au lancement', () => {
@@ -17,5 +18,18 @@ describe('ouverture de la fenêtre au lancement', () => {
 
   it('relancée après une mise à jour alors qu’elle tournait en arrière-plan, elle y reste', () => {
     assert.equal(launchWindow(['Modding Manager.exe', '--updated', '--background'], 'window'), 'hidden')
+  })
+})
+
+describe('mise à jour régulière en arrière-plan', () => {
+  const hour = 60 * 60_000
+  it('relit les releases toutes les 6 heures', () => {
+    assert.equal(nextStep({ lastCheck: 0, pending: false, hidden: true, now: 5 * hour }), 'wait')
+    assert.equal(nextStep({ lastCheck: 0, pending: false, hidden: false, now: 6 * hour }), 'check')
+  })
+
+  it('installe une version trouvée seulement quand la fenêtre est cachée', () => {
+    assert.equal(nextStep({ lastCheck: 0, pending: true, hidden: false, now: hour }), 'wait')
+    assert.equal(nextStep({ lastCheck: 0, pending: true, hidden: true, now: hour }), 'install')
   })
 })

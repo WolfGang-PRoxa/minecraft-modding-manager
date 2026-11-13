@@ -20,6 +20,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
   ou son raccourci. Pour la quitter : clic droit sur l’icône, puis **Quitter Modding Manager**.
 - Lancée avec Windows, l’application démarre désormais en arrière-plan, sans fenêtre. **Paramètres → Démarrage et
   mises à jour → Ouvrir la fenêtre au démarrage** rétablit l’ouverture réduite dans la barre des tâches.
+- Comme elle ne se ferme plus, l’application vérifie aussi ses mises à jour toutes les 6 heures et au réveil du PC :
+  une nouvelle version s’installe d’elle-même pendant qu’elle tourne en arrière-plan, sans jamais interrompre une
+  fenêtre ouverte ni une opération en cours. Le réglage devient **Se mettre à jour automatiquement**.
 
 ### Corrections
 

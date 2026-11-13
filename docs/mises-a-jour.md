@@ -20,17 +20,20 @@ vue : « Nouvelle version disponible : 1.1.0 · tu utilises la 1.0.3 », avec la
 - **Plus tard** replie la barre en un petit rappel **Mise à jour** dans la barre de titre, jusqu’au prochain
   lancement. Un clic sur le rappel rouvre la proposition.
 
-## Mise à jour automatique au démarrage
+## Mise à jour automatique
 
-Avec **Paramètres → Démarrage et mises à jour → Se mettre à jour au démarrage** (activé par défaut), une nouvelle
+Avec **Paramètres → Démarrage et mises à jour → Se mettre à jour automatiquement** (activé par défaut), une nouvelle
 version trouvée au lancement de l’application s’installe d’elle-même : la notification **Mise à jour automatique**
 l’annonce, puis l’installation suit les étapes ci-dessous, sans clic. L’application redémarre dans la nouvelle
 version. Lancée avec Windows, elle se met à jour de la même façon et revient en arrière-plan (ou réduite dans la
 barre des tâches, selon le réglage **Ouvrir la fenêtre au démarrage**).
 
-Seul le lancement de l’application déclenche la mise à jour automatique : une version qui sort pendant qu’elle est
-ouverte est proposée en haut de la fenêtre, et s’installera d’elle-même au lancement suivant. Juste après une mise à
-jour, l’application ne s’en relance pas une autre. Si elle échoue, la notification **Mise à jour impossible** en
+Fermer la fenêtre ne quitte pas l’application, qui peut tourner des jours en arrière-plan : elle relit donc les
+releases toutes les 6 heures, et au réveil du PC. Une nouvelle version s’installe alors d’elle-même tant que la
+fenêtre est cachée et que rien n’est en cours (installation d’un modpack, publication…), puis l’application revient en
+arrière-plan dans la nouvelle version. Fenêtre ouverte, rien n’est imposé : la version est proposée en haut de la
+fenêtre, et s’installera d’elle-même peu après sa fermeture. Juste après une mise à jour, l’application ne s’en
+relance pas une autre au lancement. Si elle échoue, la notification **Mise à jour impossible** en
 donne la raison, comme pour une mise à jour lancée à la main.
 
 ## Installer la mise à jour

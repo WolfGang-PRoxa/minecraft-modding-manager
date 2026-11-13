@@ -1,5 +1,5 @@
 import { BrowserWindow, dialog, ipcMain, shell, app } from 'electron'
-import type { CurseForgeSecretKind, InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
+import type { AppUpdateResult, CurseForgeSecretKind, InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
 import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
 import { registerAuthIpc } from './authIpc'
 import { registerClaudeCodeIpc } from './claudeCode'
@@ -25,7 +25,7 @@ import { normalizeWindowPlacement } from '../shared/windowPlacement'
 export function registerIpc(
   getWindow: () => BrowserWindow | null,
   launch: Pick<LaunchInfo, 'justUpdated' | 'previousVersion' | 'autoUpdate'>
-): void {
+): { installAppUpdate: () => Promise<AppUpdateResult> } {
   registerAuthIpc()
   registerRoleIpc()
   registerClaudeCodeIpc()
@@ -148,7 +148,8 @@ export function registerIpc(
   ipcMain.handle('report:browser', (_e, report: IssueReport) => openReportInBrowser(report))
 
   ipcMain.handle('app:version', () => app.getVersion())
-  ipcMain.handle('app:update', () =>
+  // Depuis la fenêtre (bouton, ou réglage autoUpdate au lancement) et depuis la mise à jour en arrière-plan.
+  const startAppUpdate = () =>
     installAppUpdate({
       busyWith: () => (isInstalling() ? 'l’installation d’un modpack' : studioTask()),
       relaunch: () => {
@@ -158,7 +159,7 @@ export function registerIpc(
       },
       onProgress: (progress) => send('app:update-progress', progress)
     })
-  )
+  ipcMain.handle('app:update', () => startAppUpdate())
   ipcMain.handle('app:cancelUpdate', () => cancelAppUpdate())
 
   ipcMain.on('window:minimize', () => getWindow()?.minimize())
@@ -172,4 +173,5 @@ export function registerIpc(
     const win = getWindow()
     return win && !win.isDestroyed() ? win.getNormalBounds() : null
   })
+  return { installAppUpdate: startAppUpdate }
 }
