@@ -16,7 +16,8 @@ import { maintenanceLock } from '../src/core/operations'
 import { useSettingsFile } from '../src/core/settings'
 import { StudioService } from '../src/core/studio/service'
 import { promoteTrial, trialPathOf } from '../src/core/trialUpdates'
-import { DEFAULT_PACK_UPDATES, type LogIssue, type PlayerTestReport, type ProfileTestReports, type ServerTestReport } from '../src/shared/studio'
+import { maintenanceStatusCommand } from '../src/core/commands/maintenance'
+import { DEFAULT_PACK_UPDATES, type LogIssue, type MaintenanceStatus, type MaintenanceTask, type PackMaintenance, type PackUpdates, type PlayerTestReport, type ProfileTestReports, type ServerTestReport } from '../src/shared/studio'
 import { startFakeCurseForge, VALID_API_KEY, type FakeCurseForge } from './support/fakeCurseForge'
 import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub'
 import { makeInstance, tempDir } from './support/fixtures'
@@ -297,5 +298,38 @@ describe('mises à jour automatiques', () => {
     } finally {
       await release()
     }
+  })
+})
+
+describe('maintenance status, affiché', () => {
+  const pack = (frequency: PackUpdates['frequency']): PackMaintenance => ({
+    folder: 'Mon_Pack',
+    packId: 'mon-pack',
+    name: 'Mon Pack',
+    updates: { ...DEFAULT_PACK_UPDATES, frequency },
+    checkedAt: null,
+    dueAt: frequency === 'manual' ? null : '2026-11-13T00:30:00.000Z',
+    last: null
+  })
+  const task = (installed: boolean): MaintenanceTask => ({
+    installed,
+    time: installed ? '04:00' : null,
+    wake: installed,
+    lastRunAt: null,
+    nextRunAt: null,
+    foreign: false
+  })
+  const print = (status: MaintenanceStatus) => String(maintenanceStatusCommand.print!(status as never))
+
+  it('sans tâche planifiée, une fréquence n’annonce pas de prochain passage', () => {
+    const text = print({ packs: [pack('biweekly'), pack('manual')], task: task(false), running: null })
+    assert.match(text, /1 modpack a une fréquence, mais rien ne se lancera seul/)
+    assert.match(text, /prochaine : aucune, pas de tâche planifiée/)
+  })
+
+  it('avec la tâche, la date du prochain passage est annoncée', () => {
+    const text = print({ packs: [pack('biweekly')], task: task(true), running: null })
+    assert.doesNotMatch(text, /rien ne se lancera seul|pas de tâche planifiée/)
+    assert.match(text, /prochaine : \d\d\/\d\d\/2026/)
   })
 })

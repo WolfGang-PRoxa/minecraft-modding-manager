@@ -8,6 +8,13 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Corrections
+
+- Studio : un modpack réglé sur une fréquence de mises à jour n’annonce plus de « prochaine » date tant que la tâche
+  planifiée de Windows n’existe pas, puisque rien ne se lancerait. Sa carte dit **Pas de tâche planifiée : rien ne se
+  lancera seul**, avec **Activer la tâche**, qui ouvre le réglage dans les paramètres. La fenêtre de réglages du
+  modpack et `mpm maintenance status` le signalent aussi.
+
 ## [2.3.2] - 2026-11-11
 
 ### Améliorations

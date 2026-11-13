@@ -36,7 +36,8 @@ Méthode :
   (outcome ready) se valide par maintenance validate après accord du publieur (il peut jouer sur l'essai avant) ; un
   échec (failed) : lis le message, tests check sur l'essai, updates changelog des mods en cause, puis propose de figer
   un mod (maintenance configure pin) ou d'abandonner (maintenance discard). N'active autoPublish et ne crée la tâche
-  planifiée (maintenance schedule) qu'à sa demande.
+  planifiée (maintenance schedule) qu'à sa demande. Sans tâche (task.installed false), les fréquences ne lancent rien
+  et dueAt n'est qu'une échéance : dis-le au publieur.
 - CurseForge : un modpack se lie à son projet par curseforge_link (le projet est créé une fois par le publieur sur le
   site). curseforge_publish envoie la dernière version (export au format CurseForge, nom « <nom>_V<N>.zip », notes en
   Markdown) : irréversible, montre d'abord version, notes et type au publieur, et teste la version avant. Un mod posé

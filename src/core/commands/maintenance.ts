@@ -63,20 +63,32 @@ export const maintenanceStatusCommand = command({
   async run(_params, ctx) {
     return maintenanceStatus(ctx.service, ctx.maintenanceLock, await task(ctx))
   },
-  print: (status: MaintenanceStatus) =>
-    [
+  print: (status: MaintenanceStatus) => {
+    // Sans tâche planifiée, une fréquence ne lance rien : pas de date de prochain passage à annoncer.
+    const noTask = status.task !== null && !status.task.installed
+    const periodic = (f: UpdateFrequency) => f === 'weekly' || f === 'biweekly' || f === 'monthly'
+    const waiting = noTask ? status.packs.filter((p) => periodic(p.updates.frequency)).length : 0
+    return [
       printTask(status.task),
+      ...(waiting
+        ? [
+            `  ⚠ ${waiting} modpack${waiting > 1 ? 's ont' : ' a'} une fréquence, mais rien ne se lancera seul : crée la tâche ` +
+              '(maintenance schedule, ou Paramètres → Mises à jour automatiques).'
+          ]
+        : []),
       ...(status.running ? [`Passage en cours (${status.running}).`] : []),
       '',
       ...status.packs.map((p) => {
         const u = p.updates
         const head = `${p.name} (${p.folder}) — ${FREQUENCY_LABELS[u.frequency]}${u.channel === 'beta' ? ', bêtas comprises' : ''}${u.autoPublish ? ', publication automatique' : ''}`
-        const lines = [`  Dernière recherche : ${date(p.checkedAt)} · prochaine : ${p.dueAt ? date(p.dueAt) : '—'}`]
+        const next = !p.dueAt ? '—' : noTask && periodic(u.frequency) ? 'aucune, pas de tâche planifiée' : date(p.dueAt)
+        const lines = [`  Dernière recherche : ${date(p.checkedAt)} · prochaine : ${next}`]
         if (u.pinned.length) lines.push(`  Figés : ${u.pinned.map((x) => `${x.name} (${x.projectId})`).join(', ')}`)
         if (p.last) lines.push(printRecord(p.last).replace(/^/gm, '  '))
         return [head, ...lines].join('\n')
       })
     ].join('\n')
+  }
 })
 
 const FREQUENCIES = ['weekly', 'biweekly', 'monthly', 'manual', 'never'] as const satisfies readonly UpdateFrequency[]

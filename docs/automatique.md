@@ -34,7 +34,10 @@ faite : le passage la signale, à faire dans CurseForge.
 
 ## Régler un modpack
 
-Sur la carte du modpack, la ligne **Mises à jour…** dit son rythme et la date du prochain passage. **Réglages** ouvre :
+Sur la carte du modpack, la ligne **Mises à jour…** dit son rythme et la date du prochain passage. La fréquence dit
+seulement quand le modpack doit passer : c’est la [tâche planifiée](#la-tâche-planifiée) qui lance les passages. Tant
+qu’elle n’existe pas, la ligne n’annonce pas de date mais **Pas de tâche planifiée : rien ne se lancera seul**, avec
+**Activer la tâche**, qui ouvre son réglage. **Réglages** ouvre :
 
 - **Fréquence** : chaque semaine, toutes les deux semaines, chaque mois, **à la demande** (réglage par défaut :
   seulement sur demande explicite) ou **jamais** ;

@@ -6,7 +6,7 @@ import type { MaintenanceRecord, PackMaintenance, PackUpdates, PackView, UpdateF
 import { Button } from '../components/Button'
 import { Toggle } from '../components/Toggle'
 import { formatDate } from '../lib/format'
-import { useMaintenance } from './maintenanceStore'
+import { openMaintenanceSettings, useMaintenance, useTaskMissing } from './maintenanceStore'
 import { Field, Modal, Spinner, TextInput } from './Modal'
 import { openPath, useStudio } from './store'
 
@@ -128,16 +128,28 @@ export function UpdatesLine({ pack }: { pack: PackView }) {
   const last = info?.last ?? null
   const pending = last && (last.outcome === 'ready' || last.outcome === 'failed') && last.trialPath ? last : null
   const mine = running === pack.folder
+  // Sans tâche planifiée, aucun passage ne se lancera seul : pas de date de prochain passage, mais un avertissement.
+  const taskMissing = useTaskMissing(updates.frequency)
 
   return (
     <div className="mt-1.5 text-sm text-ink-300">
       <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="size-1.5 shrink-0 rounded-full bg-sky-400" />
+        <span className={`size-1.5 shrink-0 rounded-full ${taskMissing ? 'bg-amber-glow' : 'bg-sky-400'}`} />
         <span>
           Mises à jour {frequencyLabel(updates.frequency)}
-          {info?.dueAt && updates.frequency !== 'manual' && updates.frequency !== 'never' ? ` · prochaine le ${formatDate(info.dueAt)}` : ''}
+          {!taskMissing && info?.dueAt && updates.frequency !== 'manual' && updates.frequency !== 'never' ? ` · prochaine le ${formatDate(info.dueAt)}` : ''}
           {updates.autoPublish ? ' · publiées seules' : ''}
         </span>
+        {taskMissing && (
+          <span className="text-xs text-amber-glow" title="La fréquence dit quand le modpack doit passer ; c’est la tâche planifiée de Windows qui lance les passages.">
+            Pas de tâche planifiée : rien ne se lancera seul.
+          </span>
+        )}
+        {taskMissing && (
+          <button type="button" className="text-xs font-semibold text-amber-glow hover:text-ink-100" onClick={openMaintenanceSettings}>
+            Activer la tâche
+          </button>
+        )}
         <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'updates', folder: pack.folder })}>
           Réglages
         </button>
@@ -193,6 +205,7 @@ export function UpdatesDialog({ folder }: { folder: string }) {
   const [query, setQuery] = useState('')
   const [busy, setBusy] = useState(false)
   const mods = useLatestMods(pack)
+  const taskMissing = useTaskMissing(updates?.frequency ?? 'manual')
   const pinnedIds = useMemo(() => new Set(updates?.pinned.map((p) => p.projectId)), [updates])
   if (!pack || !updates) return null
 
@@ -247,8 +260,10 @@ export function UpdatesDialog({ folder }: { folder: string }) {
               </label>
             ))}
           </div>
-          <p className="mt-2 text-xs text-ink-400">
-            Les passages automatiques demandent la tâche planifiée : Paramètres → Mises à jour automatiques.
+          <p className={`mt-2 text-xs ${taskMissing ? 'text-amber-glow' : 'text-ink-400'}`}>
+            {taskMissing
+              ? 'Aucune tâche planifiée pour l’instant : ce rythme ne lancera rien tant qu’elle n’est pas activée dans Paramètres → Mises à jour automatiques.'
+              : 'Les passages automatiques demandent la tâche planifiée : Paramètres → Mises à jour automatiques.'}
           </p>
         </div>
 

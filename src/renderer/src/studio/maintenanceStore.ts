@@ -93,3 +93,24 @@ export const useMaintenance = create<MaintenanceState>((set, get) => ({
 async function refreshAll(): Promise<void> {
   await useStudio.getState().refresh()
 }
+
+/** Ouvre les paramètres sur la section de la tâche planifiée. */
+export function openMaintenanceSettings(): void {
+  useStore.getState().setSettingsOpen(true)
+  // La fenêtre des paramètres se dessine au rendu suivant.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => document.getElementById(MAINTENANCE_SETTINGS_ID)?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
+  )
+}
+
+export const MAINTENANCE_SETTINGS_ID = 'parametres-mises-a-jour-automatiques'
+
+/**
+ * Le modpack a une fréquence mais aucune tâche planifiée ne lancera ses passages (Windows seulement : sans lecture de la
+ * tâche, rien n'est affirmé).
+ */
+export function useTaskMissing(frequency: string): boolean {
+  return useMaintenance(
+    (s) => ['weekly', 'biweekly', 'monthly'].includes(frequency) && s.status?.task != null && !s.status.task.installed
+  )
+}

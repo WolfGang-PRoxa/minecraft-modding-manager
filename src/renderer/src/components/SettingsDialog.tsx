@@ -9,6 +9,7 @@ import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
 import { ClaudeCodeSetting, CurseForgeAccountSetting, HangarAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
+import { MAINTENANCE_SETTINGS_ID } from '../studio/maintenanceStore'
 import { PlayerUsageSection } from './Usage'
 import { AppearanceSection } from './Appearance'
 import { APP_NAME } from '../../../shared/config'
@@ -33,9 +34,9 @@ function useMediaQuery(query: string): boolean {
   )
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
-    <section className="rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
+    <section id={id} className="scroll-mt-4 rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
       <h3 className="mb-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">{title}</h3>
       {children}
     </section>
@@ -272,7 +273,7 @@ export function SettingsDialog() {
     </Section>
   )
   const maintenance = (
-    <Section key="maintenance" title="Mises à jour automatiques">
+    <Section key="maintenance" id={MAINTENANCE_SETTINGS_ID} title="Mises à jour automatiques">
       <MaintenanceSetting />
     </Section>
   )
