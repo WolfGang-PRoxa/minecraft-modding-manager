@@ -25,7 +25,8 @@ vue : « Nouvelle version disponible : 1.1.0 · tu utilises la 1.0.3 », avec la
 Avec **Paramètres → Démarrage et mises à jour → Se mettre à jour au démarrage** (activé par défaut), une nouvelle
 version trouvée au lancement de l’application s’installe d’elle-même : la notification **Mise à jour automatique**
 l’annonce, puis l’installation suit les étapes ci-dessous, sans clic. L’application redémarre dans la nouvelle
-version. Lancée avec Windows, elle se met à jour de la même façon et revient réduite dans la barre des tâches.
+version. Lancée avec Windows, elle se met à jour de la même façon et revient en arrière-plan (ou réduite dans la
+barre des tâches, selon le réglage **Ouvrir la fenêtre au démarrage**).
 
 Seul le lancement de l’application déclenche la mise à jour automatique : une version qui sort pendant qu’elle est
 ouverte est proposée en haut de la fenêtre, et s’installera d’elle-même au lancement suivant. Juste après une mise à
@@ -41,7 +42,7 @@ donne la raison, comme pour une mise à jour lancée à la main.
    abîmé ou modifié n’est jamais lancé.
 3. L’application se ferme. La fenêtre **Mise à jour** de l’installeur montre la progression, avec la version installée
    et la nouvelle (`1.0.3 → 1.0.4`) : il remplace les fichiers sans rien demander, puis relance l’application
-   (réduite si elle l’était, par exemple lancée avec Windows).
+   (en arrière-plan ou réduite si elle l’était, par exemple lancée avec Windows).
 4. Une notification confirme la nouvelle version et propose **Voir les nouveautés**.
 
 Les réglages, la connexion GitHub, le raccourci sur le bureau et les modpacks installés ne bougent pas.

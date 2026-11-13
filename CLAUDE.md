@@ -71,7 +71,14 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     `HKCU\…\CurrentVersion\Run`, `"<exe>" --minimized`, écrite par `setLoginItemSettings` seulement si elle manque ou
     diffère, retirée seulement si elle existe (la réécrire réactiverait l'app désactivée dans le Gestionnaire des
     tâches : `StartupApproved`), relue avec `reg query` ; packagée seulement. L'installeur la retire à la
-    désinstallation. `--minimized` : fenêtre réduite au lancement, agrandie à la première restauration.
+    désinstallation. `launchWindow` : `--minimized` (lancement avec Windows) → fenêtre cachée si `launchMode`
+    `background` (défaut), sinon réduite ; `--background` (relance par l'installeur d'une app qui tournait en
+    arrière-plan) → cachée. La fenêtre est créée et chargée même cachée, agrandie au premier affichage.
+  - `tray.ts` : icône de la zone de notification (clic : ouvrir ; clic droit : Ouvrir, Bibliothèque / Studio pour un
+    publieur, Quitter). `index.ts` : la croix (et tout `close` hors `before-quit` / `session-end`) cache la fenêtre au
+    lieu de la fermer, bulle la première fois (`backgroundHintShown`) ; seul quitter ferme vraiment, avec la
+    confirmation d'une tâche du Studio en cours. `second-instance` montre la fenêtre (sauf `--minimized` /
+    `--background`). L'installeur ferme l'app de force au bout de 3 s (le `WM_CLOSE` de taskkill ne fait que la cacher).
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
     fenêtre), télécharge l'installeur dans `%LOCALAPPDATA%\Modding Manager\mises-a-jour`, compare son SHA-256 au
     `digest` publié par GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec

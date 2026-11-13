@@ -98,6 +98,7 @@ export function registerIpc(
     if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView
     if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate
     if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup
+    if (patch.launchMode === 'background' || patch.launchMode === 'window') allowed.launchMode = patch.launchMode
     if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance)
     return updateSettings(allowed).then((settings) => {
       const win = getWindow()
@@ -148,7 +149,11 @@ export function registerIpc(
   ipcMain.handle('app:update', () =>
     installAppUpdate({
       busyWith: () => (isInstalling() ? 'l’installation d’un modpack' : studioTask()),
-      minimized: () => getWindow()?.isMinimized() ?? false,
+      relaunch: () => {
+        const win = getWindow()
+        if (!win || !win.isVisible()) return 'background'
+        return win.isMinimized() ? 'minimized' : null
+      },
       onProgress: (progress) => send('app:update-progress', progress)
     })
   )

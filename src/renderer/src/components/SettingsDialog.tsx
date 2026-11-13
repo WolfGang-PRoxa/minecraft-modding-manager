@@ -193,9 +193,7 @@ export function SettingsDialog() {
       <div className="flex items-center justify-between gap-6">
         <div>
           <div className="text-sm font-medium text-ink-100">Lancer avec Windows</div>
-          <div className="mt-0.5 text-xs text-ink-400">
-            Au démarrage du PC, l’application s’ouvre réduite dans la barre des tâches.
-          </div>
+          <div className="mt-0.5 text-xs text-ink-400">Au démarrage du PC, l’application se lance d’elle-même.</div>
         </div>
         <Toggle
           label="Lancer avec Windows"
@@ -203,6 +201,26 @@ export function SettingsDialog() {
           onChange={(value) => void updateSettings({ launchAtStartup: value })}
         />
       </div>
+      <div className={`mt-4 ml-4 flex items-center justify-between gap-6 border-l border-tint/10 pl-4 ${settings.launchAtStartup ? '' : 'opacity-50'}`}>
+        <div>
+          <div className="text-sm font-medium text-ink-100">Ouvrir la fenêtre au démarrage</div>
+          <div className="mt-0.5 text-xs text-ink-400">
+            Réduite dans la barre des tâches. Sinon, l’application démarre en arrière-plan : seule son icône apparaît en
+            bas à droite de l’écran, et un clic l’ouvre aussitôt.
+          </div>
+        </div>
+        <Toggle
+          size="sm"
+          label="Ouvrir la fenêtre au démarrage"
+          disabled={!settings.launchAtStartup}
+          checked={settings.launchMode === 'window'}
+          onChange={(value) => void updateSettings({ launchMode: value ? 'window' : 'background' })}
+        />
+      </div>
+      <p className="mt-4 text-xs leading-relaxed text-ink-400">
+        Fermer la fenêtre laisse l’application tourner en arrière-plan, prête à se rouvrir. Pour la quitter : clic droit
+        sur son icône en bas à droite de l’écran (zone de notification), puis <strong className="font-semibold text-ink-300">Quitter</strong>.
+      </p>
       <div className="mt-5 flex items-center justify-between gap-6">
         <div>
           <div className="text-sm font-medium text-ink-100">Se mettre à jour au démarrage</div>

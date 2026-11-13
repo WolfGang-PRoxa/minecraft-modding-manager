@@ -50,7 +50,9 @@ depuis les paramètres ; pour les modifier à la main, fermer d’abord l’appl
 | `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
 | `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |
 | `autoUpdate` | Installer d’elle-même une nouvelle version de l’application à son démarrage (`true` par défaut). |
-| `launchAtStartup` | Lancer l’application, réduite, au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. |
+| `launchAtStartup` | Lancer l’application au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, avec `--minimized`. |
+| `launchMode` | Lancée avec Windows : `background` (par défaut, en arrière-plan, icône de la zone de notification seulement) ou `window` (fenêtre réduite dans la barre des tâches). |
+| `backgroundHintShown` | La bulle « reste ouvert en arrière-plan » a été montrée à la première fermeture de la fenêtre. |
 
 ## Dans un profil installé
 
@@ -138,6 +140,8 @@ il prend quelques dizaines de millisecondes, même pour des milliers de mods.
 |---|---|
 | `--studio` | Ouvre l’application sur le Studio (publieurs). Relancée ainsi alors qu’elle tourne déjà, elle passe sur le Studio. |
 | `--updated` | Passée par l’installeur après une mise à jour : l’application annonce sa nouvelle version. |
+| `--minimized` | Lancement avec Windows : l’application démarre en arrière-plan ou réduite, selon `launchMode`. L’installeur la passe aussi à l’application qu’il relance si sa fenêtre était réduite. |
+| `--background` | Passée par l’installeur à l’application qu’il relance si elle tournait en arrière-plan : elle y reste. |
 | `--maintenance` | Passée par la tâche planifiée : l’application fait, sans fenêtre, les [mises à jour automatiques](automatique.md) dont le tour est venu, puis se ferme. |
 | `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modding Manager` (tests). |
 

@@ -8,6 +8,14 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Améliorations
+
+- Fermer la fenêtre ne quitte plus l’application : elle continue en arrière-plan, avec son icône dans la zone de
+  notification (en bas à droite de l’écran), et se rouvre aussitôt d’un clic sur cette icône, depuis le menu Démarrer
+  ou son raccourci. Pour la quitter : clic droit sur l’icône, puis **Quitter Modding Manager**.
+- Lancée avec Windows, l’application démarre désormais en arrière-plan, sans fenêtre. **Paramètres → Démarrage et
+  mises à jour → Ouvrir la fenêtre au démarrage** rétablit l’ouverture réduite dans la barre des tâches.
+
 ### Corrections
 
 - Studio : un modpack réglé sur une fréquence de mises à jour n’annonce plus de « prochaine » date tant que la tâche

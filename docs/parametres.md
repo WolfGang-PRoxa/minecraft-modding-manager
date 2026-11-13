@@ -88,10 +88,18 @@ l’application ne trouve pas les profils. Voir [Le dossier des instances](curse
 
 ## Démarrage et mises à jour
 
-- **Lancer avec Windows** (activé par défaut) : au démarrage du PC, l’application s’ouvre réduite dans la barre des
-  tâches ; un clic sur son icône l’ouvre en grand. Elle s’inscrit pour cela dans les applications de démarrage de
-  Windows, où elle se désactive aussi (Gestionnaire des tâches, onglet **Applications de démarrage**). Désactivé,
-  l’application retire son inscription.
+- **Lancer avec Windows** (activé par défaut) : au démarrage du PC, l’application se lance d’elle-même. Elle
+  s’inscrit pour cela dans les applications de démarrage de Windows, où elle se désactive aussi (Gestionnaire des
+  tâches, onglet **Applications de démarrage**). Désactivé, l’application retire son inscription.
+  - **Ouvrir la fenêtre au démarrage** (désactivé par défaut) : la fenêtre s’ouvre réduite dans la barre des tâches,
+    et en grand d’un clic sur son icône. Désactivé, l’application démarre en arrière-plan : seule son icône apparaît
+    dans la zone de notification, en bas à droite de l’écran, et un clic dessus ouvre la fenêtre aussitôt.
+
+Fermer la fenêtre ne quitte pas l’application : elle continue en arrière-plan, son icône dans la zone de
+notification, et se rouvre aussitôt (clic sur l’icône, menu Démarrer, raccourci, épingle de la barre des tâches). La
+première fois, une bulle le rappelle. Pour la quitter vraiment : clic droit sur son icône, puis **Quitter Modding
+Manager**. Un publieur y trouve aussi **Ouvrir la Bibliothèque** et **Ouvrir le Studio**. Si une publication est en
+cours, quitter demande d’abord une confirmation.
 - **Se mettre à jour au démarrage** (activé par défaut) : quand une nouvelle version est sortie, l’application
   l’installe d’elle-même en s’ouvrant, puis redémarre. Désactivé, la mise à jour reste proposée en haut de la fenêtre
   et s’installe en un clic. Voir [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique-au-démarrage).

@@ -8,16 +8,45 @@ import { setHangarApiOverride } from '../core/hangar'
 import { setGitHubApiOverride } from '../core/githubEnv'
 import { registerIpc } from './ipc'
 import { MAINTENANCE_SWITCH, runScheduledMaintenance } from './maintenance'
-import { getSettings, useSettingsFile } from '../core/settings'
+import { getSettings, updateSettings, useSettingsFile } from '../core/settings'
 import { findTheme, windowBackground } from '../shared/appearance'
 import { enablePreviousIdentityMigration, migrateDataDir } from '../core/previousIdentity'
 import { migratePreviousInstallation } from './previousIdentity'
 import { WINDOWS_APP_ID } from './shortcut'
-import { startsMinimized, syncLaunchAtStartup } from './startup'
+import { BACKGROUND_SWITCH, launchWindow, MINIMIZED_SWITCH, syncLaunchAtStartup, type LaunchWindow } from './startup'
 import { COVER_SCHEME, registerStudio, stopStudioTasks, windowStudioTask } from './studioIpc'
+import { announceBackground, createTray, destroyTray } from './tray'
 import { applyInterfaceScale, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
 
 let mainWindow: BrowserWindow | null = null
+
+// Fermer la fenêtre la cache : l'application continue en arrière-plan, avec son icône dans la zone de notification,
+// et se rouvre aussitôt. Elle ne se ferme vraiment qu'en la quittant (menu de l'icône, mise à jour, fin de session).
+let quitting = false
+/** La fenêtre n'a encore jamais été montrée (lancement en arrière-plan) : elle s'ouvrira en grand. */
+let neverShown = true
+
+/** Montre la fenêtre (icône de la zone de notification, nouveau lancement, notification) et la met au premier plan. */
+function showWindow(view: 'library' | 'studio' | null = null): void {
+  if (!mainWindow) return
+  if (neverShown) {
+    neverShown = false
+    mainWindow.maximize()
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+  mainWindow.webContents.send('app:activated', view)
+}
+
+/** Cache la fenêtre ; la première fois, une bulle rappelle que l'application tourne encore. */
+async function hideWindow(): Promise<void> {
+  mainWindow?.hide()
+  const settings = await getSettings()
+  if (settings.backgroundHintShown) return
+  announceBackground()
+  await updateSettings({ backgroundHintShown: true }).catch(() => {})
+}
 
 // Seule permission dont la page a besoin : écrire dans le presse-papiers (bouton « Copier » du code de connexion
 // GitHub). Caméra, micro, position, notifications de la page, accès aux périphériques… sont tous refusés.
@@ -29,7 +58,7 @@ function restrictPermissions(target: Session): void {
   target.setDevicePermissionHandler(() => false)
 }
 
-async function createWindow(): Promise<void> {
+async function createWindow(launch: LaunchWindow): Promise<void> {
   const { appearance } = await getSettings()
   mainWindow = new BrowserWindow({
     title: APP_NAME,
@@ -52,10 +81,12 @@ async function createWindow(): Promise<void> {
   })
 
   // Ouverte en grand, la barre des tâches restant visible : le plein écran est au bout de F11. Lancée avec Windows,
-  // elle s'ouvre réduite dans la barre des tâches, et en grand la première fois qu'on la rouvre.
+  // elle reste cachée (arrière-plan) ou s'ouvre réduite dans la barre des tâches, selon le réglage launchMode, et en
+  // grand la première fois qu'on la rouvre. Cachée, la page est tout de même chargée : la fenêtre s'affiche aussitôt.
   mainWindow.once('ready-to-show', () => {
-    if (!mainWindow) return
-    if (startsMinimized()) {
+    if (!mainWindow || launch === 'hidden') return
+    neverShown = false
+    if (launch === 'minimized') {
       mainWindow.minimize()
       // Lancée par l'Explorateur (démarrage de Windows, relance par l'installeur), le premier affichage de la fenêtre
       // suit la façon dont il l'a lancée (fenêtre normale) et non celle demandée : elle est réduite une seconde fois.
@@ -89,12 +120,23 @@ async function createWindow(): Promise<void> {
     }
   })
 
-  // Une publication continue en arrière-plan : fermer la fenêtre l'interromprait sans que le publieur le voie.
+  // Fermer la fenêtre la cache seulement. En quittant pour de bon, une publication en cours serait interrompue sans
+  // que le publieur le voie : elle est d'abord confirmée.
   let closeConfirmed = false
   mainWindow.on('close', (event) => {
+    if (!mainWindow) return
+    if (!quitting) {
+      event.preventDefault()
+      if (mainWindow.isFullScreen()) mainWindow.setFullScreen(false)
+      void hideWindow()
+      return
+    }
     const task = windowStudioTask()
-    if (closeConfirmed || !task || !mainWindow) return
+    if (closeConfirmed || !task) return
     event.preventDefault()
+    // Quitter est remis à plus tard : la croix doit de nouveau cacher la fenêtre.
+    quitting = false
+    showWindow()
     void dialog
       .showMessageBox(mainWindow, {
         type: 'warning',
@@ -109,8 +151,13 @@ async function createWindow(): Promise<void> {
       .then(({ response }) => {
         if (response !== 1 || !mainWindow) return
         closeConfirmed = true
-        mainWindow.close()
+        app.quit()
       })
+  })
+
+  // Fin de la session Windows (déconnexion, arrêt) : l'application se ferme vraiment.
+  mainWindow.on('session-end', () => {
+    quitting = true
   })
 
   mainWindow.on('closed', () => {
@@ -155,12 +202,15 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
 } else {
   useSettingsFile(join(app.getPath('userData'), 'settings.json'))
 
-  // Relancée alors qu'elle tourne déjà (raccourci, `--studio`…) : la fenêtre revient au premier plan.
+  // Relancée alors qu'elle tourne déjà (raccourci, épingle, notification, `--studio`…) : la fenêtre revient au
+  // premier plan, même cachée en arrière-plan. Un lancement avec Windows en double ne la montre pas.
   app.on('second-instance', (_event, argv) => {
-    if (!mainWindow) return
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.focus()
-    mainWindow.webContents.send('app:activated', argv.includes('--studio') ? 'studio' : null)
+    if (argv.includes(MINIMIZED_SWITCH) || argv.includes(BACKGROUND_SWITCH)) return
+    showWindow(argv.includes('--studio') ? 'studio' : null)
+  })
+
+  app.on('before-quit', () => {
+    quitting = true
   })
 
   app.whenReady().then(async () => {
@@ -174,8 +224,10 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     void migratePreviousInstallation()
     registerIpc(() => mainWindow, { ...launch, autoUpdate: autoUpdateOnLaunch(settings.autoUpdate, launch.justUpdated) })
     await registerStudio(() => mainWindow)
-    await createWindow()
+    await createWindow(launchWindow(process.argv, settings.launchMode))
+    await createTray({ open: showWindow, quit: () => app.quit() }).catch((err) => console.warn('Icône de la zone de notification impossible :', err))
   })
 
   app.on('window-all-closed', () => app.quit())
+  app.on('will-quit', () => destroyTray())
 }

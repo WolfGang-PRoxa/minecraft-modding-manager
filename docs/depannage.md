@@ -23,8 +23,8 @@ L’installeur n’a pas réussi à fermer l’application, sans doute lancée e
 puis cliquer sur **Réessayer**.
 
 **L’application ne s’ouvre pas**\
-Elle est peut-être déjà ouverte, réduite ou derrière une autre fenêtre : la relancer ramène sa fenêtre au premier
-plan. Sinon, relancer l’installeur : il réinstalle une installation abîmée.
+Elle est peut-être déjà ouverte, en arrière-plan (icône dans la zone de notification, en bas à droite de l’écran),
+réduite ou derrière une autre fenêtre : la relancer, ou cliquer sur cette icône, ramène sa fenêtre au premier plan. Sinon, relancer l’installeur : il réinstalle une installation abîmée.
 
 ## CurseForge
 

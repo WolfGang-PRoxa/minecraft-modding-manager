@@ -15,7 +15,7 @@ import { downloadDifferential, parseBlockMap, planDifferential } from '../core/d
 import { migrateLocalDataDir } from '../core/previousIdentity'
 import { getCatalog } from './github'
 import { getSettings, updateSettings } from '../core/settings'
-import { MINIMIZED_SWITCH } from './startup'
+import { BACKGROUND_SWITCH, MINIMIZED_SWITCH } from './startup'
 
 const INSTALLER_PREFIX = 'Modding-Manager-Setup-'
 /** Où les versions jusqu'à la 2.3.1 téléchargeaient l'installeur. */
@@ -162,15 +162,16 @@ function describeError(err: unknown): string {
 }
 
 /** Lance l'installeur détaché de l'application (il doit lui survivre) et attend qu'il ait bien démarré. */
-function launchInstaller(path: string, minimized: boolean): Promise<void> {
+function launchInstaller(path: string, relaunch: 'background' | 'minimized' | null): Promise<void> {
   return new Promise((resolve, reject) => {
     const fail = (err: unknown) =>
       reject(new Error(`L’installeur n’a pas pu être lancé (${err instanceof Error ? err.message : String(err)}).`))
     try {
       // --updated : l'installeur sait qu'il s'agit d'une mise à jour demandée par l'application. Il ne pose
       // alors aucune question (application déjà installée, application en cours d'exécution) et la relance à la fin.
-      // --minimized : elle est relancée réduite, comme elle l'était (lancement avec Windows).
-      const child = spawn(path, ['--updated', ...(minimized ? [MINIMIZED_SWITCH] : [])], { detached: true, stdio: 'ignore' })
+      // --background / --minimized : elle est relancée comme elle était, en arrière-plan ou réduite.
+      const state = relaunch === 'background' ? [BACKGROUND_SWITCH] : relaunch === 'minimized' ? [MINIMIZED_SWITCH] : []
+      const child = spawn(path, ['--updated', ...state], { detached: true, stdio: 'ignore' })
       child.once('error', fail)
       child.once('spawn', () => {
         child.unref()
@@ -190,8 +191,8 @@ function launchInstaller(path: string, minimized: boolean): Promise<void> {
 export async function installAppUpdate(options: {
   /** Opération en cours que le redémarrage interromprait (« la publication »…), sinon null. */
   busyWith: () => string | null
-  /** La fenêtre est réduite : l'installeur relance l'application réduite. */
-  minimized: () => boolean
+  /** L'application tourne en arrière-plan ou sa fenêtre est réduite : l'installeur la relance ainsi. */
+  relaunch: () => 'background' | 'minimized' | null
   onProgress: (progress: AppUpdateProgress) => void
 }): Promise<AppUpdateResult> {
   const failed = (error: string): AppUpdateResult => ({ ok: false, reason: 'failed', error })
@@ -238,7 +239,7 @@ export async function installAppUpdate(options: {
     signal.throwIfAborted()
 
     options.onProgress({ phase: 'installing', done: size, total: size })
-    await launchInstaller(destination, options.minimized())
+    await launchInstaller(destination, options.relaunch())
     launched = true
     // Le temps d'afficher l'étape, puis l'application se ferme : l'installeur attend sa fermeture.
     setTimeout(() => app.quit(), 500)

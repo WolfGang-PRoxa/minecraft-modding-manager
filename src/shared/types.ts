@@ -249,8 +249,15 @@ export interface Settings {
   maintenanceClaude: boolean
   /** Au démarrage, une nouvelle version de l'application s'installe d'elle-même. */
   autoUpdate: boolean
-  /** L'application s'ouvre, réduite, au démarrage de Windows. */
+  /** L'application se lance au démarrage de Windows. */
   launchAtStartup: boolean
+  /**
+   * Lancée avec Windows : en arrière-plan (icône de la zone de notification seulement, par défaut) ou fenêtre réduite
+   * dans la barre des tâches.
+   */
+  launchMode: 'background' | 'window'
+  /** La bulle « reste ouvert en arrière-plan » a déjà été montrée à la première fermeture de la fenêtre. */
+  backgroundHintShown: boolean
   /** Style de couleurs, styles personnalisés et taille de l'interface. */
   appearance: AppearanceSettings
 }

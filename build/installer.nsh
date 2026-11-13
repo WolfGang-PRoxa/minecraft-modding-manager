@@ -36,8 +36,8 @@
 ; son icône. electron-builder ne refait cette demande qu'en créant lui-même le raccourci du bureau
 ; (createDesktopShortcut), ce qu'il ne fait pas ici : on la refait une fois les nouveaux fichiers en place.
 ; Ensuite, comme l'installeur « en un clic » : la fenêtre se ferme et l'application s'ouvre (avec --updated après une
-; mise à jour demandée par l'application, qui l'annonce alors, et --minimized si elle était réduite : lancée avec
-; Windows, elle le reste).
+; mise à jour demandée par l'application, qui l'annonce alors, et --background ou --minimized si elle tournait en
+; arrière-plan ou réduite : elle le reste).
 !macro customInstall
   System::Call 'Shell32::SHChangeNotify(i 0x8000000, i 0, i 0, i 0)'
   SetAutoClose true
@@ -45,13 +45,19 @@
     HideWindow
     ${If} ${isUpdated}
       ${GetParameters} $R8
+      StrCpy $R7 "--updated"
       ClearErrors
-      ${GetOptions} $R8 "--minimized" $R9
-      ${If} ${Errors}
-        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated"
+      ${GetOptions} $R8 "--background" $R9
+      ${IfNot} ${Errors}
+        StrCpy $R7 "--updated --background"
       ${Else}
-        ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "--updated --minimized"
+        ClearErrors
+        ${GetOptions} $R8 "--minimized" $R9
+        ${IfNot} ${Errors}
+          StrCpy $R7 "--updated --minimized"
+        ${EndIf}
       ${EndIf}
+      ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" "$R7"
     ${Else}
       ${StdUtils.ExecShellAsUser} $0 "$launchLink" "open" ""
     ${EndIf}

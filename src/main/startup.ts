@@ -2,11 +2,24 @@ import { app } from 'electron'
 import { execFile } from 'node:child_process'
 import { APP_NAME } from '../shared/config'
 
-/** Lancement au démarrage de Windows : la fenêtre s'ouvre réduite dans la barre des tâches. */
+/**
+ * Lancement au démarrage de Windows (valeur de la clé Run) : selon le réglage launchMode, l'application reste en
+ * arrière-plan (icône de la zone de notification seulement) ou ouvre sa fenêtre réduite dans la barre des tâches.
+ * Aussi passé par l'installeur à l'application qu'il relance après une mise à jour, si sa fenêtre était réduite.
+ */
 export const MINIMIZED_SWITCH = '--minimized'
 
-/** Lancée réduite (démarrage de Windows, ou relancée ainsi par l'installeur après une mise à jour). */
-export const startsMinimized = (): boolean => process.argv.includes(MINIMIZED_SWITCH)
+/** Relancée par l'installeur après une mise à jour alors qu'elle tournait en arrière-plan : elle y reste. */
+export const BACKGROUND_SWITCH = '--background'
+
+/** Comment la fenêtre s'ouvre au lancement : affichée, réduite dans la barre des tâches, ou cachée (arrière-plan). */
+export type LaunchWindow = 'shown' | 'minimized' | 'hidden'
+
+export function launchWindow(argv: readonly string[], launchMode: 'background' | 'window'): LaunchWindow {
+  if (argv.includes(BACKGROUND_SWITCH)) return 'hidden'
+  if (argv.includes(MINIMIZED_SWITCH)) return launchMode === 'background' ? 'hidden' : 'minimized'
+  return 'shown'
+}
 
 const RUN_KEY = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run'
 
@@ -23,7 +36,8 @@ function registeredCommand(): Promise<string | null> {
 
 /**
  * Lancement avec Windows (réglage launchAtStartup) : une valeur « Modding Manager » de la clé Run de l'utilisateur,
- * qui lance l'exécutable avec --minimized. L'installeur la retire à la désinstallation.
+ * qui lance l'exécutable avec --minimized (la même quel que soit launchMode, lu au lancement). L'installeur la retire
+ * à la désinstallation.
  *
  * Elle n'est écrite que si elle manque ou ne lance plus cet exécutable ainsi, et retirée seulement si elle existe : la
  * réécrire à chaque lancement réactiverait l'application que l'utilisateur a désactivée dans les applications de

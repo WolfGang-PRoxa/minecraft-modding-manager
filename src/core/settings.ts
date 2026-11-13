@@ -19,6 +19,8 @@ const DEFAULTS: Settings = {
   maintenanceClaude: false,
   autoUpdate: true,
   launchAtStartup: true,
+  launchMode: 'background',
+  backgroundHintShown: false,
   appearance: DEFAULT_APPEARANCE
 }
 
@@ -51,6 +53,8 @@ export async function getSettings(): Promise<Settings> {
     maintenanceClaude: stored?.maintenanceClaude === true,
     autoUpdate: stored?.autoUpdate !== false,
     launchAtStartup: stored?.launchAtStartup !== false,
+    launchMode: stored?.launchMode === 'window' ? 'window' : 'background',
+    backgroundHintShown: stored?.backgroundHintShown === true,
     appearance: normalizeAppearance(stored?.appearance)
   }
 }
