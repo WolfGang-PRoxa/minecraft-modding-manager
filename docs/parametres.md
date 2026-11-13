@@ -7,7 +7,7 @@ Les sections **Dossier des contenus**, **Compte CurseForge**, **Compte Modrinth*
 automatiques** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
 Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
-colonnes : l’application (utilisation, apparence, démarrage et mises à jour, raccourci, à propos), CurseForge (installation, dossier des
+colonnes : l’application (utilisation, apparence, démarrage et mises à jour, fenêtre à l’ouverture, raccourci, à propos), CurseForge (installation, dossier des
 instances, compte), Modrinth et Hangar,
 puis le Studio (dossier des contenus, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
 s’empilent sur une seule colonne.
@@ -104,6 +104,20 @@ cours, quitter demande d’abord une confirmation.
   l’installe d’elle-même en s’ouvrant, puis redémarre. Désactivé, la mise à jour reste proposée en haut de la fenêtre
   et s’installe en un clic. Voir [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique-au-démarrage).
 
+## Fenêtre à l’ouverture
+
+Où et à quelle taille la fenêtre s’ouvre : au lancement, et chaque fois qu’on la rouvre alors qu’elle tournait en
+arrière-plan (clic sur l’icône de la zone de notification, menu Démarrer, raccourci). Une fenêtre déjà affichée ou
+seulement réduite dans la barre des tâches revient simplement devant, sans bouger.
+
+- **Grande fenêtre** (par défaut) : agrandie sur l’écran principal.
+- **Taille et position choisies** : un plan des écrans montre la future fenêtre en vert. La faire glisser choisit sa
+  position, tirer ses bords ou ses coins choisit sa taille ; au clavier, les flèches la déplacent (`Maj` : par pas de
+  50 pixels) et `Alt` + flèches la redimensionnent. **Largeur**, **Hauteur**, **Position X** et **Position Y** se
+  saisissent aussi, en pixels Windows (mise à l’échelle comprise). **Reprendre la fenêtre actuelle** enregistre la
+  taille et la position qu’elle a en ce moment. Si cet emplacement n’est plus assez visible (écran débranché), la
+  fenêtre s’ouvre en grand.
+
 ## Raccourci
 
 Indique si Modding Manager a un raccourci sur le bureau.
@@ -170,15 +184,17 @@ Le numéro de la version installée et sa date de publication.
 
 ## La fenêtre
 
-- La fenêtre s’ouvre en grand, la barre des tâches restant visible. Sa taille minimale est de 960 × 640 pixels, plus
-  si l’interface est agrandie (voir [Apparence](#apparence)).
+- La fenêtre s’ouvre en grand, la barre des tâches restant visible, ou à l’emplacement choisi dans
+  [Fenêtre à l’ouverture](#fenêtre-à-louverture). Sa taille minimale est de 960 × 640 pixels, plus si l’interface est
+  agrandie (voir [Apparence](#apparence)).
 - La barre de titre se fait glisser pour déplacer la fenêtre ; un double-clic l’agrandit ou la ramène à sa taille.
 - Les boutons de droite **réduisent**, **agrandissent** (ou ramènent au **niveau inférieur**) et **ferment** la
   fenêtre. En plein écran, le bouton du milieu en fait sortir.
 - `F11` passe en plein écran, et en fait sortir en retrouvant la taille d’avant.
-- Fermer la fenêtre quitte l’application. Pendant une publication (ou une autre opération du Studio), une
-  confirmation le demande d’abord : **Continuer** la laisse se terminer, **Fermer quand même** l’interrompt, et ce
-  qui n’était pas terminé sera repris à la publication suivante (voir
+- Fermer la fenêtre la cache : l’application continue en arrière-plan (voir
+  [Démarrage et mises à jour](#démarrage-et-mises-à-jour)). La quitter pendant une publication (ou une autre
+  opération du Studio) demande d’abord une confirmation : **Continuer** la laisse se terminer, **Fermer quand même**
+  l’interrompt, et ce qui n’était pas terminé sera repris à la publication suivante (voir
   [Une opération à la fois](publication.md#une-opération-à-la-fois)).
 
 ## Raccourcis clavier

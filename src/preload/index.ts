@@ -55,7 +55,9 @@ const api: RendererApi = {
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   toggleMaximize: () => ipcRenderer.send('window:toggleMaximize'),
   closeWindow: () => ipcRenderer.send('window:close'),
-  onWindowStateChange: (listener) => subscribe('window:state', listener)
+  onWindowStateChange: (listener) => subscribe('window:state', listener),
+  getDisplays: () => ipcRenderer.invoke('window:displays'),
+  getWindowBounds: () => ipcRenderer.invoke('window:bounds')
 }
 
 // Vue Studio (publieurs) : ranger les zips et publier les releases.

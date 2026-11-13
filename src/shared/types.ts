@@ -1,5 +1,6 @@
 import type { AppearanceSettings } from './appearance'
 import type { ContentKind, ContentLoader } from './content'
+import type { DisplayInfo, WindowPlacement, WindowRect } from './windowPlacement'
 
 /** Contenu de l'asset `modpack.json` attaché à chaque release de modpack. */
 export interface ModpackManifest {
@@ -258,6 +259,8 @@ export interface Settings {
   launchMode: 'background' | 'window'
   /** La bulle « reste ouvert en arrière-plan » a déjà été montrée à la première fermeture de la fenêtre. */
   backgroundHintShown: boolean
+  /** Taille et position de la fenêtre à son ouverture (lancement, réouverture depuis l'arrière-plan). */
+  window: WindowPlacement
   /** Style de couleurs, styles personnalisés et taille de l'interface. */
   appearance: AppearanceSettings
 }
@@ -499,4 +502,8 @@ export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuth
   toggleMaximize(): void
   closeWindow(): void
   onWindowStateChange(listener: (state: WindowState) => void): () => void
+  /** Les écrans, pour le plan de Paramètres → Fenêtre à l'ouverture. */
+  getDisplays(): Promise<DisplayInfo[]>
+  /** Taille et position actuelles de la fenêtre (hors agrandissement). */
+  getWindowBounds(): Promise<WindowRect | null>
 }

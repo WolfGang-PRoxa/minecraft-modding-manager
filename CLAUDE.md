@@ -49,8 +49,12 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - `src/main/` — processus principal Electron (un seul, une seule fenêtre). Le métier est dans `src/core/`.
   - `index.ts` : verrou d'instance, protocole `studio-media:` déclaré avant `ready`, IPC de l'app puis du studio.
     Relancée pendant qu'elle tourne (`second-instance`, éventuellement avec `--studio`) → `app:activated`.
-  - `windowState.ts` : fenêtre ouverte agrandie (barre des tâches visible), plein écran par F11 qui ramène à la taille
-    d'avant ; le bouton de la barre de titre agrandit / ramène au niveau inférieur (canaux `window:*`).
+  - `windowState.ts` : fenêtre ouverte selon le réglage `window` (`shared/windowPlacement.ts`, comme CV Studio et
+    ULA : `maximized` par défaut, ou `custom` avec `bounds`, abandonné si moins de 30 % visible) : `initialBounds` à la
+    création, `applyPlacement` à chaque réouverture d'une fenêtre cachée (`showWindow` dans `index.ts` ; une fenêtre
+    affichée ou réduite par l'utilisateur revient seulement devant). Plein écran par F11 qui ramène à la taille
+    d'avant ; le bouton de la barre de titre agrandit / ramène au niveau inférieur (canaux `window:*`, dont
+    `window:displays` et `window:bounds` pour `components/WindowPlacement.tsx`, plan des écrans des paramètres).
   - `github.ts` : lecture des releases du dépôt suivi (cache ETag sur disque, mode hors ligne), `modpack.json` via
     l'URL publique (hors quota API), mises à jour de l'app toujours lues dans `APP_REPO` (tags `app-v*`) :
     `findAppUpdate` ne propose qu'une release dont l'installeur `.exe` est en ligne.

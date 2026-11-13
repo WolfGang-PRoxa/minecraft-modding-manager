@@ -52,6 +52,7 @@ depuis les paramètres ; pour les modifier à la main, fermer d’abord l’appl
 | `autoUpdate` | Installer d’elle-même une nouvelle version de l’application à son démarrage (`true` par défaut). |
 | `launchAtStartup` | Lancer l’application au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, avec `--minimized`. |
 | `launchMode` | Lancée avec Windows : `background` (par défaut, en arrière-plan, icône de la zone de notification seulement) ou `window` (fenêtre réduite dans la barre des tâches). |
+| `window` | Taille et position de la fenêtre à l’ouverture : `mode` `maximized` (par défaut) ou `custom`, et `bounds` (`x`, `y`, `width`, `height`, en pixels Windows). |
 | `backgroundHintShown` | La bulle « reste ouvert en arrière-plan » a été montrée à la première fermeture de la fenêtre. |
 
 ## Dans un profil installé

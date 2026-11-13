@@ -16,27 +16,27 @@ import { WINDOWS_APP_ID } from './shortcut'
 import { BACKGROUND_SWITCH, launchWindow, MINIMIZED_SWITCH, syncLaunchAtStartup, type LaunchWindow } from './startup'
 import { COVER_SCHEME, registerStudio, stopStudioTasks, windowStudioTask } from './studioIpc'
 import { announceBackground, createTray, destroyTray } from './tray'
-import { applyInterfaceScale, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
+import { applyInterfaceScale, applyPlacement, initialBounds, MIN_WINDOW_SIZE, toggleFullScreen, watchWindowState } from './windowState'
 
 let mainWindow: BrowserWindow | null = null
 
 // Fermer la fenêtre la cache : l'application continue en arrière-plan, avec son icône dans la zone de notification,
 // et se rouvre aussitôt. Elle ne se ferme vraiment qu'en la quittant (menu de l'icône, mise à jour, fin de session).
 let quitting = false
-/** La fenêtre n'a encore jamais été montrée (lancement en arrière-plan) : elle s'ouvrira en grand. */
-let neverShown = true
 
-/** Montre la fenêtre (icône de la zone de notification, nouveau lancement, notification) et la met au premier plan. */
-function showWindow(view: 'library' | 'studio' | null = null): void {
-  if (!mainWindow) return
-  if (neverShown) {
-    neverShown = false
-    mainWindow.maximize()
-  }
-  if (mainWindow.isMinimized()) mainWindow.restore()
-  mainWindow.show()
-  mainWindow.focus()
-  mainWindow.webContents.send('app:activated', view)
+/**
+ * Montre la fenêtre (icône de la zone de notification, nouveau lancement, notification) et la met au premier plan.
+ * Cachée (arrière-plan, ou réduite au lancement sans avoir été montrée), elle s'ouvre à l'emplacement réglé dans
+ * Paramètres → Fenêtre à l'ouverture ; déjà affichée, elle revient simplement devant.
+ */
+async function showWindow(view: 'library' | 'studio' | null = null): Promise<void> {
+  const win = mainWindow
+  if (!win || win.isDestroyed()) return
+  if (!win.isVisible()) applyPlacement(win, (await getSettings()).window)
+  else if (win.isMinimized()) win.restore()
+  win.show()
+  win.focus()
+  win.webContents.send('app:activated', view)
 }
 
 /** Cache la fenêtre ; la première fois, une bulle rappelle que l'application tourne encore. */
@@ -59,11 +59,11 @@ function restrictPermissions(target: Session): void {
 }
 
 async function createWindow(launch: LaunchWindow): Promise<void> {
-  const { appearance } = await getSettings()
+  const { appearance, window: placement } = await getSettings()
+  const initial = initialBounds(placement)
   mainWindow = new BrowserWindow({
     title: APP_NAME,
-    width: 1440,
-    height: 900,
+    ...initial.bounds,
     minWidth: MIN_WINDOW_SIZE.width,
     minHeight: MIN_WINDOW_SIZE.height,
     frame: false,
@@ -80,20 +80,20 @@ async function createWindow(launch: LaunchWindow): Promise<void> {
     }
   })
 
-  // Ouverte en grand, la barre des tâches restant visible : le plein écran est au bout de F11. Lancée avec Windows,
-  // elle reste cachée (arrière-plan) ou s'ouvre réduite dans la barre des tâches, selon le réglage launchMode, et en
-  // grand la première fois qu'on la rouvre. Cachée, la page est tout de même chargée : la fenêtre s'affiche aussitôt.
+  // Ouverte à l'emplacement réglé (Paramètres → Fenêtre à l'ouverture ; par défaut en grand, la barre des tâches
+  // restant visible) : le plein écran est au bout de F11. Lancée avec Windows, elle reste cachée (arrière-plan) ou
+  // s'ouvre réduite dans la barre des tâches, selon le réglage launchMode, puis à cet emplacement quand on la rouvre.
+  // Cachée, la page est tout de même chargée : la fenêtre s'affiche aussitôt.
   mainWindow.once('ready-to-show', () => {
     if (!mainWindow || launch === 'hidden') return
-    neverShown = false
     if (launch === 'minimized') {
       mainWindow.minimize()
       // Lancée par l'Explorateur (démarrage de Windows, relance par l'installeur), le premier affichage de la fenêtre
       // suit la façon dont il l'a lancée (fenêtre normale) et non celle demandée : elle est réduite une seconde fois.
       if (!mainWindow.isMinimized()) mainWindow.minimize()
-      mainWindow.once('restore', () => mainWindow?.maximize())
+      if (initial.maximize) mainWindow.once('restore', () => mainWindow?.maximize())
     } else {
-      mainWindow.maximize()
+      if (initial.maximize) mainWindow.maximize()
       mainWindow.show()
     }
   })
@@ -136,7 +136,7 @@ async function createWindow(launch: LaunchWindow): Promise<void> {
     event.preventDefault()
     // Quitter est remis à plus tard : la croix doit de nouveau cacher la fenêtre.
     quitting = false
-    showWindow()
+    void showWindow()
     void dialog
       .showMessageBox(mainWindow, {
         type: 'warning',
@@ -206,7 +206,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
   // premier plan, même cachée en arrière-plan. Un lancement avec Windows en double ne la montre pas.
   app.on('second-instance', (_event, argv) => {
     if (argv.includes(MINIMIZED_SWITCH) || argv.includes(BACKGROUND_SWITCH)) return
-    showWindow(argv.includes('--studio') ? 'studio' : null)
+    void showWindow(argv.includes('--studio') ? 'studio' : null)
   })
 
   app.on('before-quit', () => {
@@ -225,7 +225,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     registerIpc(() => mainWindow, { ...launch, autoUpdate: autoUpdateOnLaunch(settings.autoUpdate, launch.justUpdated) })
     await registerStudio(() => mainWindow)
     await createWindow(launchWindow(process.argv, settings.launchMode))
-    await createTray({ open: showWindow, quit: () => app.quit() }).catch((err) => console.warn('Icône de la zone de notification impossible :', err))
+    await createTray({ open: (view) => void showWindow(view), quit: () => app.quit() }).catch((err) => console.warn('Icône de la zone de notification impossible :', err))
   })
 
   app.on('window-all-closed', () => app.quit())

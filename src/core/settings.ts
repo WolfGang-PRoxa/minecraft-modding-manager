@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import { DEFAULT_APPEARANCE, normalizeAppearance } from '../shared/appearance'
 import { APP_REPO } from '../shared/config'
 import { isRepoRef } from '../shared/repo'
+import { DEFAULT_WINDOW_PLACEMENT, normalizeWindowPlacement } from '../shared/windowPlacement'
 import type { Settings } from '../shared/types'
 import { readJson, writeJsonAtomic } from './fsutil'
 import { currentRepoName, migrateDataDir } from './previousIdentity'
@@ -21,6 +22,7 @@ const DEFAULTS: Settings = {
   launchAtStartup: true,
   launchMode: 'background',
   backgroundHintShown: false,
+  window: DEFAULT_WINDOW_PLACEMENT,
   appearance: DEFAULT_APPEARANCE
 }
 
@@ -55,6 +57,7 @@ export async function getSettings(): Promise<Settings> {
     launchAtStartup: stored?.launchAtStartup !== false,
     launchMode: stored?.launchMode === 'window' ? 'window' : 'background',
     backgroundHintShown: stored?.backgroundHintShown === true,
+    window: normalizeWindowPlacement(stored?.window),
     appearance: normalizeAppearance(stored?.appearance)
   }
 }

@@ -18,8 +18,9 @@ import { getSettings, updateSettings } from '../core/settings'
 import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut'
 import { syncLaunchAtStartup } from './startup'
 import { studioTask } from './studioIpc'
-import { applyInterfaceScale, toggleMaximize } from './windowState'
+import { applyInterfaceScale, describeDisplays, toggleMaximize } from './windowState'
 import { normalizeAppearance } from '../shared/appearance'
+import { normalizeWindowPlacement } from '../shared/windowPlacement'
 
 export function registerIpc(
   getWindow: () => BrowserWindow | null,
@@ -99,6 +100,7 @@ export function registerIpc(
     if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate
     if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup
     if (patch.launchMode === 'background' || patch.launchMode === 'window') allowed.launchMode = patch.launchMode
+    if (patch.window) allowed.window = normalizeWindowPlacement(patch.window)
     if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance)
     return updateSettings(allowed).then((settings) => {
       const win = getWindow()
@@ -165,4 +167,9 @@ export function registerIpc(
     if (win) toggleMaximize(win)
   })
   ipcMain.on('window:close', () => getWindow()?.close())
+  ipcMain.handle('window:displays', () => describeDisplays())
+  ipcMain.handle('window:bounds', () => {
+    const win = getWindow()
+    return win && !win.isDestroyed() ? win.getNormalBounds() : null
+  })
 }

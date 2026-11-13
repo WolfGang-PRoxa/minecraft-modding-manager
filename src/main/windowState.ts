@@ -1,8 +1,55 @@
 import { screen, type BrowserWindow } from 'electron'
 import type { WindowState } from '../shared/types'
+import { MIN_WINDOW_SIZE, usableBounds, type DisplayInfo, type WindowPlacement, type WindowRect } from '../shared/windowPlacement'
 
-/** Taille minimale de la fenêtre à la taille normale de l'interface. */
-export const MIN_WINDOW_SIZE = { width: 960, height: 640 }
+export { MIN_WINDOW_SIZE }
+
+/** Les écrans, en pixels indépendants de la résolution (DIP), pour le plan des paramètres. */
+export function describeDisplays(): DisplayInfo[] {
+  const primaryId = screen.getPrimaryDisplay().id
+  return screen.getAllDisplays().map((display, index) => ({
+    index: index + 1,
+    primary: display.id === primaryId,
+    bounds: display.bounds,
+    workArea: display.workArea
+  }))
+}
+
+const customBounds = (placement: WindowPlacement): WindowRect | null =>
+  usableBounds(placement, screen.getAllDisplays().map((display) => display.workArea))
+
+/** Emplacement de la fenêtre à sa création, et si elle doit ensuite s'agrandir. */
+export function initialBounds(placement: WindowPlacement): { bounds: WindowRect; maximize: boolean } {
+  const custom = customBounds(placement)
+  if (custom) return { bounds: custom, maximize: false }
+  const { workArea } = screen.getPrimaryDisplay()
+  const width = Math.min(1440, workArea.width)
+  const height = Math.min(900, workArea.height)
+  return {
+    bounds: { x: workArea.x + Math.round((workArea.width - width) / 2), y: workArea.y + Math.round((workArea.height - height) / 2), width, height },
+    maximize: true
+  }
+}
+
+/**
+ * Place la fenêtre selon le réglage, à son ouverture : agrandie sur l'écran principal, ou à l'emplacement
+ * personnalisé (s'il est encore visible). Sort d'abord du plein écran et de la réduction.
+ */
+export function applyPlacement(win: BrowserWindow, placement: WindowPlacement): void {
+  if (win.isDestroyed()) return
+  if (win.isFullScreen()) win.setFullScreen(false)
+  if (win.isMinimized()) win.restore()
+  const custom = customBounds(placement)
+  if (!custom) {
+    // Agrandie sur l'écran principal : la fenêtre y est d'abord ramenée.
+    if (win.isMaximized()) win.unmaximize()
+    win.setBounds(initialBounds({ ...placement, mode: 'maximized' }).bounds)
+    win.maximize()
+    return
+  }
+  if (win.isMaximized()) win.unmaximize()
+  win.setBounds(custom)
+}
 
 /**
  * Taille de l'interface (Paramètres → Apparence) : zoom de la page, et taille minimale agrandie d'autant pour que la

@@ -12,6 +12,7 @@ import { ClaudeCodeSetting, CurseForgeAccountSetting, HangarAccountSetting, Main
 import { MAINTENANCE_SETTINGS_ID } from '../studio/maintenanceStore'
 import { PlayerUsageSection } from './Usage'
 import { AppearanceSection } from './Appearance'
+import { WindowPlacementSection } from './WindowPlacement'
 import { APP_NAME } from '../../../shared/config'
 
 const SOURCE_LABELS = {
@@ -188,6 +189,12 @@ export function SettingsDialog() {
     </Section>
   )
 
+  const windowSection = (
+    <Section key="window" title="Fenêtre à l’ouverture">
+      <WindowPlacementSection />
+    </Section>
+  )
+
   const startup = (
     <Section key="startup" title="Démarrage et mises à jour">
       <div className="flex items-center justify-between gap-6">
@@ -305,18 +312,18 @@ export function SettingsDialog() {
   // son apparence, CurseForge, puis le travail du Studio.
   const columns = !publisher
     ? [
-        [usage, appearanceSection],
+        [usage, appearanceSection, windowSection],
         [curseForgeSection, instances, startup, shortcutSection, about]
       ]
     : wide
       ? [
-          [usage, appearanceSection, startup, shortcutSection, about],
+          [usage, appearanceSection, startup, windowSection, shortcutSection, about],
           [curseForgeSection, instances, curseForgeAccount, modrinthAccount, hangarAccount],
           [workspace, maintenance, claude]
         ]
       : [
           [usage, appearanceSection, curseForgeSection, instances],
-          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, startup, shortcutSection, about]
+          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, startup, windowSection, shortcutSection, about]
         ]
 
   return (

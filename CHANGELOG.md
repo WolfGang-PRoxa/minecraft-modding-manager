@@ -8,6 +8,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- **Paramètres → Fenêtre à l’ouverture** : la fenêtre s’ouvre en grand (par défaut) ou à la taille et à la position
+  choisies sur un plan des écrans, au lancement comme quand on la rouvre depuis l’arrière-plan.
+
 ### Améliorations
 
 - Fermer la fenêtre ne quitte plus l’application : elle continue en arrière-plan, avec son icône dans la zone de
