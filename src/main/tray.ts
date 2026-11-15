@@ -7,14 +7,22 @@ import { APP_NAME } from '../shared/config'
 
 let tray: Tray | null = null
 
-/** Icône de l'exécutable une fois installée ; en développement (electron.exe), celle du dépôt. */
-async function trayImage(): Promise<NativeImage> {
-  if (app.isPackaged) {
-    const icon = await app.getFileIcon(process.execPath, { size: 'normal' }).catch(() => null)
-    if (icon && !icon.isEmpty()) return icon
+/**
+ * Logo de l'application (build/icon.png, embarqué dans le paquet), en une image par échelle d'affichage : 16 px à
+ * 100 %, 20 px à 125 %, 24 px à 150 %, 32 px à 200 %… Windows prend celle de l'écran. Pas `app.getFileIcon` sur
+ * l'exécutable : ses icônes y sont rangées en PNG et Electron n'en tire que l'icône générique de Windows (constaté le
+ * 2026-11-15 sur la 2.4.0), méconnaissable dans le menu des icônes cachées.
+ */
+function trayImage(): NativeImage {
+  const logo = nativeImage.createFromPath(join(app.getAppPath(), 'build', 'icon.png'))
+  if (logo.isEmpty()) throw new Error('logo introuvable (build/icon.png)')
+  const image = nativeImage.createEmpty()
+  for (const scaleFactor of [1, 1.25, 1.5, 2, 2.5, 3]) {
+    const size = Math.round(16 * scaleFactor)
+    const buffer = logo.resize({ width: size, height: size, quality: 'best' }).toPNG()
+    image.addRepresentation({ scaleFactor, width: size, height: size, buffer })
   }
-  const png = nativeImage.createFromPath(join(app.getAppPath(), 'build', 'icon.png'))
-  return png.isEmpty() ? png : png.resize({ width: 32, height: 32 })
+  return image
 }
 
 export interface TrayActions {
@@ -26,7 +34,7 @@ export interface TrayActions {
 
 export async function createTray(actions: TrayActions): Promise<void> {
   if (tray) return
-  tray = new Tray(await trayImage())
+  tray = new Tray(trayImage())
   tray.setToolTip(APP_NAME)
   tray.on('click', () => actions.open(null))
   tray.on('double-click', () => actions.open(null))

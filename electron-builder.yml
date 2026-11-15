@@ -10,6 +10,8 @@ directories:
 files:
   - out/**/*
   - package.json
+  # Logo de l'icône de la zone de notification (src/main/tray.ts).
+  - build/icon.png
 asarUnpack: []
 # mpm.cmd : les commandes du moteur dans le terminal, à côté de l'exécutable.
 extraFiles:

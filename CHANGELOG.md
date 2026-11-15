@@ -8,6 +8,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Corrections
+
+- L’icône de l’application dans la zone de notification (et dans le menu des icônes cachées) montre de nouveau son
+  logo, au lieu de l’icône générique de Windows qui la rendait méconnaissable.
+
 ## [2.4.0] - 2026-11-13
 
 ### Ajouts

@@ -78,7 +78,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     désinstallation. `launchWindow` : `--minimized` (lancement avec Windows) → fenêtre cachée si `launchMode`
     `background` (défaut), sinon réduite ; `--background` (relance par l'installeur d'une app qui tournait en
     arrière-plan) → cachée. La fenêtre est créée et chargée même cachée, agrandie au premier affichage.
-  - `tray.ts` : icône de la zone de notification (clic : ouvrir ; clic droit : Ouvrir, Bibliothèque / Studio pour un
+  - `tray.ts` : icône de la zone de notification, tirée de `build/icon.png` (embarqué par `files` ; pas
+    `getFileIcon` : les icônes PNG de l'exécutable donnent l'icône générique de Windows) (clic : ouvrir ; clic droit : Ouvrir, Bibliothèque / Studio pour un
     publieur, Quitter). `index.ts` : la croix (et tout `close` hors `before-quit` / `session-end`) cache la fenêtre au
     lieu de la fermer, bulle la première fois (`backgroundHintShown`) ; seul quitter ferme vraiment, avec la
     confirmation d'une tâche du Studio en cours. `second-instance` montre la fenêtre (sauf `--minimized` /
@@ -415,7 +416,7 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   ou numéro déclaré par le fichier). Jamais `pack-` ni `modpack.json` hors modpack : les apps installées (≤ 1.9.3)
   prennent pour un modpack toute release qui porte l'un ou l'autre. `computePlan` ne traite que `pack-`.
 - `build/icon.png` — le logo (PNG RVBA 1024 × 1024), seule source : `Logo` (renderer) l'importe, electron-builder en
-  tire l'icône de l'exécutable et de l'installeur, `shortcut.ts` celle du raccourci en développement,
+  tire l'icône de l'exécutable et de l'installeur, `shortcut.ts` celle du raccourci en développement, `tray.ts` celle de la zone de notification,
   `scripts/generate-installer-images.ts` les images des fenêtres de l'installeur (lecture PNG : `scripts/png.ts`, sans
   dépendance, RVB ou RVBA 8 bits). Changer de logo = remplacer ce fichier.
   `presence.ts` : `findPresentVersions` — un profil installé par l'app est reconnu à son marqueur, les autres à
