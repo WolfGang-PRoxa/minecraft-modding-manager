@@ -8,6 +8,27 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Mises à jour des mods : un fichier que son auteur réserve au téléchargement depuis CurseForge n’est plus laissé de
+  côté. L’application le prend sur le site de CurseForge, comme depuis un navigateur, dans une fenêtre cachée, et ne
+  le garde que si son empreinte est celle publiée. Les mises à jour automatiques en profitent aussi.
+
+### Corrections
+
+- Mises à jour automatiques : une mise à jour qui a passé les tests mais n’a pas pu être reportée dans le profil
+  (CurseForge qui ne se ferme pas, relancé aussitôt par Overwolf) reste à valider, avec la raison, au lieu de compter
+  comme un échec.
+- Mises à jour automatiques : une mise à jour qui a besoin d’un mod impossible à télécharger n’est plus appliquée à
+  l’essai, où elle empêchait le jeu de démarrer ; elle reste à faire dans CurseForge.
+- Mises à jour automatiques : quand la partie de test échoue aussi sur le profil d’origine, les mises à jour ne sont
+  plus tenues pour responsables : seul le serveur les départage, et la publication automatique attend une validation.
+- Test avec des joueurs : les profils sous Forge 47.4.28 (et toute version dont CurseForge n’a pas encore préparé le
+  jeu) ne plantent plus avant de rejoindre la partie (« Modules minecraft and _1._20._1 export package… »).
+- Claude dans la boucle : une analyse d’échec qui n’aboutit pas (Claude Code introuvable, connexion expirée, délai
+  dépassé…) affiche **Analyse impossible** avec la raison, notée aussi dans le journal, au lieu de disparaître sans
+  trace.
+
 ## [2.4.1] - 2026-11-16
 
 ### Corrections

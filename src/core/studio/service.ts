@@ -59,6 +59,7 @@ import { lastReport, reportsBySignature, reportsForSignature, saveReport, testCl
 import { runServerTest } from '../gameTests/serverTest'
 import { checkProfileFiles } from '../gameTests/staticChecks'
 import { checkUpdates } from '../updates'
+import type { SiteDownload } from '../addonFiles'
 import type { OperationLock } from '../lock'
 import { AnalysisCache, describeError, MAX_ASSET_SIZE, StudioError, type CachedAnalysis } from './analyze'
 import { findExcludedInZip, stripExcludedFromZip, zipFolder, zipInstance } from './archive'
@@ -173,6 +174,11 @@ export interface StudioServiceOptions {
   getModrinthClient?(): Promise<ModrinthClient>
   /** Client Hangar avec la clé du publieur (publication des plugins). */
   getHangarClient?(): Promise<HangarClient>
+  /**
+   * Téléchargement depuis le site de CurseForge (fenêtre cachée de l'application) : les fichiers que l'API ne sert pas
+   * deviennent applicables. Sans lui (ligne de commande), ils restent à mettre à jour dans CurseForge.
+   */
+  siteDownload?: SiteDownload
 }
 
 /** Ce qu'une opération a donné, pour le journal. */
@@ -1378,7 +1384,10 @@ export class StudioService {
   /** Ce qu'une mise à jour du profil changerait (lecture seule). */
   async checkUpdates(profilePath: string, channel: UpdateChannel = 'release', pinned: number[] = []): Promise<UpdatePlan> {
     const profile = await this.profileAt(profilePath)
-    return checkUpdates(profile.path, await this.curseForge(), { channel, pinned })
+    const plan = await checkUpdates(profile.path, await this.curseForge(), { channel, pinned })
+    // Avec le site, un fichier que l'API ne sert pas se télécharge quand même (page de son projet connue).
+    if (this.options.siteDownload) for (const u of plan.updates) u.downloadable ||= u.url !== null
+    return plan
   }
 
   /** Crée « <profil> (essai) » avec les mises à jour (toutes, ou celles des projets `only`). */
@@ -1392,7 +1401,7 @@ export class StudioService {
       async () => {
         const client = await this.curseForge()
         const plan = await checkUpdates((await this.profileAt(profilePath)).path, client, { channel: options.channel, pinned: options.pinned })
-        return applyToTrial(plan, { getFiles: (ids) => client.getFiles(ids), getMods: (ids) => client.getMods(ids), download: (f, d) => client.download(f, d) }, { only: options.only, onProgress })
+        return applyToTrial(plan, { getFiles: (ids) => client.getFiles(ids), getMods: (ids) => client.getMods(ids), download: (f, d) => client.download(f, d), siteDownload: this.options.siteDownload }, { only: options.only, onProgress })
       },
       (r) => ({
         ok: true,

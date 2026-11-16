@@ -1,5 +1,6 @@
 // Mise à jour d'un profil par une copie d'essai : appliquer à l'essai, puis reporter dans le profil d'origine.
 import assert from 'node:assert/strict'
+import { createHash } from 'node:crypto'
 import { readdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
@@ -115,6 +116,69 @@ describe('mises à jour par une copie d’essai', () => {
     assert.deepEqual([beta.installedFile.id, beta.isEnabled, beta.fileNameOnDisk], [201, false, 'beta-new.jar.disabled'])
     assert.equal(await readFile(join(profile, 'saves', 'Monde', 'level.dat'), 'utf8'), 'mon monde')
     assert.equal(await readFile(join(profile, 'config', 'alpha.toml'), 'utf8'), 'réglage du publieur')
+  })
+})
+
+describe('fichiers que l’API ne sert pas', () => {
+  let root: { dir: string; cleanup: () => Promise<void> }
+  after(() => root.cleanup())
+
+  it('les télécharge depuis le site (empreinte vérifiée) ; une dépendance impossible retient ce qui la demande', async () => {
+    root = await tempDir()
+    const profile = await makeInstance(join(root.dir, 'Instances'), 'Profil Site', {
+      mods: [
+        { file: 'alpha-old.jar', addonId: 1, name: 'Alpha' },
+        { file: 'beta-old.jar', addonId: 2, name: 'Beta' },
+        { file: 'gamma-old.jar', addonId: 3, name: 'Gamma' }
+      ]
+    })
+    const sha1 = (text: string) => [{ value: createHash('sha1').update(text).digest('hex'), algo: 1 }]
+    const files = [
+      file(101, 1, 'alpha-new.jar'),
+      { ...file(201, 2, 'beta-new.jar', false), hashes: sha1('le vrai beta') },
+      { ...file(301, 3, 'gamma-new.jar', false), hashes: sha1('depuis le site') },
+      file(902, 8, 'mystic-new.jar', false)
+    ]
+    const site = (name: string, from: number | null, to: CfFile, url: string | null) => ({ ...update(Number(to.modId), name, from, to), url })
+    const plan: UpdatePlan = {
+      profile: 'Profil Site',
+      profilePath: profile,
+      minecraftVersion: '1.20.1',
+      modLoader: 'forge-47.4.0',
+      channel: 'release',
+      checked: 3,
+      updates: [
+        update(1, 'Alpha', 100, files[0]),
+        site('Beta', 200, files[1], 'https://www.curseforge.com/minecraft/mc-mods/beta'),
+        site('Gamma', 300, files[2], 'https://www.curseforge.com/minecraft/mc-mods/gamma/'),
+        { ...site('Mystic', null, files[3], null), requiredBy: ['Alpha'] }
+      ],
+      pinned: [],
+      untracked: [],
+      warnings: []
+    }
+    const pages: string[] = []
+    const result = await applyToTrial(plan, {
+      getFiles: async (ids) => files.filter((f) => ids.includes(f.id)),
+      getMods: async () => [],
+      download: async (f, destination) => writeFile(destination, `contenu de ${f.fileName}`),
+      siteDownload: async (page, destination) => {
+        pages.push(page)
+        await writeFile(destination, 'depuis le site')
+      }
+    })
+    assert.deepEqual(result.applied.map((u) => u.name), ['Gamma'])
+    assert.deepEqual(
+      result.skipped.map((s) => [s.update.name, s.reason]),
+      [
+        ['Alpha', 'il demande Mystic, qui n’a pas pu être téléchargé'],
+        ['Beta', 'beta-new.jar, téléchargé depuis le site de CurseForge, n’est pas le fichier attendu (empreinte différente).'],
+        ['Mystic', 'son auteur n’autorise le téléchargement que depuis CurseForge']
+      ]
+    )
+    assert.deepEqual(pages, ['https://www.curseforge.com/minecraft/mc-mods/beta/download/201', 'https://www.curseforge.com/minecraft/mc-mods/gamma/download/301'])
+    assert.deepEqual((await readdir(join(result.trialPath, 'mods'))).sort(), ['alpha-old.jar', 'beta-old.jar', 'gamma-new.jar'])
+    assert.equal(await readFile(join(result.trialPath, 'mods', 'gamma-new.jar'), 'utf8'), 'depuis le site')
   })
 })
 

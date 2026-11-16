@@ -94,11 +94,16 @@ export async function reconnectPrevious(previousServerName: string, previousExec
 /**
  * Pose une question à Claude Code sans fenêtre (`claude -p`, demande par l'entrée standard) avec, pour seuls outils,
  * ceux donnés du serveur MCP de cette installation : ni fichiers, ni commandes, ni autres serveurs. Renvoie sa
- * réponse, ou null si Claude Code est absent ou n'a pas répondu à temps.
+ * réponse, ou la raison pour laquelle il n'en a pas donné (absent, arrêté sur une erreur, trop long…).
  */
-export async function askClaude(prompt: string, tools: string[], timeoutMs = 10 * 60_000): Promise<string | null> {
+export async function askClaude(
+  prompt: string,
+  tools: string[],
+  timeoutMs = 10 * 60_000
+): Promise<{ ok: true; answer: string } | { ok: false; error: string }> {
   const claude = await findClaude()
-  if (!claude || /\.cmd$/i.test(claude)) return null
+  if (!claude) return { ok: false, error: 'Claude Code est introuvable sur ce PC.' }
+  if (/\.cmd$/i.test(claude)) return { ok: false, error: 'Seul Claude Code installé en version native (claude.exe) peut analyser les échecs.' }
   const { command, args } = mcpLaunch()
   const mcpConfig = JSON.stringify({ mcpServers: { [MCP_SERVER_NAME]: { command, args, env: { ELECTRON_RUN_AS_NODE: '1' } } } })
   const claudeArgs = [
@@ -113,16 +118,38 @@ export async function askClaude(prompt: string, tools: string[], timeoutMs = 10 
   return new Promise((resolve) => {
     const env = { ...process.env }
     delete env.ELECTRON_RUN_AS_NODE
-    const child = spawn(claude, claudeArgs, { windowsHide: true, cwd: tmpdir(), env })
+    let child: ReturnType<typeof spawn>
+    try {
+      child = spawn(claude, claudeArgs, { windowsHide: true, cwd: tmpdir(), env })
+    } catch (err) {
+      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${(err as Error).message}` })
+      return
+    }
     let out = ''
-    child.stdout.on('data', (d: Buffer) => (out += d.toString()))
-    const timer = setTimeout(() => child.kill(), timeoutMs)
-    child.on('error', () => resolve(null))
+    let err = ''
+    let timedOut = false
+    child.stdout!.on('data', (d: Buffer) => (out += d.toString()))
+    child.stderr!.on('data', (d: Buffer) => (err += d.toString()))
+    const timer = setTimeout(() => {
+      timedOut = true
+      child.kill()
+    }, timeoutMs)
+    child.on('error', (e) => {
+      clearTimeout(timer)
+      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${e.message}` })
+    })
     child.on('close', (code) => {
       clearTimeout(timer)
-      resolve(code === 0 && out.trim() ? out.trim() : null)
+      const answer = out.trim()
+      if (timedOut) resolve({ ok: false, error: `Pas de réponse de Claude Code au bout de ${Math.round(timeoutMs / 60_000)} minutes.` })
+      else if (code === 0 && answer) resolve({ ok: true, answer })
+      else {
+        // Ce que Claude Code a dit en s'arrêtant (connexion expirée, limite d'utilisation…), sa fin seulement.
+        const said = (err.trim() || answer).replace(/\s+/g, ' ').slice(-400)
+        resolve({ ok: false, error: `Claude Code s’est arrêté sans réponse (code ${code ?? '?'})${said ? ` : ${said}` : '.'}` })
+      }
     })
-    child.stdin.end(prompt)
+    child.stdin!.end(prompt)
   })
 }
 

@@ -172,8 +172,9 @@ Le détail d’un profil a une partie **Mises à jour des mods**. Elle demande l
    CurseForge, la version la plus récente pour la même version de Minecraft et le même chargeur. Une mise à jour qui
    demande un mod absent du profil l’ajoute (**ajouté**, avec le mod qui le demande). **Bêtas comprises** accepte
    aussi les versions bêta. Les mods posés à la main dans `mods` sont signalés mais jamais mis à jour.
-2. Décocher ce qui ne doit pas être mis à jour. Une mise à jour **à faire dans CurseForge** ne peut pas être cochée :
-   son auteur n’autorise le téléchargement que depuis CurseForge.
+2. Décocher ce qui ne doit pas être mis à jour. Un fichier que son auteur réserve au téléchargement depuis
+   CurseForge est pris sur le site de CurseForge, dans une fenêtre cachée, puis vérifié. Une mise à jour **à faire
+   dans CurseForge** (page du projet inconnue) ne peut pas être cochée.
 3. **Créer l’essai** crée à côté du profil une copie, `<profil> (essai)`, avec les mises à jour cochées. Le profil
    d’origine n’est pas touché.
 4. **Relancer CurseForge** : l’essai y apparaît (dans le même dossier que le profil). Une partie dessus permet de

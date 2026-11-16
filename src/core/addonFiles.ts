@@ -3,7 +3,7 @@
 // mise à jour dans le format de CurseForge (voir CLAUDE.md, « Faits CurseForge »). À n'utiliser que sur une copie
 // d'essai : le profil d'origine du publieur n'est jamais modifié ainsi.
 import { createHash, randomUUID } from 'node:crypto'
-import { createWriteStream } from 'node:fs'
+import { createReadStream, createWriteStream } from 'node:fs'
 import { mkdir, rename, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { Readable } from 'node:stream'
@@ -92,6 +92,39 @@ export async function downloadCurseForgeFile(file: CfFile, destination: string, 
 
 /** Télécharge un fichier vers sa destination (avec la clé de l'API : CurseForgeClient.download). */
 export type Download = (file: CfFile, destination: string) => Promise<void>
+
+/**
+ * Téléchargement depuis le site de CurseForge, comme le ferait le publieur : la page du fichier est ouverte et le
+ * fichier qu'elle envoie est écrit à `destination`. Fourni par l'application (fenêtre cachée), absent en ligne de
+ * commande. Sert aux fichiers que l'API ne sert pas (l'auteur n'autorise que CurseForge).
+ */
+export type SiteDownload = (pageUrl: string, destination: string) => Promise<void>
+
+/** Page de téléchargement d'un fichier sur le site de CurseForge, d'après la page de son projet. */
+export const curseForgeFilePage = (projectUrl: string, fileId: number) => `${projectUrl.replace(/\/+$/, '')}/download/${fileId}`
+
+/** Le téléchargement depuis le site, vérifié par l'empreinte SHA-1 de l'API : le fichier n'apparaît qu'une fois vérifié. */
+export function siteDownloader(site: SiteDownload, projectUrl: string): Download {
+  return async (file, destination) => {
+    const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase()
+    if (!expected) throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`)
+    const part = `${destination}.part`
+    try {
+      await site(curseForgeFilePage(projectUrl, file.id), part)
+      if ((await sha1Of(part)) !== expected) throw new StudioError(`${file.fileName}, téléchargé depuis le site de CurseForge, n’est pas le fichier attendu (empreinte différente).`)
+      await rename(part, destination)
+    } catch (err) {
+      await rm(part, { force: true })
+      throw err
+    }
+  }
+}
+
+async function sha1Of(path: string): Promise<string> {
+  const hash = createHash('sha1')
+  for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer)
+  return hash.digest('hex')
+}
 
 /**
  * Remplace dans le profil le fichier d'un projet par `file` : téléchargement, puis ancien fichier retiré et entrée de

@@ -13,6 +13,7 @@ import { moveToRecycleBin } from '../powershell'
 import { getSettings } from '../settings'
 import { StudioError } from '../studio/analyze'
 import { StudioService } from '../studio/service'
+import type { SiteDownload } from '../addonFiles'
 import { defaultWorkspaceDir, loadWorkspaceDir, previousDefaultWorkspaceDir } from '../studio/settings'
 import type { CommandContext } from './registry'
 
@@ -28,6 +29,8 @@ export interface ContextOptions {
   onAnalyzing?(fileName: string | null): void
   /** Ce que la tâche planifiée lance ; par défaut l'application installée, si c'est elle qui exécute ces commandes. */
   launcher?: MaintenanceLauncher | null
+  /** Téléchargement depuis le site de CurseForge : seulement dans l'application (passage de la tâche planifiée). */
+  siteDownload?: SiteDownload
 }
 
 /** mpm de l'application installée : son exécutable, lancé en mode Node sur le cli.js de son app.asar. */
@@ -72,6 +75,7 @@ export async function createCommandRuntime(options: ContextOptions): Promise<{
     getCurseForgeUploader: () => CurseForgeUploader.create({ dotenvDir: options.dotenvDir }),
     getModrinthClient: () => ModrinthClient.create({ dotenvDir: options.dotenvDir }),
     getHangarClient: () => HangarClient.create({ dotenvDir: options.dotenvDir }),
+    siteDownload: options.siteDownload,
     ...operationTools(options.holder)
   })
   const lock = maintenanceLock(options.holder)

@@ -120,7 +120,13 @@ export async function maintainPack(pack: PackView, options: MaintenanceOptions):
       played = 'pas de partie avec des joueurs'
     }
     if (!server || server.outcome !== 'started') return recordFor(pack, 'failed', `Test du serveur : ${server?.message ?? players.message}`, base)
-    if (players.outcome === 'failed') return recordFor(pack, 'failed', `Partie de test : ${players.message}`, base)
+    if (players.outcome === 'failed') {
+      // Le profil d'origine ne passe pas non plus la partie : ce ne sont pas les mises à jour (jeu mal installé, test
+      // qui ne sait pas lancer ce jeu…). Seul le serveur départage, et la publication automatique est retenue.
+      if (reference.players?.outcome !== 'failed') return recordFor(pack, 'failed', `Partie de test : ${players.message}`, base)
+      warnings.push(`Partie avec des joueurs impossible, profil d’origine compris : ${reference.players.message} Seul le serveur a été comparé.`)
+      played = 'la partie avec des joueurs échoue aussi sur le profil d’origine'
+    }
 
     // Seules les erreurs comptent : les avertissements changent trop d'un lancement à l'autre.
     const errorsOnly = (issues: ReturnType<typeof newIssues>) => issues.filter((i) => i.level === 'error')
@@ -143,7 +149,14 @@ export async function maintainPack(pack: PackView, options: MaintenanceOptions):
     if (!pack.updates.autoPublish) return ready
     if (warnings.length) return { ...ready, message: `${ready.message} Publication automatique retenue : regarde les points signalés.` }
     await saveRecord(ready)
-    return await createVersion(pack, ready, { ...options, publish: true })
+    try {
+      return await createVersion(pack, ready, { ...options, publish: true })
+    } catch (err) {
+      // Essai encore là : rien n'a été reporté (CurseForge resté ouvert, Minecraft lancé…). Les mises à jour ont
+      // passé les tests : elles restent à valider plutôt que de compter comme un échec.
+      if (!(await pathExists(ready.trialPath!))) throw err
+      return { ...ready, message: `${ready.message} Publication automatique impossible : ${describeError(err)} Valide-la depuis le Studio.` }
+    }
   } catch (err) {
     return recordFor(pack, 'failed', describeError(err), base)
   }

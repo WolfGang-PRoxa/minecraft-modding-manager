@@ -3,7 +3,7 @@
 // le fichier de version du chargeur et celui du jeu dont il hérite. Le joueur est hors ligne (pseudo choisi, aucun
 // compte) et rejoint directement le serveur de test local (« quick play »).
 import { createHash } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { copyFile, link, mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { pathExists, readJson } from '../fsutil'
 import { StudioError } from '../studio/analyze'
@@ -111,6 +111,16 @@ async function extractNatives(jar: string, destination: string): Promise<void> {
   }
 }
 
+/** Copie (lien dur si possible) du jar du jeu sous le nom de la version lancée ; refaite seulement s'il a changé. */
+async function versionJarCopy(source: string, target: string): Promise<string> {
+  const [from, existing] = await Promise.all([stat(source), stat(target).catch(() => null)])
+  if (existing?.size === from.size && existing.mtimeMs >= from.mtimeMs) return target
+  await mkdir(dirname(target), { recursive: true })
+  await rm(target, { force: true })
+  await link(source, target).catch(() => copyFile(source, target))
+  return target
+}
+
 /** UUID d'un joueur hors ligne, calculé comme le fait le serveur (« OfflinePlayer:<pseudo> », version 3). */
 export function offlineUuid(name: string): string {
   const hash = createHash('md5').update(`OfflinePlayer:${name}`, 'utf8').digest()
@@ -163,10 +173,18 @@ export async function clientArguments(options: ClientLaunchOptions): Promise<str
       classpath.push(file)
     }
   }
-  // Le jar du jeu : celui de la version lancée (CurseForge le copie à côté du chargeur), sinon celui du jeu.
-  const jarCandidates = [chain[0].jar ?? chain[0].id, root.jar ?? root.id].map((id) => join(options.installDir, 'versions', id, `${id}.jar`))
-  const gameJar = (await Promise.all(jarCandidates.map(async (f) => ((await pathExists(f)) ? f : null)))).find(Boolean)
-  if (!gameJar) throw new StudioError(`Le jeu (${root.id}) n’est pas installé dans CurseForge. Lance une fois ce profil depuis CurseForge.`)
+  // Le jar du jeu : celui de la version lancée, que le lanceur copie à côté du chargeur. Son nom compte : Forge écarte
+  // `${version_name}.jar` (ignoreList) de ses modules ; sous le nom du jeu (« 1.20.1.jar »), il serait chargé en
+  // double avec Minecraft et le jeu planterait au démarrage. CurseForge ne fait pas toujours cette copie (Forge
+  // 47.4.28) : elle est alors faite dans le dossier du testeur, jamais dans celui de CurseForge.
+  const ownId = chain[0].jar ?? chain[0].id
+  const rootId = root.jar ?? root.id
+  let gameJar = join(options.installDir, 'versions', ownId, `${ownId}.jar`)
+  if (!(await pathExists(gameJar))) {
+    const rootJar = join(options.installDir, 'versions', rootId, `${rootId}.jar`)
+    if (!(await pathExists(rootJar))) throw new StudioError(`Le jeu (${root.id}) n’est pas installé dans CurseForge. Lance une fois ce profil depuis CurseForge.`)
+    gameJar = chain.length > 1 ? await versionJarCopy(rootJar, join(dirname(options.nativesDir), 'versions', ownId, `${ownId}.jar`)) : rootJar
+  }
   classpath.push(gameJar)
 
   const values: Record<string, string> = {

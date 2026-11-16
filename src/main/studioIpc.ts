@@ -21,6 +21,7 @@ import { listProfiles } from '../core/profiles'
 import { StudioService } from '../core/studio/service'
 import { defaultWorkspaceDir, loadWorkspaceDir, saveWorkspaceDir } from '../core/studio/settings'
 import { COVER_EXTENSIONS, type LocalPack } from '../core/studio/workspace'
+import { downloadFromCurseForgeSite } from './siteDownload'
 
 /** Protocole qui sert les images des modpacks à la fenêtre (déclaré avant `ready` dans index.ts). */
 export const COVER_SCHEME = 'studio-media'
@@ -143,6 +144,7 @@ export async function registerStudio(window: () => BrowserWindow | null): Promis
     getCurseForgeUploader: () => CurseForgeUploader.create(),
     getModrinthClient: () => ModrinthClient.create(),
     getHangarClient: () => HangarClient.create(),
+    siteDownload: downloadFromCurseForgeSite,
     ...operationTools('l’application')
   })
   registerCoverProtocol()

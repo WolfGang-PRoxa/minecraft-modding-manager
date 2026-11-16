@@ -6,7 +6,7 @@ import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import { CURSEFORGE_INSTANCE_FILE, TRIAL_PROFILE_SUFFIX } from '../shared/config'
 import type { AddonKind, TrialResult, UpdatePlan } from '../shared/studio'
-import { ADDON_FOLDERS, addAddon, replaceAddonFile, type Download } from './addonFiles'
+import { ADDON_FOLDERS, addAddon, replaceAddonFile, siteDownloader, type Download, type SiteDownload } from './addonFiles'
 import type { CfFile, CfMod } from './curseforgeApi'
 import { pathExists, readJson, renameWithRetry, writeJsonAtomic } from './fsutil'
 import { StudioError } from './studio/analyze'
@@ -30,6 +30,8 @@ export interface TrialSource {
   getFiles(ids: number[]): Promise<CfFile[]>
   getMods(ids: number[]): Promise<CfMod[]>
   download: Download
+  /** Pour un fichier que l'API ne sert pas (l'auteur n'autorise que CurseForge) : téléchargement depuis le site. */
+  siteDownload?: SiteDownload
 }
 
 /**
@@ -54,23 +56,35 @@ export async function applyToTrial(
   const mods = new Map(added.length ? (await source.getMods(added.map((u) => u.projectId))).map((m) => [m.id, m]) : [])
 
   const result: TrialResult = { trialPath, applied: [], skipped: [] }
-  for (const [i, update] of updates.entries()) {
+  // Les dépendances ajoutées d'abord : une mise à jour dont une dépendance obligatoire n'a pas pu être posée n'est pas
+  // appliquée (elle empêcherait le jeu de démarrer), elle reste à faire dans CurseForge.
+  const blocked = new Map<string, string>()
+  const ordered = [...updates.filter((u) => !u.from), ...updates.filter((u) => u.from)]
+  for (const [i, update] of ordered.entries()) {
     options.onProgress?.(i, updates.length, update.name)
     const file = files.get(update.to.fileId)
     try {
+      const missing = blocked.get(update.name)
+      if (missing) throw new StudioError(`il demande ${missing}, qui n’a pas pu être téléchargé`)
       if (!file) throw new StudioError('fichier introuvable sur CurseForge')
-      if (!file.downloadUrl) throw new StudioError('son auteur n’autorise le téléchargement que depuis CurseForge')
-      if (update.from) await replaceAddonFile(trialPath, instance, update.projectId, update.kind, file as CfFile & Json, source.download)
+      const download = file.downloadUrl ? source.download : source.siteDownload && update.url ? siteDownloader(source.siteDownload, update.url) : null
+      if (!download) throw new StudioError('son auteur n’autorise le téléchargement que depuis CurseForge')
+      if (update.from) await replaceAddonFile(trialPath, instance, update.projectId, update.kind, file as CfFile & Json, download)
       else {
         const mod = mods.get(update.projectId)
         if (!mod) throw new StudioError('projet introuvable sur CurseForge')
-        await addAddon(trialPath, instance, mod, update.kind, file as CfFile & Json, source.download)
+        await addAddon(trialPath, instance, mod, update.kind, file as CfFile & Json, download)
       }
       result.applied.push(update)
     } catch (err) {
       result.skipped.push({ update, reason: err instanceof Error ? err.message : String(err) })
+      for (const name of update.requiredBy) if (!blocked.has(name)) blocked.set(name, update.name)
     }
   }
+  // Dans l'ordre du plan, comme avant.
+  const rank = (u: (typeof updates)[number]) => updates.indexOf(u)
+  result.applied.sort((a, b) => rank(a) - rank(b))
+  result.skipped.sort((a, b) => rank(a.update) - rank(b.update))
   options.onProgress?.(updates.length, updates.length, '')
   await writeJsonAtomic(join(trialPath, CURSEFORGE_INSTANCE_FILE), instance)
   return result

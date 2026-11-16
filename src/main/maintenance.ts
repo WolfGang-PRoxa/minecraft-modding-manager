@@ -9,11 +9,12 @@ import { ANALYSIS_TOOLS, failurePrompt } from '../core/maintenance/claude'
 import { discardPending, finishPending, maintenanceStatus, runMaintenance, summarize, type MaintenanceOptions } from '../core/maintenance/pipeline'
 import { installMaintenanceTask, readMaintenanceTask, removeMaintenanceTask, type MaintenanceLauncher } from '../core/maintenance/scheduledTask'
 import { saveRecord } from '../core/maintenance/state'
-import { maintenanceLock } from '../core/operations'
+import { maintenanceLock, operationTools } from '../core/operations'
 import { getSettings, updateSettings } from '../core/settings'
 import { describeError } from '../core/studio/analyze'
 import type { StudioService } from '../core/studio/service'
 import { askClaude } from './claudeCode'
+import { downloadFromCurseForgeSite } from './siteDownload'
 
 /** Argument qui lance un passage sans fenêtre (tâche planifiée). */
 export const MAINTENANCE_SWITCH = '--maintenance'
@@ -26,12 +27,18 @@ export function maintenanceLauncher(): MaintenanceLauncher {
   }
 }
 
-/** Confie à Claude Code les passages qui ont échoué ; sa conclusion est gardée avec le passage. */
-async function analyzeFailures(records: MaintenanceRecord[]): Promise<void> {
+/**
+ * Confie à Claude Code les passages qui ont échoué ; sa conclusion est gardée avec le passage. S'il ne répond pas, la
+ * raison prend sa place (affichée dans le Studio) et va au journal : un échec silencieux ne s'explique plus après coup.
+ */
+async function analyzeFailures(records: MaintenanceRecord[], holder: string): Promise<void> {
+  const { journal } = operationTools(holder)
   for (const record of records.filter((r) => r.outcome === 'failed')) {
-    const answer = await askClaude(failurePrompt(record), ANALYSIS_TOOLS).catch(() => null)
-    if (!answer) continue
-    record.claude = answer
+    const started = Date.now()
+    const result = await askClaude(failurePrompt(record), ANALYSIS_TOOLS).catch((err): { ok: false; error: string } => ({ ok: false, error: describeError(err) }))
+    const operation = `l’analyse par Claude de l’échec de ${record.name}`
+    await journal.append(result.ok ? { operation, ok: true, durationMs: Date.now() - started } : { operation, ok: false, error: result.error, durationMs: Date.now() - started })
+    record.claude = result.ok ? result.answer : `Analyse impossible : ${result.error}`
     await saveRecord(record, { replace: true })
   }
 }
@@ -69,9 +76,9 @@ export async function runScheduledMaintenance(): Promise<void> {
     const settings = await getSettings()
     if (settings.role !== 'publisher') return
     const holder = 'la tâche planifiée'
-    const { service } = await createCommandRuntime({ holder, launcher: maintenanceLauncher() })
+    const { service } = await createCommandRuntime({ holder, launcher: maintenanceLauncher(), siteDownload: downloadFromCurseForgeSite })
     const records = await runMaintenance({ due: true }, { service, lock: maintenanceLock(holder) })
-    if (settings.maintenanceClaude) await analyzeFailures(records)
+    if (settings.maintenanceClaude) await analyzeFailures(records, holder)
     const summary = summarize(records)
     if (summary) await notify(summary)
   } catch (err) {
@@ -128,7 +135,7 @@ export function registerMaintenanceIpc(service: () => StudioService, window: () 
       runController = new AbortController()
       try {
         const records = await runMaintenance({ folders }, options(runController.signal))
-        if ((await getSettings()).maintenanceClaude) await analyzeFailures(records)
+        if ((await getSettings()).maintenanceClaude) await analyzeFailures(records, 'l’application')
         return { records }
       } finally {
         runController = null

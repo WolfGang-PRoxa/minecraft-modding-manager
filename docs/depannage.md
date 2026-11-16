@@ -47,7 +47,10 @@ La relance est refusée pendant une partie. Quitter Minecraft, puis recommencer.
 
 **« CurseForge ne s’est pas fermé : ferme-le à la main, puis rouvre-le. »**\
 CurseForge n’a pas répondu à la demande de fermeture. Le fermer depuis sa fenêtre ou depuis l’icône de la zone de
-notification (en bas à droite de l’écran), puis le rouvrir.
+notification (en bas à droite de l’écran), puis le rouvrir. Dans Overwolf, CurseForge lancé avec Windows sans fenêtre est
+relancé aussitôt par Overwolf quand il est arrêté : quitter Overwolf depuis l’icône de la zone de notification, puis
+réessayer. Pendant un passage automatique, la mise à jour testée reste alors à valider (voir
+[Mises à jour automatiques](automatique.md#valider-une-mise-à-jour)).
 
 ## Installation d’un modpack
 

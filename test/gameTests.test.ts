@@ -1,6 +1,6 @@
 // Lecture des métadonnées des mods et vérification d'un profil sans lancer le jeu.
 import assert from 'node:assert/strict'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { after, before, describe, it } from 'node:test'
 import { allowed, clientArguments, libraryPath, offlineUuid, profileVersionId } from '../src/core/gameTests/clientLaunch'
@@ -353,5 +353,42 @@ describe('lancement d’un client', () => {
     await rm(join(install, 'libraries/org/ow2/asm/asm/9.8/asm-9.8.jar'))
     await assert.rejects(clientArguments(options), /Bibliothèque du jeu absente \(org\.ow2\.asm:asm:9\.8\)\. Lance une fois ce profil depuis CurseForge/)
     await assert.rejects(clientArguments({ ...options, versionId: 'forge-47.4.18' }), /Le jeu \(forge-47\.4\.18\) n’est pas installé dans CurseForge/)
+  })
+
+  it('copie le jar du jeu sous le nom du chargeur quand CurseForge ne l’a pas fait (Forge l’écarte par ce nom)', async () => {
+    const install = join(root.dir, 'Install-forge')
+    const write = async (path: string, content: string) => {
+      await mkdir(join(install, path, '..'), { recursive: true })
+      await writeFile(join(install, path), content)
+    }
+    await write('versions/1.20.1/1.20.1.json', JSON.stringify({ id: '1.20.1', mainClass: 'net.minecraft.client.main.Main', libraries: [] }))
+    await write('versions/1.20.1/1.20.1.jar', 'jeu')
+    await write(
+      'versions/forge-47.4.28/forge-47.4.28.json',
+      JSON.stringify({
+        id: 'forge-47.4.28',
+        inheritsFrom: '1.20.1',
+        mainClass: 'cpw.mods.bootstraplauncher.BootstrapLauncher',
+        libraries: [],
+        arguments: { game: [], jvm: ['-DignoreList=client-extra,${version_name}.jar', '-cp', '${classpath}'] }
+      })
+    )
+    const client = join(root.dir, 'Testeur2')
+    const options = {
+      installDir: install,
+      versionId: 'forge-47.4.28',
+      gameDir: client,
+      nativesDir: join(client, 'natives'),
+      username: 'Testeur2',
+      memoryMb: 4096,
+      server: { host: '127.0.0.1', port: 25599 }
+    }
+    const args = await clientArguments(options)
+    const copy = join(client, 'versions', 'forge-47.4.28', 'forge-47.4.28.jar')
+    assert.deepEqual(args[args.indexOf('-cp') + 1].split(';'), [copy])
+    assert.ok(args.includes('-DignoreList=client-extra,forge-47.4.28.jar'))
+    assert.equal(await readFile(copy, 'utf8'), 'jeu')
+    assert.deepEqual(await readdir(join(install, 'versions', 'forge-47.4.28')), ['forge-47.4.28.json'], 'rien n’est écrit chez CurseForge')
+    await clientArguments(options)
   })
 })

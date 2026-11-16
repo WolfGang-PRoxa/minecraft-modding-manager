@@ -29,6 +29,10 @@ import { makeInstance, tempDir } from './support/fixtures'
 class TestService extends StudioService {
   serverStarts = true
   playersPlay = true
+  /** Le profil d'origine passe la partie (référence). */
+  originPlays = true
+  /** Message de l'erreur du report (CurseForge resté ouvert…), ou null. */
+  promoteFails: string | null = null
   trialIssues: LogIssue[] = []
 
   override async currentTests(): Promise<ProfileTestReports> {
@@ -37,7 +41,7 @@ class TestService extends StudioService {
 
   override async testPlayers(profilePath: string): Promise<PlayerTestReport> {
     const server = await this.testServer(profilePath)
-    const passed = server.outcome === 'started' && this.playersPlay
+    const passed = server.outcome === 'started' && (profilePath.includes('(essai)') ? this.playersPlay : this.originPlays)
     return {
       profile: 'essai',
       profilePath,
@@ -69,6 +73,7 @@ class TestService extends StudioService {
   }
 
   override async promoteTrial(profilePath: string): Promise<string[]> {
+    if (this.promoteFails) throw new Error(this.promoteFails)
     const changed = await promoteTrial(profilePath)
     await rm(trialPathOf(profilePath), { recursive: true, force: true })
     return changed
@@ -281,6 +286,31 @@ describe('mises à jour automatiques', () => {
     service.playersPlay = true
     assert.equal(record.outcome, 'failed')
     assert.equal(record.message, 'Partie de test : Testeur1 : Le jeu a planté pendant la partie.')
+    await discardPending((await service.overview()).packs[0], options)
+  })
+
+  it('un jeu qui plante aussi sur le profil d’origine : seul le serveur départage, publication retenue', async () => {
+    releaseAlpha()
+    service.playersPlay = false
+    service.originPlays = false
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    service.playersPlay = true
+    service.originPlays = true
+    assert.equal(record.outcome, 'ready', record.message)
+    assert.match(record.message, /la partie avec des joueurs échoue aussi sur le profil d’origine\. Publication automatique retenue/)
+    assert.match(record.warnings?.[0] ?? '', /^Partie avec des joueurs impossible, profil d’origine compris : /)
+    await discardPending((await service.overview()).packs[0], options)
+  })
+
+  it('CurseForge resté ouvert : la mise à jour testée reste à valider', async () => {
+    releaseAlpha()
+    service.promoteFails = 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.'
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
+    service.promoteFails = null
+    assert.equal(record.outcome, 'ready', record.message)
+    assert.match(record.message, /Publication automatique impossible : CurseForge ne s’est pas fermé .* Valide-la depuis le Studio\./)
+    assert.equal(record.trialPath, trialPathOf(profile))
+    assert.equal((await status()).last?.outcome, 'ready')
     await discardPending((await service.overview()).packs[0], options)
   })
 

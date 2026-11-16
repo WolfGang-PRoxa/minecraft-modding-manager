@@ -197,6 +197,9 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
   // propres données de Chromium ; les réglages, jetons et journal restent ceux de l'application.
   useSettingsFile(join(app.getPath('userData'), 'settings.json'))
   app.setPath('userData', join(app.getPath('userData'), 'maintenance-session'))
+  // Les fenêtres cachées du téléchargement depuis le site de CurseForge ne doivent pas arrêter le passage en se
+  // fermant : il quitte lui-même à la fin.
+  app.on('window-all-closed', () => {})
   void app.whenReady().then(() => {
     app.setAppUserModelId(WINDOWS_APP_ID)
     return runScheduledMaintenance()

@@ -122,7 +122,8 @@ jamais mis à jour.
 Les mises à jour ne s’appliquent jamais directement au profil : **`updates apply`** crée à côté de lui une copie
 d’essai, `<profil> (essai)`, avec les nouveaux fichiers (téléchargés depuis CurseForge et vérifiés). Relancer
 CurseForge pour la voir et y jouer. Une mise à jour dont l’auteur interdit le téléchargement hors de CurseForge est
-laissée de côté : elle est à faire dans CurseForge. Ensuite :
+laissée de côté : elle est à faire dans CurseForge (l’application et ses passages automatiques, eux, la prennent sur
+le site de CurseForge, voir [Mises à jour automatiques](automatique.md#ce-que-fait-un-passage)). Ensuite :
 
 - **`updates promote`** reporte dans le profil les fichiers changés ou ajoutés par l’essai ; les mondes, les réglages
   et les mods désactivés du profil restent les siens. CurseForge (y compris dans Overwolf) est fermé le temps de
