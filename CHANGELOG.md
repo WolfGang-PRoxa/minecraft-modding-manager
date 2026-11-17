@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.5.0] - 2026-11-17
+
 ### Ajouts
 
 - Mises à jour des mods : un fichier que son auteur réserve au téléchargement depuis CurseForge n’est plus laissé de
@@ -500,7 +502,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.4.1...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.5.0...HEAD
+[2.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.4.1...app-v2.5.0
 [2.4.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.4.0...app-v2.4.1
 [2.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.2...app-v2.4.0
 [2.3.2]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.1...app-v2.3.2
