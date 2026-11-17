@@ -346,7 +346,7 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
     <div className="mx-auto w-full max-w-6xl px-8 pt-8 pb-16">
       <header className="flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
-          <h1 className="font-display text-4xl font-bold tracking-tight">Mes modpacks</h1>
+          <h1 className="font-display text-4xl font-bold tracking-tight">Mes contenus</h1>
           <button
             type="button"
             onClick={() => openPath(settings.workspaceDir!)}

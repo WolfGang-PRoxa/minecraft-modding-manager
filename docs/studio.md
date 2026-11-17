@@ -55,11 +55,12 @@ modpack**) et l’ignore. Les dossiers dont le nom commence par un point sont ig
 
 ## L’écran du Studio
 
-À gauche, l’arborescence des [profils CurseForge](#les-profils-curseforge), avec en tête **Tous mes modpacks**. À
-droite, ce qui y est sélectionné : tous les modpacks, ou un profil et son modpack. Les contenus d’une même section
+À gauche, l’arborescence des [profils CurseForge](#les-profils-curseforge), avec en tête **Tous mes contenus**. À
+droite, ce qui y est sélectionné : tous les contenus (modpacks, mods, packs de ressources, shaders et plugins), ou un
+profil et son modpack. Les contenus d’une même section
 peuvent y être réunis dans des [groupes](#ranger-dans-des-groupes).
 
-En haut de la partie droite, **Mes modpacks** et le chemin du dossier (un clic l’ouvre dans l’Explorateur), puis les
+En haut de la partie droite, **Mes contenus** et le chemin du dossier (un clic l’ouvre dans l’Explorateur), puis les
 boutons :
 
 - **Guide** ouvre cette page de l’aide ;

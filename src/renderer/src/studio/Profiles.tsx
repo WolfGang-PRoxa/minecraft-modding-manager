@@ -213,7 +213,7 @@ export function ProfilesSidebar() {
       <nav className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 pb-6">
         <SidebarItem selected={selection.kind === 'all'} onClick={() => select({ kind: 'all' })}>
           <LayoutGrid size={16} className="shrink-0" />
-          <span className="flex-1 font-medium">Tous mes modpacks</span>
+          <span className="flex-1 font-medium">Tous mes contenus</span>
           <span className="text-xs text-ink-500">{overview?.packs.length ?? 0}</span>
         </SidebarItem>
 

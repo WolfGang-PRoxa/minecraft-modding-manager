@@ -28,6 +28,11 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 - Claude dans la boucle : une analyse d’échec qui n’aboutit pas (Claude Code introuvable, connexion expirée, délai
   dépassé…) affiche **Analyse impossible** avec la raison, notée aussi dans le journal, au lieu de disparaître sans
   trace.
+- Studio : l’entrée **Tous mes modpacks** devient **Tous mes contenus**, et le titre **Mes modpacks** devient **Mes
+  contenus** : ils montrent aussi les mods, packs de ressources, shaders et plugins.
+- Paramètres : les colonnes sont équilibrées et finissent à la même hauteur, au lieu de laisser les dernières sections
+  s’empiler dans la première. Seul le contenu défile : la barre de défilement ne déborde plus sur les angles arrondis
+  de la fenêtre, et le titre reste visible.
 
 ## [2.4.1] - 2026-11-16
 

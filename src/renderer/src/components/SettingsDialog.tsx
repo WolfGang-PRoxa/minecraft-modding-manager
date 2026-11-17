@@ -37,7 +37,7 @@ function useMediaQuery(query: string): boolean {
 
 function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-4 rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
+    <section id={id} className="mb-4 break-inside-avoid scroll-mt-4 rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
       <h3 className="mb-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">{title}</h3>
       {children}
     </section>
@@ -309,44 +309,32 @@ export function SettingsDialog() {
     </Section>
   )
 
-  // Une colonne sur une fenêtre étroite, deux sinon ; trois pour le publieur sur un grand écran : l'application et
-  // son apparence, CurseForge, puis le travail du Studio.
-  const columns = !publisher
-    ? [
-        [usage, appearanceSection, windowSection],
-        [curseForgeSection, instances, startup, shortcutSection, about]
-      ]
-    : wide
-      ? [
-          [usage, appearanceSection, startup, windowSection, shortcutSection, about],
-          [curseForgeSection, instances, curseForgeAccount, modrinthAccount, hangarAccount],
-          [workspace, maintenance, claude]
-        ]
-      : [
-          [usage, appearanceSection, curseForgeSection, instances],
-          [workspace, curseForgeAccount, modrinthAccount, hangarAccount, maintenance, claude, startup, windowSection, shortcutSection, about]
-        ]
+  // Une colonne sur une fenêtre étroite, deux sinon ; trois pour le publieur sur un grand écran. Les sections se
+  // suivent de haut en bas, colonne après colonne, et le navigateur équilibre les colonnes (colonnes CSS) : la place
+  // reste bien remplie quelle que soit la hauteur de chaque section (états, messages, style ouvert…).
+  const sections = publisher
+    ? [usage, appearanceSection, startup, windowSection, shortcutSection, about, curseForgeSection, instances, workspace, maintenance, claude, curseForgeAccount, modrinthAccount, hangarAccount]
+    : [usage, appearanceSection, windowSection, curseForgeSection, instances, startup, shortcutSection, about]
+  const threeColumns = publisher && wide
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div className="animate-fade-in absolute inset-0 bg-ink-950/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
+      {/* Seul le contenu défile : la barre de défilement reste sous le titre et au-dessus du bas de la fenêtre, loin
+          des angles arrondis. */}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Paramètres"
-        className={`animate-rise relative max-h-[calc(100vh-3rem)] w-full overflow-y-auto rounded-3xl bg-ink-850 p-8 shadow-2xl ring-1 ring-tint/10 ${columns.length === 3 ? 'max-w-[100rem]' : 'max-w-6xl'}`}
+        className={`animate-rise relative flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-3xl bg-ink-850 pb-6 shadow-2xl ring-1 ring-tint/10 ${threeColumns ? 'max-w-[100rem]' : 'max-w-6xl'}`}
       >
-        <div className="mb-6 flex items-center justify-between">
+        <div className="flex shrink-0 items-center justify-between px-8 pt-8 pb-6">
           <h2 className="font-display text-2xl font-bold tracking-tight">Paramètres</h2>
           <IconButton icon={X} label="Fermer" onClick={() => setOpen(false)} />
         </div>
 
-        <div className={`grid items-start gap-4 ${columns.length === 3 ? 'grid-cols-3' : 'lg:grid-cols-2'}`}>
-          {columns.map((sections, index) => (
-            <div key={index} className="flex min-w-0 flex-col gap-4">
-              {sections}
-            </div>
-          ))}
+        <div className="mr-1.5 min-h-0 overflow-y-auto pr-[1.625rem] pl-8">
+          <div className={`gap-4 ${threeColumns ? 'columns-3' : 'lg:columns-2'}`}>{sections}</div>
         </div>
       </div>
     </div>

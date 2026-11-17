@@ -6,11 +6,12 @@ clic à côté de la fenêtre les referment. Chaque réglage est enregistré dè
 Les sections **Dossier des contenus**, **Compte CurseForge**, **Compte Modrinth**, **Compte Hangar**, **Mises à jour
 automatiques** et **Claude Code et terminal** n’apparaissent qu’en mode publieur.
 
-Les sections sont rangées côte à côte, en deux colonnes. En mode publieur, sur un grand écran, elles passent sur trois
-colonnes : l’application (utilisation, apparence, démarrage et mises à jour, fenêtre à l’ouverture, raccourci, à propos), CurseForge (installation, dossier des
-instances, compte), Modrinth et Hangar,
-puis le Studio (dossier des contenus, mises à jour automatiques, Claude Code). Quand la fenêtre est étroite, elles
-s’empilent sur une seule colonne.
+Les sections sont rangées en deux colonnes, ou en trois en mode publieur sur un grand écran. Elles se suivent de haut
+en bas, colonne après colonne, dans cet ordre : l’application (utilisation, apparence, démarrage et mises à jour,
+fenêtre à l’ouverture, raccourci, à propos), CurseForge (installation, dossier des instances), puis le Studio (dossier
+des contenus, mises à jour automatiques, Claude Code, comptes CurseForge, Modrinth et Hangar). Les colonnes sont
+équilibrées pour finir à la même hauteur. Seul le contenu défile : le titre **Paramètres** et son bouton de fermeture
+restent visibles. Quand la fenêtre est étroite, les sections s’empilent sur une seule colonne.
 
 ## Utilisation
 
