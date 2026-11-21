@@ -1,0 +1,9 @@
+# Dossiers et fichiers générés
+node_modules
+out
+dist
+release
+build/installer
+*.tsbuildinfo
+release-notes.md
+package-lock.json
