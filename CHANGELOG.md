@@ -8,6 +8,8 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+## [2.6.0] - 2026-11-21
+
 ### Ajouts
 
 - Mise à jour automatique des modpacks : une nouvelle version d’un modpack installé s’installe d’elle-même, fenêtre
@@ -519,7 +521,8 @@ Première version publique.
 - Mises à jour de l’application proposées en haut de la fenêtre, quelle que soit la vue : téléchargement vérifié,
   installation et redémarrage automatiques.
 
-[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.5.0...HEAD
+[Non publié]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.6.0...HEAD
+[2.6.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.5.0...app-v2.6.0
 [2.5.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.4.1...app-v2.5.0
 [2.4.1]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.4.0...app-v2.4.1
 [2.4.0]: https://github.com/WolfGang-PRoxa/minecraft-modding-manager/compare/app-v2.3.2...app-v2.4.0
