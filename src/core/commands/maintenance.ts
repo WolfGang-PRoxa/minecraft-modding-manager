@@ -1,12 +1,24 @@
-import { z } from 'zod'
-import type { MaintenanceRecord, MaintenanceStatus, MaintenanceTask, PackUpdates, UpdateFrequency } from '../../shared/studio'
-import { CurseForgeClient } from '../curseforgeApi'
-import { discardPending, finishPending, maintenanceStatus, runMaintenance, type MaintenanceOptions } from '../maintenance/pipeline'
-import { FREQUENCY_LABELS } from '../maintenance/schedule'
-import { installMaintenanceTask, readMaintenanceTask, removeMaintenanceTask } from '../maintenance/scheduledTask'
-import { describeError, StudioError } from '../studio/analyze'
-import { packOf, packParam } from './refs'
-import { command, type CommandContext } from './registry'
+import { z } from 'zod';
+import type {
+  MaintenanceRecord,
+  MaintenanceStatus,
+  MaintenanceTask,
+  PackUpdates,
+  UpdateFrequency,
+} from '../../shared/studio';
+import { CurseForgeClient } from '../curseforgeApi';
+import {
+  discardPending,
+  finishPending,
+  maintenanceStatus,
+  runMaintenance,
+  type MaintenanceOptions,
+} from '../maintenance/pipeline';
+import { FREQUENCY_LABELS } from '../maintenance/schedule';
+import { installMaintenanceTask, readMaintenanceTask, removeMaintenanceTask } from '../maintenance/scheduledTask';
+import { describeError, StudioError } from '../studio/analyze';
+import { packOf, packParam } from './refs';
+import { command, type CommandContext } from './registry';
 
 const OUTCOME: Record<MaintenanceRecord['outcome'], string> = {
   'up-to-date': '✔ à jour',
@@ -15,20 +27,21 @@ const OUTCOME: Record<MaintenanceRecord['outcome'], string> = {
   failed: '✖ échec',
   created: '✔ version créée',
   published: '✔ publiée',
-  skipped: '· remis à plus tard'
-}
+  skipped: '· remis à plus tard',
+};
 
-const date = (iso: string | null) => (iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '—')
+const date = (iso: string | null) =>
+  iso ? new Date(iso).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
 
 const options = (ctx: CommandContext): MaintenanceOptions => ({
   service: ctx.service,
   lock: ctx.maintenanceLock,
   onStep: (text) => ctx.progress(text),
-  signal: ctx.signal
-})
+  signal: ctx.signal,
+});
 
 async function task(ctx: CommandContext): Promise<MaintenanceTask | null> {
-  return process.platform === 'win32' ? readMaintenanceTask(ctx.launcher).catch(() => null) : null
+  return process.platform === 'win32' ? readMaintenanceTask(ctx.launcher).catch(() => null) : null;
 }
 
 const printRecord = (r: MaintenanceRecord) =>
@@ -37,16 +50,16 @@ const printRecord = (r: MaintenanceRecord) =>
     ...r.changes.map((c) => `    ~ ${c}`),
     ...r.manual.map((c) => `    ⚠ ${c}`),
     ...(r.trialPath ? [`    Essai : ${r.trialPath}`] : []),
-    ...(r.claude ? [`    Claude : ${r.claude}`] : [])
-  ].join('\n')
+    ...(r.claude ? [`    Claude : ${r.claude}`] : []),
+  ].join('\n');
 
 function printTask(t: MaintenanceTask | null): string {
-  if (!t) return 'Tâche planifiée : inconnue (Windows seulement).'
-  if (!t.installed) return 'Tâche planifiée : aucune (les passages ne se font qu’à la demande).'
+  if (!t) return 'Tâche planifiée : inconnue (Windows seulement).';
+  if (!t.installed) return 'Tâche planifiée : aucune (les passages ne se font qu’à la demande).';
   return [
     `Tâche planifiée : chaque jour à ${t.time ?? '?'}${t.wake ? ', réveille le PC' : ''} · dernier passage ${date(t.lastRunAt)} · prochain ${date(t.nextRunAt)}`,
-    ...(t.foreign ? ['  ⚠ Elle lance une autre installation de l’application : recrée-la depuis celle-ci.'] : [])
-  ].join('\n')
+    ...(t.foreign ? ['  ⚠ Elle lance une autre installation de l’application : recrée-la depuis celle-ci.'] : []),
+  ].join('\n');
 }
 
 export const maintenanceStatusCommand = command({
@@ -61,37 +74,41 @@ export const maintenanceStatusCommand = command({
   params: z.object({}),
   kind: 'read',
   async run(_params, ctx) {
-    return maintenanceStatus(ctx.service, ctx.maintenanceLock, await task(ctx))
+    return maintenanceStatus(ctx.service, ctx.maintenanceLock, await task(ctx));
   },
   print: (status: MaintenanceStatus) => {
     // Sans tâche planifiée, une fréquence ne lance rien : pas de date de prochain passage à annoncer.
-    const noTask = status.task !== null && !status.task.installed
-    const periodic = (f: UpdateFrequency) => f === 'weekly' || f === 'biweekly' || f === 'monthly'
-    const waiting = noTask ? status.packs.filter((p) => periodic(p.updates.frequency)).length : 0
+    const noTask = status.task !== null && !status.task.installed;
+    const periodic = (f: UpdateFrequency) => f === 'weekly' || f === 'biweekly' || f === 'monthly';
+    const waiting = noTask ? status.packs.filter((p) => periodic(p.updates.frequency)).length : 0;
     return [
       printTask(status.task),
       ...(waiting
         ? [
             `  ⚠ ${waiting} modpack${waiting > 1 ? 's ont' : ' a'} une fréquence, mais rien ne se lancera seul : crée la tâche ` +
-              '(maintenance schedule, ou Paramètres → Mises à jour automatiques).'
+              '(maintenance schedule, ou Paramètres → Mises à jour automatiques).',
           ]
         : []),
       ...(status.running ? [`Passage en cours (${status.running}).`] : []),
       '',
       ...status.packs.map((p) => {
-        const u = p.updates
-        const head = `${p.name} (${p.folder}) — ${FREQUENCY_LABELS[u.frequency]}${u.channel === 'beta' ? ', bêtas comprises' : ''}${u.autoPublish ? ', publication automatique' : ''}`
-        const next = !p.dueAt ? '—' : noTask && periodic(u.frequency) ? 'aucune, pas de tâche planifiée' : date(p.dueAt)
-        const lines = [`  Dernière recherche : ${date(p.checkedAt)} · prochaine : ${next}`]
-        if (u.pinned.length) lines.push(`  Figés : ${u.pinned.map((x) => `${x.name} (${x.projectId})`).join(', ')}`)
-        if (p.last) lines.push(printRecord(p.last).replace(/^/gm, '  '))
-        return [head, ...lines].join('\n')
-      })
-    ].join('\n')
-  }
-})
+        const u = p.updates;
+        const head = `${p.name} (${p.folder}) — ${FREQUENCY_LABELS[u.frequency]}${u.channel === 'beta' ? ', bêtas comprises' : ''}${u.autoPublish ? ', publication automatique' : ''}`;
+        const next = !p.dueAt
+          ? '—'
+          : noTask && periodic(u.frequency)
+            ? 'aucune, pas de tâche planifiée'
+            : date(p.dueAt);
+        const lines = [`  Dernière recherche : ${date(p.checkedAt)} · prochaine : ${next}`];
+        if (u.pinned.length) lines.push(`  Figés : ${u.pinned.map((x) => `${x.name} (${x.projectId})`).join(', ')}`);
+        if (p.last) lines.push(printRecord(p.last).replace(/^/gm, '  '));
+        return [head, ...lines].join('\n');
+      }),
+    ].join('\n');
+  },
+});
 
-const FREQUENCIES = ['weekly', 'biweekly', 'monthly', 'manual', 'never'] as const satisfies readonly UpdateFrequency[]
+const FREQUENCIES = ['weekly', 'biweekly', 'monthly', 'manual', 'never'] as const satisfies readonly UpdateFrequency[];
 
 export const maintenanceConfigure = command({
   name: 'maintenance configure',
@@ -107,55 +124,58 @@ export const maintenanceConfigure = command({
     beta: z.boolean().optional().describe('Accepter aussi les versions bêta des mods.'),
     autoPublish: z.boolean().optional().describe('Publier seul une version qui passe les tests.'),
     pin: z.array(z.number().int().positive()).optional().describe('Projets CurseForge à figer.'),
-    unpin: z.array(z.number().int().positive()).optional().describe('Projets CurseForge à ne plus figer.')
+    unpin: z.array(z.number().int().positive()).optional().describe('Projets CurseForge à ne plus figer.'),
   }),
   kind: 'write',
   async run({ pack: ref, frequency, beta, autoPublish, pin, unpin }, ctx) {
-    const pack = await packOf(ctx, ref)
-    const pinned = new Map(pack.updates.pinned.map((p) => [p.projectId, p.name]))
-    const added = (pin ?? []).filter((id) => !pinned.has(id))
+    const pack = await packOf(ctx, ref);
+    const pinned = new Map(pack.updates.pinned.map((p) => [p.projectId, p.name]));
+    const added = (pin ?? []).filter((id) => !pinned.has(id));
     if (added.length) {
       const names = await CurseForgeClient.create({ dotenvDir: process.cwd() })
         .then((client) => client.getMods(added))
         .then((mods) => new Map(mods.map((m) => [m.id, m.name])))
-        .catch(() => new Map<number, string>())
-      for (const id of added) pinned.set(id, names.get(id) ?? `Projet ${id}`)
+        .catch(() => new Map<number, string>());
+      for (const id of added) pinned.set(id, names.get(id) ?? `Projet ${id}`);
     }
-    for (const id of unpin ?? []) pinned.delete(id)
-    const changes: Partial<PackUpdates> = { pinned: [...pinned].map(([projectId, name]) => ({ projectId, name })) }
-    if (frequency) changes.frequency = frequency
-    if (beta !== undefined) changes.channel = beta ? 'beta' : 'release'
-    if (autoPublish !== undefined) changes.autoPublish = autoPublish
-    return { pack: pack.folder, updates: await ctx.service.updatePackUpdates(pack.folder, changes) }
+    for (const id of unpin ?? []) pinned.delete(id);
+    const changes: Partial<PackUpdates> = { pinned: [...pinned].map(([projectId, name]) => ({ projectId, name })) };
+    if (frequency) changes.frequency = frequency;
+    if (beta !== undefined) changes.channel = beta ? 'beta' : 'release';
+    if (autoPublish !== undefined) changes.autoPublish = autoPublish;
+    return { pack: pack.folder, updates: await ctx.service.updatePackUpdates(pack.folder, changes) };
   },
   print: ({ pack, updates }) =>
     `${pack} : ${FREQUENCY_LABELS[updates.frequency]}${updates.channel === 'beta' ? ', bêtas comprises' : ''}, ` +
     `${updates.autoPublish ? 'publication automatique' : 'version à valider'}` +
-    `${updates.pinned.length ? `, figés : ${updates.pinned.map((p) => p.name).join(', ')}` : ''}.`
-})
+    `${updates.pinned.length ? `, figés : ${updates.pinned.map((p) => p.name).join(', ')}` : ''}.`,
+});
 
 export const maintenanceRun = command({
   name: 'maintenance run',
-  summary: 'Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu, ou tous.',
+  summary:
+    'Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu, ou tous.',
   description:
     'Sans packs ni due : tous les modpacks sauf ceux réglés sur never. Plusieurs minutes par modpack qui a des mises à ' +
     'jour (partie de test avec des joueurs, dont les fenêtres du jeu). Un modpack réglé sur autoPublish est publié s’il passe les tests (irréversible sur ' +
     'CurseForge) : préviens le publieur avant. Un modpack dont un essai attend déjà une décision est laissé de côté.',
   params: z.object({
     packs: z.array(z.string().min(1)).optional().describe('Modpacks à passer (dossier, identifiant ou nom).'),
-    due: z.boolean().optional().describe('Seulement ceux dont le tour est venu (ce que fait la tâche planifiée).')
+    due: z.boolean().optional().describe('Seulement ceux dont le tour est venu (ce que fait la tâche planifiée).'),
   }),
   kind: 'destructive',
   async run({ packs, due }, ctx) {
-    const folders = packs ? await Promise.all(packs.map(async (ref) => (await packOf(ctx, ref)).folder)) : undefined
-    return runMaintenance({ folders, due }, options(ctx))
+    const folders = packs ? await Promise.all(packs.map(async (ref) => (await packOf(ctx, ref)).folder)) : undefined;
+    return runMaintenance({ folders, due }, options(ctx));
   },
-  print: (records: MaintenanceRecord[]) => (records.length ? records.map(printRecord).join('\n') : 'Aucun modpack à passer.')
-})
+  print: (records: MaintenanceRecord[]) =>
+    records.length ? records.map(printRecord).join('\n') : 'Aucun modpack à passer.',
+});
 
 export const maintenanceValidate = command({
   name: 'maintenance validate',
-  summary: 'Valide l’essai en attente d’un modpack : il devient la version suivante (notes écrites), publiée sauf --no-publish.',
+  summary:
+    'Valide l’essai en attente d’un modpack : il devient la version suivante (notes écrites), publiée sauf --no-publish.',
   description:
     'L’essai est reporté dans le profil source (CurseForge fermé puis rouvert ; refusé si Minecraft tourne depuis l’un ' +
     'des deux), la version est zippée depuis le profil, ses notes listent les mises à jour (à réécrire avec « packs ' +
@@ -163,14 +183,14 @@ export const maintenanceValidate = command({
     'Un essai qui a échoué aux tests se valide aussi : seulement si le publieur l’a vérifié lui-même.',
   params: z.object({
     pack: packParam,
-    publish: z.boolean().optional().describe('Publier la version créée (oui par défaut).')
+    publish: z.boolean().optional().describe('Publier la version créée (oui par défaut).'),
   }),
   kind: 'destructive',
   async run({ pack: ref, publish }, ctx) {
-    return finishPending(await packOf(ctx, ref), publish !== false, options(ctx))
+    return finishPending(await packOf(ctx, ref), publish !== false, options(ctx));
   },
-  print: printRecord
-})
+  print: printRecord,
+});
 
 export const maintenanceDiscard = command({
   name: 'maintenance discard',
@@ -178,10 +198,10 @@ export const maintenanceDiscard = command({
   params: z.object({ pack: packParam }),
   kind: 'destructive',
   async run({ pack: ref }, ctx) {
-    return discardPending(await packOf(ctx, ref), options(ctx))
+    return discardPending(await packOf(ctx, ref), options(ctx));
   },
-  print: printRecord
-})
+  print: printRecord,
+});
 
 export const maintenanceSchedule = command({
   name: 'maintenance schedule',
@@ -191,26 +211,31 @@ export const maintenanceSchedule = command({
     'minuteurs de réveil » dans les options d’alimentation). La tâche ne tourne que si la session du publieur est ouverte ' +
     '(verrouillée suffit). Seulement depuis l’application installée (mpm.cmd ou Claude Code connecté par elle).',
   params: z.object({
-    time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional().describe('Heure du passage quotidien, HH:MM.'),
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):[0-5]\d$/)
+      .optional()
+      .describe('Heure du passage quotidien, HH:MM.'),
     wake: z.boolean().optional().describe('Réveiller le PC en veille.'),
-    off: z.boolean().optional().describe('Retirer la tâche.')
+    off: z.boolean().optional().describe('Retirer la tâche.'),
   }),
   kind: 'write',
   async run({ time, wake, off }, ctx) {
-    if (process.platform !== 'win32') throw new StudioError('La tâche planifiée n’existe que sous Windows.')
+    if (process.platform !== 'win32') throw new StudioError('La tâche planifiée n’existe que sous Windows.');
     if (off) {
-      await removeMaintenanceTask()
-      return readMaintenanceTask(ctx.launcher)
+      await removeMaintenanceTask();
+      return readMaintenanceTask(ctx.launcher);
     }
-    if (!ctx.launcher) throw new StudioError('La tâche planifiée se crée depuis l’application installée (mpm.cmd, ou ses Paramètres).')
-    const current = await readMaintenanceTask(ctx.launcher)
-    const at = time ?? current.time ?? '04:00'
+    if (!ctx.launcher)
+      throw new StudioError('La tâche planifiée se crée depuis l’application installée (mpm.cmd, ou ses Paramètres).');
+    const current = await readMaintenanceTask(ctx.launcher);
+    const at = time ?? current.time ?? '04:00';
     try {
-      await installMaintenanceTask(ctx.launcher, { time: at, wake: wake ?? current.wake })
+      await installMaintenanceTask(ctx.launcher, { time: at, wake: wake ?? current.wake });
     } catch (err) {
-      throw new StudioError(`Windows refuse de créer la tâche : ${describeError(err)}`)
+      throw new StudioError(`Windows refuse de créer la tâche : ${describeError(err)}`);
     }
-    return readMaintenanceTask(ctx.launcher)
+    return readMaintenanceTask(ctx.launcher);
   },
-  print: printTask
-})
+  print: printTask,
+});

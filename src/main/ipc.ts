@@ -1,181 +1,194 @@
-import { BrowserWindow, dialog, ipcMain, shell, app } from 'electron'
-import type { AppUpdateResult, CurseForgeSecretKind, InstallResult, IssueReport, LaunchInfo, ModpackVersion, Settings, ShortcutLocation } from '../shared/types'
-import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate'
-import { registerAuthIpc } from './authIpc'
-import { registerClaudeCodeIpc } from './claudeCode'
-import { registerExtrasIpc } from './extrasIpc'
-import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth'
-import { modrinthAuthStatus, saveModrinthToken } from '../core/modrinth'
-import { hangarAuthStatus, saveHangarKey } from '../core/hangar'
-import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge'
-import { getCatalog } from './github'
-import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer'
-import { listProfiles } from '../core/profiles'
-import { openFolder } from './openFolder'
-import { openReportInBrowser, reportInfo, submitReport } from './report'
-import { registerRoleIpc } from './roleIpc'
-import { getSettings, updateSettings } from '../core/settings'
-import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut'
-import { syncLaunchAtStartup } from './startup'
-import { studioTask } from './studioIpc'
-import { applyInterfaceScale, describeDisplays, toggleMaximize } from './windowState'
-import { normalizeAppearance } from '../shared/appearance'
-import { DEFAULT_APP_CHECK_MINUTES, DEFAULT_PACK_CHECK_MINUTES, normalizeCheckMinutes } from '../shared/autoUpdate'
-import { normalizeWindowPlacement } from '../shared/windowPlacement'
+import { BrowserWindow, dialog, ipcMain, shell, app } from 'electron';
+import type {
+  AppUpdateResult,
+  CurseForgeSecretKind,
+  InstallResult,
+  IssueReport,
+  LaunchInfo,
+  ModpackVersion,
+  Settings,
+  ShortcutLocation,
+} from '../shared/types';
+import { appUpdateTask, cancelAppUpdate, installAppUpdate } from './appUpdate';
+import { registerAuthIpc } from './authIpc';
+import { registerClaudeCodeIpc } from './claudeCode';
+import { registerExtrasIpc } from './extrasIpc';
+import { curseForgeAuthStatus, saveCurseForgeSecret } from '../core/curseforgeAuth';
+import { modrinthAuthStatus, saveModrinthToken } from '../core/modrinth';
+import { hangarAuthStatus, saveHangarKey } from '../core/hangar';
+import { getCurseForgeStatus, launchCurseForge, resolveInstancesDir, restartCurseForge } from '../core/curseforge';
+import { getCatalog } from './github';
+import { cancelInstall, installModpack, isInstalling, listInstalled } from './installer';
+import { listProfiles } from '../core/profiles';
+import { openFolder } from './openFolder';
+import { openReportInBrowser, reportInfo, submitReport } from './report';
+import { registerRoleIpc } from './roleIpc';
+import { getSettings, updateSettings } from '../core/settings';
+import { createShortcut, PLAYER_SHORTCUT, shortcutStatus } from './shortcut';
+import { syncLaunchAtStartup } from './startup';
+import { studioTask } from './studioIpc';
+import { applyInterfaceScale, describeDisplays, toggleMaximize } from './windowState';
+import { normalizeAppearance } from '../shared/appearance';
+import { DEFAULT_APP_CHECK_MINUTES, DEFAULT_PACK_CHECK_MINUTES, normalizeCheckMinutes } from '../shared/autoUpdate';
+import { normalizeWindowPlacement } from '../shared/windowPlacement';
 
 export function registerIpc(
   getWindow: () => BrowserWindow | null,
-  launch: Pick<LaunchInfo, 'justUpdated' | 'previousVersion' | 'autoUpdate'>
+  launch: Pick<LaunchInfo, 'justUpdated' | 'previousVersion' | 'autoUpdate'>,
 ): { installAppUpdate: () => Promise<AppUpdateResult> } {
-  registerAuthIpc()
-  registerRoleIpc()
-  registerClaudeCodeIpc()
-  registerExtrasIpc()
-  ipcMain.handle('cfauth:status', () => curseForgeAuthStatus())
-  ipcMain.handle('mrauth:status', () => modrinthAuthStatus())
-  ipcMain.handle('hangarauth:status', () => hangarAuthStatus())
+  registerAuthIpc();
+  registerRoleIpc();
+  registerClaudeCodeIpc();
+  registerExtrasIpc();
+  ipcMain.handle('cfauth:status', () => curseForgeAuthStatus());
+  ipcMain.handle('mrauth:status', () => modrinthAuthStatus());
+  ipcMain.handle('hangarauth:status', () => hangarAuthStatus());
   ipcMain.handle('hangarauth:save', async (_e, value: string | null) => {
     try {
-      await saveHangarKey(typeof value === 'string' ? value : null)
-      return { ok: true }
+      await saveHangarKey(typeof value === 'string' ? value : null);
+      return { ok: true };
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
-  })
+  });
   ipcMain.handle('mrauth:save', async (_e, value: string | null) => {
     try {
-      await saveModrinthToken(typeof value === 'string' ? value : null)
-      return { ok: true }
+      await saveModrinthToken(typeof value === 'string' ? value : null);
+      return { ok: true };
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
-  })
+  });
   ipcMain.handle('cfauth:save', async (_e, kind: CurseForgeSecretKind, value: string | null) => {
-    if (kind !== 'apiKey' && kind !== 'uploadToken') return { ok: false, error: 'Secret inconnu.' }
+    if (kind !== 'apiKey' && kind !== 'uploadToken') return { ok: false, error: 'Secret inconnu.' };
     try {
-      await saveCurseForgeSecret(kind, typeof value === 'string' ? value : null)
-      return { ok: true }
+      await saveCurseForgeSecret(kind, typeof value === 'string' ? value : null);
+      return { ok: true };
     } catch (err) {
-      return { ok: false, error: err instanceof Error ? err.message : String(err) }
+      return { ok: false, error: err instanceof Error ? err.message : String(err) };
     }
-  })
+  });
 
   const send = (channel: string, payload: unknown) => {
-    const win = getWindow()
-    if (win && !win.isDestroyed()) win.webContents.send(channel, payload)
-  }
+    const win = getWindow();
+    if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+  };
 
-  ipcMain.handle('catalog:get', (_e, force?: boolean) => getCatalog(Boolean(force)))
+  ipcMain.handle('catalog:get', (_e, force?: boolean) => getCatalog(Boolean(force)));
 
   ipcMain.handle('installed:list', async () => {
-    const { dir } = await resolveInstancesDir(await getSettings())
-    return listInstalled(dir)
-  })
+    const { dir } = await resolveInstancesDir(await getSettings());
+    return listInstalled(dir);
+  });
 
   ipcMain.handle('curseforge:profiles', async () => {
-    const { dir } = await resolveInstancesDir(await getSettings())
-    return listProfiles(dir)
-  })
+    const { dir } = await resolveInstancesDir(await getSettings());
+    return listProfiles(dir);
+  });
 
   ipcMain.handle('install:start', (_e, version: ModpackVersion): InstallResult | Promise<InstallResult> => {
     // L'application va se fermer pour se mettre à jour : une installation serait coupée en plein milieu.
-    const updating = appUpdateTask()
-    if (updating) return { ok: false, cancelled: false, error: `Patiente : ${updating} est en cours.` }
-    return installModpack(version, (progress) => send('install:progress', progress))
-  })
-  ipcMain.handle('install:cancel', (_e, id: string) => cancelInstall(id))
+    const updating = appUpdateTask();
+    if (updating) return { ok: false, cancelled: false, error: `Patiente : ${updating} est en cours.` };
+    return installModpack(version, (progress) => send('install:progress', progress));
+  });
+  ipcMain.handle('install:cancel', (_e, id: string) => cancelInstall(id));
 
-  ipcMain.handle('curseforge:status', async () => getCurseForgeStatus(await getSettings()))
-  ipcMain.handle('curseforge:launch', () => launchCurseForge())
-  ipcMain.handle('curseforge:restart', async () => restartCurseForge((await resolveInstancesDir(await getSettings())).dir))
+  ipcMain.handle('curseforge:status', async () => getCurseForgeStatus(await getSettings()));
+  ipcMain.handle('curseforge:launch', () => launchCurseForge());
+  ipcMain.handle('curseforge:restart', async () =>
+    restartCurseForge((await resolveInstancesDir(await getSettings())).dir),
+  );
 
-  ipcMain.handle('settings:get', () => getSettings())
+  ipcMain.handle('settings:get', () => getSettings());
   ipcMain.handle('settings:update', (_e, patch: Partial<Settings>) => {
-    const allowed: Partial<Settings> = {}
-    if ('instancesDir' in patch) allowed.instancesDir = patch.instancesDir || null
+    const allowed: Partial<Settings> = {};
+    if ('instancesDir' in patch) allowed.instancesDir = patch.instancesDir || null;
     if (typeof patch.openCurseForgeAfterInstall === 'boolean') {
-      allowed.openCurseForgeAfterInstall = patch.openCurseForgeAfterInstall
+      allowed.openCurseForgeAfterInstall = patch.openCurseForgeAfterInstall;
     }
-    if (typeof patch.shortcutPrompted === 'boolean') allowed.shortcutPrompted = patch.shortcutPrompted
-    if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView
-    if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate
-    if (typeof patch.autoUpdatePacks === 'boolean') allowed.autoUpdatePacks = patch.autoUpdatePacks
-    if (typeof patch.appCheckMinutes === 'number') allowed.appCheckMinutes = normalizeCheckMinutes(patch.appCheckMinutes, DEFAULT_APP_CHECK_MINUTES)
-    if (typeof patch.packCheckMinutes === 'number') allowed.packCheckMinutes = normalizeCheckMinutes(patch.packCheckMinutes, DEFAULT_PACK_CHECK_MINUTES)
-    if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup
-    if (patch.launchMode === 'background' || patch.launchMode === 'window') allowed.launchMode = patch.launchMode
-    if (patch.window) allowed.window = normalizeWindowPlacement(patch.window)
-    if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance)
+    if (typeof patch.shortcutPrompted === 'boolean') allowed.shortcutPrompted = patch.shortcutPrompted;
+    if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView;
+    if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate;
+    if (typeof patch.autoUpdatePacks === 'boolean') allowed.autoUpdatePacks = patch.autoUpdatePacks;
+    if (typeof patch.appCheckMinutes === 'number')
+      allowed.appCheckMinutes = normalizeCheckMinutes(patch.appCheckMinutes, DEFAULT_APP_CHECK_MINUTES);
+    if (typeof patch.packCheckMinutes === 'number')
+      allowed.packCheckMinutes = normalizeCheckMinutes(patch.packCheckMinutes, DEFAULT_PACK_CHECK_MINUTES);
+    if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup;
+    if (patch.launchMode === 'background' || patch.launchMode === 'window') allowed.launchMode = patch.launchMode;
+    if (patch.window) allowed.window = normalizeWindowPlacement(patch.window);
+    if (patch.appearance) allowed.appearance = normalizeAppearance(patch.appearance);
     return updateSettings(allowed).then((settings) => {
-      const win = getWindow()
-      if (allowed.appearance && win) applyInterfaceScale(win, settings.appearance.scale)
-      if (allowed.launchAtStartup === undefined) return settings
-      return syncLaunchAtStartup(settings.launchAtStartup).then(() => settings)
-    })
-  })
+      const win = getWindow();
+      if (allowed.appearance && win) applyInterfaceScale(win, settings.appearance.scale);
+      if (allowed.launchAtStartup === undefined) return settings;
+      return syncLaunchAtStartup(settings.launchAtStartup).then(() => settings);
+    });
+  });
   ipcMain.handle('settings:pickInstancesDir', async () => {
-    const win = getWindow()
-    const current = await resolveInstancesDir(await getSettings())
+    const win = getWindow();
+    const current = await resolveInstancesDir(await getSettings());
     const options: Electron.OpenDialogOptions = {
       title: 'Choisir le dossier Instances de CurseForge',
       defaultPath: current.dir,
-      properties: ['openDirectory', 'createDirectory']
-    }
-    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options)
-    if (result.canceled || !result.filePaths[0]) return null
-    return updateSettings({ instancesDir: result.filePaths[0] })
-  })
+      properties: ['openDirectory', 'createDirectory'],
+    };
+    const result = win ? await dialog.showOpenDialog(win, options) : await dialog.showOpenDialog(options);
+    if (result.canceled || !result.filePaths[0]) return null;
+    return updateSettings({ instancesDir: result.filePaths[0] });
+  });
 
-  let update = launch
+  let update = launch;
   ipcMain.handle('app:launchInfo', (): LaunchInfo => {
-    const info: LaunchInfo = { view: process.argv.includes('--studio') ? 'studio' : null, ...update }
+    const info: LaunchInfo = { view: process.argv.includes('--studio') ? 'studio' : null, ...update };
     // Annoncé une seule fois, même si la fenêtre est rechargée.
-    update = { justUpdated: false, previousVersion: null, autoUpdate: false }
-    return info
-  })
+    update = { justUpdated: false, previousVersion: null, autoUpdate: false };
+    return info;
+  });
 
-  ipcMain.handle('shortcut:status', () => shortcutStatus(PLAYER_SHORTCUT))
+  ipcMain.handle('shortcut:status', () => shortcutStatus(PLAYER_SHORTCUT));
   ipcMain.handle('shortcut:create', async (_e, location: ShortcutLocation) => {
-    const result = await createShortcut(PLAYER_SHORTCUT, location === 'choose' ? 'choose' : 'desktop', getWindow())
+    const result = await createShortcut(PLAYER_SHORTCUT, location === 'choose' ? 'choose' : 'desktop', getWindow());
     // Une réponse a été donnée : le bandeau de premier lancement ne revient plus.
-    if (result.ok) await updateSettings({ shortcutPrompted: true })
-    return result
-  })
+    if (result.ok) await updateSettings({ shortcutPrompted: true });
+    return result;
+  });
 
-  ipcMain.handle('shell:openPath', (_e, path: unknown) => openFolder(path))
+  ipcMain.handle('shell:openPath', (_e, path: unknown) => openFolder(path));
   ipcMain.handle('shell:openExternal', async (_e, url: string) => {
-    if (/^https:\/\//i.test(url)) await shell.openExternal(url)
-  })
+    if (/^https:\/\//i.test(url)) await shell.openExternal(url);
+  });
 
-  ipcMain.handle('report:info', () => reportInfo())
-  ipcMain.handle('report:submit', (_e, report: IssueReport) => submitReport(report))
-  ipcMain.handle('report:browser', (_e, report: IssueReport) => openReportInBrowser(report))
+  ipcMain.handle('report:info', () => reportInfo());
+  ipcMain.handle('report:submit', (_e, report: IssueReport) => submitReport(report));
+  ipcMain.handle('report:browser', (_e, report: IssueReport) => openReportInBrowser(report));
 
-  ipcMain.handle('app:version', () => app.getVersion())
+  ipcMain.handle('app:version', () => app.getVersion());
   // Depuis la fenêtre (bouton, ou réglage autoUpdate au lancement) et depuis la mise à jour en arrière-plan.
   const startAppUpdate = () =>
     installAppUpdate({
       busyWith: () => (isInstalling() ? 'l’installation d’un modpack' : studioTask()),
       relaunch: () => {
-        const win = getWindow()
-        if (!win || !win.isVisible()) return 'background'
-        return win.isMinimized() ? 'minimized' : null
+        const win = getWindow();
+        if (!win || !win.isVisible()) return 'background';
+        return win.isMinimized() ? 'minimized' : null;
       },
-      onProgress: (progress) => send('app:update-progress', progress)
-    })
-  ipcMain.handle('app:update', () => startAppUpdate())
-  ipcMain.handle('app:cancelUpdate', () => cancelAppUpdate())
+      onProgress: (progress) => send('app:update-progress', progress),
+    });
+  ipcMain.handle('app:update', () => startAppUpdate());
+  ipcMain.handle('app:cancelUpdate', () => cancelAppUpdate());
 
-  ipcMain.on('window:minimize', () => getWindow()?.minimize())
+  ipcMain.on('window:minimize', () => getWindow()?.minimize());
   ipcMain.on('window:toggleMaximize', () => {
-    const win = getWindow()
-    if (win) toggleMaximize(win)
-  })
-  ipcMain.on('window:close', () => getWindow()?.close())
-  ipcMain.handle('window:displays', () => describeDisplays())
+    const win = getWindow();
+    if (win) toggleMaximize(win);
+  });
+  ipcMain.on('window:close', () => getWindow()?.close());
+  ipcMain.handle('window:displays', () => describeDisplays());
   ipcMain.handle('window:bounds', () => {
-    const win = getWindow()
-    return win && !win.isDestroyed() ? win.getNormalBounds() : null
-  })
-  return { installAppUpdate: startAppUpdate }
+    const win = getWindow();
+    return win && !win.isDestroyed() ? win.getNormalBounds() : null;
+  });
+  return { installAppUpdate: startAppUpdate };
 }

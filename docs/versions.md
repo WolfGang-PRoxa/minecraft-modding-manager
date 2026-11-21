@@ -12,14 +12,14 @@ un profil CurseForge, avec ses mods, ses configurations et ses scripts.
 
 Le Studio analyse chaque zip dès qu’il le voit. Un zip est **refusé**, et donc ni rangé ni publié, dans ces cas :
 
-| Message | Cause |
-|---|---|
-| « Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille. » | GitHub limite chaque fichier d’une release à 2 Go. Seulement pour un modpack publié sur GitHub. |
-| « Zip illisible ou incomplet (copie encore en cours ?). » | Le zip est encore en cours de copie, ou abîmé. Il suffit d’attendre la fin de la copie. |
-| « Zip corrompu : son contenu est illisible. » | Le zip est abîmé : il est à recréer. |
-| « C’est un export CurseForge (manifest.json)… » | Un export CurseForge (`manifest.json` et `overrides`) ne contient pas les mods eux-mêmes. Zipper le dossier de l’instance, ou utiliser **Créer la vN depuis CurseForge**. |
-| « minecraftinstance.json introuvable : ce zip ne contient pas une instance CurseForge. » | Le zip ne contient pas de dossier d’instance. |
-| « minecraftinstance.json est illisible dans ce zip. » | Le fichier de l’instance est abîmé. |
+| Message                                                                                  | Cause                                                                                                                                                                     |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| « Zip de plus de 2 Go : GitHub refuse les fichiers de cette taille. »                    | GitHub limite chaque fichier d’une release à 2 Go. Seulement pour un modpack publié sur GitHub.                                                                           |
+| « Zip illisible ou incomplet (copie encore en cours ?). »                                | Le zip est encore en cours de copie, ou abîmé. Il suffit d’attendre la fin de la copie.                                                                                   |
+| « Zip corrompu : son contenu est illisible. »                                            | Le zip est abîmé : il est à recréer.                                                                                                                                      |
+| « C’est un export CurseForge (manifest.json)… »                                          | Un export CurseForge (`manifest.json` et `overrides`) ne contient pas les mods eux-mêmes. Zipper le dossier de l’instance, ou utiliser **Créer la vN depuis CurseForge**. |
+| « minecraftinstance.json introuvable : ce zip ne contient pas une instance CurseForge. » | Le zip ne contient pas de dossier d’instance.                                                                                                                             |
+| « minecraftinstance.json est illisible dans ce zip. »                                    | Le fichier de l’instance est abîmé.                                                                                                                                       |
 
 Un zip accepté peut porter des **avertissements**, affichés sous sa ligne :
 

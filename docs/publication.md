@@ -40,11 +40,11 @@ L’aperçu peut afficher ces avertissements :
 
 Pour chaque version, le Studio crée une release GitHub :
 
-| Élément | Valeur |
-|---|---|
-| Tag | `pack-<id>-v<N>`, par exemple `pack-hardcore-endgame-v3` |
-| Titre | `<Nom> v<N>`, par exemple « Hardcore Endgame v3 » |
-| Texte | Les notes de la version, suivies de la version de Minecraft, du mod loader et du nombre de mods |
+| Élément  | Valeur                                                                                                                           |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Tag      | `pack-<id>-v<N>`, par exemple `pack-hardcore-endgame-v3`                                                                         |
+| Titre    | `<Nom> v<N>`, par exemple « Hardcore Endgame v3 »                                                                                |
+| Texte    | Les notes de la version, suivies de la version de Minecraft, du mod loader et du nombre de mods                                  |
 | Fichiers | `<id>-<N>.zip` (le contenu de l’instance), `modpack.json` (sa description) et, s’il y en a une, `cover.png` (ou `.jpg`, `.webp`) |
 
 La release n’est jamais marquée « Latest » sur GitHub : cette place revient à l’installeur de l’application. Le
@@ -59,15 +59,15 @@ est signalé (« Brouillon abandonné sur GitHub ») et supprimé à la publicat
 
 Une version déjà publiée est mise à jour quand :
 
-| Changement | Ce qui est envoyé |
-|---|---|
-| Le contenu du zip a changé | Le zip, puis `modpack.json` |
-| Le zip manque ou est incomplet sur GitHub | Le zip, puis `modpack.json` |
-| L’image a changé | L’image, puis `modpack.json` |
-| Le nom ou la description a changé | `modpack.json` et le titre de la release |
-| Les mods désactivés ou l’option des configurations ont changé ([réglages des versions](reglages.md)) | `modpack.json` |
-| Les notes ont changé | Le texte de la release |
-| Des fichiers en trop sont sur la release | Ils sont retirés |
+| Changement                                                                                           | Ce qui est envoyé                        |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Le contenu du zip a changé                                                                           | Le zip, puis `modpack.json`              |
+| Le zip manque ou est incomplet sur GitHub                                                            | Le zip, puis `modpack.json`              |
+| L’image a changé                                                                                     | L’image, puis `modpack.json`             |
+| Le nom ou la description a changé                                                                    | `modpack.json` et le titre de la release |
+| Les mods désactivés ou l’option des configurations ont changé ([réglages des versions](reglages.md)) | `modpack.json`                           |
+| Les notes ont changé                                                                                 | Le texte de la release                   |
+| Des fichiers en trop sont sur la release                                                             | Ils sont retirés                         |
 
 Les versions publiées avant que l’application sache reconnaître un modpack à ses mods reçoivent aussi leur
 « empreinte des mods » : seul leur `modpack.json` est renvoyé.

@@ -1,23 +1,49 @@
-import { curseforgeExport, curseforgeLink, curseforgePublish, curseforgeTargets, curseforgeVersions } from './curseforge'
-import { curseforgeStatus, journal, status } from './general'
+import {
+  curseforgeExport,
+  curseforgeLink,
+  curseforgePublish,
+  curseforgeTargets,
+  curseforgeVersions,
+} from './curseforge';
+import { curseforgeStatus, journal, status } from './general';
 import {
   maintenanceConfigure,
   maintenanceDiscard,
   maintenanceRun,
   maintenanceSchedule,
   maintenanceStatusCommand,
-  maintenanceValidate
-} from './maintenance'
-import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth'
-import { hangarLink, hangarPublish, hangarStatus, hangarVersions } from './hangar'
-import { contentCreate, contentCurseforge, contentDelete, contentImport, contentMinecraft, contentNotes, contentSource, contentVersions, contentZip } from './content'
-import { packsCover, packsCreate, packsDelete, packsEdit, packsGroup, packsList, packsNotes, packsSettings, packsShow } from './packs'
-import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish'
-import { packsLink, profilesList } from './profiles'
-import type { Command } from './registry'
-import { testsAll, testsCheck, testsPlayers, testsServer } from './tests'
-import { updatesApply, updatesChangelog, updatesCheck, updatesDiscard, updatesPromote } from './updates'
-import { versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions'
+  maintenanceValidate,
+} from './maintenance';
+import { modrinthLink, modrinthPublish, modrinthStatus, modrinthVersions } from './modrinth';
+import { hangarLink, hangarPublish, hangarStatus, hangarVersions } from './hangar';
+import {
+  contentCreate,
+  contentCurseforge,
+  contentDelete,
+  contentImport,
+  contentMinecraft,
+  contentNotes,
+  contentSource,
+  contentVersions,
+  contentZip,
+} from './content';
+import {
+  packsCover,
+  packsCreate,
+  packsDelete,
+  packsEdit,
+  packsGroup,
+  packsList,
+  packsNotes,
+  packsSettings,
+  packsShow,
+} from './packs';
+import { publishApply, publishPlan, rangerApply, rangerPlan, releasesDelete } from './publish';
+import { packsLink, profilesList } from './profiles';
+import type { Command } from './registry';
+import { testsAll, testsCheck, testsPlayers, testsServer } from './tests';
+import { updatesApply, updatesChangelog, updatesCheck, updatesDiscard, updatesPromote } from './updates';
+import { versionsContents, versionsCreate, versionsDelete, versionsFile, versionsStrip } from './versions';
 
 /** Toutes les commandes, dans l'ordre de l'aide. */
 export const COMMANDS = [
@@ -81,5 +107,5 @@ export const COMMANDS = [
   curseforgeStatus,
   modrinthStatus,
   hangarStatus,
-  journal
-] as unknown as Command[]
+  journal,
+] as unknown as Command[];

@@ -116,10 +116,10 @@ One-time setup:
    SignPath, and a first release of the application already published (`app-v1.0.0`, unsigned).
 2. Apply on [signpath.org](https://signpath.org/apply) with the repository address.
 3. Once the project is created at SignPath: install the SignPath GitHub application on the repository, link the
-   *Trusted Build System* "GitHub.com" to the project, set the content of
+   _Trusted Build System_ "GitHub.com" to the project, set the content of
    [`.github/signpath/artifact-configuration.xml`](.github/signpath/artifact-configuration.xml) as the default
    artifact configuration, and create an API token for a user allowed to submit signing requests.
-4. In GitHub → *Settings* → *Secrets and variables* → *Actions*: the secret `SIGNPATH_API_TOKEN` and the variables
+4. In GitHub → _Settings_ → _Secrets and variables_ → _Actions_: the secret `SIGNPATH_API_TOKEN` and the variables
    `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG` and `SIGNPATH_SIGNING_POLICY_SLUG` (usually
    `release-signing`).
 

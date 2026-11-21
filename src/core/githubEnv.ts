@@ -1,28 +1,28 @@
-import { repoApiUrl } from '../shared/repo'
-import type { RepoRef } from '../shared/types'
+import { repoApiUrl } from '../shared/repo';
+import type { RepoRef } from '../shared/types';
 
 // En test, MM_GITHUB_API (http://localhost:<port>/repos/o/r) remplace l'API de n'importe quel dépôt.
-let override: string | null = null
+let override: string | null = null;
 
 export function setGitHubApiOverride(url: string | null | undefined): void {
-  override = url ? url.replace(/\/+$/, '') : null
+  override = url ? url.replace(/\/+$/, '') : null;
 }
 
 /** Un faux GitHub remplace l'API (tests) : rien d'autre que l'API n'est alors lu sur github.com. */
 export function hasGitHubApiOverride(): boolean {
-  return override !== null
+  return override !== null;
 }
 
 export function repoApiBase(repo: RepoRef): string {
-  return override ?? repoApiUrl(repo)
+  return override ?? repoApiUrl(repo);
 }
 
 export function userApiUrl(): string {
-  return override ? override.replace(/\/repos\/[^/]+\/[^/]+$/, '/user') : 'https://api.github.com/user'
+  return override ? override.replace(/\/repos\/[^/]+\/[^/]+$/, '/user') : 'https://api.github.com/user';
 }
 
 export const GITHUB_HEADERS = {
   Accept: 'application/vnd.github+json',
   'X-GitHub-Api-Version': '2022-11-28',
-  'User-Agent': 'ModpackManager'
-}
+  'User-Agent': 'ModpackManager',
+};

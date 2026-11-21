@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -12,14 +12,14 @@ import {
   LifeBuoy,
   Search,
   Sparkles,
-  X
-} from 'lucide-react'
-import { releaseHasChanges } from '../../../shared/changelog'
-import { frenchSpacing, inlineText } from '../../../shared/docs'
-import { IconButton } from '../components/Button'
-import { Logo } from '../components/Logo'
-import { useStore } from '../store'
-import { ChangelogPage } from './ChangelogPage'
+  X,
+} from 'lucide-react';
+import { releaseHasChanges } from '../../../shared/changelog';
+import { frenchSpacing, inlineText } from '../../../shared/docs';
+import { IconButton } from '../components/Button';
+import { Logo } from '../components/Logo';
+import { useStore } from '../store';
+import { ChangelogPage } from './ChangelogPage';
 import {
   CHANGELOG_PAGE,
   changelog,
@@ -31,38 +31,49 @@ import {
   repoFileUrl,
   summary,
   type DocLink,
-  type DocPage
-} from './content'
-import { DocMarkdown } from './DocMarkdown'
-import { searchDocs, type SearchHit } from './search'
-import { useDocs } from './store'
-import { APP_NAME } from '../../../shared/config'
+  type DocPage,
+} from './content';
+import { DocMarkdown } from './DocMarkdown';
+import { searchDocs, type SearchHit } from './search';
+import { useDocs } from './store';
+import { APP_NAME } from '../../../shared/config';
 
 /** Hauteur réservée à la barre du haut de la page, pour qu'une ancre ne s'y cache pas. */
-const TOP_OFFSET = 96
+const TOP_OFFSET = 96;
 
 interface TocEntry {
-  id: string
-  text: string
-  depth: number
+  id: string;
+  text: string;
+  depth: number;
 }
 
 function tocFor(page: DocPage): TocEntry[] {
   if (page.kind === 'changelog') {
     return changelog.releases
       .filter((release) => release.version !== null && releaseHasChanges(release))
-      .map((release) => ({ id: releaseAnchor(release), text: `Version ${release.version}`, depth: 2 }))
+      .map((release) => ({ id: releaseAnchor(release), text: `Version ${release.version}`, depth: 2 }));
   }
-  return page.headings.filter((heading) => heading.depth === 2 || heading.depth === 3)
+  return page.headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
 }
 
 /** Une fenêtre de dialogue est-elle ouverte par-dessus l'aide ? Elle garde alors la main sur le clavier. */
-const modalOpen = () => document.querySelector('[aria-modal="true"]') !== null
+const modalOpen = () => document.querySelector('[aria-modal="true"]') !== null;
 
 /** Description d'une page du sommaire (« : ce que fait… ») présentée seule : « Ce que fait… ». */
-const describe = (description: string) => frenchSpacing(inlineText(description).replace(/^\p{Ll}/u, (c) => c.toUpperCase()))
+const describe = (description: string) =>
+  frenchSpacing(inlineText(description).replace(/^\p{Ll}/u, (c) => c.toUpperCase()));
 
-function NavLink({ active, onClick, children, badge }: { active: boolean; onClick: () => void; children: ReactNode; badge?: ReactNode }) {
+function NavLink({
+  active,
+  onClick,
+  children,
+  badge,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  badge?: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -75,24 +86,24 @@ function NavLink({ active, onClick, children, badge }: { active: boolean; onClic
       <span className="min-w-0 flex-1 truncate">{children}</span>
       {badge}
     </button>
-  )
+  );
 }
 
 function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> }) {
-  const location = useDocs((s) => s.location)
-  const query = useDocs((s) => s.query)
-  const setQuery = useDocs((s) => s.setQuery)
-  const navigate = useDocs((s) => s.navigate)
-  const updatedFrom = useDocs((s) => s.updatedFrom)
-  const appVersion = useStore((s) => s.appVersion)
-  const update = useStore((s) => s.catalog?.appUpdate?.version ?? null)
-  const searching = query.trim() !== ''
+  const location = useDocs((s) => s.location);
+  const query = useDocs((s) => s.query);
+  const setQuery = useDocs((s) => s.setQuery);
+  const navigate = useDocs((s) => s.navigate);
+  const updatedFrom = useDocs((s) => s.updatedFrom);
+  const appVersion = useStore((s) => s.appVersion);
+  const update = useStore((s) => s.catalog?.appUpdate?.version ?? null);
+  const searching = query.trim() !== '';
 
   const changelogBadge = update ? (
     <span className="rounded-md bg-sky-400/15 px-1.5 py-0.5 text-[10px] font-bold text-sky-300">{update}</span>
   ) : updatedFrom ? (
     <span className="size-2 rounded-full bg-sky-300" title="Nouveautés depuis ta dernière version" />
-  ) : null
+  ) : null;
 
   return (
     <aside className="flex w-72 shrink-0 flex-col border-r border-tint/[0.06] bg-ink-950/40">
@@ -108,16 +119,18 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key !== 'Enter') return
-              const first = searchDocs(query)[0]
-              if (first) navigate({ slug: first.section.slug, anchor: first.section.anchor })
+              if (e.key !== 'Enter') return;
+              const first = searchDocs(query)[0];
+              if (first) navigate({ slug: first.section.slug, anchor: first.section.anchor });
             }}
             placeholder="Rechercher dans l’aide"
             aria-label="Rechercher dans l’aide"
             spellCheck={false}
             className="min-w-0 flex-1 bg-transparent text-sm text-ink-100 outline-none placeholder:text-ink-500"
           />
-          <kbd className="shrink-0 rounded-md bg-tint/[0.06] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-ink-400">Ctrl K</kbd>
+          <kbd className="shrink-0 rounded-md bg-tint/[0.06] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-ink-400">
+            Ctrl K
+          </kbd>
         </label>
       </div>
 
@@ -129,7 +142,9 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
         </NavLink>
         {summary.groups.map((group) => (
           <div key={group.title} className="mt-5">
-            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-widest text-ink-500 uppercase">{group.title}</p>
+            <p className="mb-1.5 px-3 text-[11px] font-semibold tracking-widest text-ink-500 uppercase">
+              {group.title}
+            </p>
             {pages
               .filter((page) => page.group === group.title)
               .map((page) => (
@@ -150,19 +165,19 @@ function Sidebar({ searchRef }: { searchRef: RefObject<HTMLInputElement | null> 
         {APP_NAME} {appVersion && `v${appVersion}`}
       </div>
     </aside>
-  )
+  );
 }
 
 function QuickLink({
   icon: Icon,
   title,
   text,
-  onClick
+  onClick,
 }: {
-  icon: LucideIcon
-  title: string
-  text: string
-  onClick: () => void
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  onClick: () => void;
 }) {
   return (
     <button
@@ -176,19 +191,22 @@ function QuickLink({
       <span className="min-w-0">
         <span className="flex items-center gap-1 font-semibold text-ink-100">
           {title}
-          <ChevronRight size={15} className="text-ink-500 transition group-hover:translate-x-0.5 group-hover:text-ink-300" />
+          <ChevronRight
+            size={15}
+            className="text-ink-500 transition group-hover:translate-x-0.5 group-hover:text-ink-300"
+          />
         </span>
         <span className="mt-1 block text-sm leading-relaxed text-ink-400">{text}</span>
       </span>
     </button>
-  )
+  );
 }
 
 function HomePage() {
-  const navigate = useDocs((s) => s.navigate)
-  const appVersion = useStore((s) => s.appVersion)
-  const update = useStore((s) => s.catalog?.appUpdate?.version ?? null)
-  const go = (slug: string, anchor: string | null = null) => navigate({ slug, anchor })
+  const navigate = useDocs((s) => s.navigate);
+  const appVersion = useStore((s) => s.appVersion);
+  const update = useStore((s) => s.catalog?.appUpdate?.version ?? null);
+  const go = (slug: string, anchor: string | null = null) => navigate({ slug, anchor });
 
   return (
     <div>
@@ -205,13 +223,32 @@ function HomePage() {
       </p>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
-        <QuickLink icon={Download} title="Installer un modpack" text="Du premier clic à la partie dans CurseForge." onClick={() => go('bibliotheque', 'installer-un-modpack')} />
-        <QuickLink icon={CloudUpload} title="Publier mes modpacks" text="Devenir publieur et prendre en main le Studio." onClick={() => go('studio')} />
-        <QuickLink icon={LifeBuoy} title="Résoudre un problème" text="Les messages d’erreur, leur cause et leur solution." onClick={() => go('depannage')} />
+        <QuickLink
+          icon={Download}
+          title="Installer un modpack"
+          text="Du premier clic à la partie dans CurseForge."
+          onClick={() => go('bibliotheque', 'installer-un-modpack')}
+        />
+        <QuickLink
+          icon={CloudUpload}
+          title="Publier mes modpacks"
+          text="Devenir publieur et prendre en main le Studio."
+          onClick={() => go('studio')}
+        />
+        <QuickLink
+          icon={LifeBuoy}
+          title="Résoudre un problème"
+          text="Les messages d’erreur, leur cause et leur solution."
+          onClick={() => go('depannage')}
+        />
         <QuickLink
           icon={Sparkles}
           title="Nouveautés"
-          text={update ? `La version ${update} est disponible : découvre ce qu’elle apporte.` : 'L’historique des versions de l’application.'}
+          text={
+            update
+              ? `La version ${update} est disponible : découvre ce qu’elle apporte.`
+              : 'L’historique des versions de l’application.'
+          }
           onClick={() => go(CHANGELOG_PAGE)}
         />
       </div>
@@ -239,12 +276,12 @@ function HomePage() {
         </section>
       ))}
     </div>
-  )
+  );
 }
 
 function SearchResults({ query }: { query: string }) {
-  const navigate = useDocs((s) => s.navigate)
-  const hits = useMemo(() => searchDocs(query), [query])
+  const navigate = useDocs((s) => s.navigate);
+  const hits = useMemo(() => searchDocs(query), [query]);
 
   return (
     <div>
@@ -280,7 +317,7 @@ function SearchResults({ query }: { query: string }) {
                     </mark>
                   ) : (
                     <span key={i}>{frenchSpacing(part.text)}</span>
-                  )
+                  ),
                 )}
               </span>
             )}
@@ -288,14 +325,14 @@ function SearchResults({ query }: { query: string }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function PageFooter({ page, onLink }: { page: DocPage; onLink: (link: DocLink) => void }) {
-  const navigate = useDocs((s) => s.navigate)
-  const index = readingOrder.findIndex((p) => p.slug === page.slug)
-  const previous = index > 0 ? readingOrder[index - 1] : null
-  const next = index >= 0 && index < readingOrder.length - 1 ? readingOrder[index + 1] : null
+  const navigate = useDocs((s) => s.navigate);
+  const index = readingOrder.findIndex((p) => p.slug === page.slug);
+  const previous = index > 0 ? readingOrder[index - 1] : null;
+  const next = index >= 0 && index < readingOrder.length - 1 ? readingOrder[index + 1] : null;
 
   return (
     <footer className="mt-16 border-t border-tint/[0.06] pt-6">
@@ -335,11 +372,19 @@ function PageFooter({ page, onLink }: { page: DocPage; onLink: (link: DocLink) =
         Voir cette page sur GitHub <ExternalLink size={12} />
       </button>
     </footer>
-  )
+  );
 }
 
-function Toc({ entries, active, onSelect }: { entries: TocEntry[]; active: string | null; onSelect: (id: string) => void }) {
-  if (entries.length < 2) return null
+function Toc({
+  entries,
+  active,
+  onSelect,
+}: {
+  entries: TocEntry[];
+  active: string | null;
+  onSelect: (id: string) => void;
+}) {
+  if (entries.length < 2) return null;
   return (
     <nav className="sticky top-0 max-h-full overflow-y-auto py-10 pr-6" aria-label="Sur cette page">
       <p className="mb-3 text-[11px] font-semibold tracking-widest text-ink-500 uppercase">Sur cette page</p>
@@ -363,7 +408,7 @@ function Toc({ entries, active, onSelect }: { entries: TocEntry[]; active: strin
         ))}
       </ul>
     </nav>
-  )
+  );
 }
 
 /**
@@ -371,116 +416,121 @@ function Toc({ entries, active, onSelect }: { entries: TocEntry[]; active: strin
  * (la barre de titre et la proposition de mise à jour restent visibles). Bouton « Aide » ou F1.
  */
 export function DocsCenter() {
-  const open = useDocs((s) => s.open)
-  const location = useDocs((s) => s.location)
-  const seq = useDocs((s) => s.seq)
-  const query = useDocs((s) => s.query)
-  const history = useDocs((s) => s.history)
-  const navigate = useDocs((s) => s.navigate)
-  const back = useDocs((s) => s.back)
-  const close = useDocs((s) => s.close)
-  const setQuery = useDocs((s) => s.setQuery)
-  const scroller = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const [active, setActive] = useState<string | null>(null)
+  const open = useDocs((s) => s.open);
+  const location = useDocs((s) => s.location);
+  const seq = useDocs((s) => s.seq);
+  const query = useDocs((s) => s.query);
+  const history = useDocs((s) => s.history);
+  const navigate = useDocs((s) => s.navigate);
+  const back = useDocs((s) => s.back);
+  const close = useDocs((s) => s.close);
+  const setQuery = useDocs((s) => s.setQuery);
+  const scroller = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [active, setActive] = useState<string | null>(null);
 
-  const page = pageBySlug(location.slug) ?? pageBySlug(HOME)!
-  const searching = query.trim() !== ''
-  const toc = useMemo(() => tocFor(page), [page])
+  const page = pageBySlug(location.slug) ?? pageBySlug(HOME)!;
+  const searching = query.trim() !== '';
+  const toc = useMemo(() => tocFor(page), [page]);
 
   const onLink = useCallback(
     (link: DocLink) => {
-      if (link.kind === 'external') void window.api.openExternal(link.url)
-      else if (link.kind === 'page') navigate({ slug: link.slug, anchor: link.anchor })
+      if (link.kind === 'external') void window.api.openExternal(link.url);
+      else if (link.kind === 'page') navigate({ slug: link.slug, anchor: link.anchor });
     },
-    [navigate]
-  )
+    [navigate],
+  );
 
   const scrollTo = useCallback((id: string, smooth: boolean) => {
-    const container = scroller.current
-    const target = container?.querySelector<HTMLElement>(`#${CSS.escape(id)}`)
-    if (!container || !target) return
-    const top = target.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop - TOP_OFFSET + 24
-    container.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' })
+    const container = scroller.current;
+    const target = container?.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+    if (!container || !target) return;
+    const top =
+      target.getBoundingClientRect().top -
+      container.getBoundingClientRect().top +
+      container.scrollTop -
+      TOP_OFFSET +
+      24;
+    container.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
     // La section visée est brièvement mise en évidence.
-    target.removeAttribute('data-flash')
-    void target.offsetWidth
-    target.setAttribute('data-flash', '')
-  }, [])
+    target.removeAttribute('data-flash');
+    void target.offsetWidth;
+    target.setAttribute('data-flash', '');
+  }, []);
 
   // Chaque navigation : en haut de la page, ou sur l'ancre demandée.
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const frame = requestAnimationFrame(() => {
-      if (location.anchor && !searching) scrollTo(location.anchor, false)
-      else scroller.current?.scrollTo({ top: 0 })
-    })
-    return () => cancelAnimationFrame(frame)
-  }, [open, seq, searching, location.anchor, scrollTo])
+      if (location.anchor && !searching) scrollTo(location.anchor, false);
+      else scroller.current?.scrollTo({ top: 0 });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, seq, searching, location.anchor, scrollTo]);
 
   // À l'ouverture, les touches de défilement agissent sur la page.
   useEffect(() => {
-    if (open) scroller.current?.focus({ preventScroll: true })
-  }, [open])
+    if (open) scroller.current?.focus({ preventScroll: true });
+  }, [open]);
 
   // Section en cours de lecture, pour « Sur cette page ».
   useEffect(() => {
-    const container = scroller.current
-    if (!open || !container) return
-    let frame = 0
+    const container = scroller.current;
+    if (!open || !container) return;
+    let frame = 0;
     const update = () => {
-      frame = 0
-      const limit = container.getBoundingClientRect().top + TOP_OFFSET + 8
-      let current: string | null = toc[0]?.id ?? null
+      frame = 0;
+      const limit = container.getBoundingClientRect().top + TOP_OFFSET + 8;
+      let current: string | null = toc[0]?.id ?? null;
       for (const entry of toc) {
-        const element = container.querySelector(`#${CSS.escape(entry.id)}`)
-        if (element && element.getBoundingClientRect().top <= limit) current = entry.id
+        const element = container.querySelector(`#${CSS.escape(entry.id)}`);
+        if (element && element.getBoundingClientRect().top <= limit) current = entry.id;
       }
-      setActive(current)
-    }
+      setActive(current);
+    };
     const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update)
-    }
-    update()
-    container.addEventListener('scroll', onScroll, { passive: true })
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    container.addEventListener('scroll', onScroll, { passive: true });
     return () => {
-      container.removeEventListener('scroll', onScroll)
-      if (frame) cancelAnimationFrame(frame)
-    }
-  }, [open, toc, seq])
+      container.removeEventListener('scroll', onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [open, toc, seq]);
 
   // Raccourcis de l'aide. Écoutés à la capture : `Échap` ferme l'aide sans fermer aussi ce qu'elle recouvre
   // (panneau de détails), mais laisse une fenêtre de dialogue ouverte par-dessus se fermer d'abord.
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (modalOpen()) return
+      if (modalOpen()) return;
       if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-        if (useDocs.getState().query) setQuery('')
-        else close()
+        e.preventDefault();
+        e.stopPropagation();
+        if (useDocs.getState().query) setQuery('');
+        else close();
       } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        searchRef.current?.focus()
-        searchRef.current?.select()
+        e.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
       } else if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault()
-        back()
+        e.preventDefault();
+        back();
       }
-    }
-    window.addEventListener('keydown', onKey, true)
-    return () => window.removeEventListener('keydown', onKey, true)
-  }, [open, close, back, setQuery])
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open, close, back, setQuery]);
 
-  if (!open) return null
+  if (!open) return null;
 
   // « Aide › Jouer › La bibliothèque » ; un groupe qui porte le nom de sa page n'est pas répété.
   const crumbs = searching
     ? ['Recherche']
     : page.kind === 'home'
       ? []
-      : [...new Set([page.group, page.title].filter((crumb): crumb is string => Boolean(crumb)))]
+      : [...new Set([page.group, page.title].filter((crumb): crumb is string => Boolean(crumb)))];
 
   return (
     <section
@@ -488,7 +538,7 @@ export function DocsCenter() {
       className="animate-fade-in absolute inset-0 z-[45] flex bg-ink-900"
       onMouseUp={(e) => {
         // Bouton « précédent » de la souris.
-        if (e.button === 3) back()
+        if (e.button === 3) back();
       }}
     >
       <Sidebar searchRef={searchRef} />
@@ -507,7 +557,9 @@ export function DocsCenter() {
             {crumbs.map((crumb, i) => (
               <span key={i} className="flex min-w-0 items-center gap-1.5">
                 <ChevronRight size={14} className="shrink-0 text-ink-600" />
-                <span className={`truncate ${i === crumbs.length - 1 ? 'font-semibold text-ink-100' : 'text-ink-400'}`}>{crumb}</span>
+                <span className={`truncate ${i === crumbs.length - 1 ? 'font-semibold text-ink-100' : 'text-ink-400'}`}>
+                  {crumb}
+                </span>
               </span>
             ))}
           </div>
@@ -539,5 +591,5 @@ export function DocsCenter() {
         </div>
       )}
     </section>
-  )
+  );
 }

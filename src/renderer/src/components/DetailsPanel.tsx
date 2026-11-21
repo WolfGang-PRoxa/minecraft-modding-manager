@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import { ExternalLink, FolderOpen, History, X } from 'lucide-react'
-import type { PresentVersion } from '../../../shared/presence'
-import type { Modpack, ModpackVersion } from '../../../shared/types'
-import { formatBytes, formatDate, formatLoader, formatRelative } from '../lib/format'
-import { useStore } from '../store'
-import { describePresence, PackBadges } from './Badges'
-import { Button, IconButton } from './Button'
-import { Cover } from './Cover'
-import { InstallButton } from './InstallButton'
-import { Notes } from './Notes'
+import { useEffect, useMemo, useState } from 'react';
+import { ExternalLink, FolderOpen, History, X } from 'lucide-react';
+import type { PresentVersion } from '../../../shared/presence';
+import type { Modpack, ModpackVersion } from '../../../shared/types';
+import { formatBytes, formatDate, formatLoader, formatRelative } from '../lib/format';
+import { useStore } from '../store';
+import { describePresence, PackBadges } from './Badges';
+import { Button, IconButton } from './Button';
+import { Cover } from './Cover';
+import { InstallButton } from './InstallButton';
+import { Notes } from './Notes';
 
 function InfoCell({ label, value }: { label: string; value: string | null }) {
   return (
@@ -16,7 +16,7 @@ function InfoCell({ label, value }: { label: string; value: string | null }) {
       <div className="text-[11px] font-semibold tracking-wider text-ink-400 uppercase">{label}</div>
       <div className="mt-1 truncate text-sm font-medium text-ink-100">{value ?? '—'}</div>
     </div>
-  )
+  );
 }
 
 function VersionRow({
@@ -24,16 +24,16 @@ function VersionRow({
   modpack,
   present,
   active,
-  onSelect
+  onSelect,
 }: {
-  version: ModpackVersion
-  modpack: Modpack
+  version: ModpackVersion;
+  modpack: Modpack;
   /** Profils CurseForge qui contiennent cette version. */
-  present: PresentVersion[]
-  active: boolean
-  onSelect: () => void
+  present: PresentVersion[];
+  active: boolean;
+  onSelect: () => void;
 }) {
-  const isLatest = version === modpack.latest
+  const isLatest = version === modpack.latest;
 
   return (
     <button
@@ -70,37 +70,37 @@ function VersionRow({
         </div>
       </div>
     </button>
-  )
+  );
 }
 
 export function DetailsPanel() {
-  const selectedId = useStore((s) => s.selectedId)
-  const modpacks = useStore((s) => s.catalog?.modpacks)
-  const installed = useStore((s) => s.installed)
-  const present = useStore((s) => s.present)
-  const select = useStore((s) => s.select)
-  const modpack = modpacks?.find((m) => m.id === selectedId) ?? null
-  const mine = useMemo(() => present.filter((p) => p.id === selectedId), [present, selectedId])
-  const [versionTag, setVersionTag] = useState<string | null>(null)
+  const selectedId = useStore((s) => s.selectedId);
+  const modpacks = useStore((s) => s.catalog?.modpacks);
+  const installed = useStore((s) => s.installed);
+  const present = useStore((s) => s.present);
+  const select = useStore((s) => s.select);
+  const modpack = modpacks?.find((m) => m.id === selectedId) ?? null;
+  const mine = useMemo(() => present.filter((p) => p.id === selectedId), [present, selectedId]);
+  const [versionTag, setVersionTag] = useState<string | null>(null);
 
   useEffect(() => {
-    setVersionTag(null)
-  }, [selectedId])
+    setVersionTag(null);
+  }, [selectedId]);
 
   useEffect(() => {
-    if (!modpack) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && select(null)
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [modpack, select])
+    if (!modpack) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && select(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [modpack, select]);
 
-  if (!modpack) return null
+  if (!modpack) return null;
 
-  const version = modpack.versions.find((v) => v.tag === versionTag) ?? modpack.latest
-  const current = installed.find((i) => i.id === modpack.id)
+  const version = modpack.versions.find((v) => v.tag === versionTag) ?? modpack.latest;
+  const current = installed.find((i) => i.id === modpack.id);
   // Version installée par l'application mais retirée de GitHub : elle ne fait pas partie des versions présentes.
-  const unlisted = current && !mine.some((p) => p.profilePath === current.instancePath) ? current : null
-  const folder = current?.instancePath ?? mine[0]?.profilePath
+  const unlisted = current && !mine.some((p) => p.profilePath === current.instancePath) ? current : null;
+  const folder = current?.instancePath ?? mine[0]?.profilePath;
 
   return (
     <div className="absolute inset-0 z-40 flex justify-end">
@@ -112,7 +112,12 @@ export function DetailsPanel() {
         aria-label={modpack.latest.name}
       >
         <div className="relative h-60 shrink-0">
-          <Cover id={modpack.id} name={modpack.latest.name} url={modpack.latest.coverUrl} className="absolute inset-0" />
+          <Cover
+            id={modpack.id}
+            name={modpack.latest.name}
+            url={modpack.latest.coverUrl}
+            className="absolute inset-0"
+          />
           <div className="absolute inset-0 bg-linear-to-t from-ink-900 via-ink-900/40 to-transparent" />
           <IconButton
             icon={X}
@@ -136,7 +141,11 @@ export function DetailsPanel() {
                 Ouvrir le dossier
               </Button>
             )}
-            <Button variant="ghost" icon={ExternalLink} onClick={() => void window.api.openExternal(version.releaseUrl)}>
+            <Button
+              variant="ghost"
+              icon={ExternalLink}
+              onClick={() => void window.api.openExternal(version.releaseUrl)}
+            >
               GitHub
             </Button>
           </div>
@@ -198,5 +207,5 @@ export function DetailsPanel() {
         </div>
       </aside>
     </div>
-  )
+  );
 }

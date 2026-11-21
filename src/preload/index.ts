@@ -1,11 +1,11 @@
-import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
-import type { StudioApi } from '../shared/studio'
-import type { RendererApi } from '../shared/types'
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron';
+import type { StudioApi } from '../shared/studio';
+import type { RendererApi } from '../shared/types';
 
 function subscribe<T>(channel: string, listener: (payload: T) => void): () => void {
-  const handler = (_event: IpcRendererEvent, payload: T) => listener(payload)
-  ipcRenderer.on(channel, handler)
-  return () => ipcRenderer.removeListener(channel, handler)
+  const handler = (_event: IpcRendererEvent, payload: T) => listener(payload);
+  ipcRenderer.on(channel, handler);
+  return () => ipcRenderer.removeListener(channel, handler);
 }
 
 const api: RendererApi = {
@@ -41,7 +41,8 @@ const api: RendererApi = {
   getModrinthAuth: () => ipcRenderer.invoke('mrauth:status'),
   getHangarAuth: () => ipcRenderer.invoke('hangarauth:status'),
   saveHangarKey: (value) => ipcRenderer.invoke('hangarauth:save', value),
-  installExtra: (profilePath, kind, id, version) => ipcRenderer.invoke('extras:install', profilePath, kind, id, version),
+  installExtra: (profilePath, kind, id, version) =>
+    ipcRenderer.invoke('extras:install', profilePath, kind, id, version),
   removeExtra: (profilePath, kind, id) => ipcRenderer.invoke('extras:remove', profilePath, kind, id),
   saveModrinthToken: (value) => ipcRenderer.invoke('mrauth:save', value),
   createShortcut: (location) => ipcRenderer.invoke('shortcut:create', location),
@@ -59,8 +60,8 @@ const api: RendererApi = {
   closeWindow: () => ipcRenderer.send('window:close'),
   onWindowStateChange: (listener) => subscribe('window:state', listener),
   getDisplays: () => ipcRenderer.invoke('window:displays'),
-  getWindowBounds: () => ipcRenderer.invoke('window:bounds')
-}
+  getWindowBounds: () => ipcRenderer.invoke('window:bounds'),
+};
 
 // Vue Studio (publieurs) : ranger les zips et publier les releases.
 const studio: StudioApi = {
@@ -95,12 +96,15 @@ const studio: StudioApi = {
   createPackContent: (kind, from) => ipcRenderer.invoke('studio:createPackContent', kind, from),
   zipContentVersion: (folder) => ipcRenderer.invoke('studio:zipContentVersion', folder),
   setMinecraftVersions: (folder, versions) => ipcRenderer.invoke('studio:setMinecraftVersions', folder, versions),
-  publishModCurseForge: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishModCurseForge', folder, version, releaseType),
+  publishModCurseForge: (folder, version, releaseType) =>
+    ipcRenderer.invoke('studio:publishModCurseForge', folder, version, releaseType),
   linkModrinth: (folder, ref) => ipcRenderer.invoke('studio:linkModrinth', folder, ref),
-  publishModrinth: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishModrinth', folder, version, releaseType),
+  publishModrinth: (folder, version, releaseType) =>
+    ipcRenderer.invoke('studio:publishModrinth', folder, version, releaseType),
   modrinthVersions: (folder) => ipcRenderer.invoke('studio:modrinthVersions', folder),
   linkHangar: (folder, ref) => ipcRenderer.invoke('studio:linkHangar', folder, ref),
-  publishHangar: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishHangar', folder, version, releaseType),
+  publishHangar: (folder, version, releaseType) =>
+    ipcRenderer.invoke('studio:publishHangar', folder, version, releaseType),
   hangarVersions: (folder) => ipcRenderer.invoke('studio:hangarVersions', folder),
   deletePack: (folder) => ipcRenderer.invoke('studio:deletePack', folder),
   deleteReleases: (tags) => ipcRenderer.invoke('studio:deleteReleases', tags),
@@ -123,7 +127,8 @@ const studio: StudioApi = {
   scheduleMaintenance: (schedule) => ipcRenderer.invoke('maintenance:schedule', schedule),
   setMaintenanceClaude: (enabled) => ipcRenderer.invoke('maintenance:setClaude', enabled),
   updatePublishTargets: (folder, changes) => ipcRenderer.invoke('studio:updatePublishTargets', folder, changes),
-  publishCurseForge: (folder, version, releaseType) => ipcRenderer.invoke('studio:publishCurseForge', folder, version, releaseType),
+  publishCurseForge: (folder, version, releaseType) =>
+    ipcRenderer.invoke('studio:publishCurseForge', folder, version, releaseType),
   onCurseForgeProgress: (listener) => subscribe('studio:curseforge-progress', listener),
   curseForgeVersions: (folder) => ipcRenderer.invoke('studio:curseForgeVersions', folder),
   testServer: (profilePath) => ipcRenderer.invoke('studio:testServer', profilePath),
@@ -146,8 +151,8 @@ const studio: StudioApi = {
   previewZipEntry: (folder, fileName, path) => ipcRenderer.invoke('studio:zipEntry', folder, fileName, path),
 
   openPath: (path) => ipcRenderer.invoke('studio:openPath', path),
-  getPathForFile: (file) => webUtils.getPathForFile(file)
-}
+  getPathForFile: (file) => webUtils.getPathForFile(file),
+};
 
-contextBridge.exposeInMainWorld('api', api)
-contextBridge.exposeInMainWorld('studio', studio)
+contextBridge.exposeInMainWorld('api', api);
+contextBridge.exposeInMainWorld('studio', studio);

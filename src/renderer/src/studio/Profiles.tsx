@@ -1,6 +1,6 @@
 // La vue du publieur par profil CurseForge : l'arborescence des dossiers de CurseForge (à gauche) et le détail d'un
 // profil face au modpack qui en vient.
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -17,52 +17,52 @@ import {
   PackagePlus,
   RefreshCw,
   Search,
-  Unlink
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type { PackView, ProfileState, ProfileView } from '../../../shared/studio'
-import { Button } from '../components/Button'
-import { KIND_UI } from './ModCard'
-import { releaseVersion } from '../../../shared/releases'
-import { Select } from '../components/Select'
-import { formatLoader, formatRelative } from '../lib/format'
-import { PackCard } from './PackCard'
-import { ProfileUpdates } from './ProfileUpdates'
-import { openLink, openPath, useStudio, type Selection } from './store'
+  Unlink,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { PackView, ProfileState, ProfileView } from '../../../shared/studio';
+import { Button } from '../components/Button';
+import { KIND_UI } from './ModCard';
+import { releaseVersion } from '../../../shared/releases';
+import { Select } from '../components/Select';
+import { formatLoader, formatRelative } from '../lib/format';
+import { PackCard } from './PackCard';
+import { ProfileUpdates } from './ProfileUpdates';
+import { openLink, openPath, useStudio, type Selection } from './store';
 
 const STATE_DOT: Record<ProfileState, { className: string; label: (p: ProfileView) => string } | null> = {
   unlinked: null,
   'no-version': { className: 'bg-ink-400', label: () => 'Modpack sans version' },
   'up-to-date': { className: 'bg-grass-400', label: (p) => `À jour (v${p.matchingVersion})` },
   older: { className: 'bg-amber-glow', label: (p) => `Mods d’une version plus ancienne (v${p.matchingVersion})` },
-  changed: { className: 'bg-sky-400', label: () => 'Changé depuis la dernière version' }
-}
+  changed: { className: 'bg-sky-400', label: () => 'Changé depuis la dernière version' },
+};
 
-const CLOSED_KEY = 'studio.closedFolders'
+const CLOSED_KEY = 'studio.closedFolders';
 
 function loadClosed(): Set<string> {
   try {
-    return new Set(JSON.parse(localStorage.getItem(CLOSED_KEY) ?? '[]') as string[])
+    return new Set(JSON.parse(localStorage.getItem(CLOSED_KEY) ?? '[]') as string[]);
   } catch {
-    return new Set()
+    return new Set();
   }
 }
 
 const sameSelection = (a: Selection, b: Selection) =>
   a.kind === b.kind &&
   (a.kind !== 'profile' || a.path === (b as typeof a).path) &&
-  (a.kind !== 'pack' || a.folder === (b as typeof a).folder)
+  (a.kind !== 'pack' || a.folder === (b as typeof a).folder);
 
 function SidebarItem({
   selected,
   onClick,
   children,
-  title
+  title,
 }: {
-  selected: boolean
-  onClick: () => void
-  children: ReactNode
-  title?: string
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+  title?: string;
 }) {
   return (
     <button
@@ -70,17 +70,19 @@ function SidebarItem({
       onClick={onClick}
       title={title}
       className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-sm transition ${
-        selected ? 'bg-grass-400/12 text-ink-100 ring-1 ring-inset ring-grass-400/30' : 'text-ink-300 hover:bg-tint/[0.05] hover:text-ink-100'
+        selected
+          ? 'bg-grass-400/12 text-ink-100 ring-1 ring-inset ring-grass-400/30'
+          : 'text-ink-300 hover:bg-tint/[0.05] hover:text-ink-100'
       }`}
     >
       {children}
     </button>
-  )
+  );
 }
 
 function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; selected: boolean; onClick: () => void }) {
-  const dot = STATE_DOT[profile.state]
-  const meta = [profile.minecraftVersion, formatLoader(profile.modLoader)?.split(' ')[0]].filter(Boolean).join(' · ')
+  const dot = STATE_DOT[profile.state];
+  const meta = [profile.minecraftVersion, formatLoader(profile.modLoader)?.split(' ')[0]].filter(Boolean).join(' · ');
   return (
     <SidebarItem selected={selected} onClick={onClick} title={dot?.label(profile)}>
       <span className="min-w-0 flex-1">
@@ -90,7 +92,9 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
           {profile.pack && <span className="text-ink-400"> · {profile.pack.name}</span>}
         </span>
       </span>
-      {profile.installedPack && <Download size={13} className="shrink-0 text-ink-500" aria-label="Installé par l’application" />}
+      {profile.installedPack && (
+        <Download size={13} className="shrink-0 text-ink-500" aria-label="Installé par l’application" />
+      )}
       {(profile.trialOf || profile.trialPath) && (
         <FlaskConical
           size={13}
@@ -99,13 +103,16 @@ function ProfileItem({ profile, selected, onClick }: { profile: ProfileView; sel
         />
       )}
       {profile.curseforgeProjectId && !profile.installedPack && (
-        <span className="shrink-0 text-[10px] font-bold text-curseforge" title="Installation d’un modpack de CurseForge">
+        <span
+          className="shrink-0 text-[10px] font-bold text-curseforge"
+          title="Installation d’un modpack de CurseForge"
+        >
           CF
         </span>
       )}
       {dot && <span className={`size-2 shrink-0 rounded-full ${dot.className}`} />}
     </SidebarItem>
-  )
+  );
 }
 
 /**
@@ -118,24 +125,24 @@ function GroupedItems({
   closed,
   toggle,
   isSelected,
-  render
+  render,
 }: {
-  section: string
-  packs: PackView[]
-  closed: Set<string>
-  toggle: (key: string) => void
-  isSelected: (pack: PackView) => boolean
-  render: (pack: PackView) => ReactNode
+  section: string;
+  packs: PackView[];
+  closed: Set<string>;
+  toggle: (key: string) => void;
+  isSelected: (pack: PackView) => boolean;
+  render: (pack: PackView) => ReactNode;
 }) {
-  const groups = new Map<string, PackView[]>()
-  for (const pack of packs) if (pack.group) groups.set(pack.group, [...(groups.get(pack.group) ?? []), pack])
-  const names = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }))
+  const groups = new Map<string, PackView[]>();
+  for (const pack of packs) if (pack.group) groups.set(pack.group, [...(groups.get(pack.group) ?? []), pack]);
+  const names = [...groups.keys()].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
   return (
     <>
       {names.map((name) => {
-        const items = groups.get(name)!
-        const key = `group:${section}:${name}`
-        const open = !closed.has(key) || items.some(isSelected)
+        const items = groups.get(name)!;
+        const key = `group:${section}:${name}`;
+        const open = !closed.has(key) || items.some(isSelected);
         return (
           <div key={key}>
             <button
@@ -144,17 +151,23 @@ function GroupedItems({
               className="flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left text-sm text-ink-300 transition hover:bg-tint/[0.05] hover:text-ink-100"
             >
               {open ? <ChevronDown size={14} className="shrink-0" /> : <ChevronRight size={14} className="shrink-0" />}
-              {open ? <FolderOpen size={14} className="shrink-0 text-ink-400" /> : <Folder size={14} className="shrink-0 text-ink-400" />}
+              {open ? (
+                <FolderOpen size={14} className="shrink-0 text-ink-400" />
+              ) : (
+                <Folder size={14} className="shrink-0 text-ink-400" />
+              )}
               <span className="flex-1 truncate font-medium">{name}</span>
               <span className="text-xs text-ink-500">{items.length}</span>
             </button>
-            {open && <div className="mt-0.5 ml-4 space-y-0.5 border-l border-tint/[0.06] pl-1.5">{items.map(render)}</div>}
+            {open && (
+              <div className="mt-0.5 ml-4 space-y-0.5 border-l border-tint/[0.06] pl-1.5">{items.map(render)}</div>
+            )}
           </div>
-        )
+        );
       })}
       {packs.filter((p) => !p.group).map(render)}
     </>
-  )
+  );
 }
 
 /** Arborescence : tous les modpacks, les dossiers de CurseForge et leurs profils, les modpacks sans profil. */
@@ -163,31 +176,32 @@ const CONTENT_SECTIONS = [
   { kind: 'mod', title: 'Mods' },
   { kind: 'resourcepack', title: 'Packs de ressources' },
   { kind: 'shader', title: 'Shaders' },
-  { kind: 'plugin', title: 'Plugins' }
-] as const
+  { kind: 'plugin', title: 'Plugins' },
+] as const;
 
 export function ProfilesSidebar() {
-  const library = useStudio((s) => s.library)
-  const overview = useStudio((s) => s.overview)
-  const selection = useStudio((s) => s.selection)
-  const select = useStudio((s) => s.select)
-  const refresh = useStudio((s) => s.refresh)
-  const [query, setQuery] = useState('')
-  const [closed, setClosed] = useState(loadClosed)
+  const library = useStudio((s) => s.library);
+  const overview = useStudio((s) => s.overview);
+  const selection = useStudio((s) => s.selection);
+  const select = useStudio((s) => s.select);
+  const refresh = useStudio((s) => s.refresh);
+  const [query, setQuery] = useState('');
+  const [closed, setClosed] = useState(loadClosed);
 
-  const wanted = query.trim().toLowerCase()
-  const matches = (p: ProfileView) => !wanted || p.name.toLowerCase().includes(wanted) || Boolean(p.pack?.name.toLowerCase().includes(wanted))
+  const wanted = query.trim().toLowerCase();
+  const matches = (p: ProfileView) =>
+    !wanted || p.name.toLowerCase().includes(wanted) || Boolean(p.pack?.name.toLowerCase().includes(wanted));
   const toggle = (key: string) => {
-    const next = new Set(closed)
-    if (next.has(key)) next.delete(key)
-    else next.add(key)
-    setClosed(next)
+    const next = new Set(closed);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    setClosed(next);
     try {
-      localStorage.setItem(CLOSED_KEY, JSON.stringify([...next]))
+      localStorage.setItem(CLOSED_KEY, JSON.stringify([...next]));
     } catch {
       // préférence facultative
     }
-  }
+  };
 
   return (
     <aside className="flex w-80 shrink-0 flex-col border-r border-tint/[0.05] bg-ink-900/40">
@@ -221,10 +235,10 @@ export function ProfilesSidebar() {
         {!library && <p className="px-2.5 text-xs text-ink-500">Lecture des profils CurseForge…</p>}
 
         {library?.folders.map((folder) => {
-          const key = folder.id ?? '(aucun)'
-          const shown = folder.profiles.filter(matches)
-          if (wanted && !shown.length) return null
-          const open = Boolean(wanted) || !closed.has(key)
+          const key = folder.id ?? '(aucun)';
+          const shown = folder.profiles.filter(matches);
+          if (wanted && !shown.length) return null;
+          const open = Boolean(wanted) || !closed.has(key);
           return (
             <div key={key}>
               <button
@@ -240,7 +254,7 @@ export function ProfilesSidebar() {
               {open && (
                 <div className="mt-0.5 space-y-0.5">
                   {shown.map((profile) => {
-                    const target: Selection = { kind: 'profile', path: profile.path }
+                    const target: Selection = { kind: 'profile', path: profile.path };
                     return (
                       <ProfileItem
                         key={profile.path}
@@ -248,19 +262,19 @@ export function ProfilesSidebar() {
                         selected={sameSelection(selection, target)}
                         onClick={() => select(target)}
                       />
-                    )
+                    );
                   })}
                 </div>
               )}
             </div>
-          )
+          );
         })}
 
         {!wanted &&
           CONTENT_SECTIONS.map(({ kind, title }) => {
-            const items = (overview?.packs ?? []).filter((p) => p.type === kind)
-            if (!items.length) return null
-            const Icon = KIND_UI[kind]!.icon
+            const items = (overview?.packs ?? []).filter((p) => p.type === kind);
+            if (!items.length) return null;
+            const Icon = KIND_UI[kind]!.icon;
             return (
               <div key={kind}>
                 <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">{title}</p>
@@ -271,56 +285,72 @@ export function ProfilesSidebar() {
                   toggle={toggle}
                   isSelected={(pack) => sameSelection(selection, { kind: 'pack', folder: pack.folder })}
                   render={(pack) => {
-                    const target: Selection = { kind: 'pack', folder: pack.folder }
-                    const latest = pack.contentVersions[0]?.version
+                    const target: Selection = { kind: 'pack', folder: pack.folder };
+                    const latest = pack.contentVersions[0]?.version;
                     return (
-                      <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                      <SidebarItem
+                        key={pack.folder}
+                        selected={sameSelection(selection, target)}
+                        onClick={() => select(target)}
+                      >
                         <Icon size={15} className="shrink-0 text-ink-400" />
                         <span className="flex-1 truncate">{pack.name}</span>
-                        {latest && <span className="text-xs text-ink-500">{kind === 'mod' || kind === 'plugin' ? releaseVersion(latest).split('-')[0] : `v${latest}`}</span>}
+                        {latest && (
+                          <span className="text-xs text-ink-500">
+                            {kind === 'mod' || kind === 'plugin' ? releaseVersion(latest).split('-')[0] : `v${latest}`}
+                          </span>
+                        )}
                       </SidebarItem>
-                    )
+                    );
                   }}
                 />
               </div>
-            )
+            );
           })}
 
         {library && library.packsWithoutProfile.length > 0 && !wanted && (
           <div>
-            <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">Modpacks sans profil</p>
+            <p className="px-1.5 py-1 text-xs font-semibold tracking-wide text-ink-400 uppercase">
+              Modpacks sans profil
+            </p>
             <GroupedItems
               section="modpack"
-              packs={library.packsWithoutProfile.flatMap((folder) => overview?.packs.find((p) => p.folder === folder) ?? [])}
+              packs={library.packsWithoutProfile.flatMap(
+                (folder) => overview?.packs.find((p) => p.folder === folder) ?? [],
+              )}
               closed={closed}
               toggle={toggle}
               isSelected={(pack) => sameSelection(selection, { kind: 'pack', folder: pack.folder })}
               render={(pack) => {
-                const target: Selection = { kind: 'pack', folder: pack.folder }
+                const target: Selection = { kind: 'pack', folder: pack.folder };
                 return (
-                  <SidebarItem key={pack.folder} selected={sameSelection(selection, target)} onClick={() => select(target)}>
+                  <SidebarItem
+                    key={pack.folder}
+                    selected={sameSelection(selection, target)}
+                    onClick={() => select(target)}
+                  >
                     <span className="truncate">{pack.name}</span>
                   </SidebarItem>
-                )
+                );
               }}
             />
           </div>
         )}
       </nav>
     </aside>
-  )
+  );
 }
 
 function Banner({
   icon: Icon,
   tone,
   children,
-  actions
+  actions,
 }: {
-  icon: LucideIcon
-  tone: string
-  children: ReactNode
-  actions?: ReactNode
+  icon: LucideIcon;
+  tone: string;
+  children: ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <div className={`mt-5 flex flex-wrap items-center gap-4 rounded-2xl px-5 py-4 ring-1 ring-inset ${tone}`}>
@@ -328,27 +358,41 @@ function Banner({
       <div className="min-w-0 flex-1 text-sm text-ink-100">{children}</div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
-  )
+  );
 }
 
 /** Choix d'un modpack (ou d'un profil) à lier, et bouton « Lier ». */
-function LinkPicker({ options, onLink }: { options: Array<{ value: string; label: string }>; onLink: (value: string) => void }) {
-  const [value, setValue] = useState('')
-  if (!options.length) return null
+function LinkPicker({
+  options,
+  onLink,
+}: {
+  options: Array<{ value: string; label: string }>;
+  onLink: (value: string) => void;
+}) {
+  const [value, setValue] = useState('');
+  if (!options.length) return null;
   return (
     <div className="flex items-center gap-2">
-      <Select label="À lier" value={value} onChange={setValue} options={options} placeholder="Choisir…" size="sm" className="w-56" />
+      <Select
+        label="À lier"
+        value={value}
+        onChange={setValue}
+        options={options}
+        placeholder="Choisir…"
+        size="sm"
+        className="w-56"
+      />
       <Button size="sm" icon={Link2} disabled={!value} onClick={() => onLink(value)}>
         Lier
       </Button>
     </div>
-  )
+  );
 }
 
 function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView | null }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const run = useStudio((s) => s.run)
-  const packs = useStudio((s) => s.overview?.packs ?? [])
+  const openDialog = useStudio((s) => s.openDialog);
+  const run = useStudio((s) => s.run);
+  const packs = useStudio((s) => s.overview?.packs ?? []);
   const createVersion = (label: string, variant: 'primary' | 'secondary' = 'primary') =>
     pack && (
       <Button
@@ -359,16 +403,16 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
       >
         {label}
       </Button>
-    )
+    );
 
-  if (profile.trialOf) return null
+  if (profile.trialOf) return null;
   if (profile.installedPack) {
     return (
       <Banner icon={Download} tone="bg-tint/[0.04] text-ink-300 ring-tint/[0.08]">
-        Installé par l’application depuis GitHub ({profile.installedPack.id}, v{profile.installedPack.version}) : c’est une copie
-        de joueur, pas la source d’un modpack.
+        Installé par l’application depuis GitHub ({profile.installedPack.id}, v{profile.installedPack.version}) : c’est
+        une copie de joueur, pas la source d’un modpack.
       </Banner>
-    )
+    );
   }
   if (!pack) {
     return (
@@ -400,29 +444,37 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
         ) : (
           <>
             <strong className="font-semibold">Aucun modpack ne vient de ce profil.</strong>{' '}
-            <span className="text-ink-300">Crée-en un (sa v1 est zippée tout de suite), ou lie-le à un modpack existant.</span>
+            <span className="text-ink-300">
+              Crée-en un (sa v1 est zippée tout de suite), ou lie-le à un modpack existant.
+            </span>
           </>
         )}
       </Banner>
-    )
+    );
   }
 
-  const latest = pack.versions[0]
+  const latest = pack.versions[0];
   const banner = (() => {
     switch (profile.state) {
       case 'no-version':
         return (
-          <Banner icon={PackagePlus} tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]" actions={createVersion('Créer la v1 depuis ce profil')}>
+          <Banner
+            icon={PackagePlus}
+            tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
+            actions={createVersion('Créer la v1 depuis ce profil')}
+          >
             <strong className="font-semibold">{pack.name} n’a encore aucune version.</strong>
           </Banner>
-        )
+        );
       case 'up-to-date':
         return (
           <Banner icon={CircleCheck} tone="bg-grass-400/10 text-grass-400 ring-grass-400/25">
             <strong className="font-semibold">À jour.</strong>{' '}
-            <span className="text-ink-300">Le profil a exactement les mods de la v{profile.matchingVersion}, la dernière version.</span>
+            <span className="text-ink-300">
+              Le profil a exactement les mods de la v{profile.matchingVersion}, la dernière version.
+            </span>
           </Banner>
-        )
+        );
       case 'older':
         return (
           <Banner
@@ -433,7 +485,7 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
             <strong className="font-semibold">Le profil a les mods de la v{profile.matchingVersion}</strong>{' '}
             <span className="text-ink-300">, plus ancienne que la dernière version (v{latest?.number}).</span>
           </Banner>
-        )
+        );
       default:
         return (
           <Banner
@@ -442,11 +494,13 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
             actions={createVersion(`Créer la v${pack.nextVersion} depuis ce profil`)}
           >
             <strong className="font-semibold">Le profil a changé depuis la v{latest?.number}.</strong>{' '}
-            <span className="text-ink-300">Ses mods ne sont plus ceux de la dernière version : de quoi créer la suivante.</span>
+            <span className="text-ink-300">
+              Ses mods ne sont plus ceux de la dernière version : de quoi créer la suivante.
+            </span>
           </Banner>
-        )
+        );
     }
-  })()
+  })();
 
   return (
     <>
@@ -455,34 +509,42 @@ function ProfileStatus({ profile, pack }: { profile: ProfileView; pack: PackView
           icon={Link2}
           tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
           actions={
-            <Button size="sm" icon={Link2} onClick={() => void run(window.studio.linkProfile(pack.folder, profile.path), 'Lien enregistré')}>
+            <Button
+              size="sm"
+              icon={Link2}
+              onClick={() => void run(window.studio.linkProfile(pack.folder, profile.path), 'Lien enregistré')}
+            >
               Confirmer
             </Button>
           }
         >
           <strong className="font-semibold">Ce profil semble être la source de {pack.name}</strong>{' '}
-          <span className="text-ink-300">(mêmes mods qu’une de ses versions, ou même nom). Confirme le lien pour le garder.</span>
+          <span className="text-ink-300">
+            (mêmes mods qu’une de ses versions, ou même nom). Confirme le lien pour le garder.
+          </span>
         </Banner>
       )}
       {banner}
     </>
-  )
+  );
 }
 
 /** Le détail d'un profil CurseForge, et le modpack qui en vient. */
 export function ProfileDetail({ profile }: { profile: ProfileView }) {
-  const library = useStudio((s) => s.library)
-  const pack = useStudio((s) => (profile.pack ? (s.overview?.packs.find((p) => p.folder === profile.pack!.folder) ?? null) : null))
-  const run = useStudio((s) => s.run)
-  const folder = library?.folders.find((f) => f.profiles.some((p) => p.path === profile.path))
+  const library = useStudio((s) => s.library);
+  const pack = useStudio((s) =>
+    profile.pack ? (s.overview?.packs.find((p) => p.folder === profile.pack!.folder) ?? null) : null,
+  );
+  const run = useStudio((s) => s.run);
+  const folder = library?.folders.find((f) => f.profiles.some((p) => p.path === profile.path));
   const meta = [
     profile.minecraftVersion && `Minecraft ${profile.minecraftVersion}`,
     formatLoader(profile.modLoader),
     profile.modCount !== null && `${profile.modCount} mod${profile.modCount > 1 ? 's' : ''}`,
-    profile.lastPlayed && `joué ${formatRelative(profile.lastPlayed)}`
+    profile.lastPlayed && `joué ${formatRelative(profile.lastPlayed)}`,
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' · ');
 
   return (
     <div className="space-y-6">
@@ -507,7 +569,12 @@ export function ProfileDetail({ profile }: { profile: ProfileView }) {
               </Button>
             )}
             {pack && profile.link === 'saved' && (
-              <Button size="sm" variant="ghost" icon={Unlink} onClick={() => void run(window.studio.linkProfile(pack.folder, null), 'Lien retiré')}>
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={Unlink}
+                onClick={() => void run(window.studio.linkProfile(pack.folder, null), 'Lien retiré')}
+              >
                 Délier
               </Button>
             )}
@@ -521,36 +588,41 @@ export function ProfileDetail({ profile }: { profile: ProfileView }) {
       </section>
       {pack && <PackCard pack={pack} index={1} />}
     </div>
-  )
+  );
 }
 
 /** Un modpack dont le profil source n'est pas connu : sa carte, et de quoi le lier à un profil. */
 export function UnlinkedPackDetail({ pack }: { pack: PackView }) {
-  const library = useStudio((s) => s.library)
-  const run = useStudio((s) => s.run)
+  const library = useStudio((s) => s.library);
+  const run = useStudio((s) => s.run);
   const options = useMemo(
     () =>
       (library?.folders ?? [])
         .flatMap((f) => f.profiles)
         .filter((p) => !p.installedPack)
         .map((p) => ({ value: p.path, label: p.pack ? `${p.name} (${p.pack.name})` : p.name })),
-    [library]
-  )
+    [library],
+  );
   return (
     <div className="space-y-6">
       <Banner
         icon={Link2}
         tone="bg-tint/[0.04] text-ink-200 ring-tint/[0.08]"
         actions={
-          <LinkPicker options={options} onLink={(path) => void run(window.studio.linkProfile(pack.folder, path), 'Profil lié au modpack')} />
+          <LinkPicker
+            options={options}
+            onLink={(path) => void run(window.studio.linkProfile(pack.folder, path), 'Profil lié au modpack')}
+          />
         }
       >
         <strong className="font-semibold">
-          {pack.profile ? `Le profil « ${pack.profile.name} » n’est plus dans CurseForge.` : 'Aucun profil CurseForge n’est lié à ce modpack.'}
+          {pack.profile
+            ? `Le profil « ${pack.profile.name} » n’est plus dans CurseForge.`
+            : 'Aucun profil CurseForge n’est lié à ce modpack.'}
         </strong>{' '}
         <span className="text-ink-300">Lie-le au profil d’où viennent ses versions pour suivre ses changements.</span>
       </Banner>
       <PackCard pack={pack} index={0} />
     </div>
-  )
+  );
 }

@@ -1,46 +1,50 @@
-import { z } from 'zod'
-import type { AddonUpdate, TrialResult, UpdatePlan } from '../../shared/studio'
-import { CurseForgeClient } from '../curseforgeApi'
-import { trialPathOf } from '../trialUpdates'
-import { profileFor, target } from './refs'
-import { command } from './registry'
+import { z } from 'zod';
+import type { AddonUpdate, TrialResult, UpdatePlan } from '../../shared/studio';
+import { CurseForgeClient } from '../curseforgeApi';
+import { trialPathOf } from '../trialUpdates';
+import { profileFor, target } from './refs';
+import { command } from './registry';
 
-
-const RELEASE = ['', '', ' (bêta)', ' (alpha)']
+const RELEASE = ['', '', ' (bêta)', ' (alpha)'];
 
 function printUpdate(u: AddonUpdate): string {
-  const to = `${u.to.fileName}${RELEASE[u.to.releaseType] ?? ''}${u.downloadable ? '' : ' (à faire dans CurseForge)'}`
-  if (!u.from) return `  + ${u.name} : ${to} (dépendance de ${u.requiredBy.join(', ')})`
-  return `  ~ ${u.name} : ${u.from.fileName} → ${to}`
+  const to = `${u.to.fileName}${RELEASE[u.to.releaseType] ?? ''}${u.downloadable ? '' : ' (à faire dans CurseForge)'}`;
+  if (!u.from) return `  + ${u.name} : ${to} (dépendance de ${u.requiredBy.join(', ')})`;
+  return `  ~ ${u.name} : ${u.from.fileName} → ${to}`;
 }
 
 export const updatesCheck = command({
   name: 'updates check',
-  summary: 'Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil (sans rien changer).',
+  summary:
+    'Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil (sans rien changer).',
   description:
     'Même version de Minecraft et même chargeur que le profil ; dépendances obligatoires manquantes ajoutées. Demande la ' +
     'clé de l’API CurseForge (curseforge status). Les fichiers posés à la main (untracked) ne sont jamais mis à jour. ' +
     'Pour juger une mise à jour, lis ses notes de version avec « updates changelog ».',
   params: z.object({
     ...target,
-    beta: z.boolean().optional().describe('Accepter aussi les versions bêta (par défaut : versions stables seulement).')
+    beta: z
+      .boolean()
+      .optional()
+      .describe('Accepter aussi les versions bêta (par défaut : versions stables seulement).'),
   }),
   kind: 'read',
   async run({ pack, profile, beta }, ctx) {
-    return ctx.service.checkUpdates(await profileFor(ctx, pack, profile), beta ? 'beta' : 'release')
+    return ctx.service.checkUpdates(await profileFor(ctx, pack, profile), beta ? 'beta' : 'release');
   },
   print: (plan: UpdatePlan) =>
     [
       `${plan.profile} — Minecraft ${plan.minecraftVersion}${plan.modLoader ? ` · ${plan.modLoader}` : ''} · ${plan.checked} projet(s) vérifié(s)`,
       ...(plan.updates.length ? plan.updates.map(printUpdate) : ['  Tout est à jour.']),
       ...plan.warnings.map((w) => `  ⚠ ${w}`),
-      ...(plan.untracked.length ? [`  Posés à la main, non suivis : ${plan.untracked.join(', ')}`] : [])
-    ].join('\n')
-})
+      ...(plan.untracked.length ? [`  Posés à la main, non suivis : ${plan.untracked.join(', ')}`] : []),
+    ].join('\n'),
+});
 
 export const updatesApply = command({
   name: 'updates apply',
-  summary: 'Crée la copie d’essai « <profil> (essai) » avec les mises à jour du profil ; le profil d’origine n’est pas touché.',
+  summary:
+    'Crée la copie d’essai « <profil> (essai) » avec les mises à jour du profil ; le profil d’origine n’est pas touché.',
   description:
     'L’essai apparaît dans CurseForge après sa relance : le publieur peut y jouer. Une mise à jour dont l’auteur interdit ' +
     'le téléchargement hors de CurseForge est laissée de côté (skipped) : elle se fait dans CurseForge. Ensuite : ' +
@@ -48,23 +52,26 @@ export const updatesApply = command({
   params: z.object({
     ...target,
     beta: z.boolean().optional().describe('Accepter aussi les versions bêta.'),
-    only: z.array(z.number().int().positive()).optional().describe('Seulement ces projets CurseForge (projectId de « updates check »).')
+    only: z
+      .array(z.number().int().positive())
+      .optional()
+      .describe('Seulement ces projets CurseForge (projectId de « updates check »).'),
   }),
   kind: 'write',
   async run({ pack, profile, beta, only }, ctx) {
-    const path = await profileFor(ctx, pack, profile)
+    const path = await profileFor(ctx, pack, profile);
     return ctx.service.applyUpdatesToTrial(path, { channel: beta ? 'beta' : 'release', only }, (done, total, name) =>
-      ctx.progress(name ? `Mise à jour : ${name}` : 'Mises à jour appliquées', done, total)
-    )
+      ctx.progress(name ? `Mise à jour : ${name}` : 'Mises à jour appliquées', done, total),
+    );
   },
   print: (result: TrialResult) =>
     [
       `Essai créé : ${result.trialPath}`,
       ...result.applied.map(printUpdate),
       ...result.skipped.map((s) => `  ✖ ${s.update.name} : ${s.reason}`),
-      'Relance CurseForge pour le voir et y jouer, puis « updates promote » (garder) ou « updates discard » (abandonner).'
-    ].join('\n')
-})
+      'Relance CurseForge pour le voir et y jouer, puis « updates promote » (garder) ou « updates discard » (abandonner).',
+    ].join('\n'),
+});
 
 export const updatesPromote = command({
   name: 'updates promote',
@@ -76,11 +83,11 @@ export const updatesPromote = command({
   params: z.object(target),
   kind: 'destructive',
   async run({ pack, profile }, ctx) {
-    const path = await profileFor(ctx, pack, profile)
-    return { profile: path, promoted: await ctx.service.promoteTrial(path) }
+    const path = await profileFor(ctx, pack, profile);
+    return { profile: path, promoted: await ctx.service.promoteTrial(path) };
   },
-  print: ({ promoted }) => `Essai reporté : ${promoted.join(', ') || 'rien à reporter'}.`
-})
+  print: ({ promoted }) => `Essai reporté : ${promoted.join(', ') || 'rien à reporter'}.`,
+});
 
 export const updatesDiscard = command({
   name: 'updates discard',
@@ -88,12 +95,12 @@ export const updatesDiscard = command({
   params: z.object(target),
   kind: 'destructive',
   async run({ pack, profile }, ctx) {
-    const path = await profileFor(ctx, pack, profile)
-    await ctx.service.discardTrial(path)
-    return { trial: trialPathOf(path) }
+    const path = await profileFor(ctx, pack, profile);
+    await ctx.service.discardTrial(path);
+    return { trial: trialPathOf(path) };
   },
-  print: ({ trial }) => `${trial} est à la corbeille.`
-})
+  print: ({ trial }) => `${trial} est à la corbeille.`,
+});
 
 /** Texte brut d'un changelog HTML (assez pour être lu dans un terminal ou par Claude). */
 export function htmlToText(html: string): string {
@@ -109,7 +116,7 @@ export function htmlToText(html: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/\n{3,}/g, '\n\n')
-    .trim()
+    .trim();
 }
 
 export const updatesChangelog = command({
@@ -117,13 +124,13 @@ export const updatesChangelog = command({
   summary: 'Notes de version d’un fichier CurseForge (texte), pour juger une mise à jour avant de l’appliquer.',
   params: z.object({
     project: z.number().int().positive().describe('Projet CurseForge (projectId de « updates check »).'),
-    file: z.number().int().positive().describe('Fichier (to.fileId de « updates check »).')
+    file: z.number().int().positive().describe('Fichier (to.fileId de « updates check »).'),
   }),
   kind: 'read',
   async run({ project, file }) {
-    const client = await CurseForgeClient.create({ dotenvDir: process.cwd() })
-    const text = htmlToText(await client.getChangelog(project, file))
-    return { project, file, changelog: text.length > 20_000 ? `${text.slice(0, 20_000)}\n…` : text }
+    const client = await CurseForgeClient.create({ dotenvDir: process.cwd() });
+    const text = htmlToText(await client.getChangelog(project, file));
+    return { project, file, changelog: text.length > 20_000 ? `${text.slice(0, 20_000)}\n…` : text };
   },
-  print: ({ changelog }) => changelog || '(pas de notes de version)'
-})
+  print: ({ changelog }) => changelog || '(pas de notes de version)',
+});

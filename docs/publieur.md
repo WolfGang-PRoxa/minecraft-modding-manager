@@ -45,7 +45,7 @@ connecter un autre.
 
 ### Créer un jeton GitHub
 
-Sans session existante, la connexion se fait avec un jeton d’accès *fine-grained*, limité au dépôt des modpacks :
+Sans session existante, la connexion se fait avec un jeton d’accès _fine-grained_, limité au dépôt des modpacks :
 
 1. Ouvrir la page de [création d’un jeton](https://github.com/settings/personal-access-tokens/new) (lien
    **en créer un** dans l’application).

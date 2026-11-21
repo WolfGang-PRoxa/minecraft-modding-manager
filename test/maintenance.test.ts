@@ -1,58 +1,79 @@
 // Mises à jour automatiques, de bout en bout sur un faux CurseForge et un faux GitHub : passage, essai prêt, validation
 // et publication, échec des tests, abandon, publication automatique. Les tests du serveur et avec des joueurs, et la
 // fermeture de CurseForge, sont remplacés (ils lanceraient Java et le jeu, et fermeraient le vrai CurseForge).
-import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { after, before, describe, it } from 'node:test'
-import { CurseForgeClient, type CfFile } from '../src/core/curseforgeApi'
-import { setCurseForgeApiOverride } from '../src/core/curseforgeAuth'
-import { setGitHubApiOverride } from '../src/core/githubEnv'
-import { discardPending, finishPending, maintenanceStatus, runMaintenance, type MaintenanceOptions } from '../src/core/maintenance/pipeline'
-import { dueAt, isDue } from '../src/core/maintenance/schedule'
-import { readMaintenanceState } from '../src/core/maintenance/state'
-import { maintenanceLock } from '../src/core/operations'
-import { useSettingsFile } from '../src/core/settings'
-import { StudioService } from '../src/core/studio/service'
-import { promoteTrial, trialPathOf } from '../src/core/trialUpdates'
-import { maintenanceStatusCommand } from '../src/core/commands/maintenance'
-import { DEFAULT_PACK_UPDATES, type LogIssue, type MaintenanceStatus, type MaintenanceTask, type PackMaintenance, type PackUpdates, type PlayerTestReport, type ProfileTestReports, type ServerTestReport } from '../src/shared/studio'
-import { startFakeCurseForge, VALID_API_KEY, type FakeCurseForge } from './support/fakeCurseForge'
-import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub'
-import { makeInstance, tempDir } from './support/fixtures'
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { after, before, describe, it } from 'node:test';
+import { CurseForgeClient, type CfFile } from '../src/core/curseforgeApi';
+import { setCurseForgeApiOverride } from '../src/core/curseforgeAuth';
+import { setGitHubApiOverride } from '../src/core/githubEnv';
+import {
+  discardPending,
+  finishPending,
+  maintenanceStatus,
+  runMaintenance,
+  type MaintenanceOptions,
+} from '../src/core/maintenance/pipeline';
+import { dueAt, isDue } from '../src/core/maintenance/schedule';
+import { readMaintenanceState } from '../src/core/maintenance/state';
+import { maintenanceLock } from '../src/core/operations';
+import { useSettingsFile } from '../src/core/settings';
+import { StudioService } from '../src/core/studio/service';
+import { promoteTrial, trialPathOf } from '../src/core/trialUpdates';
+import { maintenanceStatusCommand } from '../src/core/commands/maintenance';
+import {
+  DEFAULT_PACK_UPDATES,
+  type LogIssue,
+  type MaintenanceStatus,
+  type MaintenanceTask,
+  type PackMaintenance,
+  type PackUpdates,
+  type PlayerTestReport,
+  type ProfileTestReports,
+  type ServerTestReport,
+} from '../src/shared/studio';
+import { startFakeCurseForge, VALID_API_KEY, type FakeCurseForge } from './support/fakeCurseForge';
+import { startFakeGitHub, type FakeGitHub } from './support/fakeGitHub';
+import { makeInstance, tempDir } from './support/fixtures';
 
 /**
  * Le service, sans Java ni CurseForge réel : le serveur « démarre » selon `serverStarts`, les joueurs jouent selon
  * `playersPlay`, et le journal de l'essai contient `trialIssues` (celui du profil d'origine, aucune erreur).
  */
 class TestService extends StudioService {
-  serverStarts = true
-  playersPlay = true
+  serverStarts = true;
+  playersPlay = true;
   /** Le profil d'origine passe la partie (référence). */
-  originPlays = true
+  originPlays = true;
   /** Message de l'erreur du report (CurseForge resté ouvert…), ou null. */
-  promoteFails: string | null = null
-  trialIssues: LogIssue[] = []
+  promoteFails: string | null = null;
+  trialIssues: LogIssue[] = [];
 
   override async currentTests(): Promise<ProfileTestReports> {
-    return { files: null, server: null, players: await this.testPlayers('profil d’origine') }
+    return { files: null, server: null, players: await this.testPlayers('profil d’origine') };
   }
 
   override async testPlayers(profilePath: string): Promise<PlayerTestReport> {
-    const server = await this.testServer(profilePath)
-    const passed = server.outcome === 'started' && (profilePath.includes('(essai)') ? this.playersPlay : this.originPlays)
+    const server = await this.testServer(profilePath);
+    const passed =
+      server.outcome === 'started' && (profilePath.includes('(essai)') ? this.playersPlay : this.originPlays);
     return {
       profile: 'essai',
       profilePath,
       startedAt: new Date().toISOString(),
       durationMs: 1,
       outcome: passed ? 'passed' : 'failed',
-      message: passed ? 'Les 2 joueurs ont joué.' : server.outcome === 'started' ? 'Testeur1 : Le jeu a planté pendant la partie.' : server.message,
+      message: passed
+        ? 'Les 2 joueurs ont joué.'
+        : server.outcome === 'started'
+          ? 'Testeur1 : Le jeu a planté pendant la partie.'
+          : server.message,
       players: [],
       server,
-      clientIssues: []
-    }
+      clientIssues: [],
+    };
   }
 
   override async testServer(profilePath: string): Promise<ServerTestReport> {
@@ -68,31 +89,31 @@ class TestService extends StudioService {
       modLoader: 'forge',
       clientOnly: [],
       crashReport: null,
-      logTail: []
-    } as ServerTestReport
+      logTail: [],
+    } as ServerTestReport;
   }
 
   override async promoteTrial(profilePath: string): Promise<string[]> {
-    if (this.promoteFails) throw new Error(this.promoteFails)
-    const changed = await promoteTrial(profilePath)
-    await rm(trialPathOf(profilePath), { recursive: true, force: true })
-    return changed
+    if (this.promoteFails) throw new Error(this.promoteFails);
+    const changed = await promoteTrial(profilePath);
+    await rm(trialPathOf(profilePath), { recursive: true, force: true });
+    return changed;
   }
 }
 
 describe('mises à jour automatiques', () => {
-  let curseforge: FakeCurseForge
-  let github: FakeGitHub
-  let root: { dir: string; cleanup: () => Promise<void> }
-  let profile: string
-  let service: TestService
-  let options: MaintenanceOptions
-  let nextFile = 1101
+  let curseforge: FakeCurseForge;
+  let github: FakeGitHub;
+  let root: { dir: string; cleanup: () => Promise<void> };
+  let profile: string;
+  let service: TestService;
+  let options: MaintenanceOptions;
+  let nextFile = 1101;
 
   /** Publie sur le faux CurseForge un fichier plus récent d'Alpha. */
   function releaseAlpha(): CfFile {
-    const id = nextFile++
-    const content = Buffer.from(`alpha ${id}`)
+    const id = nextFile++;
+    const content = Buffer.from(`alpha ${id}`);
     const file: CfFile = {
       id,
       modId: 11,
@@ -105,32 +126,40 @@ describe('mises à jour automatiques', () => {
       isAvailable: true,
       gameVersions: ['1.20.1', 'Forge'],
       hashes: [{ value: createHash('sha1').update(content).digest('hex'), algo: 1 }],
-      dependencies: []
-    }
-    curseforge.catalog.files.push(file)
-    curseforge.catalog.downloads[id] = content
-    curseforge.catalog.mods[0].latestFilesIndexes = [{ gameVersion: '1.20.1', fileId: id, filename: file.fileName, releaseType: 1, modLoader: 1 }]
-    return file
+      dependencies: [],
+    };
+    curseforge.catalog.files.push(file);
+    curseforge.catalog.downloads[id] = content;
+    curseforge.catalog.mods[0].latestFilesIndexes = [
+      { gameVersion: '1.20.1', fileId: id, filename: file.fileName, releaseType: 1, modLoader: 1 },
+    ];
+    return file;
   }
 
-  const status = async () => (await maintenanceStatus(service, options.lock, null)).packs[0]
+  const status = async () => (await maintenanceStatus(service, options.lock, null)).packs[0];
 
   before(async () => {
-    curseforge = await startFakeCurseForge()
-    setCurseForgeApiOverride(curseforge.url)
-    github = await startFakeGitHub()
-    setGitHubApiOverride(github.apiBase)
-    root = await tempDir()
-    useSettingsFile(join(root.dir, 'Réglages', 'settings.json'))
-    const workspace = join(root.dir, 'Modpacks')
-    await mkdir(workspace)
-    profile = await makeInstance(join(root.dir, 'Instances'), 'Mon Pack', { mods: [{ file: 'alpha-1100.jar', addonId: 11, name: 'Alpha' }] })
-    const instanceFile = join(profile, 'minecraftinstance.json')
-    const instance = JSON.parse(await readFile(instanceFile, 'utf8'))
-    instance.guid = 'guid-mon-pack'
-    Object.assign(instance.installedAddons[0], { categoryClassID: 6 })
-    Object.assign(instance.installedAddons[0].installedFile, { id: 1100, releaseType: 1, gameVersion: ['1.20.1', 'Forge'] })
-    await writeFile(instanceFile, JSON.stringify(instance))
+    curseforge = await startFakeCurseForge();
+    setCurseForgeApiOverride(curseforge.url);
+    github = await startFakeGitHub();
+    setGitHubApiOverride(github.apiBase);
+    root = await tempDir();
+    useSettingsFile(join(root.dir, 'Réglages', 'settings.json'));
+    const workspace = join(root.dir, 'Modpacks');
+    await mkdir(workspace);
+    profile = await makeInstance(join(root.dir, 'Instances'), 'Mon Pack', {
+      mods: [{ file: 'alpha-1100.jar', addonId: 11, name: 'Alpha' }],
+    });
+    const instanceFile = join(profile, 'minecraftinstance.json');
+    const instance = JSON.parse(await readFile(instanceFile, 'utf8'));
+    instance.guid = 'guid-mon-pack';
+    Object.assign(instance.installedAddons[0], { categoryClassID: 6 });
+    Object.assign(instance.installedAddons[0].installedFile, {
+      id: 1100,
+      releaseType: 1,
+      gameVersion: ['1.20.1', 'Forge'],
+    });
+    await writeFile(instanceFile, JSON.stringify(instance));
     curseforge.catalog.mods.push({
       id: 11,
       name: 'Alpha',
@@ -140,8 +169,8 @@ describe('mises à jour automatiques', () => {
       allowModDistribution: true,
       links: { websiteUrl: 'https://www.curseforge.com/minecraft/mc-mods/alpha' },
       latestFilesIndexes: [],
-      authors: [{ id: 5, name: 'auteur' }]
-    })
+      authors: [{ id: 5, name: 'auteur' }],
+    });
 
     service = new TestService({
       getWorkspaceDir: () => workspace,
@@ -150,186 +179,211 @@ describe('mises à jour automatiques', () => {
       getCredential: async () => ({ token: 'jeton', source: 'env' }),
       getInstancesDir: async () => join(root.dir, 'Instances'),
       getCurseForgeClient: async () => new CurseForgeClient(VALID_API_KEY),
-      trashItem: (path) => rm(path, { recursive: true, force: true })
-    })
-    options = { service, lock: maintenanceLock('les tests') }
-    await service.createPackFromProfile('Mon Pack', profile, false, () => {}, new AbortController().signal)
-  })
+      trashItem: (path) => rm(path, { recursive: true, force: true }),
+    });
+    options = { service, lock: maintenanceLock('les tests') };
+    await service.createPackFromProfile('Mon Pack', profile, false, () => {}, new AbortController().signal);
+  });
 
   after(async () => {
-    setCurseForgeApiOverride(null)
-    setGitHubApiOverride(null)
-    await curseforge.close()
-    await github.close()
-    await root.cleanup()
-  })
+    setCurseForgeApiOverride(null);
+    setGitHubApiOverride(null);
+    await curseforge.close();
+    await github.close();
+    await root.cleanup();
+  });
 
   it('calcule le tour de chaque modpack', () => {
-    const weekly = { ...DEFAULT_PACK_UPDATES, frequency: 'weekly' as const }
-    const now = new Date('2026-10-20T04:00:00Z')
-    assert.equal(isDue(weekly, null, now), true)
-    assert.equal(isDue(weekly, '2026-10-13T04:05:00Z', now), true, 'quelques minutes d’avance ne font pas sauter un jour')
-    assert.equal(isDue(weekly, '2026-10-15T04:00:00Z', now), false)
-    assert.equal(isDue(DEFAULT_PACK_UPDATES, null, now), false, 'à la demande : jamais seul')
-    assert.equal(dueAt({ ...weekly, frequency: 'monthly' }, '2026-10-01T00:00:00Z')?.toISOString(), '2026-10-31T00:00:00.000Z')
-  })
+    const weekly = { ...DEFAULT_PACK_UPDATES, frequency: 'weekly' as const };
+    const now = new Date('2026-10-20T04:00:00Z');
+    assert.equal(isDue(weekly, null, now), true);
+    assert.equal(
+      isDue(weekly, '2026-10-13T04:05:00Z', now),
+      true,
+      'quelques minutes d’avance ne font pas sauter un jour',
+    );
+    assert.equal(isDue(weekly, '2026-10-15T04:00:00Z', now), false);
+    assert.equal(isDue(DEFAULT_PACK_UPDATES, null, now), false, 'à la demande : jamais seul');
+    assert.equal(
+      dueAt({ ...weekly, frequency: 'monthly' }, '2026-10-01T00:00:00Z')?.toISOString(),
+      '2026-10-31T00:00:00.000Z',
+    );
+  });
 
   it('enregistre les réglages seulement s’ils servent', async () => {
-    const packFile = join(root.dir, 'Modpacks', 'Mon_Pack', 'pack.json')
-    assert.equal(JSON.parse(await readFile(packFile, 'utf8')).updates, undefined)
-    const updates = await service.updatePackUpdates('Mon_Pack', { frequency: 'weekly' })
-    assert.deepEqual(updates, { ...DEFAULT_PACK_UPDATES, frequency: 'weekly' })
-    assert.deepEqual(JSON.parse(await readFile(packFile, 'utf8')).updates, updates)
-  })
+    const packFile = join(root.dir, 'Modpacks', 'Mon_Pack', 'pack.json');
+    assert.equal(JSON.parse(await readFile(packFile, 'utf8')).updates, undefined);
+    const updates = await service.updatePackUpdates('Mon_Pack', { frequency: 'weekly' });
+    assert.deepEqual(updates, { ...DEFAULT_PACK_UPDATES, frequency: 'weekly' });
+    assert.deepEqual(JSON.parse(await readFile(packFile, 'utf8')).updates, updates);
+  });
 
   it('rien à faire : le modpack est à jour', async () => {
-    const [record] = await runMaintenance({ due: true }, options)
-    assert.equal(record.outcome, 'up-to-date')
-    assert.deepEqual(await runMaintenance({ due: true }, options), [], 'son tour ne revient que dans une semaine')
-  })
+    const [record] = await runMaintenance({ due: true }, options);
+    assert.equal(record.outcome, 'up-to-date');
+    assert.deepEqual(await runMaintenance({ due: true }, options), [], 'son tour ne revient que dans une semaine');
+  });
 
   it('une mise à jour testée attend d’être validée', async () => {
-    releaseAlpha()
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(record.outcome, 'ready', record.message)
-    assert.deepEqual(record.changes, ['Alpha : alpha-1100.jar → alpha-1101.jar'])
-    assert.equal(record.trialPath, trialPathOf(profile))
-    const [again] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(again.outcome, 'skipped')
-    assert.equal((await status()).last?.outcome, 'ready', 'un passage remis à plus tard ne fait pas oublier l’essai')
-  })
+    releaseAlpha();
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(record.outcome, 'ready', record.message);
+    assert.deepEqual(record.changes, ['Alpha : alpha-1100.jar → alpha-1101.jar']);
+    assert.equal(record.trialPath, trialPathOf(profile));
+    const [again] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(again.outcome, 'skipped');
+    assert.equal((await status()).last?.outcome, 'ready', 'un passage remis à plus tard ne fait pas oublier l’essai');
+  });
 
   it('valider crée la version suivante, avec ses notes, et la publie', async () => {
-    const record = await finishPending((await service.overview()).packs[0], true, options)
-    assert.equal(record.outcome, 'published', record.message)
-    assert.equal(record.version, 2)
-    const pack = (await service.overview()).packs[0]
-    assert.match(pack.versions[0].notes, /Alpha : alpha-1100\.jar → alpha-1101\.jar/)
-    assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v2'))
-    assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v1'), 'la v1 part avec : rien n’est retiré')
-    const [next] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(next.outcome, 'up-to-date', 'le profil source a reçu la mise à jour')
-  })
+    const record = await finishPending((await service.overview()).packs[0], true, options);
+    assert.equal(record.outcome, 'published', record.message);
+    assert.equal(record.version, 2);
+    const pack = (await service.overview()).packs[0];
+    assert.match(pack.versions[0].notes, /Alpha : alpha-1100\.jar → alpha-1101\.jar/);
+    assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v2'));
+    assert.ok(
+      github.releases.some((r) => r.tag_name === 'pack-mon-pack-v1'),
+      'la v1 part avec : rien n’est retiré',
+    );
+    const [next] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(next.outcome, 'up-to-date', 'le profil source a reçu la mise à jour');
+  });
 
   it('un essai qui échoue aux tests reste à regarder, puis s’abandonne', async () => {
-    releaseAlpha()
-    service.serverStarts = false
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(record.outcome, 'failed')
-    assert.match(record.message, /Test du serveur : Le serveur a planté/)
-    const discarded = await discardPending((await service.overview()).packs[0], options)
-    assert.equal(discarded.message, 'Essai abandonné.')
-    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null)
-    service.serverStarts = true
-  })
+    releaseAlpha();
+    service.serverStarts = false;
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(record.outcome, 'failed');
+    assert.match(record.message, /Test du serveur : Le serveur a planté/);
+    const discarded = await discardPending((await service.overview()).packs[0], options);
+    assert.equal(discarded.message, 'Essai abandonné.');
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null);
+    service.serverStarts = true;
+  });
 
   it('un essai reporté ou abandonné en dehors des mises à jour automatiques n’attend plus de décision', async () => {
-    const pack = async () => (await service.overview()).packs[0]
-    const status = async () => (await maintenanceStatus(service, options.lock, null)).packs[0].last
-    releaseAlpha()
-    service.serverStarts = false
+    const pack = async () => (await service.overview()).packs[0];
+    const status = async () => (await maintenanceStatus(service, options.lock, null)).packs[0].last;
+    releaseAlpha();
+    service.serverStarts = false;
     after(() => {
-      service.serverStarts = true
-    })
+      service.serverStarts = true;
+    });
     // L'essai disparaît sans passer par les mises à jour automatiques (report à la main, dossier supprimé…).
-    const [failed] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(failed.outcome, 'failed')
-    await rm(failed.trialPath!, { recursive: true, force: true })
-    assert.equal((await status())?.outcome, 'skipped')
-    assert.equal((await status())?.trialPath, null)
+    const [failed] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(failed.outcome, 'failed');
+    await rm(failed.trialPath!, { recursive: true, force: true });
+    assert.equal((await status())?.outcome, 'skipped');
+    assert.equal((await status())?.trialPath, null);
     // « Abandonner » retire la section au lieu d'échouer faute d'essai ; ensuite, plus rien n'attend.
-    const cleared = await discardPending(await pack(), options)
-    assert.equal(cleared.trialPath, null)
-    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null)
-    await assert.rejects(finishPending(await pack(), false, options), /n’a pas d’essai/)
+    const cleared = await discardPending(await pack(), options);
+    assert.equal(cleared.trialPath, null);
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null);
+    await assert.rejects(finishPending(await pack(), false, options), /n’a pas d’essai/);
 
     // « Valider quand même » sur un essai disparu : refusé, mais la section est retirée aussi.
-    const [lost] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    await rm(lost.trialPath!, { recursive: true, force: true })
-    await assert.rejects(finishPending(await pack(), false, options), /n’existe plus/)
-    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null)
+    const [lost] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    await rm(lost.trialPath!, { recursive: true, force: true });
+    await assert.rejects(finishPending(await pack(), false, options), /n’existe plus/);
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.trialPath, null);
 
     // L'essai est abandonné depuis les mises à jour du profil : le passage en attente est retiré aussitôt.
-    const [again] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(again.outcome, 'failed')
-    await service.discardTrial(profile)
-    assert.equal((await readMaintenanceState())['mon-pack'].last?.outcome, 'skipped')
-    assert.equal((await readMaintenanceState())['mon-pack'].last?.message, 'Essai abandonné.')
-  })
+    const [again] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(again.outcome, 'failed');
+    await service.discardTrial(profile);
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.outcome, 'skipped');
+    assert.equal((await readMaintenanceState())['mon-pack'].last?.message, 'Essai abandonné.');
+  });
 
   it('publie seul quand le modpack le permet', async () => {
-    await service.updatePackUpdates('Mon_Pack', { autoPublish: true })
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(record.outcome, 'published', record.message)
-    assert.equal(record.version, 3)
-    assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v3'))
-  })
+    await service.updatePackUpdates('Mon_Pack', { autoPublish: true });
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(record.outcome, 'published', record.message);
+    assert.equal(record.version, 3);
+    assert.ok(github.releases.some((r) => r.tag_name === 'pack-mon-pack-v3'));
+  });
 
   it('une erreur apparue dans les journaux retient la publication automatique', async () => {
-    releaseAlpha()
-    service.trialIssues = [{ level: 'error', source: 'RecipeManager', message: 'Couldn’t load recipe alpha:foo', detail: null, count: 3, key: 'k' }]
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    service.trialIssues = []
-    assert.equal(record.outcome, 'ready', record.message)
-    assert.match(record.message, /Publication automatique retenue/)
+    releaseAlpha();
+    service.trialIssues = [
+      {
+        level: 'error',
+        source: 'RecipeManager',
+        message: 'Couldn’t load recipe alpha:foo',
+        detail: null,
+        count: 3,
+        key: 'k',
+      },
+    ];
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    service.trialIssues = [];
+    assert.equal(record.outcome, 'ready', record.message);
+    assert.match(record.message, /Publication automatique retenue/);
     assert.deepEqual(record.warnings, [
       '1 nouvelle erreur dans les journaux depuis le profil d’origine :',
-      'Serveur : [RecipeManager] Couldn’t load recipe alpha:foo (×3)'
-    ])
-    await discardPending((await service.overview()).packs[0], options)
-  })
+      'Serveur : [RecipeManager] Couldn’t load recipe alpha:foo (×3)',
+    ]);
+    await discardPending((await service.overview()).packs[0], options);
+  });
 
   it('un jeu qui plante pendant la partie fait échouer l’essai', async () => {
-    releaseAlpha()
-    service.playersPlay = false
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    service.playersPlay = true
-    assert.equal(record.outcome, 'failed')
-    assert.equal(record.message, 'Partie de test : Testeur1 : Le jeu a planté pendant la partie.')
-    await discardPending((await service.overview()).packs[0], options)
-  })
+    releaseAlpha();
+    service.playersPlay = false;
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    service.playersPlay = true;
+    assert.equal(record.outcome, 'failed');
+    assert.equal(record.message, 'Partie de test : Testeur1 : Le jeu a planté pendant la partie.');
+    await discardPending((await service.overview()).packs[0], options);
+  });
 
   it('un jeu qui plante aussi sur le profil d’origine : seul le serveur départage, publication retenue', async () => {
-    releaseAlpha()
-    service.playersPlay = false
-    service.originPlays = false
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    service.playersPlay = true
-    service.originPlays = true
-    assert.equal(record.outcome, 'ready', record.message)
-    assert.match(record.message, /la partie avec des joueurs échoue aussi sur le profil d’origine\. Publication automatique retenue/)
-    assert.match(record.warnings?.[0] ?? '', /^Partie avec des joueurs impossible, profil d’origine compris : /)
-    await discardPending((await service.overview()).packs[0], options)
-  })
+    releaseAlpha();
+    service.playersPlay = false;
+    service.originPlays = false;
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    service.playersPlay = true;
+    service.originPlays = true;
+    assert.equal(record.outcome, 'ready', record.message);
+    assert.match(
+      record.message,
+      /la partie avec des joueurs échoue aussi sur le profil d’origine\. Publication automatique retenue/,
+    );
+    assert.match(record.warnings?.[0] ?? '', /^Partie avec des joueurs impossible, profil d’origine compris : /);
+    await discardPending((await service.overview()).packs[0], options);
+  });
 
   it('CurseForge resté ouvert : la mise à jour testée reste à valider', async () => {
-    releaseAlpha()
-    service.promoteFails = 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.'
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    service.promoteFails = null
-    assert.equal(record.outcome, 'ready', record.message)
-    assert.match(record.message, /Publication automatique impossible : CurseForge ne s’est pas fermé .* Valide-la depuis le Studio\./)
-    assert.equal(record.trialPath, trialPathOf(profile))
-    assert.equal((await status()).last?.outcome, 'ready')
-    await discardPending((await service.overview()).packs[0], options)
-  })
+    releaseAlpha();
+    service.promoteFails = 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.';
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    service.promoteFails = null;
+    assert.equal(record.outcome, 'ready', record.message);
+    assert.match(
+      record.message,
+      /Publication automatique impossible : CurseForge ne s’est pas fermé .* Valide-la depuis le Studio\./,
+    );
+    assert.equal(record.trialPath, trialPathOf(profile));
+    assert.equal((await status()).last?.outcome, 'ready');
+    await discardPending((await service.overview()).packs[0], options);
+  });
 
   it('un mod figé n’est plus mis à jour', async () => {
-    releaseAlpha()
-    await service.updatePackUpdates('Mon_Pack', { pinned: [{ projectId: 11, name: 'Alpha' }] })
-    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options)
-    assert.equal(record.outcome, 'up-to-date')
-  })
+    releaseAlpha();
+    await service.updatePackUpdates('Mon_Pack', { pinned: [{ projectId: 11, name: 'Alpha' }] });
+    const [record] = await runMaintenance({ folders: ['Mon_Pack'] }, options);
+    assert.equal(record.outcome, 'up-to-date');
+  });
 
   it('un seul passage à la fois', async () => {
-    const release = await maintenanceLock('un autre passage').acquire('les mises à jour automatiques')
+    const release = await maintenanceLock('un autre passage').acquire('les mises à jour automatiques');
     try {
-      await assert.rejects(runMaintenance({}, options), /Patiente/)
+      await assert.rejects(runMaintenance({}, options), /Patiente/);
     } finally {
-      await release()
+      await release();
     }
-  })
-})
+  });
+});
 
 describe('maintenance status, affiché', () => {
   const pack = (frequency: PackUpdates['frequency']): PackMaintenance => ({
@@ -339,27 +393,27 @@ describe('maintenance status, affiché', () => {
     updates: { ...DEFAULT_PACK_UPDATES, frequency },
     checkedAt: null,
     dueAt: frequency === 'manual' ? null : '2026-11-13T00:30:00.000Z',
-    last: null
-  })
+    last: null,
+  });
   const task = (installed: boolean): MaintenanceTask => ({
     installed,
     time: installed ? '04:00' : null,
     wake: installed,
     lastRunAt: null,
     nextRunAt: null,
-    foreign: false
-  })
-  const print = (status: MaintenanceStatus) => String(maintenanceStatusCommand.print!(status as never))
+    foreign: false,
+  });
+  const print = (status: MaintenanceStatus) => String(maintenanceStatusCommand.print!(status as never));
 
   it('sans tâche planifiée, une fréquence n’annonce pas de prochain passage', () => {
-    const text = print({ packs: [pack('biweekly'), pack('manual')], task: task(false), running: null })
-    assert.match(text, /1 modpack a une fréquence, mais rien ne se lancera seul/)
-    assert.match(text, /prochaine : aucune, pas de tâche planifiée/)
-  })
+    const text = print({ packs: [pack('biweekly'), pack('manual')], task: task(false), running: null });
+    assert.match(text, /1 modpack a une fréquence, mais rien ne se lancera seul/);
+    assert.match(text, /prochaine : aucune, pas de tâche planifiée/);
+  });
 
   it('avec la tâche, la date du prochain passage est annoncée', () => {
-    const text = print({ packs: [pack('biweekly')], task: task(true), running: null })
-    assert.doesNotMatch(text, /rien ne se lancera seul|pas de tâche planifiée/)
-    assert.match(text, /prochaine : \d\d\/\d\d\/2026/)
-  })
-})
+    const text = print({ packs: [pack('biweekly')], task: task(true), running: null });
+    assert.doesNotMatch(text, /rien ne se lancera seul|pas de tâche planifiée/);
+    assert.match(text, /prochaine : \d\d\/\d\d\/2026/);
+  });
+});

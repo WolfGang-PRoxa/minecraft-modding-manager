@@ -26,40 +26,40 @@ d’Electron est donc téléchargé au premier lancement. S’il manque, `node -
 
 ## Commandes
 
-| Commande | Effet |
-|---|---|
-| `npm run dev` | L’application en développement, avec rechargement à chaud de l’interface. |
-| `npm run studio` | La même chose, ouverte sur le Studio (`--studio`). |
-| `npm run typecheck` | Vérification des types : processus principal, scripts, interface et relais. |
-| `npm run docs:verifier` | Vérification de la documentation et de l’historique des versions (voir plus bas). |
-| `npm test` | Les tests (`test/*.test.ts`, avec `node:test` et tsx) : moteur, commandes, serveur MCP, sur des dossiers temporaires et un faux GitHub. |
-| `npm run build` | Types, documentation, tests, puis compilation dans `out/`. |
-| `npm run build:win` | L’installeur Windows, dans `dist/` : compilation, images des fenêtres de l’installeur, puis electron-builder. |
-| `npm run changelog` | État de l’historique des versions (voir [Suivi des changements](#suivi-des-changements)). |
-| `npm run mpm -- <commande>` | Les commandes du moteur (voir [Claude Code et commandes](commandes.md)) ; sans argument, leur liste ; options communes `--json`, `--yes`, `--dir`, `--repo` ; `npm run mpm -- mcp` démarre le serveur MCP. `npm run modpacks:ranger` et `npm run modpacks:publier` en sont des raccourcis. |
-| `npx tsx scripts/generate-installer-images.ts` | Régénère les images des fenêtres de l’installeur (`build/installer/`), à partir du logo `build/icon.png`. `npm run build:win` le fait. |
+| Commande                                       | Effet                                                                                                                                                                                                                                                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`                                  | L’application en développement, avec rechargement à chaud de l’interface.                                                                                                                                                                                                                  |
+| `npm run studio`                               | La même chose, ouverte sur le Studio (`--studio`).                                                                                                                                                                                                                                         |
+| `npm run typecheck`                            | Vérification des types : processus principal, scripts, interface et relais.                                                                                                                                                                                                                |
+| `npm run docs:verifier`                        | Vérification de la documentation et de l’historique des versions (voir plus bas).                                                                                                                                                                                                          |
+| `npm test`                                     | Les tests (`test/*.test.ts`, avec `node:test` et tsx) : moteur, commandes, serveur MCP, sur des dossiers temporaires et un faux GitHub.                                                                                                                                                    |
+| `npm run build`                                | Types, documentation, tests, puis compilation dans `out/`.                                                                                                                                                                                                                                 |
+| `npm run build:win`                            | L’installeur Windows, dans `dist/` : compilation, images des fenêtres de l’installeur, puis electron-builder.                                                                                                                                                                              |
+| `npm run changelog`                            | État de l’historique des versions (voir [Suivi des changements](#suivi-des-changements)).                                                                                                                                                                                                  |
+| `npm run mpm -- <commande>`                    | Les commandes du moteur (voir [Claude Code et commandes](commandes.md)) ; sans argument, leur liste ; options communes `--json`, `--yes`, `--dir`, `--repo` ; `npm run mpm -- mcp` démarre le serveur MCP. `npm run modpacks:ranger` et `npm run modpacks:publier` en sont des raccourcis. |
+| `npx tsx scripts/generate-installer-images.ts` | Régénère les images des fenêtres de l’installeur (`build/installer/`), à partir du logo `build/icon.png`. `npm run build:win` le fait.                                                                                                                                                     |
 
 ## Organisation du code
 
 Une application [Electron](https://www.electronjs.org/) : un processus principal, une seule fenêtre, deux vues
 (Bibliothèque et Studio). L’interface est en React 19, Tailwind CSS 4 et zustand, compilée par electron-vite.
 
-| Dossier | Contenu |
-|---|---|
-| `src/main` | Processus principal (Electron) : fenêtre, lecture des releases (`github.ts`), installation (`installer.ts`), mise à jour de l’application (`appUpdate.ts`), signalements (`report.ts`), connexion à Claude Code (`claudeCode.ts`), canaux IPC. |
-| `src/core` | Le moteur, en Node pur (sans Electron, vérifié par un test) : réglages, connexion GitHub, CurseForge, choix du joueur, et le Studio (`studio/` : dossier, analyse des zips, rangement, publication). Verrou et journal des opérations, partagés entre processus. |
-| `src/core/commands` | Le registre des commandes : une commande = un nom, une description, des paramètres (zod) et une fonction. La ligne de commande et le serveur MCP en sont tirés. |
-| `src/cli` | `mpm`, la ligne de commande (`mpm.cmd` dans l’application installée), et `mpm mcp`. |
-| `src/mcp` | Le serveur MCP pour Claude Code, et les instructions qu’il donne à Claude. |
-| `src/preload` | Le pont entre la fenêtre et le processus principal : `window.api` et `window.studio`. |
-| `src/renderer` | L’interface : `src/` (Bibliothèque, composants, état), `src/studio/` (vue Studio), `src/docs/` (aide intégrée). |
-| `src/shared` | Code commun : types, configuration (`APP_REPO`…), format des releases, lecture de la documentation et de l’historique des versions. |
-| `test` | Les tests, et leurs outils (`support/` : faux GitHub, fausses instances CurseForge). |
-| `scripts` | Outils du dépôt : `changelog.ts`, `docs.ts`, `blockmap.ts` (blockmap de l’installeur, recalculé par la CI après la signature), et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`). |
-| `docs` | Cette documentation. |
-| `relay` | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)). |
-| `build` | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
-| `.github/workflows` | La publication de l’application sur un tag `app-v*`. |
+| Dossier             | Contenu                                                                                                                                                                                                                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/main`          | Processus principal (Electron) : fenêtre, lecture des releases (`github.ts`), installation (`installer.ts`), mise à jour de l’application (`appUpdate.ts`), signalements (`report.ts`), connexion à Claude Code (`claudeCode.ts`), canaux IPC.                                                                                        |
+| `src/core`          | Le moteur, en Node pur (sans Electron, vérifié par un test) : réglages, connexion GitHub, CurseForge, choix du joueur, et le Studio (`studio/` : dossier, analyse des zips, rangement, publication). Verrou et journal des opérations, partagés entre processus.                                                                      |
+| `src/core/commands` | Le registre des commandes : une commande = un nom, une description, des paramètres (zod) et une fonction. La ligne de commande et le serveur MCP en sont tirés.                                                                                                                                                                       |
+| `src/cli`           | `mpm`, la ligne de commande (`mpm.cmd` dans l’application installée), et `mpm mcp`.                                                                                                                                                                                                                                                   |
+| `src/mcp`           | Le serveur MCP pour Claude Code, et les instructions qu’il donne à Claude.                                                                                                                                                                                                                                                            |
+| `src/preload`       | Le pont entre la fenêtre et le processus principal : `window.api` et `window.studio`.                                                                                                                                                                                                                                                 |
+| `src/renderer`      | L’interface : `src/` (Bibliothèque, composants, état), `src/studio/` (vue Studio), `src/docs/` (aide intégrée).                                                                                                                                                                                                                       |
+| `src/shared`        | Code commun : types, configuration (`APP_REPO`…), format des releases, lecture de la documentation et de l’historique des versions.                                                                                                                                                                                                   |
+| `test`              | Les tests, et leurs outils (`support/` : faux GitHub, fausses instances CurseForge).                                                                                                                                                                                                                                                  |
+| `scripts`           | Outils du dépôt : `changelog.ts`, `docs.ts`, `blockmap.ts` (blockmap de l’installeur, recalculé par la CI après la signature), et le générateur des images de l’installeur (`generate-installer-images.ts`, qui lit les PNG avec `png.ts`).                                                                                           |
+| `docs`              | Cette documentation.                                                                                                                                                                                                                                                                                                                  |
+| `relay`             | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)).                                                                                                                                                                                                                               |
+| `build`             | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
+| `.github/workflows` | La publication de l’application sur un tag `app-v*`.                                                                                                                                                                                                                                                                                  |
 
 Le dépôt de l’application (`APP_REPO`) et l’identifiant de l’application OAuth GitHub utilisé par « Se connecter avec
 GitHub » (`GITHUB_OAUTH_CLIENT_ID`) sont définis dans `src/shared/config.ts`.
@@ -188,7 +188,6 @@ et le commentaire, après lecture des changements de l’action.
   est exigée par SignPath : la garder à jour dans chaque version du README.
 - Licence : [MIT](../LICENSE).
 
-
 ## Référence technique
 
 Notes détaillées pour qui modifie le code : le rôle de chaque fichier, les conventions des releases, ce qui a été
@@ -287,8 +286,8 @@ fenêtre ni de processus. Interface et messages en français.
     notification, un clic lance l'app avec `--studio`) puis quitte. Canaux `maintenance:*` de la vue Studio ;
     `maintenanceTask` fait attendre la mise à jour de l'app. Interface : `studio/MaintenancePanel.tsx` (`UpdatesLine`
     sur la carte, essai à valider, `UpdatesDialog`), `studio/maintenanceStore.ts`, `MaintenanceSetting` (Paramètres).
-  - `claudeCode.ts` : connexion à Claude Code (canaux `claude:*`, Paramètres → Claude Code et terminal) : `claude mcp
-    add --scope user modding-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
+  - `claudeCode.ts` : connexion à Claude Code (canaux `claude:*`, Paramètres → Claude Code et terminal) :
+    `claude mcp add --scope user modding-manager --env ELECTRON_RUN_AS_NODE=1 -- <exécutable> <app.asar>/out/main/cli.js mcp`
     (`claude.exe` natif de `~/.local/bin`, sinon `where claude`, `.cmd` par cmd.exe). « Connecté » = `claude mcp get`
     cite le cli.js de cette installation. `askClaude` : `claude -p` (demande par stdin), `--strict-mcp-config` avec
     le seul serveur MCP de cette installation, `--tools ""`, `--allowedTools` donnés, `--permission-mode dontAsk`.
@@ -513,12 +512,12 @@ fenêtre ni de processus. Interface et messages en français.
   `frequency`, `channel`, `pinned`, `autoPublish`), écrit seulement s'il diffère de `DEFAULT_PACK_UPDATES`
   (`manual`). Commandes `maintenance *` (`commands/maintenance.ts`), contexte `maintenanceLock` et `launcher`
   (mpm de l'app installée : `<exe> --maintenance`).
-- `src/core/commands/` — registre des commandes (`registry.ts` : `command({ name, summary, description, params: zod,
-  kind: read | write | destructive, run, print })`, `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP
-  `packs_list`. `context.ts` (`createCommandRuntime`) construit le service hors de la fenêtre : publie d'office en
-  publieur, corbeille par PowerShell, `holder` « la ligne de commande » ou « Claude (MCP) ». Un modpack se désigne par
-  dossier, id ou nom (`findPack`). `publish apply` exige l'empreinte de `publish plan`. Toute commande doit figurer
-  dans `docs/commandes.md` (test).
+- `src/core/commands/` — registre des commandes (`registry.ts` :
+  `command({ name, summary, description, params: zod, kind: read | write | destructive, run, print })`,
+  `COMMANDS` dans `index.ts`). Nom « packs list » = outil MCP `packs_list`. `context.ts` (`createCommandRuntime`)
+  construit le service hors de la fenêtre : publie d'office en publieur, corbeille par PowerShell,
+  `holder` « la ligne de commande » ou « Claude (MCP) ». Un modpack se désigne par dossier, id ou nom (`findPack`).
+  `publish apply` exige l'empreinte de `publish plan`. Toute commande doit figurer dans `docs/commandes.md` (test).
 - `src/cli/` — `mpm` (`index.ts`) : options déduites du schéma zod (`args.ts`, via `z.toJSONSchema` : `--kebab`,
   `--no-x`, option répétée pour une liste, obligatoires aussi dans l'ordre), confirmation des commandes
   `destructive` (sauf `--yes`), progression sur stderr, `--json` sur stdout. `mpm ranger` / `mpm publier` : aperçu,
@@ -647,10 +646,10 @@ fenêtre ni de processus. Interface et messages en français.
   jour demandée par l'app). Chaque fenêtre est redessinée aux couleurs de l'app : décor de Modern UI caché, textes
   `STATIC` posés à la main, boutons = textes cliquables nsDialogs (survol relevé par minuterie), barre de progression
   plate, barre de titre sombre (DWM), tout mis à l'échelle du DPI. Logo : `build/installer/logo-<n>.bmp`, généré par
-  `scripts/generate-installer-images.ts`. Fenêtres : progression « Installation », « Mise à jour » (bleu, `Version a →
-  b`, titre de fenêtre « Mise à jour de … »), « Réinstallation », « Retour à une version précédente » (orange) ; pages
-  « déjà installé » et « application ouverte » ; désinstalleur : confirmation (Entrée ne désinstalle pas) puis
-  progression qui se ferme seule (sa propre `UninstPage instfiles`).
+  `scripts/generate-installer-images.ts`. Fenêtres : progression « Installation », « Mise à jour » (bleu,
+  `Version a → b`, titre de fenêtre « Mise à jour de … »), « Réinstallation », « Retour à une version précédente »
+  (orange) ; pages « déjà installé » et « application ouverte » ; désinstalleur : confirmation (Entrée ne désinstalle
+  pas) puis progression qui se ferme seule (sa propre `UninstPage instfiles`).
   `customInit` vérifie au lancement si l'app est déjà installée et intacte (`DisplayVersion` du registre + exécutable
   présent) : même version → page Ouvrir / Réinstaller / Annuler ; version installée plus récente → page Ouvrir la vX /
   Installer la vY / Annuler ; plus ancienne → mise à jour sans question. Aucune page avec `/S` ni `--updated`, que

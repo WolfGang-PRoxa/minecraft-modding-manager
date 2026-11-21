@@ -1,85 +1,123 @@
 // Un mod, un pack de ressources ou un shader dans le Studio : son dossier lié (où son projet dépose ses jars, ou le
 // dossier du pack en cours de création), ses versions, et leur publication sur GitHub, CurseForge et Modrinth.
-import { useEffect, useState, type ReactNode } from 'react'
-import { Blocks, FileArchive, FolderOpen, FolderSync, Gamepad2, Hourglass, Image, Link2Off, NotebookPen, PackagePlus, Pencil, Server, Sun, Trash2, Upload } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { CONTENT_KINDS, LOADER_LABELS, type ContentKind, type ContentLoader } from '../../../shared/content'
-import type { AvailableModVersion, CurseForgeVersion, ContentVersionView, PackView } from '../../../shared/studio'
-import { Button, IconButton } from '../components/Button'
-import { Cover } from '../components/Cover'
-import { formatBytes, formatDate } from '../lib/format'
-import { compareVersions, groupByRelease, releaseVersion } from '../../../shared/releases'
-import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
-import { ModrinthLine, ModrinthVersionStatus, useModrinthVersions, type ModrinthVersions } from './ModrinthPanel'
-import { HangarLine, HangarVersionStatus, useHangarVersions, type HangarVersions } from './HangarPanel'
-import { Field, Modal, Spinner, TextInput } from './Modal'
-import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard'
-import { openPath, useStudio } from './store'
-import { publishEach, runPublication, useRunningPublication } from './publications'
-import { PublicationBusyNote } from './PublicationsTray'
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  Blocks,
+  FileArchive,
+  FolderOpen,
+  FolderSync,
+  Gamepad2,
+  Hourglass,
+  Image,
+  Link2Off,
+  NotebookPen,
+  PackagePlus,
+  Pencil,
+  Server,
+  Sun,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { CONTENT_KINDS, LOADER_LABELS, type ContentKind, type ContentLoader } from '../../../shared/content';
+import type { AvailableModVersion, CurseForgeVersion, ContentVersionView, PackView } from '../../../shared/studio';
+import { Button, IconButton } from '../components/Button';
+import { Cover } from '../components/Cover';
+import { formatBytes, formatDate } from '../lib/format';
+import { compareVersions, groupByRelease, releaseVersion } from '../../../shared/releases';
+import { CurseForgeLine, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel';
+import { ModrinthLine, ModrinthVersionStatus, useModrinthVersions, type ModrinthVersions } from './ModrinthPanel';
+import { HangarLine, HangarVersionStatus, useHangarVersions, type HangarVersions } from './HangarPanel';
+import { Field, Modal, Spinner, TextInput } from './Modal';
+import { DANGER_HOVER, Message, Pill, RemoteOnlyRow, Row, STATUS, VersionBadge } from './PackCard';
+import { openPath, useStudio } from './store';
+import { publishEach, runPublication, useRunningPublication } from './publications';
+import { PublicationBusyNote } from './PublicationsTray';
 
 /** Chargeurs à afficher : Quilt charge les mods Fabric, il n'est cité que pour un mod qui le vise seul. */
 function loadersLabel(loaders: ContentLoader[]): string {
-  return loaders.filter((l) => !(l === 'quilt' && loaders.includes('fabric'))).map((l) => LOADER_LABELS[l]).join(', ')
+  return loaders
+    .filter((l) => !(l === 'quilt' && loaders.includes('fabric')))
+    .map((l) => LOADER_LABELS[l])
+    .join(', ');
 }
 
-const SIDES = { client: 'client seulement', server: 'serveur seulement', both: 'client et serveur' }
+const SIDES = { client: 'client seulement', server: 'serveur seulement', both: 'client et serveur' };
 
 /** Icône et mention de chaque type de contenu (sauf le modpack, qui a sa propre carte). */
 export const KIND_UI: Partial<Record<ContentKind, { icon: LucideIcon; badge: string }>> = {
   mod: { icon: Blocks, badge: 'Mod' },
   resourcepack: { icon: Image, badge: 'Pack de ressources' },
   shader: { icon: Sun, badge: 'Shader' },
-  plugin: { icon: Server, badge: 'Plugin' }
-}
+  plugin: { icon: Server, badge: 'Plugin' },
+};
 
 /** Mod ou plugin : jars, version déclarée, dossier lié dont on importe les versions. */
-const jarBased = (pack: PackView) => pack.type === 'mod' || pack.type === 'plugin'
+const jarBased = (pack: PackView) => pack.type === 'mod' || pack.type === 'plugin';
 
 /** Versions numérotées par le Studio (pack de ressources, shader) : « v3 ». */
-const numbered = (pack: PackView) => CONTENT_KINDS[pack.type].versioning === 'number'
-export const versionLabel = (pack: PackView, version: string) => (numbered(pack) ? `v${version}` : `version ${version}`)
+const numbered = (pack: PackView) => CONTENT_KINDS[pack.type].versioning === 'number';
+export const versionLabel = (pack: PackView, version: string) =>
+  numbered(pack) ? `v${version}` : `version ${version}`;
 
 function fileMeta(pack: PackView, file: ContentVersionView['files'][number]): string {
   return [
     formatBytes(file.size),
-    file.minecraftVersions.length ? `Minecraft ${file.minecraftVersions.join(', ')}` : 'version de Minecraft non précisée',
+    file.minecraftVersions.length
+      ? `Minecraft ${file.minecraftVersions.join(', ')}`
+      : 'version de Minecraft non précisée',
     loadersLabel(file.loaders),
-    pack.type === 'mod' && SIDES[file.side]
+    pack.type === 'mod' && SIDES[file.side],
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' · ');
 }
 
-const CURSEFORGE_LIVE = 'bg-curseforge/15 text-curseforge ring-curseforge/30'
-const CURSEFORGE_REVIEW = 'bg-sky-400/15 text-sky-300 ring-sky-400/30'
+const CURSEFORGE_LIVE = 'bg-curseforge/15 text-curseforge ring-curseforge/30';
+const CURSEFORGE_REVIEW = 'bg-sky-400/15 text-sky-300 ring-sky-400/30';
 
 /** Pastille d'un groupe : `n/total` quand une partie seulement de ses versions est en ligne. */
-const share = (sent: number, total: number) => (total > 1 && sent < total ? ` (${sent}/${total})` : '')
+const share = (sent: number, total: number) => (total > 1 && sent < total ? ` (${sent}/${total})` : '');
 
 /**
  * État sur CurseForge d'une version, ou des versions d'un groupe (`1.0.0+26.3-fabric`, `1.0.0+1.21.5-forge`…) :
  * rapprochées des fichiers du projet, ou bouton pour mettre en ligne celles qui n'y sont pas.
  */
-function ModCurseForgeStatus({ pack, versions, latest, curseforge }: { pack: PackView; versions: ContentVersionView[]; latest: boolean; curseforge: CurseForgeVersions }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  if (!pack.curseforge) return null
-  const found = versions.map((version) => curseforge.versions?.find((v) => v.version === version.version))
-  const sent = found.filter((v): v is CurseForgeVersion => !!v)
-  const missing = versions.filter((_, i) => !found[i])
-  let pill: ReactNode = null
+function ModCurseForgeStatus({
+  pack,
+  versions,
+  latest,
+  curseforge,
+}: {
+  pack: PackView;
+  versions: ContentVersionView[];
+  latest: boolean;
+  curseforge: CurseForgeVersions;
+}) {
+  const openDialog = useStudio((s) => s.openDialog);
+  if (!pack.curseforge) return null;
+  const found = versions.map((version) => curseforge.versions?.find((v) => v.version === version.version));
+  const sent = found.filter((v): v is CurseForgeVersion => !!v);
+  const missing = versions.filter((_, i) => !found[i]);
+  let pill: ReactNode = null;
   if (sent.length) {
-    const pending = sent.filter((v) => v.status !== 4 && v.status !== 10)
+    const pending = sent.filter((v) => v.status !== 4 && v.status !== 10);
     pill = (
       <Pill className={pending.length ? CURSEFORGE_REVIEW : CURSEFORGE_LIVE}>
-        {pending.length ? `CurseForge : ${pending[0].label}${share(pending.length, versions.length)}` : `Publiée sur CurseForge${share(sent.length, versions.length)}`}
+        {pending.length
+          ? `CurseForge : ${pending[0].label}${share(pending.length, versions.length)}`
+          : `Publiée sur CurseForge${share(sent.length, versions.length)}`}
       </Pill>
-    )
+    );
   }
-  if (!missing.length) return pill
-  if (!curseforge.versions) return pill ?? (versions.some((v) => v.curseforgeFileId) ? <span className="text-xs text-ink-500">CurseForge…</span> : null)
+  if (!missing.length) return pill;
+  if (!curseforge.versions)
+    return (
+      pill ??
+      (versions.some((v) => v.curseforgeFileId) ? <span className="text-xs text-ink-500">CurseForge…</span> : null)
+    );
   // Seule la version la plus récente se publie : une plus ancienne passerait après des versions déjà en ligne.
-  if (!latest || pack.errors.length) return pill
+  if (!latest || pack.errors.length) return pill;
   return (
     <>
       {pill}
@@ -88,16 +126,29 @@ function ModCurseForgeStatus({ pack, versions, latest, curseforge }: { pack: Pac
         variant="ghost"
         icon={Upload}
         className="text-curseforge"
-        onClick={() => openDialog({ kind: 'mod-curseforge-publish', folder: pack.folder, version: missing[0].version, versions: missing.length > 1 ? missing.map((v) => v.version) : undefined })}
+        onClick={() =>
+          openDialog({
+            kind: 'mod-curseforge-publish',
+            folder: pack.folder,
+            version: missing[0].version,
+            versions: missing.length > 1 ? missing.map((v) => v.version) : undefined,
+          })
+        }
       >
-        {sent.length ? `Publier ${missing.length > 1 ? `les ${missing.length} autres` : 'l’autre'} sur CurseForge` : 'Publier sur CurseForge'}
+        {sent.length
+          ? `Publier ${missing.length > 1 ? `les ${missing.length} autres` : 'l’autre'} sur CurseForge`
+          : 'Publier sur CurseForge'}
       </Button>
     </>
-  )
+  );
 }
 
 /** Version de Minecraft la plus récente visée par les jars d'une version (« 0 » si aucune). */
-const newestMinecraft = (version: ContentVersionView) => version.files.flatMap((f) => f.minecraftVersions).sort(compareVersions).at(-1) ?? '0'
+const newestMinecraft = (version: ContentVersionView) =>
+  version.files
+    .flatMap((f) => f.minecraftVersions)
+    .sort(compareVersions)
+    .at(-1) ?? '0';
 
 /** Ligne d'une version, ou d'un groupe de versions qui ne diffèrent que par ce qui suit « + » (une par jar). */
 function ModVersionRow({
@@ -107,26 +158,35 @@ function ModVersionRow({
   latest,
   curseforge,
   modrinth,
-  hangar
+  hangar,
 }: {
-  pack: PackView
+  pack: PackView;
   /** Version de publication : celle de l'unique version, ou ce qui précède « + » pour un groupe. */
-  release: string
-  versions: ContentVersionView[]
-  latest: boolean
-  curseforge: CurseForgeVersions
-  modrinth: ModrinthVersions
-  hangar: HangarVersions
+  release: string;
+  versions: ContentVersionView[];
+  latest: boolean;
+  curseforge: CurseForgeVersions;
+  modrinth: ModrinthVersions;
+  hangar: HangarVersions;
 }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const group = versions.length > 1
-  const single = versions[0]
+  const openDialog = useStudio((s) => s.openDialog);
+  const group = versions.length > 1;
+  const single = versions[0];
   // Jars d'un groupe : de la version de Minecraft la plus récente à la plus ancienne, puis par nom.
-  const listed = group ? [...versions].sort((a, b) => compareVersions(newestMinecraft(b), newestMinecraft(a)) || a.files[0].fileName.localeCompare(b.files[0].fileName)) : versions
-  const withNotes = versions.filter((v) => v.notes).length
+  const listed = group
+    ? [...versions].sort(
+        (a, b) =>
+          compareVersions(newestMinecraft(b), newestMinecraft(a)) ||
+          a.files[0].fileName.localeCompare(b.files[0].fileName),
+      )
+    : versions;
+  const withNotes = versions.filter((v) => v.notes).length;
   // Statuts GitHub du groupe, chacun une fois, avec leur nombre.
-  const statuses = [...new Set(versions.map((v) => v.remote))].map((remote) => ({ remote, count: versions.filter((v) => v.remote === remote).length }))
-  const changes = versions.flatMap((v) => (group ? v.changes.map((change) => `${v.version} : ${change}`) : v.changes))
+  const statuses = [...new Set(versions.map((v) => v.remote))].map((remote) => ({
+    remote,
+    count: versions.filter((v) => v.remote === remote).length,
+  }));
+  const changes = versions.flatMap((v) => (group ? v.changes.map((change) => `${v.version} : ${change}`) : v.changes));
   return (
     <Row
       badge={<VersionBadge>{numbered(pack) ? `v${single.version}` : release.split('-')[0]}</VersionBadge>}
@@ -136,9 +196,20 @@ function ModVersionRow({
             size="sm"
             variant="ghost"
             icon={NotebookPen}
-            onClick={() => openDialog({ kind: 'notes', folder: pack.folder, version: group ? release : single.version, versions: group ? versions.map((v) => v.version) : undefined })}
+            onClick={() =>
+              openDialog({
+                kind: 'notes',
+                folder: pack.folder,
+                version: group ? release : single.version,
+                versions: group ? versions.map((v) => v.version) : undefined,
+              })
+            }
             className={withNotes === versions.length ? 'text-grass-300' : withNotes ? 'text-amber-glow' : ''}
-            title={group && withNotes > 0 && withNotes < versions.length ? `Notes pour ${withNotes} versions sur ${versions.length}` : undefined}
+            title={
+              group && withNotes > 0 && withNotes < versions.length
+                ? `Notes pour ${withNotes} versions sur ${versions.length}`
+                : undefined
+            }
           >
             {withNotes ? 'Notes' : 'Ajouter des notes'}
           </Button>
@@ -148,7 +219,12 @@ function ModVersionRow({
               size={16}
               label={`Supprimer la ${versionLabel(pack, single.version)}`}
               className={DANGER_HOVER}
-              onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: single.version } })}
+              onClick={() =>
+                openDialog({
+                  kind: 'delete',
+                  target: { type: 'mod-version', folder: pack.folder, version: single.version },
+                })
+              }
             />
           )}
         </>
@@ -178,7 +254,12 @@ function ModVersionRow({
               size={13}
               label={`Supprimer la ${versionLabel(pack, version.version)}`}
               className={`size-5! shrink-0 opacity-0 transition group-hover/version:opacity-100 focus-visible:opacity-100 ${DANGER_HOVER}`}
-              onClick={() => openDialog({ kind: 'delete', target: { type: 'mod-version', folder: pack.folder, version: version.version } })}
+              onClick={() =>
+                openDialog({
+                  kind: 'delete',
+                  target: { type: 'mod-version', folder: pack.folder, version: version.version },
+                })
+              }
             />
           )}
         </div>
@@ -202,66 +283,91 @@ function ModVersionRow({
           </p>
         ))}
     </Row>
-  )
+  );
 }
 
 /** Où le contenu prend ses versions : le dossier où le projet d'un mod dépose ses jars, ou celui d'un pack. */
 function SourceLine({ pack, available }: { pack: PackView; available: AvailableModVersion[] | null }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const run = useStudio((s) => s.run)
-  const mod = jarBased(pack)
+  const openDialog = useStudio((s) => s.openDialog);
+  const run = useStudio((s) => s.run);
+  const mod = jarBased(pack);
   return (
     <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
       <FolderSync size={14} className="shrink-0 text-ink-400" />
       {pack.source ? (
         <>
           <span>{mod ? 'Versions prises dans' : 'Pack en cours de création dans'}</span>
-          <button type="button" className="max-w-full truncate font-mono text-xs text-ink-200 hover:underline" onClick={() => openPath(pack.source!)} title="Ouvrir dans l’Explorateur">
+          <button
+            type="button"
+            className="max-w-full truncate font-mono text-xs text-ink-200 hover:underline"
+            onClick={() => openPath(pack.source!)}
+            title="Ouvrir dans l’Explorateur"
+          >
             {pack.source}
           </button>
           {available && available.length > 0 && (
-            <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}>
-              {available.length > 1 ? `${available.length} versions à importer` : `Version ${available[0].version} à importer`}
+            <button
+              type="button"
+              className="text-xs font-semibold text-grass-300 hover:text-grass-400"
+              onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}
+            >
+              {available.length > 1
+                ? `${available.length} versions à importer`
+                : `Version ${available[0].version} à importer`}
             </button>
           )}
-          <button type="button" className="text-xs font-semibold text-ink-400 hover:text-ink-100" onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'))}>
+          <button
+            type="button"
+            className="text-xs font-semibold text-ink-400 hover:text-ink-100"
+            onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'))}
+          >
             Changer
           </button>
-          <IconButton icon={Link2Off} size={14} label="Retirer le lien" className="size-7!" onClick={() => void run(window.studio.linkModSource(pack.folder, null), 'Lien retiré')} />
+          <IconButton
+            icon={Link2Off}
+            size={14}
+            label="Retirer le lien"
+            className="size-7!"
+            onClick={() => void run(window.studio.linkModSource(pack.folder, null), 'Lien retiré')}
+          />
         </>
       ) : (
         <>
           <span>Aucun dossier lié : dépose ses {mod ? 'jars' : 'zips'} dans son dossier, ou</span>
-          <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'), 'Dossier lié')}>
+          <button
+            type="button"
+            className="text-xs font-semibold text-grass-300 hover:text-grass-400"
+            onClick={() => void run(window.studio.linkModSource(pack.folder, 'pick'), 'Dossier lié')}
+          >
             {mod ? 'lie-le au dossier de son projet' : 'lie-le au dossier du pack'}
           </button>
         </>
       )}
     </p>
-  )
+  );
 }
 
 /** Versions du dossier lié pas encore importées, relues quand le mod change. */
 function useAvailableVersions(pack: PackView): AvailableModVersion[] | null {
-  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null)
-  const key = JSON.stringify([pack.source, pack.contentVersions.map((v) => v.version)])
+  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null);
+  const key = JSON.stringify([pack.source, pack.contentVersions.map((v) => v.version)]);
   useEffect(() => {
-    setAvailable(null)
-    if (!pack.source || !jarBased(pack)) return
-    let alive = true
-    void window.studio.availableModVersions(pack.folder).then((r) => alive && setAvailable(r.ok ? r.versions : []))
+    setAvailable(null);
+    if (!pack.source || !jarBased(pack)) return;
+    let alive = true;
+    void window.studio.availableModVersions(pack.folder).then((r) => alive && setAvailable(r.ok ? r.versions : []));
     return () => {
-      alive = false
-    }
-  }, [pack.folder, key])
-  return available
+      alive = false;
+    };
+  }, [pack.folder, key]);
+  return available;
 }
 
 /** Pack de ressources ou shader : versions de Minecraft visées, lues dans le zip ou données à la main. */
 function MinecraftLine({ pack }: { pack: PackView }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const fromZip = pack.contentVersions[0]?.files[0]?.minecraftVersions ?? []
-  const shown = pack.minecraftVersions.length ? pack.minecraftVersions : fromZip
+  const openDialog = useStudio((s) => s.openDialog);
+  const fromZip = pack.contentVersions[0]?.files[0]?.minecraftVersions ?? [];
+  const shown = pack.minecraftVersions.length ? pack.minecraftVersions : fromZip;
   return (
     <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
       <Gamepad2 size={14} className="shrink-0 text-ink-400" />
@@ -269,29 +375,39 @@ function MinecraftLine({ pack }: { pack: PackView }) {
         <span>
           Minecraft {shown.join(', ')}
           <span className="text-ink-500">
-            {pack.minecraftVersions.length ? ' (données à la main)' : pack.type === 'plugin' ? ' (d’après api-version : la plus ancienne visée)' : ' (d’après pack.mcmeta)'}
+            {pack.minecraftVersions.length
+              ? ' (données à la main)'
+              : pack.type === 'plugin'
+                ? ' (d’après api-version : la plus ancienne visée)'
+                : ' (d’après pack.mcmeta)'}
           </span>
         </span>
       ) : (
-        <span className="text-amber-glow">Versions de Minecraft à préciser : les sites de publication les exigent.</span>
+        <span className="text-amber-glow">
+          Versions de Minecraft à préciser : les sites de publication les exigent.
+        </span>
       )}
-      <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'minecraft-versions', folder: pack.folder })}>
+      <button
+        type="button"
+        className="text-xs font-semibold text-grass-300 hover:text-grass-400"
+        onClick={() => openDialog({ kind: 'minecraft-versions', folder: pack.folder })}
+      >
         Changer
       </button>
     </p>
-  )
+  );
 }
 
 export function ModCard({ pack, index }: { pack: PackView; index: number }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const run = useStudio((s) => s.run)
-  const kind = KIND_UI[pack.type] ?? KIND_UI.mod!
-  const label = CONTENT_KINDS[pack.type].label
-  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
-  const modrinth = useModrinthVersions(pack.folder, pack.modrinth)
-  const hangar = useHangarVersions(pack.folder, pack.hangar)
-  const available = useAvailableVersions(pack)
-  const empty = !pack.contentVersions.length && !pack.remoteOnly.length && !pack.pending.length
+  const openDialog = useStudio((s) => s.openDialog);
+  const run = useStudio((s) => s.run);
+  const kind = KIND_UI[pack.type] ?? KIND_UI.mod!;
+  const label = CONTENT_KINDS[pack.type].label;
+  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge);
+  const modrinth = useModrinthVersions(pack.folder, pack.modrinth);
+  const hangar = useHangarVersions(pack.folder, pack.hangar);
+  const available = useAvailableVersions(pack);
+  const empty = !pack.contentVersions.length && !pack.remoteOnly.length && !pack.pending.length;
 
   return (
     <section
@@ -336,12 +452,26 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
               Infos et image
             </Button>
             {pack.source && jarBased(pack) && (
-              <Button size="sm" icon={PackagePlus} disabled={!available?.length} onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}>
+              <Button
+                size="sm"
+                icon={PackagePlus}
+                disabled={!available?.length}
+                onClick={() => openDialog({ kind: 'mod-import', folder: pack.folder })}
+              >
                 Importer des versions
               </Button>
             )}
             {pack.source && !jarBased(pack) && (
-              <Button size="sm" icon={PackagePlus} onClick={() => void run(window.studio.zipContentVersion(pack.folder), `v${pack.nextVersion} créée depuis le dossier du pack`)}>
+              <Button
+                size="sm"
+                icon={PackagePlus}
+                onClick={() =>
+                  void run(
+                    window.studio.zipContentVersion(pack.folder),
+                    `v${pack.nextVersion} créée depuis le dossier du pack`,
+                  )
+                }
+              >
                 Créer la v{pack.nextVersion} depuis le dossier
               </Button>
             )}
@@ -361,7 +491,9 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
 
       {pack.errors.length > 0 && (
         <div className="mx-6 mb-4 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-inset ring-red-400/25">
-          <p className="text-sm font-semibold text-red-300">Ce {label} ne sera pas publié tant que ceci n’est pas corrigé :</p>
+          <p className="text-sm font-semibold text-red-300">
+            Ce {label} ne sera pas publié tant que ceci n’est pas corrigé :
+          </p>
           {pack.errors.map((error) => (
             <p key={error} className="mt-1 text-sm text-ink-200 select-text">
               {error}
@@ -425,54 +557,57 @@ export function ModCard({ pack, index }: { pack: PackView; index: number }) {
         )}
       </div>
     </section>
-  )
+  );
 }
 
 function usePack(folder: string) {
-  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
+  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null);
 }
 
 /** Choix des versions du dossier lié à copier dans le Studio. */
 export function ModImportDialog({ folder }: { folder: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [chosen, setChosen] = useState<Set<string>>(new Set())
-  const [busy, setBusy] = useState(false)
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const [available, setAvailable] = useState<AvailableModVersion[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [chosen, setChosen] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     void window.studio.availableModVersions(folder).then((r) => {
-      if (!r.ok) return setError(r.error)
-      setAvailable(r.versions)
-      setChosen(new Set(r.versions.slice(0, 1).map((v) => v.version)))
-    })
-  }, [folder])
-  if (!pack) return null
+      if (!r.ok) return setError(r.error);
+      setAvailable(r.versions);
+      setChosen(new Set(r.versions.slice(0, 1).map((v) => v.version)));
+    });
+  }, [folder]);
+  if (!pack) return null;
 
   const toggle = (version: string) => {
-    const next = new Set(chosen)
-    if (next.has(version)) next.delete(version)
-    else next.add(version)
-    setChosen(next)
-  }
+    const next = new Set(chosen);
+    if (next.has(version)) next.delete(version);
+    else next.add(version);
+    setChosen(next);
+  };
 
   async function importVersions() {
-    setBusy(true)
+    setBusy(true);
     try {
-      const result = await window.studio.importModVersions(folder, [...chosen])
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Import impossible', message: result.error })
+      const result = await window.studio.importModVersions(folder, [...chosen]);
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Import impossible', message: result.error });
       pushToast({
         kind: 'success',
-        title: result.imported.length > 1 ? `${result.imported.length} versions importées` : `Version ${result.imported[0]} importée`,
-        message: 'Elles partiront sur GitHub à la prochaine publication.'
-      })
-      close()
+        title:
+          result.imported.length > 1
+            ? `${result.imported.length} versions importées`
+            : `Version ${result.imported[0]} importée`,
+        message: 'Elles partiront sur GitHub à la prochaine publication.',
+      });
+      close();
     } finally {
-      setBusy(false)
-      void refresh()
+      setBusy(false);
+      void refresh();
     }
   }
 
@@ -488,7 +623,12 @@ export function ModImportDialog({ folder }: { folder: string }) {
           <Button variant="ghost" disabled={busy} onClick={close}>
             Annuler
           </Button>
-          <Button variant="primary" icon={PackagePlus} disabled={busy || !chosen.size} onClick={() => void importVersions()}>
+          <Button
+            variant="primary"
+            icon={PackagePlus}
+            disabled={busy || !chosen.size}
+            onClick={() => void importVersions()}
+          >
             Importer {chosen.size > 1 ? `${chosen.size} versions` : 'la version'}
           </Button>
         </>
@@ -507,12 +647,18 @@ export function ModImportDialog({ folder }: { folder: string }) {
           {available.map((v) => (
             <li key={v.version}>
               <label className="flex cursor-pointer items-start gap-3 py-3">
-                <input type="checkbox" className="mt-0.5" checked={chosen.has(v.version)} onChange={() => toggle(v.version)} />
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={chosen.has(v.version)}
+                  onChange={() => toggle(v.version)}
+                />
                 <span className="min-w-0">
                   <span className="block font-medium text-ink-100">Version {v.version}</span>
                   {v.files.map((f) => (
                     <span key={f.fileName} className="block text-xs text-ink-400">
-                      <span className="font-mono">{f.fileName}</span> · Minecraft {f.minecraftVersions.join(', ') || '?'} · {loadersLabel(f.loaders)}
+                      <span className="font-mono">{f.fileName}</span> · Minecraft{' '}
+                      {f.minecraftVersions.join(', ') || '?'} · {loadersLabel(f.loaders)}
                     </span>
                   ))}
                 </span>
@@ -522,30 +668,40 @@ export function ModImportDialog({ folder }: { folder: string }) {
         </ul>
       )}
     </Modal>
-  )
+  );
 }
 
 /**
  * Mise en ligne d'une version du mod sur CurseForge, après confirmation. `versions` : celles d'un groupe pas encore
  * envoyées, qui partent l'une après l'autre ; `version` est alors l'une d'elles.
  */
-export function PublishModCurseForgeDialog({ folder, version, versions }: { folder: string; version: string; versions?: string[] }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release')
-  const busy = useRunningPublication()
-  const wanted = versions ?? [version]
-  const views = pack?.contentVersions.filter((v) => wanted.includes(v.version)) ?? []
-  if (!pack || views.length !== wanted.length) return null
-  const group = views.length > 1
-  const label = group ? `${versionLabel(pack, releaseVersion(version))} (${views.length} versions)` : versionLabel(pack, version)
-  const dependencies = [...new Set(views.flatMap((v) => v.files.flatMap((f) => f.dependencies)))]
-  const notes = [...new Set(views.map((v) => v.notes))]
+export function PublishModCurseForgeDialog({
+  folder,
+  version,
+  versions,
+}: {
+  folder: string;
+  version: string;
+  versions?: string[];
+}) {
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const [releaseType, setReleaseType] = useState<'release' | 'beta' | 'alpha'>('release');
+  const busy = useRunningPublication();
+  const wanted = versions ?? [version];
+  const views = pack?.contentVersions.filter((v) => wanted.includes(v.version)) ?? [];
+  if (!pack || views.length !== wanted.length) return null;
+  const group = views.length > 1;
+  const label = group
+    ? `${versionLabel(pack, releaseVersion(version))} (${views.length} versions)`
+    : versionLabel(pack, version);
+  const dependencies = [...new Set(views.flatMap((v) => v.files.flatMap((f) => f.dependencies)))];
+  const notes = [...new Set(views.map((v) => v.notes))];
 
   function publish() {
     // La fenêtre se ferme : l'envoi continue en arrière-plan.
-    close()
+    close();
     void runPublication({
       target: 'curseforge',
       subject: `${pack!.name}, ${label}`,
@@ -557,9 +713,9 @@ export function PublishModCurseForgeDialog({ folder, version, versions }: { fold
           message: result.unknownDependencies.length
             ? `${group ? 'Elles seront visibles' : 'Elle sera visible'} une fois acceptée${group ? 's' : ''} par la modération. Dépendances introuvables sur CurseForge, à ajouter depuis le site : ${result.unknownDependencies.join(', ')}.`
             : `${group ? 'Elles seront visibles' : 'Elle sera visible'} une fois acceptée${group ? 's' : ''} par la modération.`,
-          sticky: result.unknownDependencies.length > 0
-        })
-    })
+          sticky: result.unknownDependencies.length > 0,
+        }),
+    });
   }
 
   return (
@@ -583,26 +739,39 @@ export function PublishModCurseForgeDialog({ folder, version, versions }: { fold
         <div className={group ? 'max-h-64 space-y-2 overflow-auto' : 'space-y-4'}>
           {views.flatMap((view) =>
             view.files.map((file) => (
-              <div key={file.fileName} className={`rounded-xl bg-ink-950/50 ring-1 ring-inset ring-tint/[0.06] ${group ? 'px-3 py-2' : 'px-4 py-3'}`}>
+              <div
+                key={file.fileName}
+                className={`rounded-xl bg-ink-950/50 ring-1 ring-inset ring-tint/[0.06] ${group ? 'px-3 py-2' : 'px-4 py-3'}`}
+              >
                 <p className="text-ink-300">
                   Nom affiché :{' '}
-                  <span className="font-mono text-ink-100 select-text">{numbered(pack) ? `${pack.name} v${view.version}` : file.fileName.replace(/\.jar$/i, '')}</span>
+                  <span className="font-mono text-ink-100 select-text">
+                    {numbered(pack) ? `${pack.name} v${view.version}` : file.fileName.replace(/\.jar$/i, '')}
+                  </span>
                 </p>
                 <p className="mt-1 text-xs text-ink-400">{fileMeta(pack, file)}</p>
               </div>
-            ))
+            )),
           )}
         </div>
         <p className="text-ink-300">
-          Dépendances obligatoires : <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>
-          {dependencies.length > 0 && <span className="text-ink-400"> (liées à leur projet CurseForge quand il porte le même nom)</span>}
+          Dépendances obligatoires :{' '}
+          <span className="text-ink-100">{dependencies.length ? dependencies.join(', ') : 'aucune'}</span>
+          {dependencies.length > 0 && (
+            <span className="text-ink-400"> (liées à leur projet CurseForge quand il porte le même nom)</span>
+          )}
         </p>
         <PublishNotes notes={notes} version={group ? releaseVersion(version) : version} />
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold tracking-widest text-ink-400 uppercase">Type</span>
           {(['release', 'beta', 'alpha'] as const).map((type) => (
             <label key={type} className="flex cursor-pointer items-center gap-1.5 text-ink-200">
-              <input type="radio" name="mod-release-type" checked={releaseType === type} onChange={() => setReleaseType(type)} />
+              <input
+                type="radio"
+                name="mod-release-type"
+                checked={releaseType === type}
+                onChange={() => setReleaseType(type)}
+              />
               {type === 'release' ? 'Version stable' : type === 'beta' ? 'Bêta' : 'Alpha'}
             </label>
           ))}
@@ -610,46 +779,57 @@ export function PublishModCurseForgeDialog({ folder, version, versions }: { fold
         {!group && <p className="text-xs text-ink-500">Modifiée le {formatDate(views[0].modifiedAt)}.</p>}
       </div>
     </Modal>
-  )
+  );
 }
 
 /** Notes envoyées avec une version, ou avec celles d'un groupe (`notes` : leurs notes, chacune une fois). */
 export function PublishNotes({ notes, version }: { notes: string[]; version: string }) {
-  const shown = notes.find(Boolean) ?? ''
+  const shown = notes.find(Boolean) ?? '';
   return (
     <div>
       <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
       {shown ? (
-        <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{shown}</pre>
+        <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">
+          {shown}
+        </pre>
       ) : (
-        <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
+        <p className="text-amber-glow">
+          Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.
+        </p>
       )}
-      {notes.length > 1 && <p className="mt-1.5 text-xs text-amber-glow">Ces versions n’ont pas toutes les mêmes notes : chacune part avec les siennes.</p>}
+      {notes.length > 1 && (
+        <p className="mt-1.5 text-xs text-amber-glow">
+          Ces versions n’ont pas toutes les mêmes notes : chacune part avec les siennes.
+        </p>
+      )}
     </div>
-  )
+  );
 }
 
 /** Versions de Minecraft d'un pack de ressources ou d'un shader, données à la main. */
 export function MinecraftVersionsDialog({ folder }: { folder: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const [text, setText] = useState((pack?.minecraftVersions ?? []).join(', '))
-  const [busy, setBusy] = useState(false)
-  if (!pack) return null
-  const fromZip = pack.contentVersions[0]?.files[0]?.minecraftVersions ?? []
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const [text, setText] = useState((pack?.minecraftVersions ?? []).join(', '));
+  const [busy, setBusy] = useState(false);
+  if (!pack) return null;
+  const fromZip = pack.contentVersions[0]?.files[0]?.minecraftVersions ?? [];
 
   async function save(versions: string[]) {
-    setBusy(true)
+    setBusy(true);
     try {
-      const result = await window.studio.setMinecraftVersions(folder, versions)
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Enregistrement impossible', message: result.error })
-      pushToast({ kind: 'success', title: result.versions.length ? `Minecraft ${result.versions.join(', ')}` : 'Versions lues dans le zip' })
-      close()
+      const result = await window.studio.setMinecraftVersions(folder, versions);
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Enregistrement impossible', message: result.error });
+      pushToast({
+        kind: 'success',
+        title: result.versions.length ? `Minecraft ${result.versions.join(', ')}` : 'Versions lues dans le zip',
+      });
+      close();
     } finally {
-      setBusy(false)
-      void refresh()
+      setBusy(false);
+      void refresh();
     }
   }
 
@@ -689,29 +869,32 @@ export function MinecraftVersionsDialog({ folder }: { folder: string }) {
         <TextInput value={text} onChange={(e) => setText(e.target.value)} placeholder="26.3" autoFocus />
       </Field>
     </Modal>
-  )
+  );
 }
 
 /** Créer un mod (depuis le dossier de ses jars), un pack de ressources ou un shader (depuis son dossier ou un zip). */
 export function NewContentDialog() {
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const select = useStudio((s) => s.select)
-  const [busy, setBusy] = useState(false)
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const select = useStudio((s) => s.select);
+  const [busy, setBusy] = useState(false);
 
-  async function create(run: () => Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>, what: string) {
-    setBusy(true)
+  async function create(
+    run: () => Promise<{ ok: true; folder: string | null } | { ok: false; error: string }>,
+    what: string,
+  ) {
+    setBusy(true);
     try {
-      const result = await run()
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Création impossible', message: result.error })
-      if (!result.folder) return
-      await refresh()
-      select({ kind: 'pack', folder: result.folder })
-      pushToast({ kind: 'success', title: `${what} créé` })
-      close()
+      const result = await run();
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Création impossible', message: result.error });
+      if (!result.folder) return;
+      await refresh();
+      select({ kind: 'pack', folder: result.folder });
+      pushToast({ kind: 'success', title: `${what} créé` });
+      close();
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
   }
 
@@ -719,38 +902,69 @@ export function NewContentDialog() {
     {
       kind: 'mod',
       text: 'Depuis le dossier où son projet dépose ses jars (releases, build/libs…), qui reste lié : ses nouvelles versions s’y importent en un clic.',
-      actions: [{ label: 'Choisir le dossier des jars…', run: () => void create(() => window.studio.createModFromSource(), 'Mod') }]
+      actions: [
+        {
+          label: 'Choisir le dossier des jars…',
+          run: () => void create(() => window.studio.createModFromSource(), 'Mod'),
+        },
+      ],
     },
     {
       kind: 'resourcepack',
       text: 'Depuis le dossier du pack en cours de création (avec pack.mcmeta), qui reste lié et se zippe à chaque version, ou depuis un zip.',
       actions: [
-        { label: 'Choisir le dossier…', run: () => void create(() => window.studio.createPackContent('resourcepack', 'folder'), 'Pack de ressources') },
-        { label: 'Choisir un zip…', run: () => void create(() => window.studio.createPackContent('resourcepack', 'zip'), 'Pack de ressources') }
-      ]
+        {
+          label: 'Choisir le dossier…',
+          run: () => void create(() => window.studio.createPackContent('resourcepack', 'folder'), 'Pack de ressources'),
+        },
+        {
+          label: 'Choisir un zip…',
+          run: () => void create(() => window.studio.createPackContent('resourcepack', 'zip'), 'Pack de ressources'),
+        },
+      ],
     },
     {
       kind: 'shader',
       text: 'Depuis le dossier du shader en cours de création (avec son dossier shaders/), ou depuis un zip. Ses versions de Minecraft sont à donner ensuite.',
       actions: [
-        { label: 'Choisir le dossier…', run: () => void create(() => window.studio.createPackContent('shader', 'folder'), 'Shader') },
-        { label: 'Choisir un zip…', run: () => void create(() => window.studio.createPackContent('shader', 'zip'), 'Shader') }
-      ]
+        {
+          label: 'Choisir le dossier…',
+          run: () => void create(() => window.studio.createPackContent('shader', 'folder'), 'Shader'),
+        },
+        {
+          label: 'Choisir un zip…',
+          run: () => void create(() => window.studio.createPackContent('shader', 'zip'), 'Shader'),
+        },
+      ],
     },
     {
       kind: 'plugin',
       text: 'Un plugin de serveur (Paper, Spigot…), depuis le dossier où son projet dépose ses jars (target, build/libs…), qui reste lié. Il se publie sur Modrinth et Hangar.',
-      actions: [{ label: 'Choisir le dossier des jars…', run: () => void create(() => window.studio.createModFromSource('plugin'), 'Plugin') }]
-    }
-  ]
+      actions: [
+        {
+          label: 'Choisir le dossier des jars…',
+          run: () => void create(() => window.studio.createModFromSource('plugin'), 'Plugin'),
+        },
+      ],
+    },
+  ];
 
   return (
-    <Modal title="Nouveau contenu" subtitle="Il aura son dossier dans le dossier des contenus, comme un modpack." onClose={close} closable={!busy} width="max-w-3xl">
+    <Modal
+      title="Nouveau contenu"
+      subtitle="Il aura son dossier dans le dossier des contenus, comme un modpack."
+      onClose={close}
+      closable={!busy}
+      width="max-w-3xl"
+    >
       <div className="space-y-3">
         {choices.map(({ kind, text, actions }) => {
-          const ui = KIND_UI[kind]!
+          const ui = KIND_UI[kind]!;
           return (
-            <div key={kind} className="flex items-start gap-4 rounded-2xl bg-ink-800/50 p-4 ring-1 ring-inset ring-tint/[0.06]">
+            <div
+              key={kind}
+              className="flex items-start gap-4 rounded-2xl bg-ink-800/50 p-4 ring-1 ring-inset ring-tint/[0.06]"
+            >
               <ui.icon size={22} className="mt-0.5 shrink-0 text-grass-300" />
               <div className="min-w-0 flex-1">
                 <p className="font-display text-lg font-bold text-ink-100">{ui.badge}</p>
@@ -764,9 +978,9 @@ export function NewContentDialog() {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
       </div>
     </Modal>
-  )
+  );
 }

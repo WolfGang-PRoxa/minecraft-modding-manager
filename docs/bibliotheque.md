@@ -26,11 +26,11 @@ Des bandeaux s’affichent en haut de la liste quand c’est utile :
 
 Les pastilles posées sur un modpack résument ce qui en est déjà installé :
 
-| Pastille | Signification |
-|---|---|
+| Pastille                        | Signification                                                                                                                                                                                                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Version sur CurseForge : v2** | CurseForge contient la v2 de ce modpack. Elle est verte si c’est la dernière version, bleue sinon. Avec plusieurs profils, toutes les versions sont citées (« Versions sur CurseForge : v1 et v3 »). Le survol de la pastille montre les profils concernés. |
-| **Mise à jour disponible** | Le profil installé par l’application a une version plus ancienne que la dernière publiée. |
-| **v2 installée** | L’application a installé la v2, mais cette version n’est plus publiée sur GitHub. |
+| **Mise à jour disponible**      | Le profil installé par l’application a une version plus ancienne que la dernière publiée.                                                                                                                                                                   |
+| **v2 installée**                | L’application a installé la v2, mais cette version n’est plus publiée sur GitHub.                                                                                                                                                                           |
 
 Dans l’historique des versions, d’autres pastilles marquent la **Dernière** version, une version **Bêta** (publiée
 comme préversion sur GitHub) et chaque **Version sur CurseForge**.
@@ -72,8 +72,8 @@ Quand une nouvelle version d’un modpack installé est publiée, la pastille **
 bouton devient **Mettre à jour**. La mise à jour se fait **sur place**, dans le même profil CurseForge : les mondes
 et les réglages sont conservés.
 
-| Ce qui est conservé tel quel | Ce qui est fusionné | Ce qui est remplacé |
-|---|---|---|
+| Ce qui est conservé tel quel                                                                                                                                                                                                                                                         | Ce qui est fusionné                                                                                                                                                                                                                                                                                                              | Ce qui est remplacé                                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | Options du jeu (`options.txt`, `optionsof.txt`, `optionsshaders.txt`), serveurs (`servers.dat`), historique des commandes, journaux (`logs`, `crash-reports`), cartes JourneyMap et Xaero’s, dossier `local`, et l’état des mods activés ou désactivés par le joueur dans CurseForge | **Les mondes** (`saves`), captures d’écran, schémas et sauvegardes (`backups`) : rien n’est perdu, la version du joueur l’emporte en cas de doublon. Packs de ressources et de shaders : les ajouts du joueur restent, ceux du modpack l’emportent en cas de doublon. Configurations, si le publieur l’a choisi : voir plus bas. | Tout le reste de ce que fournit le modpack : mods, configurations, scripts… |
 
 Les réglages du profil sont conservés eux aussi : mémoire allouée, arguments Java, nombre de parties, date de

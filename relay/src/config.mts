@@ -1,41 +1,41 @@
 // Réglages du relais, lus dans les variables d'environnement Netlify (jamais dans le code).
 
-declare const Netlify: { env: { get(name: string): string | undefined } }
+declare const Netlify: { env: { get(name: string): string | undefined } };
 
 export interface RelayConfig {
   /** Dépôt surveillé, « propriétaire/nom ». */
-  repo: string
+  repo: string;
   /** Jeton GitHub du propriétaire (Contents, Issues et Pull requests en écriture sur ce seul dépôt). */
-  githubToken: string
+  githubToken: string;
   /** Secret du webhook GitHub : prouve que l'appel vient bien de GitHub. */
-  webhookSecret: string
+  webhookSecret: string;
   /** Secret qui signe les liens des mails : seul le destinataire peut agir. */
-  linkSecret: string
-  resendKey: string
+  linkSecret: string;
+  resendKey: string;
   /** Adresse du propriétaire, qui reçoit les mails. */
-  ownerEmail: string
-  mailFrom: string
+  ownerEmail: string;
+  mailFrom: string;
   /** Point d'entrée /fire de la routine qui corrige les issues, et son jeton. */
-  routineUrl: string
-  routineToken: string
+  routineUrl: string;
+  routineToken: string;
   /** Adresse publique du relais, pour les liens des mails. */
-  baseUrl: string
-  githubApi: string
-  resendApi: string
+  baseUrl: string;
+  githubApi: string;
+  resendApi: string;
   /** Point d'entrée /fire de la routine qui évalue le risque d'une issue, et son jeton (facultatifs). */
-  evalRoutineUrl: string
-  evalRoutineToken: string
+  evalRoutineUrl: string;
+  evalRoutineToken: string;
   /** Nombre d'issues évaluées d'office par 24 h (les autres, sur demande depuis le mail). */
-  evalDailyMax: number
+  evalDailyMax: number;
 }
 
 /** Erreur dont le message peut être montré tel quel au propriétaire. */
 export class RelayError extends Error {
-  readonly status: number
+  readonly status: number;
 
   constructor(message: string, status = 500) {
-    super(message)
-    this.status = status
+    super(message);
+    this.status = status;
   }
 }
 
@@ -47,21 +47,21 @@ const REQUIRED = {
   resendKey: 'RESEND_API_KEY',
   ownerEmail: 'OWNER_EMAIL',
   routineUrl: 'ROUTINE_FIRE_URL',
-  routineToken: 'ROUTINE_TOKEN'
-} as const
+  routineToken: 'ROUTINE_TOKEN',
+} as const;
 
-type RequiredKey = keyof typeof REQUIRED
+type RequiredKey = keyof typeof REQUIRED;
 
 /** Variables attendues, et si chacune est renseignée (jamais leur valeur). */
 export function configStatus(): Array<{ name: string; set: boolean }> {
-  return Object.values(REQUIRED).map((name) => ({ name, set: Boolean(Netlify.env.get(name)?.trim()) }))
+  return Object.values(REQUIRED).map((name) => ({ name, set: Boolean(Netlify.env.get(name)?.trim()) }));
 }
 
-const DEFAULT_EVAL_DAILY_MAX = 3
+const DEFAULT_EVAL_DAILY_MAX = 3;
 
 function dailyMax(value: string): number {
-  const parsed = Number.parseInt(value, 10)
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_EVAL_DAILY_MAX
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_EVAL_DAILY_MAX;
 }
 
 /**
@@ -69,11 +69,14 @@ function dailyMax(value: string): number {
  * qui la nomme, plutôt qu'un échec obscur plus loin.
  */
 export function loadConfig(req: Request, needs: RequiredKey[]): RelayConfig {
-  const env = (name: string) => Netlify.env.get(name)?.trim() ?? ''
-  const values = Object.fromEntries(Object.entries(REQUIRED).map(([key, name]) => [key, env(name)])) as Record<RequiredKey, string>
-  const missing = needs.filter((key) => !values[key]).map((key) => REQUIRED[key])
+  const env = (name: string) => Netlify.env.get(name)?.trim() ?? '';
+  const values = Object.fromEntries(Object.entries(REQUIRED).map(([key, name]) => [key, env(name)])) as Record<
+    RequiredKey,
+    string
+  >;
+  const missing = needs.filter((key) => !values[key]).map((key) => REQUIRED[key]);
   if (missing.length > 0) {
-    throw new RelayError(`Configuration du relais incomplète : ${missing.join(', ')} à renseigner dans Netlify.`, 503)
+    throw new RelayError(`Configuration du relais incomplète : ${missing.join(', ')} à renseigner dans Netlify.`, 503);
   }
   return {
     ...values,
@@ -83,6 +86,6 @@ export function loadConfig(req: Request, needs: RequiredKey[]): RelayConfig {
     resendApi: (env('RESEND_API_URL') || 'https://api.resend.com').replace(/\/+$/, ''),
     evalRoutineUrl: env('EVAL_ROUTINE_FIRE_URL'),
     evalRoutineToken: env('EVAL_ROUTINE_TOKEN'),
-    evalDailyMax: dailyMax(env('EVAL_DAILY_MAX'))
-  }
+    evalDailyMax: dailyMax(env('EVAL_DAILY_MAX')),
+  };
 }

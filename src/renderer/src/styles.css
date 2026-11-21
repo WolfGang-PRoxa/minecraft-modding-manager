@@ -222,12 +222,7 @@
 }
 
 @utility skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-ink-800) 0%,
-    var(--color-ink-750) 40%,
-    var(--color-ink-800) 80%
-  );
+  background: linear-gradient(90deg, var(--color-ink-800) 0%, var(--color-ink-750) 40%, var(--color-ink-800) 80%);
   background-size: 800px 100%;
   animation: var(--animate-shimmer);
 }

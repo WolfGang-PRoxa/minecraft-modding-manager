@@ -1,32 +1,32 @@
-import { useEffect, useState } from 'react'
-import { Bug, ChevronDown, CircleCheck, ExternalLink, Lightbulb, Send } from 'lucide-react'
-import { APP_REPO } from '../../../shared/config'
-import { repoSlug } from '../../../shared/repo'
-import { REPORT_DESCRIPTION_MAX, REPORT_TITLE_MAX, reportProblem } from '../../../shared/report'
-import type { IssueReport, ReportInfo, ReportKind } from '../../../shared/types'
-import { errorMessage } from '../studio/store'
-import { Field, Modal, Spinner, TextArea, TextInput } from '../studio/Modal'
-import { useStore } from '../store'
-import { Button } from './Button'
-import { Select } from './Select'
-import { Avatar } from './GitHubAccount'
+import { useEffect, useState } from 'react';
+import { Bug, ChevronDown, CircleCheck, ExternalLink, Lightbulb, Send } from 'lucide-react';
+import { APP_REPO } from '../../../shared/config';
+import { repoSlug } from '../../../shared/repo';
+import { REPORT_DESCRIPTION_MAX, REPORT_TITLE_MAX, reportProblem } from '../../../shared/report';
+import type { IssueReport, ReportInfo, ReportKind } from '../../../shared/types';
+import { errorMessage } from '../studio/store';
+import { Field, Modal, Spinner, TextArea, TextInput } from '../studio/Modal';
+import { useStore } from '../store';
+import { Button } from './Button';
+import { Select } from './Select';
+import { Avatar } from './GitHubAccount';
 
 const KINDS: Array<{ kind: ReportKind; label: string; icon: typeof Bug; placeholder: string }> = [
   {
     kind: 'bug',
     label: 'Un problème',
     icon: Bug,
-    placeholder: 'Ce que tu faisais, ce qui s’est passé, et ce que tu attendais à la place.'
+    placeholder: 'Ce que tu faisais, ce qui s’est passé, et ce que tu attendais à la place.',
   },
   {
     kind: 'suggestion',
     label: 'Une suggestion',
     icon: Lightbulb,
-    placeholder: 'Ce que tu aimerais voir dans l’application, et à quoi ça te servirait.'
-  }
-]
+    placeholder: 'Ce que tu aimerais voir dans l’application, et à quoi ça te servirait.',
+  },
+];
 
-type Outcome = { kind: 'created'; number: number; url: string } | { kind: 'browser' }
+type Outcome = { kind: 'created'; number: number; url: string } | { kind: 'browser' };
 
 /** Ce qui s'affiche une fois le signalement parti. */
 function Sent({ outcome, onClose }: { outcome: Outcome; onClose: () => void }) {
@@ -57,68 +57,68 @@ function Sent({ outcome, onClose }: { outcome: Outcome; onClose: () => void }) {
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 function ReportForm({ onClose }: { onClose: () => void }) {
-  const modpacks = useStore((s) => s.catalog?.modpacks ?? null)
-  const selectedId = useStore((s) => s.selectedId)
-  const [info, setInfo] = useState<ReportInfo | null>(null)
-  const [kind, setKind] = useState<ReportKind>('bug')
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [modpackId, setModpackId] = useState<string | null>(selectedId)
-  const [includeDiagnostics, setIncludeDiagnostics] = useState(true)
-  const [showDiagnostics, setShowDiagnostics] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [outcome, setOutcome] = useState<Outcome | null>(null)
+  const modpacks = useStore((s) => s.catalog?.modpacks ?? null);
+  const selectedId = useStore((s) => s.selectedId);
+  const [info, setInfo] = useState<ReportInfo | null>(null);
+  const [kind, setKind] = useState<ReportKind>('bug');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [modpackId, setModpackId] = useState<string | null>(selectedId);
+  const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [outcome, setOutcome] = useState<Outcome | null>(null);
 
   useEffect(() => {
     void window.api
       .getReportInfo()
       .then(setInfo)
-      .catch(() => setInfo({ account: null, diagnostics: [] }))
-  }, [])
+      .catch(() => setInfo({ account: null, diagnostics: [] }));
+  }, []);
 
-  const report: IssueReport = { kind, title, description, modpackId, includeDiagnostics }
-  const problem = reportProblem(report)
-  const account = info?.account ?? null
-  const current = KINDS.find((k) => k.kind === kind)!
+  const report: IssueReport = { kind, title, description, modpackId, includeDiagnostics };
+  const problem = reportProblem(report);
+  const account = info?.account ?? null;
+  const current = KINDS.find((k) => k.kind === kind)!;
 
   const inBrowser = async () => {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
     try {
-      await window.api.openReportInBrowser(report)
-      setOutcome({ kind: 'browser' })
+      await window.api.openReportInBrowser(report);
+      setOutcome({ kind: 'browser' });
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorMessage(err));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   const send = async () => {
-    setBusy(true)
-    setError(null)
+    setBusy(true);
+    setError(null);
     try {
-      const result = await window.api.submitReport(report)
-      if (result.ok) setOutcome({ kind: 'created', number: result.number, url: result.url })
-      else setError(result.error)
+      const result = await window.api.submitReport(report);
+      if (result.ok) setOutcome({ kind: 'created', number: result.number, url: result.url });
+      else setError(result.error);
     } catch (err) {
-      setError(errorMessage(err))
+      setError(errorMessage(err));
     } finally {
-      setBusy(false)
+      setBusy(false);
     }
-  }
+  };
 
   if (outcome) {
     return (
       <Modal title="Signaler un problème" onClose={onClose} width="max-w-xl">
         <Sent outcome={outcome} onClose={onClose} />
       </Modal>
-    )
+    );
   }
 
   return (
@@ -148,7 +148,13 @@ function ReportForm({ onClose }: { onClose: () => void }) {
             Annuler
           </Button>
           {account ? (
-            <Button size="sm" variant="primary" icon={busy ? undefined : Send} disabled={busy || problem !== null} onClick={() => void send()}>
+            <Button
+              size="sm"
+              variant="primary"
+              icon={busy ? undefined : Send}
+              disabled={busy || problem !== null}
+              onClick={() => void send()}
+            >
               {busy ? <Spinner size={15} /> : null}
               Envoyer
             </Button>
@@ -212,7 +218,10 @@ function ReportForm({ onClose }: { onClose: () => void }) {
               label="Modpack concerné"
               value={modpackId ?? ''}
               onChange={(id) => setModpackId(id || null)}
-              options={[{ value: '', label: 'Aucun en particulier' }, ...modpacks.map((modpack) => ({ value: modpack.id, label: modpack.latest.name }))]}
+              options={[
+                { value: '', label: 'Aucun en particulier' },
+                ...modpacks.map((modpack) => ({ value: modpack.id, label: modpack.latest.name })),
+              ]}
               className="w-full"
             />
           </Field>
@@ -265,12 +274,12 @@ function ReportForm({ onClose }: { onClose: () => void }) {
         )}
       </div>
     </Modal>
-  )
+  );
 }
 
 /** Formulaire « Signaler un problème » : remonté à chaque ouverture, pour repartir d'un formulaire vide. */
 export function ReportDialog() {
-  const open = useStore((s) => s.reportOpen)
-  const setOpen = useStore((s) => s.setReportOpen)
-  return open ? <ReportForm onClose={() => setOpen(false)} /> : null
+  const open = useStore((s) => s.reportOpen);
+  const setOpen = useStore((s) => s.setReportOpen);
+  return open ? <ReportForm onClose={() => setOpen(false)} /> : null;
 }

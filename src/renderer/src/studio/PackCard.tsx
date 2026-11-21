@@ -1,5 +1,5 @@
-import { useMemo, useState, type DragEvent, type ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import { useMemo, useState, type DragEvent, type ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import {
   CircleAlert,
   CloudOff,
@@ -18,40 +18,52 @@ import {
   SlidersHorizontal,
   Trash2,
   TriangleAlert,
-  Upload
-} from 'lucide-react'
-import { findPresentVersions, type PresentVersion } from '../../../shared/presence'
-import type { ExcludedInZip, PackView, PendingZip, RemoteOnlyVersion, RemoteStatus, VersionView } from '../../../shared/studio'
-import type { CurseForgeProfile } from '../../../shared/types'
-import { describePresence } from '../components/Badges'
-import { Button, IconButton } from '../components/Button'
-import { Cover } from '../components/Cover'
-import { formatBytes, formatDate, formatLoader } from '../lib/format'
-import { useStore } from '../store'
-import { CurseForgeLine, CurseForgeVersionStatus, useCurseForgeVersions, type CurseForgeVersions } from './CurseForgePanel'
-import { TestsPill } from './ProfileTests'
-import { UpdatesLine } from './MaintenancePanel'
-import { describeExcluded, type SettingsTab } from './PackSettingsDialog'
-import { errorMessage, openLink, openPath, useStudio } from './store'
+  Upload,
+} from 'lucide-react';
+import { findPresentVersions, type PresentVersion } from '../../../shared/presence';
+import type {
+  ExcludedInZip,
+  PackView,
+  PendingZip,
+  RemoteOnlyVersion,
+  RemoteStatus,
+  VersionView,
+} from '../../../shared/studio';
+import type { CurseForgeProfile } from '../../../shared/types';
+import { describePresence } from '../components/Badges';
+import { Button, IconButton } from '../components/Button';
+import { Cover } from '../components/Cover';
+import { formatBytes, formatDate, formatLoader } from '../lib/format';
+import { useStore } from '../store';
+import {
+  CurseForgeLine,
+  CurseForgeVersionStatus,
+  useCurseForgeVersions,
+  type CurseForgeVersions,
+} from './CurseForgePanel';
+import { TestsPill } from './ProfileTests';
+import { UpdatesLine } from './MaintenancePanel';
+import { describeExcluded, type SettingsTab } from './PackSettingsDialog';
+import { errorMessage, openLink, openPath, useStudio } from './store';
 
 export const STATUS: Record<RemoteStatus, { label: string; className: string }> = {
   published: { label: 'En ligne', className: 'bg-grass-400/15 text-grass-300 ring-grass-400/30' },
   create: { label: 'À publier', className: 'bg-sky-400/15 text-sky-300 ring-sky-400/30' },
   update: { label: 'Modifiée', className: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35' },
   blocked: { label: 'Non publiable', className: 'bg-red-500/15 text-red-300 ring-red-400/30' },
-  unknown: { label: 'GitHub non vérifié', className: 'bg-tint/[0.06] text-ink-300 ring-tint/10' }
-}
+  unknown: { label: 'GitHub non vérifié', className: 'bg-tint/[0.06] text-ink-300 ring-tint/10' },
+};
 
 export function Pill({
   className,
   children,
   title,
-  icon: Icon
+  icon: Icon,
 }: {
-  className: string
-  children: ReactNode
-  title?: string
-  icon?: LucideIcon
+  className: string;
+  children: ReactNode;
+  title?: string;
+  icon?: LucideIcon;
 }) {
   return (
     <span
@@ -61,17 +73,19 @@ export function Pill({
       {Icon ? <Icon size={12} strokeWidth={2.5} /> : <span className="size-1.5 rounded-full bg-current" />}
       {children}
     </span>
-  )
+  );
 }
 
 export function Message({ tone, children }: { tone: 'warning' | 'error'; children: ReactNode }) {
-  const Icon = tone === 'error' ? CircleAlert : TriangleAlert
+  const Icon = tone === 'error' ? CircleAlert : TriangleAlert;
   return (
-    <p className={`mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed ${tone === 'error' ? 'text-red-300' : 'text-amber-glow/90'}`}>
+    <p
+      className={`mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed ${tone === 'error' ? 'text-red-300' : 'text-amber-glow/90'}`}
+    >
       <Icon size={13} className="mt-px shrink-0" />
       <span>{children}</span>
     </p>
-  )
+  );
 }
 
 /** Un zip qui partira à la prochaine publication contient des fichiers exclus dans les réglages du modpack. */
@@ -80,18 +94,19 @@ function ExcludedWarning({
   fileName,
   label,
   excluded,
-  pending
+  pending,
 }: {
-  folder: string
-  fileName: string
-  label: string
-  excluded: ExcludedInZip
-  pending: boolean
+  folder: string;
+  fileName: string;
+  label: string;
+  excluded: ExcludedInZip;
+  pending: boolean;
 }) {
-  const openDialog = useStudio((s) => s.openDialog)
+  const openDialog = useStudio((s) => s.openDialog);
   return (
     <Message tone="warning">
-      Contient {describeExcluded(excluded)} : {pending ? 'ils partiront avec ce zip' : 'ils seront publiés avec cette version'}.{' '}
+      Contient {describeExcluded(excluded)} :{' '}
+      {pending ? 'ils partiront avec ce zip' : 'ils seront publiés avec cette version'}.{' '}
       <button
         type="button"
         onClick={() => openDialog({ kind: 'strip', folder, fileName, label })}
@@ -100,24 +115,25 @@ function ExcludedWarning({
         <Eraser size={12} /> Retirer du zip
       </button>
     </Message>
-  )
+  );
 }
 
 /** Résumé des réglages des versions du modpack ; chaque pastille ouvre l'onglet correspondant. */
 function SettingsSummary({ pack }: { pack: PackView }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const { exclude, disabledMods, keepPlayerConfigs } = pack.settings
-  const items: Array<{ tab: SettingsTab; icon: LucideIcon; label: string }> = []
-  if (exclude.length) items.push({ tab: 'files', icon: EyeOff, label: `${exclude.length} exclusion${exclude.length > 1 ? 's' : ''}` })
+  const openDialog = useStudio((s) => s.openDialog);
+  const { exclude, disabledMods, keepPlayerConfigs } = pack.settings;
+  const items: Array<{ tab: SettingsTab; icon: LucideIcon; label: string }> = [];
+  if (exclude.length)
+    items.push({ tab: 'files', icon: EyeOff, label: `${exclude.length} exclusion${exclude.length > 1 ? 's' : ''}` });
   if (disabledMods.length) {
     items.push({
       tab: 'mods',
       icon: PowerOff,
-      label: `${disabledMods.length} mod${disabledMods.length > 1 ? 's' : ''} désactivé${disabledMods.length > 1 ? 's' : ''} chez les joueurs`
-    })
+      label: `${disabledMods.length} mod${disabledMods.length > 1 ? 's' : ''} désactivé${disabledMods.length > 1 ? 's' : ''} chez les joueurs`,
+    });
   }
-  if (keepPlayerConfigs) items.push({ tab: 'configs', icon: ShieldCheck, label: 'Configurations des joueurs gardées' })
-  if (!items.length) return null
+  if (keepPlayerConfigs) items.push({ tab: 'configs', icon: ShieldCheck, label: 'Configurations des joueurs gardées' });
+  if (!items.length) return null;
   return (
     <div className="mt-2.5 flex flex-wrap gap-2">
       {items.map(({ tab, icon: Icon, label }) => (
@@ -131,7 +147,7 @@ function SettingsSummary({ pack }: { pack: PackView }) {
         </button>
       ))}
     </div>
-  )
+  );
 }
 
 export function Row({ badge, children, aside }: { badge: ReactNode; children: ReactNode; aside?: ReactNode }) {
@@ -142,33 +158,41 @@ export function Row({ badge, children, aside }: { badge: ReactNode; children: Re
       <div className="min-w-72 flex-1 basis-72">{children}</div>
       {aside && <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">{aside}</div>}
     </div>
-  )
+  );
 }
 
-export function VersionBadge({ children, tone = 'default' }: { children: ReactNode; tone?: 'default' | 'muted' | 'removed' }) {
+export function VersionBadge({
+  children,
+  tone = 'default',
+}: {
+  children: ReactNode;
+  tone?: 'default' | 'muted' | 'removed';
+}) {
   const styles = {
     default: 'bg-tint/[0.08] text-ink-100',
     muted: 'bg-tint/[0.04] text-ink-400',
-    removed: 'bg-red-500/10 text-red-300/80 line-through'
-  }[tone]
-  return <span className={`inline-block rounded-lg px-2 py-1 font-display text-sm font-bold ${styles}`}>{children}</span>
+    removed: 'bg-red-500/10 text-red-300/80 line-through',
+  }[tone];
+  return (
+    <span className={`inline-block rounded-lg px-2 py-1 font-display text-sm font-bold ${styles}`}>{children}</span>
+  );
 }
 
 function versionMeta(version: VersionView): string {
-  const a = version.analysis
+  const a = version.analysis;
   return [
     formatBytes(version.size),
     a?.minecraftVersion && `Minecraft ${a.minecraftVersion}`,
     a && formatLoader(a.modLoader),
     a?.modCount != null && `${a.modCount} mod${a.modCount > 1 ? 's' : ''}`,
-    formatDate(version.modifiedAt)
+    formatDate(version.modifiedAt),
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' · ');
 }
 
 /** Bouton discret qui rougit au survol : supprimer est une action rare. */
-export const DANGER_HOVER = 'hover:bg-red-500/15! hover:text-red-300!'
+export const DANGER_HOVER = 'hover:bg-red-500/15! hover:text-red-300!';
 
 /** Où en est sur GitHub la version que contient le CurseForge du publieur. */
 const ONLINE: Record<RemoteStatus, string> = {
@@ -176,13 +200,17 @@ const ONLINE: Record<RemoteStatus, string> = {
   update: ', en ligne sur GitHub (avec des changements à publier).',
   create: ' : elle n’est pas encore publiée.',
   blocked: ' : elle n’est pas publiable pour l’instant.',
-  unknown: '.'
-}
+  unknown: '.',
+};
 
 const sameName = (a: string, b: string) => {
-  const normalize = (text: string) => text.replace(/[_\s]+/g, ' ').trim().toLowerCase()
-  return normalize(a) === normalize(b)
-}
+  const normalize = (text: string) =>
+    text
+      .replace(/[_\s]+/g, ' ')
+      .trim()
+      .toLowerCase();
+  return normalize(a) === normalize(b);
+};
 
 /**
  * Dit au publieur quelle version de ce modpack son CurseForge contient, et si elle est en ligne. Sans
@@ -191,33 +219,37 @@ const sameName = (a: string, b: string) => {
 function CurseForgeNote({
   pack,
   present,
-  profiles
+  profiles,
 }: {
-  pack: PackView
-  present: PresentVersion[]
-  profiles: CurseForgeProfile[]
+  pack: PackView;
+  present: PresentVersion[];
+  profiles: CurseForgeProfile[];
 }) {
-  const dot = <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-curseforge" />
+  const dot = <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-curseforge" />;
   if (present.length > 0) {
     return (
       <div className="mt-2.5 space-y-1">
         {present.map((p) => {
-          const version = pack.versions.find((v) => String(v.number) === p.version)
+          const version = pack.versions.find((v) => String(v.number) === p.version);
           return (
-            <p key={`${p.profilePath}|${p.version}`} className="flex gap-2 text-sm text-ink-300" title={describePresence(p)}>
+            <p
+              key={`${p.profilePath}|${p.version}`}
+              className="flex gap-2 text-sm text-ink-300"
+              title={describePresence(p)}
+            >
               {dot}
               <span>
-                Ton CurseForge contient la <strong className="font-semibold text-ink-100">v{p.version}</strong> (profil «{' '}
-                {p.profileName} »){ONLINE[version?.remote ?? 'unknown']}
+                Ton CurseForge contient la <strong className="font-semibold text-ink-100">v{p.version}</strong> (profil
+                « {p.profileName} »){ONLINE[version?.remote ?? 'unknown']}
               </span>
             </p>
-          )
+          );
         })}
       </div>
-    )
+    );
   }
-  const namesake = profiles.find((profile) => sameName(profile.name, pack.name) || sameName(profile.name, pack.folder))
-  if (!namesake || pack.versions.length === 0) return null
+  const namesake = profiles.find((profile) => sameName(profile.name, pack.name) || sameName(profile.name, pack.folder));
+  if (!namesake || pack.versions.length === 0) return null;
   return (
     <p className="mt-2.5 flex gap-2 text-sm text-ink-400">
       {dot}
@@ -226,22 +258,22 @@ function CurseForgeNote({
         {pack.versions[0].number}, crée la v{pack.nextVersion} pour le publier.
       </span>
     </p>
-  )
+  );
 }
 
 function VersionRow({
   pack,
   version,
   present,
-  curseforge
+  curseforge,
 }: {
-  pack: PackView
-  version: VersionView
-  present: PresentVersion[]
-  curseforge: CurseForgeVersions
+  pack: PackView;
+  version: VersionView;
+  present: PresentVersion[];
+  curseforge: CurseForgeVersions;
 }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const status = STATUS[version.remote]
+  const openDialog = useStudio((s) => s.openDialog);
+  const status = STATUS[version.remote];
   return (
     <Row
       badge={<VersionBadge>v{version.number}</VersionBadge>}
@@ -252,7 +284,12 @@ function VersionRow({
             variant="ghost"
             icon={Eye}
             onClick={() =>
-              openDialog({ kind: 'contents', folder: pack.folder, fileName: version.fileName, label: `la v${version.number}` })
+              openDialog({
+                kind: 'contents',
+                folder: pack.folder,
+                fileName: version.fileName,
+                label: `la v${version.number}`,
+              })
             }
           >
             Contenu
@@ -271,7 +308,9 @@ function VersionRow({
             size={16}
             label={`Supprimer la v${version.number}`}
             className={DANGER_HOVER}
-            onClick={() => openDialog({ kind: 'delete', target: { type: 'version', folder: pack.folder, version: version.number } })}
+            onClick={() =>
+              openDialog({ kind: 'delete', target: { type: 'version', folder: pack.folder, version: version.number } })
+            }
           />
         </>
       }
@@ -287,7 +326,10 @@ function VersionRow({
         )}
         <CurseForgeVersionStatus pack={pack} version={version} curseforge={curseforge} />
         {present.length > 0 && (
-          <Pill className="bg-curseforge/15 text-curseforge ring-curseforge/30" title={present.map(describePresence).join('\n')}>
+          <Pill
+            className="bg-curseforge/15 text-curseforge ring-curseforge/30"
+            title={present.map(describePresence).join('\n')}
+          >
             Version sur CurseForge
           </Pill>
         )}
@@ -315,11 +357,11 @@ function VersionRow({
         />
       )}
     </Row>
-  )
+  );
 }
 
 function PendingRow({ folder, zip, number }: { folder: string; zip: PendingZip; number: number | null }) {
-  const openDialog = useStudio((s) => s.openDialog)
+  const openDialog = useStudio((s) => s.openDialog);
   return (
     <Row
       badge={<VersionBadge tone="muted">{number ? `v${number}` : '—'}</VersionBadge>}
@@ -354,13 +396,15 @@ function PendingRow({ folder, zip, number }: { folder: string; zip: PendingZip; 
           {warning}
         </Message>
       ))}
-      {zip.excluded && <ExcludedWarning folder={folder} fileName={zip.fileName} label={zip.fileName} excluded={zip.excluded} pending />}
+      {zip.excluded && (
+        <ExcludedWarning folder={folder} fileName={zip.fileName} label={zip.fileName} excluded={zip.excluded} pending />
+      )}
     </Row>
-  )
+  );
 }
 
 export function RemoteOnlyRow({ pack, version }: { pack: PackView; version: RemoteOnlyVersion }) {
-  const openDialog = useStudio((s) => s.openDialog)
+  const openDialog = useStudio((s) => s.openDialog);
   return (
     <Row
       badge={<VersionBadge tone="removed">v{version.version}</VersionBadge>}
@@ -380,14 +424,22 @@ export function RemoteOnlyRow({ pack, version }: { pack: PackView; version: Remo
             onClick={() =>
               openDialog({
                 kind: 'delete',
-                target: { type: 'releases', name: pack.name, versions: [version.version], tags: [version.tag], orphan: false }
+                target: {
+                  type: 'releases',
+                  name: pack.name,
+                  versions: [version.version],
+                  tags: [version.tag],
+                  orphan: false,
+                },
               })
             }
           />
         </>
       }
     >
-      <p className="font-medium text-ink-300">{version.draft ? 'Brouillon abandonné sur GitHub' : 'Toujours sur GitHub'}</p>
+      <p className="font-medium text-ink-300">
+        {version.draft ? 'Brouillon abandonné sur GitHub' : 'Toujours sur GitHub'}
+      </p>
       <p className="mt-0.5 text-xs text-ink-400">
         {version.draft
           ? 'Reste d’une publication interrompue : il sera supprimé.'
@@ -396,83 +448,89 @@ export function RemoteOnlyRow({ pack, version }: { pack: PackView; version: Remo
             : 'Son zip n’est plus dans le dossier : la release sera supprimée à la prochaine publication.'}
       </p>
     </Row>
-  )
+  );
 }
 
 function useFileDrop(folder: string) {
-  const [over, setOver] = useState(false)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
+  const [over, setOver] = useState(false);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
 
-  const hasFiles = (e: DragEvent) => e.dataTransfer.types.includes('Files')
+  const hasFiles = (e: DragEvent) => e.dataTransfer.types.includes('Files');
   return {
     over,
     handlers: {
       onDragEnter: (e: DragEvent) => {
-        if (!hasFiles(e)) return
-        e.preventDefault()
-        setOver(true)
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        setOver(true);
       },
       onDragOver: (e: DragEvent) => {
-        if (!hasFiles(e)) return
-        e.preventDefault()
-        e.dataTransfer.dropEffect = 'copy'
+        if (!hasFiles(e)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
       },
       onDragLeave: (e: DragEvent) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false)
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver(false);
       },
       onDrop: async (e: DragEvent) => {
-        e.preventDefault()
-        setOver(false)
-        const paths = [...e.dataTransfer.files].map((file) => window.studio.getPathForFile(file)).filter(Boolean)
-        if (!paths.length) return
+        e.preventDefault();
+        setOver(false);
+        const paths = [...e.dataTransfer.files].map((file) => window.studio.getPathForFile(file)).filter(Boolean);
+        if (!paths.length) return;
         try {
-          const result = await window.studio.importFiles(folder, paths)
+          const result = await window.studio.importFiles(folder, paths);
           if (!result.ok) {
-            pushToast({ kind: 'error', title: 'Copie impossible', message: result.error })
-            return
+            pushToast({ kind: 'error', title: 'Copie impossible', message: result.error });
+            return;
           }
           const parts = [
             result.zips && `${result.zips} zip${result.zips > 1 ? 's' : ''} ajouté${result.zips > 1 ? 's' : ''}`,
-            result.cover && 'image de couverture remplacée'
-          ].filter(Boolean)
+            result.cover && 'image de couverture remplacée',
+          ].filter(Boolean);
           if (parts.length) {
             pushToast({
               kind: 'success',
               title: parts.join(', ').replace(/^./, (c) => c.toUpperCase()),
-              message: result.zips ? 'Clique sur « Ranger les zips » pour leur donner un numéro de version.' : undefined
-            })
+              message: result.zips
+                ? 'Clique sur « Ranger les zips » pour leur donner un numéro de version.'
+                : undefined,
+            });
           }
           if (result.ignored.length) {
-            pushToast({ kind: 'info', title: 'Fichiers ignorés', message: `Seuls les zips et les images sont acceptés : ${result.ignored.join(', ')}` })
+            pushToast({
+              kind: 'info',
+              title: 'Fichiers ignorés',
+              message: `Seuls les zips et les images sont acceptés : ${result.ignored.join(', ')}`,
+            });
           }
         } catch (err) {
-          pushToast({ kind: 'error', title: 'Copie impossible', message: errorMessage(err) })
+          pushToast({ kind: 'error', title: 'Copie impossible', message: errorMessage(err) });
         } finally {
-          void refresh()
+          void refresh();
         }
-      }
-    }
-  }
+      },
+    },
+  };
 }
 
 export function PackCard({ pack, index }: { pack: PackView; index: number }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const installed = useStore((s) => s.installed)
-  const profiles = useStore((s) => s.profiles)
+  const openDialog = useStudio((s) => s.openDialog);
+  const installed = useStore((s) => s.installed);
+  const profiles = useStore((s) => s.profiles);
   // Versions de ce dossier retrouvées dans le CurseForge du publieur (son profil d'origine, le plus souvent).
   const present = useMemo(() => {
     const known = pack.versions.map((v) => ({
       id: pack.id,
       version: String(v.number),
-      modsSignature: v.analysis?.modsSignature ?? null
-    }))
-    return findPresentVersions(known, installed, profiles)
-  }, [pack, installed, profiles])
-  const { over, handlers } = useFileDrop(pack.folder)
-  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge)
-  const empty = !pack.versions.length && !pack.pending.length && !pack.remoteOnly.length
-  let next = pack.nextVersion
+      modsSignature: v.analysis?.modsSignature ?? null,
+    }));
+    return findPresentVersions(known, installed, profiles);
+  }, [pack, installed, profiles]);
+  const { over, handlers } = useFileDrop(pack.folder);
+  const curseforge = useCurseForgeVersions(pack.folder, pack.curseforge);
+  const empty = !pack.versions.length && !pack.pending.length && !pack.remoteOnly.length;
+  let next = pack.nextVersion;
 
   return (
     <section
@@ -515,7 +573,11 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             <Button size="sm" icon={Pencil} onClick={() => openDialog({ kind: 'pack-info', folder: pack.folder })}>
               Infos et image
             </Button>
-            <Button size="sm" icon={SlidersHorizontal} onClick={() => openDialog({ kind: 'pack-settings', folder: pack.folder })}>
+            <Button
+              size="sm"
+              icon={SlidersHorizontal}
+              onClick={() => openDialog({ kind: 'pack-settings', folder: pack.folder })}
+            >
               Réglages
             </Button>
             <Button size="sm" icon={PackagePlus} onClick={() => openDialog({ kind: 'import', folder: pack.folder })}>
@@ -537,7 +599,9 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
 
       {pack.errors.length > 0 && (
         <div className="mx-6 mb-4 rounded-xl bg-red-500/10 px-4 py-3 ring-1 ring-inset ring-red-400/25">
-          <p className="text-sm font-semibold text-red-300">Ce modpack ne sera pas publié tant que ceci n’est pas corrigé :</p>
+          <p className="text-sm font-semibold text-red-300">
+            Ce modpack ne sera pas publié tant que ceci n’est pas corrigé :
+          </p>
           {pack.errors.map((error) => (
             <p key={error} className="mt-1 text-sm text-ink-200 select-text">
               {error}
@@ -567,7 +631,11 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
             <FileArchive size={22} className="shrink-0 text-ink-500" />
             <span>
               Aucun zip pour l’instant. Dépose les zips de ce modpack dans{' '}
-              <button type="button" className="font-semibold text-grass-300 hover:text-grass-400" onClick={() => openPath(pack.dir)}>
+              <button
+                type="button"
+                className="font-semibold text-grass-300 hover:text-grass-400"
+                onClick={() => openPath(pack.dir)}
+              >
                 son dossier
               </button>
               , glisse-les ici, ou crée une version depuis CurseForge.
@@ -584,5 +652,5 @@ export function PackCard({ pack, index }: { pack: PackView; index: number }) {
         </div>
       )}
     </section>
-  )
+  );
 }

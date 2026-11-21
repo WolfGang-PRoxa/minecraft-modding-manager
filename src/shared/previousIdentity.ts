@@ -5,17 +5,17 @@
 // Une identité se retire quand plus personne n'a de version qui la porte.
 export interface PreviousIdentity {
   /** Dossier des données, dans %APPDATA%. */
-  dataDir: string
+  dataDir: string;
   /** Exécutable, dans le dossier d'installation. */
-  executable: string
+  executable: string;
   /** Dossier d'installation, dans %LOCALAPPDATA%\Programs. */
-  installDir: string
+  installDir: string;
   /** Marqueur posé dans chaque profil installé par l'application. */
-  instanceMarker: string
+  instanceMarker: string;
   /** Dossier des téléchargements, dans %TEMP%. */
-  tempDir: string
+  tempDir: string;
   /** Nom du dépôt de l'application (GitHub redirige encore l'ancienne adresse). */
-  repoName: string
+  repoName: string;
 }
 
 /** De la plus récente à la plus ancienne. */
@@ -26,7 +26,7 @@ export const PREVIOUS_IDENTITIES: readonly PreviousIdentity[] = [
     installDir: 'minecraft-modpack-manager',
     instanceMarker: '.modpack-manager.json',
     tempDir: 'modpack-manager',
-    repoName: 'minecraft-modpack-manager'
+    repoName: 'minecraft-modpack-manager',
   },
   {
     dataDir: 'Modpack Downloader',
@@ -34,9 +34,9 @@ export const PREVIOUS_IDENTITIES: readonly PreviousIdentity[] = [
     installDir: 'minecraft-modpack-downloader',
     instanceMarker: '.modpack-downloader.json',
     tempDir: 'modpack-downloader',
-    repoName: 'minecraft-modpack-downloader'
-  }
-]
+    repoName: 'minecraft-modpack-downloader',
+  },
+];
 
 /**
  * Ce que les deux identités précédentes avaient en commun, sous le nom de produit « Modpack Manager » : nom affiché
@@ -46,8 +46,8 @@ export const PREVIOUS_PRODUCT = {
   name: 'Modpack Manager',
   localDataDir: 'Modpack Manager',
   maintenanceTask: 'Modpack Manager - mises a jour des modpacks',
-  mcpServer: 'modpack-manager'
-} as const
+  mcpServer: 'modpack-manager',
+} as const;
 
-export const PREVIOUS_INSTANCE_MARKERS = PREVIOUS_IDENTITIES.map((identity) => identity.instanceMarker)
-export const PREVIOUS_EXECUTABLES = PREVIOUS_IDENTITIES.map((identity) => identity.executable)
+export const PREVIOUS_INSTANCE_MARKERS = PREVIOUS_IDENTITIES.map((identity) => identity.instanceMarker);
+export const PREVIOUS_EXECUTABLES = PREVIOUS_IDENTITIES.map((identity) => identity.executable);

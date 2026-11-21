@@ -25,10 +25,10 @@ décident de ce que reçoivent les joueurs : fichiers jamais publiés, mods livr
 Au premier lancement, l’application demande comment elle sera utilisée. Ce choix se change à tout moment dans
 [Paramètres → Utilisation](parametres.md#utilisation), sans réinstaller ni redémarrer.
 
-| Rôle | Pour qui | Ce qui s’affiche |
-|---|---|---|
-| **Récepteur** (par défaut) | Les joueurs | La **Bibliothèque** : les modpacks publiés, à installer et à mettre à jour. |
-| **Publieur** | Les auteurs de modpacks | La Bibliothèque et le **Studio**, avec des onglets pour passer de l’un à l’autre. |
+| Rôle                       | Pour qui                | Ce qui s’affiche                                                                  |
+| -------------------------- | ----------------------- | --------------------------------------------------------------------------------- |
+| **Récepteur** (par défaut) | Les joueurs             | La **Bibliothèque** : les modpacks publiés, à installer et à mettre à jour.       |
+| **Publieur**               | Les auteurs de modpacks | La Bibliothèque et le **Studio**, avec des onglets pour passer de l’un à l’autre. |
 
 Un publieur reste un joueur : il installe aussi les modpacks depuis la Bibliothèque.
 

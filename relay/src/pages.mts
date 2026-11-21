@@ -1,4 +1,4 @@
-import { esc, paragraphs } from './text.mts'
+import { esc, paragraphs } from './text.mts';
 
 // Pages ouvertes par les boutons des mails. Un lien ne fait jamais rien à lui seul (les messageries les visitent
 // pour les vérifier) : chaque action demande un clic sur un bouton de la page.
@@ -26,7 +26,7 @@ const STYLE = `
   a { color: #a6f08a; font-weight: 600; }
   .note { font-size: 13.5px; color: #8d9aab; }
   .ok { color: #a6f08a; } .warn { color: #ffcf66; } .error { color: #ff8f8f; }
-`
+`;
 
 function page(title: string, content: string, status = 200): Response {
   const html = `<!doctype html>
@@ -39,23 +39,27 @@ function page(title: string, content: string, status = 200): Response {
 <style>${STYLE}</style>
 </head>
 <body><main><div class="brand">Modding Manager</div>${content}</main></body>
-</html>`
+</html>`;
   return new Response(html, {
     status,
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' }
-  })
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'Referrer-Policy': 'no-referrer',
+    },
+  });
 }
 
 export interface ActionForm {
-  title: string
+  title: string;
   /** HTML déjà échappé, affiché sous le titre. */
-  intro: string
-  token: string
-  submit: string
+  intro: string;
+  token: string;
+  submit: string;
   /** Champ de texte libre, avec son libellé ; `required` impose de le remplir. */
-  field?: { label: string; placeholder: string; required: boolean }
+  field?: { label: string; placeholder: string; required: boolean };
   /** Case transmise telle quelle (« relancer quand même »). */
-  force?: boolean
+  force?: boolean;
 }
 
 /** Page de confirmation : le bouton envoie le formulaire, et se désactive pour éviter un double envoi. */
@@ -63,7 +67,7 @@ export function formPage(form: ActionForm): Response {
   const field = form.field
     ? `<label for="text">${esc(form.field.label)}</label>
 <textarea id="text" name="text" maxlength="6000" placeholder="${esc(form.field.placeholder)}"${form.field.required ? ' required' : ''}></textarea>`
-    : ''
+    : '';
   return page(
     form.title,
     `<h1>${esc(form.title)}</h1>${form.intro}
@@ -71,18 +75,18 @@ export function formPage(form: ActionForm): Response {
 <input type="hidden" name="t" value="${esc(form.token)}">${form.force ? '<input type="hidden" name="force" value="1">' : ''}
 ${field}
 <button type="submit">${esc(form.submit)}</button>
-</form>`
-  )
+</form>`,
+  );
 }
 
 export function resultPage(title: string, html: string, tone: 'ok' | 'warn' = 'ok'): Response {
-  return page(title, `<h1 class="${tone}">${esc(title)}</h1>${html}`)
+  return page(title, `<h1 class="${tone}">${esc(title)}</h1>${html}`);
 }
 
 export function errorPage(message: string, status = 400): Response {
-  return page('Action impossible', `<h1 class="error">Action impossible</h1><p>${esc(message)}</p>`, status)
+  return page('Action impossible', `<h1 class="error">Action impossible</h1><p>${esc(message)}</p>`, status);
 }
 
-export const quoteBlock = (text: string) => `<div class="quote">${paragraphs(text)}</div>`
+export const quoteBlock = (text: string) => `<div class="quote">${paragraphs(text)}</div>`;
 
-export const linkTo = (url: string, label: string) => `<a href="${esc(url)}">${esc(label)}</a>`
+export const linkTo = (url: string, label: string) => `<a href="${esc(url)}">${esc(label)}</a>`;

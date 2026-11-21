@@ -48,67 +48,67 @@ Depuis le code source, `npm run modpacks:ranger` et `npm run modpacks:publier` f
 
 ## Les commandes
 
-| Commande | Effet |
-|---|---|
-| `status` | État général : dossier des contenus, connexion GitHub, ce qui attend d’être rangé ou publié. |
-| `packs list` | Les modpacks, avec leur dernière version et son état sur GitHub. |
-| `packs show` | Un modpack en détail : fiche, réglages, versions et notes. |
-| `packs create` | Crée un modpack, éventuellement depuis un profil CurseForge (avec sa v1). |
-| `packs edit` | Change le nom ou la description d’un modpack. |
-| `packs group` | Range un modpack ou un contenu dans un [groupe](studio.md#ranger-dans-des-groupes) de la colonne de gauche, ou l’en sort (sans `--group`). |
-| `packs settings` | [Réglages des versions](reglages.md) : fichiers exclus, mods désactivés chez les joueurs, configurations gardées. |
-| `packs notes` | Écrit les notes d’une version. |
-| `packs cover` | Change ou retire l’image d’un modpack. |
-| `packs link` | Lie un modpack au profil CurseForge d’où viennent ses versions, ou retire ce lien. |
-| `packs delete` | Supprime un modpack (dossier à la corbeille, releases retirées de GitHub). |
-| `profiles list` | Les profils CurseForge du PC, rangés par dossier comme dans CurseForge, chacun face à son modpack : à jour, ou changé depuis sa dernière version. |
-| `versions create` | Crée la prochaine version d’un modpack depuis un profil CurseForge. |
-| `versions contents` | Les mods et les fichiers d’un zip. |
-| `versions file` | Le texte d’un fichier d’un zip (configuration, script…). |
-| `versions strip` | Retire d’un zip les fichiers exclus dans les réglages. |
-| `versions delete` | Supprime une version (zip à la corbeille, release retirée de GitHub). |
-| `content create` | Crée un [mod](studio.md#les-mods) ou un [plugin](studio.md#les-plugins) (depuis le dossier de ses jars), un [pack de ressources ou un shader](studio.md#les-packs-de-ressources-et-les-shaders) (depuis son dossier ou un zip) : `--type mod`, `resourcepack`, `shader` ou `plugin`. |
-| `content versions` | Les versions d’un mod, d’un pack de ressources ou d’un shader (état sur GitHub et CurseForge), et pour un mod celles de son dossier lié à importer. |
-| `content import` | Mod ou plugin : copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque). |
-| `content zip` | Pack de ressources ou shader : zippe le dossier lié comme version suivante. |
-| `content source` | Lie un contenu à un autre dossier, ou retire ce lien (`--unlink`). |
-| `content minecraft` | Donne les versions de Minecraft d’un pack de ressources, d’un shader ou d’un plugin. |
-| `content notes` | Écrit les notes d’une version d’un contenu. |
-| `content delete` | Supprime une version d’un contenu (fichiers à la corbeille, release retirée de GitHub). |
-| `content curseforge` | Met une version d’un contenu en ligne sur son projet CurseForge (elle passe en modération). |
-| `updates check` | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien. |
-| `updates changelog` | Les notes de version d’un fichier CurseForge, pour juger une mise à jour. |
-| `updates apply` | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché. |
-| `updates promote` | Reporte l’essai validé dans le profil d’origine, puis met l’essai à la corbeille. |
-| `updates discard` | Abandonne l’essai (corbeille). |
-| `tests check` | Vérifie les fichiers d’un profil sans lancer le jeu : doublons, dépendances manquantes ou dans une version refusée, incompatibilités, mauvais chargeur. |
-| `tests server` | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités. |
-| `tests players` | Partie de test : le serveur démarre, puis de vrais clients Minecraft le rejoignent et jouent un moment. |
-| `tests all` | Tous les tests d’un profil à la suite : fichiers, puis partie avec des joueurs (serveur compris). |
-| `maintenance status` | Les [mises à jour automatiques](automatique.md) : réglages de chaque modpack, dernier et prochain passage, tâche planifiée. |
-| `maintenance configure` | Règle les mises à jour automatiques d’un modpack : fréquence, bêtas, publication automatique, mods figés. |
-| `maintenance run` | Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu (`--due`), ou tous. |
-| `maintenance validate` | Valide l’essai en attente d’un modpack : il devient la version suivante, publiée (sauf `--no-publish`). |
-| `maintenance discard` | Abandonne l’essai en attente d’un modpack. |
-| `maintenance schedule` | Crée (`--time 04:00`, `--wake`) ou retire (`--off`) la tâche planifiée de Windows. |
-| `ranger plan`, `ranger apply` | Aperçu, puis numérotation des zips déposés à la main. |
-| `publish plan`, `publish apply` | Aperçu de la publication, puis publication. |
-| `curseforge link` | Lie un modpack ou un mod à son projet CurseForge (numéro, adresse de la page ou slug). |
-| `curseforge targets` | Où le modpack est publié (GitHub ou non) et les fichiers joints à son export CurseForge. |
-| `curseforge export` | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier. |
-| `curseforge publish` | Met une version en ligne sur CurseForge (elle passe en modération). |
-| `curseforge versions` | Les versions du projet CurseForge, envoyées par l’application ou depuis le site, et leur état (en modération, approuvée, refusée…). |
-| `modrinth link` | Lie un mod à son projet Modrinth (adresse, slug ou identifiant), ou retire ce lien (`--unlink`). |
-| `modrinth publish` | Met une version d’un mod en ligne sur son projet Modrinth. |
-| `modrinth versions` | Les versions du projet Modrinth d’un mod, rapprochées des versions locales. |
-| `hangar link` | Lie un plugin à son projet Hangar (adresse ou nom), ou retire ce lien (`--unlink`). |
-| `hangar publish` | Met une version d’un plugin en ligne sur Hangar, pour Paper. |
-| `hangar versions` | Les versions du projet Hangar d’un plugin. |
-| `releases delete` | Retire de GitHub des releases dont le zip n’est plus dans le dossier. |
-| `curseforge status` | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher). |
-| `modrinth status` | Si le jeton Modrinth est là et accepté, et à quel compte il appartient (sans jamais l’afficher). |
-| `hangar status` | Si la clé d’API Hangar est là et acceptée, et à quel compte elle appartient (sans jamais l’afficher). |
-| `journal` | Les dernières opérations, de l’application comme des commandes. |
+| Commande                        | Effet                                                                                                                                                                                                                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `status`                        | État général : dossier des contenus, connexion GitHub, ce qui attend d’être rangé ou publié.                                                                                                                                                                                         |
+| `packs list`                    | Les modpacks, avec leur dernière version et son état sur GitHub.                                                                                                                                                                                                                     |
+| `packs show`                    | Un modpack en détail : fiche, réglages, versions et notes.                                                                                                                                                                                                                           |
+| `packs create`                  | Crée un modpack, éventuellement depuis un profil CurseForge (avec sa v1).                                                                                                                                                                                                            |
+| `packs edit`                    | Change le nom ou la description d’un modpack.                                                                                                                                                                                                                                        |
+| `packs group`                   | Range un modpack ou un contenu dans un [groupe](studio.md#ranger-dans-des-groupes) de la colonne de gauche, ou l’en sort (sans `--group`).                                                                                                                                           |
+| `packs settings`                | [Réglages des versions](reglages.md) : fichiers exclus, mods désactivés chez les joueurs, configurations gardées.                                                                                                                                                                    |
+| `packs notes`                   | Écrit les notes d’une version.                                                                                                                                                                                                                                                       |
+| `packs cover`                   | Change ou retire l’image d’un modpack.                                                                                                                                                                                                                                               |
+| `packs link`                    | Lie un modpack au profil CurseForge d’où viennent ses versions, ou retire ce lien.                                                                                                                                                                                                   |
+| `packs delete`                  | Supprime un modpack (dossier à la corbeille, releases retirées de GitHub).                                                                                                                                                                                                           |
+| `profiles list`                 | Les profils CurseForge du PC, rangés par dossier comme dans CurseForge, chacun face à son modpack : à jour, ou changé depuis sa dernière version.                                                                                                                                    |
+| `versions create`               | Crée la prochaine version d’un modpack depuis un profil CurseForge.                                                                                                                                                                                                                  |
+| `versions contents`             | Les mods et les fichiers d’un zip.                                                                                                                                                                                                                                                   |
+| `versions file`                 | Le texte d’un fichier d’un zip (configuration, script…).                                                                                                                                                                                                                             |
+| `versions strip`                | Retire d’un zip les fichiers exclus dans les réglages.                                                                                                                                                                                                                               |
+| `versions delete`               | Supprime une version (zip à la corbeille, release retirée de GitHub).                                                                                                                                                                                                                |
+| `content create`                | Crée un [mod](studio.md#les-mods) ou un [plugin](studio.md#les-plugins) (depuis le dossier de ses jars), un [pack de ressources ou un shader](studio.md#les-packs-de-ressources-et-les-shaders) (depuis son dossier ou un zip) : `--type mod`, `resourcepack`, `shader` ou `plugin`. |
+| `content versions`              | Les versions d’un mod, d’un pack de ressources ou d’un shader (état sur GitHub et CurseForge), et pour un mod celles de son dossier lié à importer.                                                                                                                                  |
+| `content import`                | Mod ou plugin : copie dans le Studio des versions du dossier lié (par défaut la plus récente qui manque).                                                                                                                                                                            |
+| `content zip`                   | Pack de ressources ou shader : zippe le dossier lié comme version suivante.                                                                                                                                                                                                          |
+| `content source`                | Lie un contenu à un autre dossier, ou retire ce lien (`--unlink`).                                                                                                                                                                                                                   |
+| `content minecraft`             | Donne les versions de Minecraft d’un pack de ressources, d’un shader ou d’un plugin.                                                                                                                                                                                                 |
+| `content notes`                 | Écrit les notes d’une version d’un contenu.                                                                                                                                                                                                                                          |
+| `content delete`                | Supprime une version d’un contenu (fichiers à la corbeille, release retirée de GitHub).                                                                                                                                                                                              |
+| `content curseforge`            | Met une version d’un contenu en ligne sur son projet CurseForge (elle passe en modération).                                                                                                                                                                                          |
+| `updates check`                 | Cherche sur CurseForge les mises à jour des mods, packs de textures et shaders d’un profil, pour la même version de Minecraft et le même chargeur, avec les dépendances qui manqueraient. Ne change rien.                                                                            |
+| `updates changelog`             | Les notes de version d’un fichier CurseForge, pour juger une mise à jour.                                                                                                                                                                                                            |
+| `updates apply`                 | Crée la copie d’essai `<profil> (essai)`, avec les mises à jour : le profil d’origine n’est pas touché.                                                                                                                                                                              |
+| `updates promote`               | Reporte l’essai validé dans le profil d’origine, puis met l’essai à la corbeille.                                                                                                                                                                                                    |
+| `updates discard`               | Abandonne l’essai (corbeille).                                                                                                                                                                                                                                                       |
+| `tests check`                   | Vérifie les fichiers d’un profil sans lancer le jeu : doublons, dépendances manquantes ou dans une version refusée, incompatibilités, mauvais chargeur.                                                                                                                              |
+| `tests server`                  | Démarre un serveur dédié avec les mods du profil, puis l’arrête : le test qui trouve la plupart des incompatibilités.                                                                                                                                                                |
+| `tests players`                 | Partie de test : le serveur démarre, puis de vrais clients Minecraft le rejoignent et jouent un moment.                                                                                                                                                                              |
+| `tests all`                     | Tous les tests d’un profil à la suite : fichiers, puis partie avec des joueurs (serveur compris).                                                                                                                                                                                    |
+| `maintenance status`            | Les [mises à jour automatiques](automatique.md) : réglages de chaque modpack, dernier et prochain passage, tâche planifiée.                                                                                                                                                          |
+| `maintenance configure`         | Règle les mises à jour automatiques d’un modpack : fréquence, bêtas, publication automatique, mods figés.                                                                                                                                                                            |
+| `maintenance run`               | Lance un passage : mises à jour, copie d’essai et tests, pour les modpacks donnés, ceux dont le tour est venu (`--due`), ou tous.                                                                                                                                                    |
+| `maintenance validate`          | Valide l’essai en attente d’un modpack : il devient la version suivante, publiée (sauf `--no-publish`).                                                                                                                                                                              |
+| `maintenance discard`           | Abandonne l’essai en attente d’un modpack.                                                                                                                                                                                                                                           |
+| `maintenance schedule`          | Crée (`--time 04:00`, `--wake`) ou retire (`--off`) la tâche planifiée de Windows.                                                                                                                                                                                                   |
+| `ranger plan`, `ranger apply`   | Aperçu, puis numérotation des zips déposés à la main.                                                                                                                                                                                                                                |
+| `publish plan`, `publish apply` | Aperçu de la publication, puis publication.                                                                                                                                                                                                                                          |
+| `curseforge link`               | Lie un modpack ou un mod à son projet CurseForge (numéro, adresse de la page ou slug).                                                                                                                                                                                               |
+| `curseforge targets`            | Où le modpack est publié (GitHub ou non) et les fichiers joints à son export CurseForge.                                                                                                                                                                                             |
+| `curseforge export`             | Crée l’export CurseForge d’une version dans un fichier, pour le vérifier.                                                                                                                                                                                                            |
+| `curseforge publish`            | Met une version en ligne sur CurseForge (elle passe en modération).                                                                                                                                                                                                                  |
+| `curseforge versions`           | Les versions du projet CurseForge, envoyées par l’application ou depuis le site, et leur état (en modération, approuvée, refusée…).                                                                                                                                                  |
+| `modrinth link`                 | Lie un mod à son projet Modrinth (adresse, slug ou identifiant), ou retire ce lien (`--unlink`).                                                                                                                                                                                     |
+| `modrinth publish`              | Met une version d’un mod en ligne sur son projet Modrinth.                                                                                                                                                                                                                           |
+| `modrinth versions`             | Les versions du projet Modrinth d’un mod, rapprochées des versions locales.                                                                                                                                                                                                          |
+| `hangar link`                   | Lie un plugin à son projet Hangar (adresse ou nom), ou retire ce lien (`--unlink`).                                                                                                                                                                                                  |
+| `hangar publish`                | Met une version d’un plugin en ligne sur Hangar, pour Paper.                                                                                                                                                                                                                         |
+| `hangar versions`               | Les versions du projet Hangar d’un plugin.                                                                                                                                                                                                                                           |
+| `releases delete`               | Retire de GitHub des releases dont le zip n’est plus dans le dossier.                                                                                                                                                                                                                |
+| `curseforge status`             | Si la clé de l’API CurseForge et le jeton d’auteur sont là et acceptés (sans jamais les afficher).                                                                                                                                                                                   |
+| `modrinth status`               | Si le jeton Modrinth est là et accepté, et à quel compte il appartient (sans jamais l’afficher).                                                                                                                                                                                     |
+| `hangar status`                 | Si la clé d’API Hangar est là et acceptée, et à quel compte elle appartient (sans jamais l’afficher).                                                                                                                                                                                |
+| `journal`                       | Les dernières opérations, de l’application comme des commandes.                                                                                                                                                                                                                      |
 
 Un modpack se désigne par le nom de son dossier, son identifiant ou son nom affiché, sans tenir compte de la casse :
 `mpm packs show lma-26.3`. Un profil CurseForge, par son nom (celui de son dossier) ou le chemin de son dossier. Les
@@ -188,12 +188,12 @@ vu dans l’aperçu.
 
 ## Les options
 
-| Option | Effet |
-|---|---|
-| `--json` | Résultat en JSON, pour un programme. Une erreur donne `{ "ok": false, "error": "…" }`. |
-| `--yes`, `-y` | Ne demande pas de confirmation (suppressions, publication). |
-| `--dir <dossier>` | Dossier des contenus à utiliser. |
-| `--repo <propriétaire/dépôt>` | Dépôt GitHub sur lequel publier. |
+| Option                        | Effet                                                                                  |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `--json`                      | Résultat en JSON, pour un programme. Une erreur donne `{ "ok": false, "error": "…" }`. |
+| `--yes`, `-y`                 | Ne demande pas de confirmation (suppressions, publication).                            |
+| `--dir <dossier>`             | Dossier des contenus à utiliser.                                                       |
+| `--repo <propriétaire/dépôt>` | Dépôt GitHub sur lequel publier.                                                       |
 
 Depuis le code source, les options se placent après `--` : `npm run mpm -- publish plan --dir "D:\Modding Manager"`.
 

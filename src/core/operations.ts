@@ -1,7 +1,7 @@
-import { join } from 'node:path'
-import { Journal } from './journal'
-import { OperationLock } from './lock'
-import { settingsDir } from './settings'
+import { join } from 'node:path';
+import { Journal } from './journal';
+import { OperationLock } from './lock';
+import { settingsDir } from './settings';
 
 /**
  * Verrou et journal des opérations, rangés à côté des réglages : la fenêtre, la ligne de commande et le serveur
@@ -11,8 +11,8 @@ import { settingsDir } from './settings'
 export function operationTools(holder: string): { lock: OperationLock; journal: Journal } {
   return {
     lock: new OperationLock(join(settingsDir(), 'operation.lock'), holder),
-    journal: new Journal(join(settingsDir(), 'journal.jsonl'), holder)
-  }
+    journal: new Journal(join(settingsDir(), 'journal.jsonl'), holder),
+  };
 }
 
 /**
@@ -20,5 +20,5 @@ export function operationTools(holder: string): { lock: OperationLock; journal: 
  * opérations, que chaque étape d'un passage prend à son tour.
  */
 export function maintenanceLock(holder: string): OperationLock {
-  return new OperationLock(join(settingsDir(), 'maintenance.lock'), holder)
+  return new OperationLock(join(settingsDir(), 'maintenance.lock'), holder);
 }

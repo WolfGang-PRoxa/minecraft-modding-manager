@@ -1,66 +1,92 @@
 // Publication d'un plugin sur Hangar (hangar.papermc.io) depuis sa carte : lien avec le projet, versions, mise en ligne.
-import { useEffect, useState } from 'react'
-import { ExternalLink, Link2, Upload } from 'lucide-react'
-import type { ContentVersionView, HangarVersionView, PackHangar, PackView } from '../../../shared/studio'
-import { Button } from '../components/Button'
-import { Field, Modal, TextInput } from './Modal'
-import { Pill } from './PackCard'
-import { openLink, useStudio } from './store'
-import { runPublication, useRunningPublication } from './publications'
-import { PublicationBusyNote } from './PublicationsTray'
+import { useEffect, useState } from 'react';
+import { ExternalLink, Link2, Upload } from 'lucide-react';
+import type { ContentVersionView, HangarVersionView, PackHangar, PackView } from '../../../shared/studio';
+import { Button } from '../components/Button';
+import { Field, Modal, TextInput } from './Modal';
+import { Pill } from './PackCard';
+import { openLink, useStudio } from './store';
+import { runPublication, useRunningPublication } from './publications';
+import { PublicationBusyNote } from './PublicationsTray';
 
 export interface HangarVersions {
-  versions: HangarVersionView[] | null
-  error: string | null
+  versions: HangarVersionView[] | null;
+  error: string | null;
 }
 
 export function useHangarVersions(folder: string, hangar: PackHangar | null): HangarVersions {
-  const [state, setState] = useState<HangarVersions>({ versions: null, error: null })
-  const key = hangar ? JSON.stringify([hangar.slug, hangar.versions]) : ''
+  const [state, setState] = useState<HangarVersions>({ versions: null, error: null });
+  const key = hangar ? JSON.stringify([hangar.slug, hangar.versions]) : '';
   useEffect(() => {
-    setState({ versions: null, error: null })
-    if (!key) return
-    let alive = true
-    void window.studio.hangarVersions(folder).then((r) => alive && setState(r.ok ? { versions: r.versions, error: null } : { versions: null, error: r.error }))
+    setState({ versions: null, error: null });
+    if (!key) return;
+    let alive = true;
+    void window.studio
+      .hangarVersions(folder)
+      .then(
+        (r) => alive && setState(r.ok ? { versions: r.versions, error: null } : { versions: null, error: r.error }),
+      );
     return () => {
-      alive = false
-    }
-  }, [folder, key])
-  return state
+      alive = false;
+    };
+  }, [folder, key]);
+  return state;
 }
 
-const LIVE = 'bg-sky-400/15 text-sky-300 ring-sky-400/30'
+const LIVE = 'bg-sky-400/15 text-sky-300 ring-sky-400/30';
 
 /** État sur Hangar d'une version, ou bouton pour l'y mettre en ligne (la plus récente seulement). */
-export function HangarVersionStatus({ pack, versions, latest, hangar }: { pack: PackView; versions: ContentVersionView[]; latest: boolean; hangar: HangarVersions }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  if (!pack.hangar) return null
-  const found = versions.map((version) => hangar.versions?.find((v) => v.version === version.version))
-  const sent = found.filter((v) => !!v)
-  const missing = versions.filter((_, i) => !found[i])
+export function HangarVersionStatus({
+  pack,
+  versions,
+  latest,
+  hangar,
+}: {
+  pack: PackView;
+  versions: ContentVersionView[];
+  latest: boolean;
+  hangar: HangarVersions;
+}) {
+  const openDialog = useStudio((s) => s.openDialog);
+  if (!pack.hangar) return null;
+  const found = versions.map((version) => hangar.versions?.find((v) => v.version === version.version));
+  const sent = found.filter((v) => !!v);
+  const missing = versions.filter((_, i) => !found[i]);
   const pill = sent.length ? (
     <Pill className={LIVE} title={`Hangar : canal ${sent[0]!.channel}`}>
       Publiée sur Hangar{versions.length > 1 && missing.length ? ` (${sent.length}/${versions.length})` : ''}
     </Pill>
-  ) : null
-  if (!missing.length) return pill
-  if (!hangar.versions) return pill ?? (versions.some((v) => pack.hangar!.versions.includes(v.version)) ? <span className="text-xs text-ink-500">Hangar…</span> : null)
+  ) : null;
+  if (!missing.length) return pill;
+  if (!hangar.versions)
+    return (
+      pill ??
+      (versions.some((v) => pack.hangar!.versions.includes(v.version)) ? (
+        <span className="text-xs text-ink-500">Hangar…</span>
+      ) : null)
+    );
   // Hangar se publie une version à la fois.
-  if (!latest || pack.errors.length || missing.length > 1) return pill
+  if (!latest || pack.errors.length || missing.length > 1) return pill;
   return (
     <>
       {pill}
-      <Button size="sm" variant="ghost" icon={Upload} className="text-sky-300" onClick={() => openDialog({ kind: 'hangar-publish', folder: pack.folder, version: missing[0].version })}>
+      <Button
+        size="sm"
+        variant="ghost"
+        icon={Upload}
+        className="text-sky-300"
+        onClick={() => openDialog({ kind: 'hangar-publish', folder: pack.folder, version: missing[0].version })}
+      >
         Publier sur Hangar
       </Button>
     </>
-  )
+  );
 }
 
 /** Sur la carte du plugin : son projet Hangar, ou de quoi l'y lier. */
 export function HangarLine({ pack, hangar }: { pack: PackView; hangar: HangarVersions }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const count = hangar.versions?.length ?? 0
+  const openDialog = useStudio((s) => s.openDialog);
+  const count = hangar.versions?.length ?? 0;
   return (
     <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-300">
       <span className="size-1.5 shrink-0 rounded-full bg-sky-400" />
@@ -68,12 +94,18 @@ export function HangarLine({ pack, hangar }: { pack: PackView; hangar: HangarVer
         <>
           <span>
             Sur{' '}
-            <button type="button" className="font-semibold text-sky-300 hover:underline" onClick={() => openLink(pack.hangar!.url)}>
+            <button
+              type="button"
+              className="font-semibold text-sky-300 hover:underline"
+              onClick={() => openLink(pack.hangar!.url)}
+            >
               Hangar
             </button>
           </span>
           {hangar.versions ? (
-            <span className="text-ink-400">· {count ? `${count} version${count > 1 ? 's' : ''}` : 'aucune version encore'}</span>
+            <span className="text-ink-400">
+              · {count ? `${count} version${count > 1 ? 's' : ''}` : 'aucune version encore'}
+            </span>
           ) : hangar.error ? (
             <span className="text-ink-500" title={hangar.error}>
               · versions illisibles
@@ -81,51 +113,63 @@ export function HangarLine({ pack, hangar }: { pack: PackView; hangar: HangarVer
           ) : (
             <span className="text-ink-500">· versions…</span>
           )}
-          <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'hangar', folder: pack.folder })}>
+          <button
+            type="button"
+            className="text-xs font-semibold text-grass-300 hover:text-grass-400"
+            onClick={() => openDialog({ kind: 'hangar', folder: pack.folder })}
+          >
             Réglages
           </button>
         </>
       ) : (
-        <button type="button" className="text-xs font-semibold text-grass-300 hover:text-grass-400" onClick={() => openDialog({ kind: 'hangar', folder: pack.folder })}>
+        <button
+          type="button"
+          className="text-xs font-semibold text-grass-300 hover:text-grass-400"
+          onClick={() => openDialog({ kind: 'hangar', folder: pack.folder })}
+        >
           Publier aussi sur Hangar
         </button>
       )}
     </p>
-  )
+  );
 }
 
 function usePack(folder: string) {
-  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
+  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null);
 }
 
 /** Lien avec le projet Hangar du plugin. */
 export function HangarDialog({ folder }: { folder: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const run = useStudio((s) => s.run)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const [ref, setRef] = useState('')
-  const [busy, setBusy] = useState(false)
-  if (!pack) return null
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const run = useStudio((s) => s.run);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const [ref, setRef] = useState('');
+  const [busy, setBusy] = useState(false);
+  if (!pack) return null;
 
   async function link() {
-    setBusy(true)
+    setBusy(true);
     try {
-      const result = await window.studio.linkHangar(folder, ref)
-      if (!result.ok) return pushToast({ kind: 'error', title: 'Lien impossible', message: result.error })
-      pushToast({ kind: 'success', title: `Lié au projet Hangar « ${result.slug} »` })
-      close()
+      const result = await window.studio.linkHangar(folder, ref);
+      if (!result.ok) return pushToast({ kind: 'error', title: 'Lien impossible', message: result.error });
+      pushToast({ kind: 'success', title: `Lié au projet Hangar « ${result.slug} »` });
+      close();
     } finally {
-      setBusy(false)
-      void refresh()
+      setBusy(false);
+      void refresh();
     }
   }
 
   return (
     <Modal
       title="Publication sur Hangar"
-      subtitle={pack.hangar ? `« ${pack.name} » est lié à son projet Hangar.` : 'Lie ce plugin au projet que tu as créé sur Hangar (hangar.papermc.io).'}
+      subtitle={
+        pack.hangar
+          ? `« ${pack.name} » est lié à son projet Hangar.`
+          : 'Lie ce plugin au projet que tu as créé sur Hangar (hangar.papermc.io).'
+      }
       onClose={close}
       closable={!busy}
       footer={
@@ -134,7 +178,12 @@ export function HangarDialog({ folder }: { folder: string }) {
             <Button
               variant="ghost"
               disabled={busy}
-              onClick={() => void run(window.studio.updatePublishTargets(folder, { unlinkHangar: true }), 'Lien avec Hangar retiré').then((ok) => ok && close())}
+              onClick={() =>
+                void run(
+                  window.studio.updatePublishTargets(folder, { unlinkHangar: true }),
+                  'Lien avec Hangar retiré',
+                ).then((ok) => ok && close())
+              }
             >
               Retirer le lien
             </Button>
@@ -149,8 +198,11 @@ export function HangarDialog({ folder }: { folder: string }) {
       {pack.hangar ? (
         <div className="space-y-3 text-sm text-ink-300">
           <p>
-            Projet <span className="font-mono text-ink-100 select-text">{pack.hangar.owner}/{pack.hangar.slug}</span>. Ses versions sont reconnues à leur nom,
-            qui est la version du plugin.
+            Projet{' '}
+            <span className="font-mono text-ink-100 select-text">
+              {pack.hangar.owner}/{pack.hangar.slug}
+            </span>
+            . Ses versions sont reconnues à leur nom, qui est la version du plugin.
           </p>
           <Button size="sm" variant="ghost" icon={ExternalLink} onClick={() => openLink(pack.hangar!.url)}>
             Ouvrir la page du projet
@@ -158,8 +210,16 @@ export function HangarDialog({ folder }: { folder: string }) {
         </div>
       ) : (
         <div className="space-y-4">
-          <Field label="Projet Hangar" hint="L’adresse de sa page (hangar.papermc.io/<auteur>/<projet>) ou son nom. Le projet se crée une fois sur le site.">
-            <TextInput value={ref} onChange={(e) => setRef(e.target.value)} placeholder="https://hangar.papermc.io/…" autoFocus />
+          <Field
+            label="Projet Hangar"
+            hint="L’adresse de sa page (hangar.papermc.io/<auteur>/<projet>) ou son nom. Le projet se crée une fois sur le site."
+          >
+            <TextInput
+              value={ref}
+              onChange={(e) => setRef(e.target.value)}
+              placeholder="https://hangar.papermc.io/…"
+              autoFocus
+            />
           </Field>
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => openLink('https://hangar.papermc.io/new')}>
@@ -172,29 +232,29 @@ export function HangarDialog({ folder }: { folder: string }) {
         </div>
       )}
     </Modal>
-  )
+  );
 }
 
 /** Mise en ligne d'une version du plugin sur Hangar, après confirmation. */
 export function PublishHangarDialog({ folder, version }: { folder: string; version: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const [releaseType, setReleaseType] = useState<'release' | 'beta'>('release')
-  const busy = useRunningPublication()
-  const view = pack?.contentVersions.find((v) => v.version === version)
-  if (!pack || !view) return null
-  const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))]
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const [releaseType, setReleaseType] = useState<'release' | 'beta'>('release');
+  const busy = useRunningPublication();
+  const view = pack?.contentVersions.find((v) => v.version === version);
+  if (!pack || !view) return null;
+  const minecraft = [...new Set(view.files.flatMap((f) => f.minecraftVersions))];
 
   function publish() {
     // La fenêtre se ferme : l'envoi continue en arrière-plan.
-    close()
+    close();
     void runPublication({
       target: 'hangar',
       subject: `${pack!.name}, version ${version}`,
       run: () => window.studio.publishHangar(folder, version, releaseType),
-      onSuccess: () => pushToast({ kind: 'success', title: `${pack!.name} : version ${version} publiée sur Hangar` })
-    })
+      onSuccess: () => pushToast({ kind: 'success', title: `${pack!.name} : version ${version} publiée sur Hangar` }),
+    });
   }
 
   return (
@@ -224,21 +284,30 @@ export function PublishHangarDialog({ folder, version }: { folder: string; versi
         <div>
           <p className="mb-1.5 text-xs font-semibold tracking-widest text-ink-400 uppercase">Notes de version</p>
           {view.notes ? (
-            <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">{view.notes}</pre>
+            <pre className="max-h-40 overflow-auto rounded-xl bg-ink-950/60 p-3 font-sans text-[13px] whitespace-pre-wrap text-ink-200 select-text">
+              {view.notes}
+            </pre>
           ) : (
-            <p className="text-amber-glow">Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.</p>
+            <p className="text-amber-glow">
+              Pas encore de notes : « Version {version} » sera affiché. Ajoute-les d’abord pour tes joueurs.
+            </p>
           )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-semibold tracking-widest text-ink-400 uppercase">Canal</span>
           {(['release', 'beta'] as const).map((type) => (
             <label key={type} className="flex cursor-pointer items-center gap-1.5 text-ink-200">
-              <input type="radio" name="hangar-channel" checked={releaseType === type} onChange={() => setReleaseType(type)} />
+              <input
+                type="radio"
+                name="hangar-channel"
+                checked={releaseType === type}
+                onChange={() => setReleaseType(type)}
+              />
               {type === 'release' ? 'Release' : 'Snapshot'}
             </label>
           ))}
         </div>
       </div>
     </Modal>
-  )
+  );
 }

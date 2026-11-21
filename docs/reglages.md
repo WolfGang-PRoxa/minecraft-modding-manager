@@ -34,13 +34,13 @@ seulement est exclue. Un clic sur le nom d’un dossier l’ouvre, le fil d’Ar
 La croix le publie de nouveau. Le champ **Chemin à exclure** accepte aussi un chemin saisi à la main, depuis la racine
 de l’instance :
 
-| Chemin | Ce qui est exclu |
-|---|---|
-| `shaderpacks` | Le dossier `shaderpacks` et tout son contenu. |
-| `options.txt` | Le fichier `options.txt` à la racine de l’instance. |
-| `config/minimap.toml` | Un seul fichier de configuration. |
+| Chemin                 | Ce qui est exclu                                                                                                                       |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `shaderpacks`          | Le dossier `shaderpacks` et tout son contenu.                                                                                          |
+| `options.txt`          | Le fichier `options.txt` à la racine de l’instance.                                                                                    |
+| `config/minimap.toml`  | Un seul fichier de configuration.                                                                                                      |
 | `config/*-client.toml` | Les fichiers du dossier `config` dont le nom finit par `-client.toml` (`*` remplace n’importe quels caractères d’un nom, `?` un seul). |
-| `**/*.log` | Tous les fichiers `.log`, dans n’importe quel dossier (`**/` remplace n’importe quels dossiers). |
+| `**/*.log`             | Tous les fichiers `.log`, dans n’importe quel dossier (`**/` remplace n’importe quels dossiers).                                       |
 
 La casse ne compte pas : `Shaderpacks` et `shaderpacks` désignent le même dossier.
 
@@ -93,11 +93,11 @@ interface…) est perdu.
 Avec l’option **Garder les configurations modifiées par les joueurs**, une mise à jour regarde chaque fichier du
 dossier `config` du joueur :
 
-| Fichier | Après la mise à jour |
-|---|---|
-| Modifié par le joueur | Il est **gardé** tel quel, même si la nouvelle version en fournit un autre. |
-| Fourni par le modpack, jamais touché par le joueur | Il suit la nouvelle version (ou disparaît si la nouvelle version ne le fournit plus). |
-| Nouveau dans la nouvelle version | Il est ajouté. |
+| Fichier                                                           | Après la mise à jour                                                                                     |
+| ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Modifié par le joueur                                             | Il est **gardé** tel quel, même si la nouvelle version en fournit un autre.                              |
+| Fourni par le modpack, jamais touché par le joueur                | Il suit la nouvelle version (ou disparaît si la nouvelle version ne le fournit plus).                    |
+| Nouveau dans la nouvelle version                                  | Il est ajouté.                                                                                           |
 | Créé chez le joueur (par lui, ou par un mod au premier lancement) | Il est gardé, sauf si la nouvelle version fournit un fichier du même nom : c’est alors celui du modpack. |
 
 L’application sait qu’un fichier a été modifié en le comparant à celui que la version installée avait fourni : elle
@@ -115,9 +115,9 @@ toujours gardés (voir [Mettre à jour un modpack](bibliotheque.md#mettre-à-jou
 
 ## Quand les réglages arrivent chez les joueurs
 
-| Réglage | Ce qui change sur GitHub |
-|---|---|
-| Fichiers exclus | Rien tout de suite : ils s’appliquent aux prochaines versions créées depuis CurseForge, ou aux zips nettoyés avec **Retirer du zip**. |
+| Réglage                         | Ce qui change sur GitHub                                                                                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Fichiers exclus                 | Rien tout de suite : ils s’appliquent aux prochaines versions créées depuis CurseForge, ou aux zips nettoyés avec **Retirer du zip**.                                  |
 | Mods désactivés, configurations | À la prochaine publication, le `modpack.json` de **toutes les versions** du modpack est renvoyé (le zip n’est pas renvoyé). L’aperçu le détaille, version par version. |
 
 Les mods désactivés et les configurations gardées demandent aux joueurs une version récente de Modding Manager ;

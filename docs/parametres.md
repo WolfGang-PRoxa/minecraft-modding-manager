@@ -101,6 +101,7 @@ notification, et se rouvre aussitôt (clic sur l’icône, menu Démarrer, racco
 première fois, une bulle le rappelle. Pour la quitter vraiment : clic droit sur son icône, puis **Quitter Modding
 Manager**. Un publieur y trouve aussi **Ouvrir la Bibliothèque** et **Ouvrir le Studio**. Si une publication est en
 cours, quitter demande d’abord une confirmation.
+
 - **Mettre à jour les modpacks automatiquement** (activé par défaut) : une nouvelle version d’un modpack installé
   par l’application s’installe d’elle-même, fenêtre ouverte ou fermée, sauf pendant une partie lancée avec ce
   modpack. Désactivé, la mise à jour reste proposée par le bouton **Mettre à jour**. Voir
@@ -210,13 +211,13 @@ Le numéro de la version installée et sa date de publication.
 
 ## Raccourcis clavier
 
-| Touche | Action |
-|---|---|
-| `F1` | Ouvrir ou fermer l’aide |
-| `F11` | Passer en plein écran, ou en sortir |
-| `Échap` | Fermer la fenêtre de dialogue, le panneau de détails ou l’aide |
-| `Ctrl` + `+` / `Ctrl` + `-` | Agrandir ou réduire l’interface (voir [Apparence](#apparence)) |
-| `Ctrl` + `0` | Revenir à la taille normale de l’interface |
-| `Entrée` | Valider le formulaire en cours (dépôt, jeton GitHub, nom d’un modpack…) |
-| `Ctrl` + `K` | Dans l’aide, rechercher dans toutes les pages |
-| `Alt` + `←` | Dans l’aide, revenir à la page précédente |
+| Touche                      | Action                                                                  |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `F1`                        | Ouvrir ou fermer l’aide                                                 |
+| `F11`                       | Passer en plein écran, ou en sortir                                     |
+| `Échap`                     | Fermer la fenêtre de dialogue, le panneau de détails ou l’aide          |
+| `Ctrl` + `+` / `Ctrl` + `-` | Agrandir ou réduire l’interface (voir [Apparence](#apparence))          |
+| `Ctrl` + `0`                | Revenir à la taille normale de l’interface                              |
+| `Entrée`                    | Valider le formulaire en cours (dépôt, jeton GitHub, nom d’un modpack…) |
+| `Ctrl` + `K`                | Dans l’aide, rechercher dans toutes les pages                           |
+| `Alt` + `←`                 | Dans l’aide, revenir à la page précédente                               |

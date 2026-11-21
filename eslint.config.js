@@ -13,7 +13,10 @@ module.exports = tseslint.config(
     rules: {
       // Les textes en français contiennent des espaces insécables (avant « : », dans « … ») : seules celles du code
       // lui-même sont signalées.
-      'no-irregular-whitespace': ['error', { skipStrings: true, skipComments: true, skipRegExps: true, skipTemplates: true }],
+      'no-irregular-whitespace': [
+        'error',
+        { skipStrings: true, skipComments: true, skipRegExps: true, skipTemplates: true },
+      ],
       // Les expressions qui retirent les caractères de contrôle d'un texte les nomment exprès.
       'no-control-regex': 'off',
       // Un nom commençant par « _ » marque une valeur ignorée volontairement (déstructuration, paramètre imposé).

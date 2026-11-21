@@ -1,15 +1,15 @@
-import { Info } from 'lucide-react'
-import type { Modpack } from '../../../shared/types'
-import { formatRelative } from '../lib/format'
-import { useStore } from '../store'
-import { PackBadges, VersionMeta } from './Badges'
-import { IconButton } from './Button'
-import { Cover } from './Cover'
-import { InstallButton } from './InstallButton'
+import { Info } from 'lucide-react';
+import type { Modpack } from '../../../shared/types';
+import { formatRelative } from '../lib/format';
+import { useStore } from '../store';
+import { PackBadges, VersionMeta } from './Badges';
+import { IconButton } from './Button';
+import { Cover } from './Cover';
+import { InstallButton } from './InstallButton';
 
 export function ModpackCard({ modpack, index }: { modpack: Modpack; index: number }) {
-  const select = useStore((s) => s.select)
-  const latest = modpack.latest
+  const select = useStore((s) => s.select);
+  const latest = modpack.latest;
 
   return (
     <article
@@ -42,9 +42,14 @@ export function ModpackCard({ modpack, index }: { modpack: Modpack; index: numbe
         <VersionMeta version={latest} withSize={false} />
         <div className="mt-auto flex items-center gap-2">
           <InstallButton version={latest} latest={latest} className="flex-1" />
-          <IconButton icon={Info} label="Détails" onClick={() => select(modpack.id)} className="size-11! rounded-xl bg-tint/[0.05]" />
+          <IconButton
+            icon={Info}
+            label="Détails"
+            onClick={() => select(modpack.id)}
+            className="size-11! rounded-xl bg-tint/[0.05]"
+          />
         </div>
       </div>
     </article>
-  )
+  );
 }

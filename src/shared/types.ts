@@ -1,525 +1,541 @@
-import type { AppearanceSettings } from './appearance'
-import type { ContentKind, ContentLoader } from './content'
-import type { DisplayInfo, WindowPlacement, WindowRect } from './windowPlacement'
+import type { AppearanceSettings } from './appearance';
+import type { ContentKind, ContentLoader } from './content';
+import type { DisplayInfo, WindowPlacement, WindowRect } from './windowPlacement';
 
 /** Contenu de l'asset `modpack.json` attaché à chaque release de modpack. */
 export interface ModpackManifest {
-  schema: 1
-  id: string
-  name: string
-  version: string
-  minecraftVersion: string | null
-  modLoader: string | null
-  modCount: number | null
-  description: string
-  archive: string
-  archiveSize: number
-  archiveSha256: string | null
-  cover: string | null
+  schema: 1;
+  id: string;
+  name: string;
+  version: string;
+  minecraftVersion: string | null;
+  modLoader: string | null;
+  modCount: number | null;
+  description: string;
+  archive: string;
+  archiveSize: number;
+  archiveSha256: string | null;
+  cover: string | null;
   /** Empreinte de l'image : permet au studio de savoir si elle a changé. */
-  coverSha256?: string | null
+  coverSha256?: string | null;
   /** Empreinte des mods : permet de reconnaître cette version dans un profil CurseForge. */
-  modsSignature?: string | null
+  modsSignature?: string | null;
   /** Fichiers du dossier mods installés désactivés : le joueur peut les activer dans CurseForge. Absent : aucun. */
-  disabledMods?: string[]
+  disabledMods?: string[];
   /** Une mise à jour garde les fichiers du dossier config que le joueur a modifiés. Absent : non. */
-  keepPlayerConfigs?: boolean
-  author: string | null
-  createdAt: string
+  keepPlayerConfigs?: boolean;
+  author: string | null;
+  createdAt: string;
 }
 
 /** Une version publiée d'un modpack (= une release GitHub). */
 export interface ModpackVersion {
-  id: string
-  name: string
-  version: string
-  minecraftVersion: string | null
-  modLoader: string | null
-  modCount: number | null
-  description: string
-  tag: string
-  notes: string
-  prerelease: boolean
-  publishedAt: string
-  archiveUrl: string
-  archiveSize: number
-  archiveSha256: string | null
+  id: string;
+  name: string;
+  version: string;
+  minecraftVersion: string | null;
+  modLoader: string | null;
+  modCount: number | null;
+  description: string;
+  tag: string;
+  notes: string;
+  prerelease: boolean;
+  publishedAt: string;
+  archiveUrl: string;
+  archiveSize: number;
+  archiveSha256: string | null;
   /** Empreinte des mods (absente des versions publiées avant qu'elle existe). */
-  modsSignature: string | null
+  modsSignature: string | null;
   /** Fichiers du dossier mods installés désactivés. */
-  disabledMods: string[]
+  disabledMods: string[];
   /** Une mise à jour garde les fichiers du dossier config que le joueur a modifiés. */
-  keepPlayerConfigs: boolean
-  coverUrl: string | null
-  releaseUrl: string
+  keepPlayerConfigs: boolean;
+  coverUrl: string | null;
+  releaseUrl: string;
 }
 
 /** Un modpack et toutes ses versions, de la plus récente à la plus ancienne. */
 export interface Modpack {
-  id: string
-  latest: ModpackVersion
-  versions: ModpackVersion[]
+  id: string;
+  latest: ModpackVersion;
+  versions: ModpackVersion[];
 }
 
 /** Version de l'application publiée sur GitHub. */
 export interface AppReleaseNotes {
-  version: string
-  publishedAt: string
+  version: string;
+  publishedAt: string;
   /** Texte de la release, tiré de CHANGELOG.md par la CI : ses rubriques sont les nouveautés de la version. */
-  notes: string
-  url: string
+  notes: string;
+  url: string;
 }
 
 export interface AppUpdateInfo {
-  version: string
+  version: string;
   /** Les versions plus récentes que celle qui tourne, jusqu'à celle proposée, de la plus récente à la plus ancienne. */
-  releases: AppReleaseNotes[]
-  releaseUrl: string
-  installerUrl: string
-  installerSize: number
+  releases: AppReleaseNotes[];
+  releaseUrl: string;
+  installerUrl: string;
+  installerSize: number;
   /** Empreinte de l'installeur publiée par GitHub, comparée à celle du fichier téléchargé. */
-  installerSha256: string | null
+  installerSha256: string | null;
   /**
    * Mise à jour différentielle : blockmap du nouvel installeur et installeur de la version qui tourne (son empreinte
    * et son blockmap), d'après sa release. Null si l'une des deux releases n'a pas de blockmap (avant la 2.3.2).
    */
   differential: {
-    blockmapUrl: string
-    baseVersion: string
-    baseSha256: string
-    baseBlockmapUrl: string
-  } | null
+    blockmapUrl: string;
+    baseVersion: string;
+    baseSha256: string;
+    baseBlockmapUrl: string;
+  } | null;
 }
 
 /** Un fichier d'une version publiée d'un mod, d'un pack de ressources ou d'un shader. */
 export interface ContentReleaseFile {
-  name: string
-  url: string
-  size: number
-  sha256: string
-  loaders: ContentLoader[]
-  minecraftVersions: string[]
+  name: string;
+  url: string;
+  size: number;
+  sha256: string;
+  loaders: ContentLoader[];
+  minecraftVersions: string[];
 }
 
 /** Une version publiée d'un contenu qui n'est pas un modpack (release `mod-`, `rp-`, `shader-` avec content.json). */
 export interface ContentRelease {
-  kind: Exclude<ContentKind, 'modpack'>
-  id: string
-  name: string
-  description: string
-  version: string
-  tag: string
-  notes: string
-  publishedAt: string
-  minecraftVersions: string[]
-  loaders: ContentLoader[]
-  files: ContentReleaseFile[]
-  coverUrl: string | null
-  releaseUrl: string
+  kind: Exclude<ContentKind, 'modpack'>;
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  tag: string;
+  notes: string;
+  publishedAt: string;
+  minecraftVersions: string[];
+  loaders: ContentLoader[];
+  files: ContentReleaseFile[];
+  coverUrl: string | null;
+  releaseUrl: string;
 }
 
 /** Un contenu et ses versions, de la plus récente à la plus ancienne. */
 export interface ContentItem {
-  kind: ContentRelease['kind']
-  id: string
-  latest: ContentRelease
-  versions: ContentRelease[]
+  kind: ContentRelease['kind'];
+  id: string;
+  latest: ContentRelease;
+  versions: ContentRelease[];
 }
 
 export interface Catalog {
   /** Dépôt d'où viennent les modpacks. */
-  repo: RepoRef
-  modpacks: Modpack[]
+  repo: RepoRef;
+  modpacks: Modpack[];
   /** Mods, packs de ressources et shaders publiés dans le même dépôt. */
-  contents: ContentItem[]
-  appUpdate: AppUpdateInfo | null
-  fetchedAt: string | null
+  contents: ContentItem[];
+  appUpdate: AppUpdateInfo | null;
+  fetchedAt: string | null;
   /** Renseigné quand GitHub n'a pas pu être joint : le catalogue vient alors du cache. */
-  error: string | null
+  error: string | null;
 }
 
 /** Contenu du fichier marqueur déposé dans une instance installée. */
 export interface InstanceMarker {
-  id: string
-  version: string
-  tag: string
-  installedAt: string
+  id: string;
+  version: string;
+  tag: string;
+  installedAt: string;
   /** Entrées de premier niveau fournies par le modpack (pour nettoyer lors d'une mise à jour). */
-  managedEntries: string[]
+  managedEntries: string[];
   /**
    * Empreinte SHA-1 de chaque fichier du dossier config fourni par cette version, par chemin (« config/x.toml ») :
    * un fichier qui ne correspond plus a été modifié par le joueur. Absent des installations antérieures.
    */
-  configFiles?: Record<string, string>
+  configFiles?: Record<string, string>;
   /** Mods que cette version installe désactivés (clés de modKey) : un mod dans l'autre état a été changé par le joueur. */
-  disabledByDefault?: string[]
+  disabledByDefault?: string[];
   /** Mods, packs de ressources et shaders ajoutés par le joueur depuis la Bibliothèque : gardés aux mises à jour. */
-  extras?: InstalledExtra[]
+  extras?: InstalledExtra[];
 }
 
 /** Un contenu ajouté par le joueur à un profil installé par l'application. */
 export interface InstalledExtra {
-  kind: ContentRelease['kind']
-  id: string
-  name: string
-  version: string
+  kind: ContentRelease['kind'];
+  id: string;
+  name: string;
+  version: string;
   /** Chemin depuis le dossier du profil (« mods/lma-26.3-1.2.0.jar »). */
-  file: string
-  sha256: string
-  installedAt: string
+  file: string;
+  sha256: string;
+  installedAt: string;
 }
 
 /** Modpack installé par l'application, tel que la fenêtre le voit (sans les empreintes du marqueur). */
-export interface InstalledModpack extends Pick<InstanceMarker, 'id' | 'version' | 'tag' | 'installedAt' | 'managedEntries'> {
-  instanceName: string
-  instancePath: string
-  extras: InstalledExtra[]
+export interface InstalledModpack extends Pick<
+  InstanceMarker,
+  'id' | 'version' | 'tag' | 'installedAt' | 'managedEntries'
+> {
+  instanceName: string;
+  instancePath: string;
+  extras: InstalledExtra[];
 }
 
-export type CurseForgeFlavor = 'overwolf' | 'standalone'
+export type CurseForgeFlavor = 'overwolf' | 'standalone';
 
 export interface CurseForgeStatus {
-  installed: boolean
-  flavor: CurseForgeFlavor | null
-  instancesDir: string
-  instancesDirSource: 'settings' | 'curseforge' | 'default'
-  instancesDirExists: boolean
+  installed: boolean;
+  flavor: CurseForgeFlavor | null;
+  instancesDir: string;
+  instancesDirSource: 'settings' | 'curseforge' | 'default';
+  instancesDirExists: boolean;
 }
 
 /** Profil du dossier Instances de CurseForge, qu'il ait été créé par l'application ou non. */
 /** Un profil du dossier Instances de CurseForge (son dossier et son minecraftinstance.json). */
 export interface CurseForgeProfile {
   /** Nom du dossier du profil, celui que CurseForge affiche. */
-  name: string
-  path: string
+  name: string;
+  path: string;
   /** Empreinte de ses mods (null s'il n'en a pas), à comparer à celle des versions publiées. */
-  modsSignature: string | null
+  modsSignature: string | null;
   /** Identifiant du profil pour CurseForge : il ne change pas si le profil est renommé. */
-  guid: string | null
+  guid: string | null;
   /** Dossier de CurseForge où le profil est rangé (CurseForgeGroup), null s'il n'est dans aucun. */
-  groupId: string | null
-  minecraftVersion: string | null
+  groupId: string | null;
+  minecraftVersion: string | null;
   /** Chargeur tel que CurseForge l'écrit (« neoforge-21.1.215 »). */
-  modLoader: string | null
+  modLoader: string | null;
   /** Mods actifs (.jar du dossier mods). */
-  modCount: number | null
-  lastPlayed: string | null
+  modCount: number | null;
+  lastPlayed: string | null;
   /** Projet CurseForge du modpack dont ce profil est une installation ; null pour un profil personnel. */
-  curseforgeProjectId: number | null
+  curseforgeProjectId: number | null;
   /** Version installée par cette application depuis GitHub (marqueur du profil), sinon null. */
-  installedPack: { id: string; version: string } | null
+  installedPack: { id: string; version: string } | null;
 }
 
 /** Un dossier de CurseForge, dans lequel l'utilisateur range ses profils (un seul niveau). */
 export interface CurseForgeGroup {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 export interface RepoRef {
-  owner: string
-  name: string
+  owner: string;
+  name: string;
 }
 
 /** Récepteur : installe les modpacks. Publieur : les publie aussi, avec le Studio. */
-export type UserRole = 'receiver' | 'publisher'
+export type UserRole = 'receiver' | 'publisher';
 
 /** Vues de la fenêtre : la bibliothèque (tout le monde) et le studio (publieurs). */
-export type AppView = 'library' | 'studio'
+export type AppView = 'library' | 'studio';
 
 /** Fenêtre normale, agrandie (au lancement) ou en plein écran (F11). */
-export type WindowState = 'normal' | 'maximized' | 'fullscreen'
+export type WindowState = 'normal' | 'maximized' | 'fullscreen';
 
 export interface Settings {
   /** Dossier Instances choisi manuellement (null = détection automatique). */
-  instancesDir: string | null
-  openCurseForgeAfterInstall: boolean
+  instancesDir: string | null;
+  openCurseForgeAfterInstall: boolean;
   /** La proposition de raccourci sur le bureau a déjà reçu une réponse. */
-  shortcutPrompted: boolean
+  shortcutPrompted: boolean;
   /** null tant que le premier lancement n'a pas eu lieu. */
-  role: UserRole | null
+  role: UserRole | null;
   /** Dépôt des modpacks : lu par l'application, géré par le studio pour un publieur. */
-  repo: RepoRef
+  repo: RepoRef;
   /** Dossier des contenus du studio (un sous-dossier par contenu). */
-  workspaceDir: string | null
+  workspaceDir: string | null;
   /** Dernière vue affichée, rouverte au lancement suivant. */
-  lastView: AppView
+  lastView: AppView;
   /** Version de l'application au dernier lancement : sert à annoncer qu'une mise à jour vient d'être installée. */
-  lastRunVersion: string | null
+  lastRunVersion: string | null;
   /** Un passage automatique qui échoue est confié à Claude Code, qui en cherche la cause. */
-  maintenanceClaude: boolean
+  maintenanceClaude: boolean;
   /** Au démarrage, une nouvelle version de l'application s'installe d'elle-même. */
-  autoUpdate: boolean
+  autoUpdate: boolean;
   /** Minutes entre deux vérifications d'une nouvelle version de l'application (1 à 360, 10 par défaut). */
-  appCheckMinutes: number
+  appCheckMinutes: number;
   /** Une nouvelle version d'un modpack installé par l'application s'installe d'elle-même. */
-  autoUpdatePacks: boolean
+  autoUpdatePacks: boolean;
   /** Minutes entre deux vérifications des modpacks publiés (1 à 360, 5 par défaut). */
-  packCheckMinutes: number
+  packCheckMinutes: number;
   /** L'application se lance au démarrage de Windows. */
-  launchAtStartup: boolean
+  launchAtStartup: boolean;
   /**
    * Lancée avec Windows : en arrière-plan (icône de la zone de notification seulement, par défaut) ou fenêtre réduite
    * dans la barre des tâches.
    */
-  launchMode: 'background' | 'window'
+  launchMode: 'background' | 'window';
   /** La bulle « reste ouvert en arrière-plan » a déjà été montrée à la première fermeture de la fenêtre. */
-  backgroundHintShown: boolean
+  backgroundHintShown: boolean;
   /** Taille et position de la fenêtre à son ouverture (lancement, réouverture depuis l'arrière-plan). */
-  window: WindowPlacement
+  window: WindowPlacement;
   /** Style de couleurs, styles personnalisés et taille de l'interface. */
-  appearance: AppearanceSettings
+  appearance: AppearanceSettings;
 }
 
 /** D'où vient la connexion GitHub : connexion faite dans l'application, ou repli sur une session existante. */
-export type CredentialSource = 'login' | 'env' | 'dotenv' | 'gh'
+export type CredentialSource = 'login' | 'env' | 'dotenv' | 'gh';
 
 export interface GitHubAccount {
-  login: string
-  avatarUrl: string | null
-  source: CredentialSource
+  login: string;
+  avatarUrl: string | null;
+  source: CredentialSource;
 }
 
 export interface AuthStatus {
-  account: GitHubAccount | null
-  error: string | null
+  account: GitHubAccount | null;
+  error: string | null;
   /** « Se connecter avec GitHub » est configuré (sinon, seul le jeton est proposé). */
-  deviceLoginAvailable: boolean
+  deviceLoginAvailable: boolean;
 }
 
 export interface DeviceLogin {
-  userCode: string
-  verificationUri: string
-  expiresAt: string
+  userCode: string;
+  verificationUri: string;
+  expiresAt: string;
 }
 
-export type LoginResult = { ok: true; account: GitHubAccount } | { ok: false; cancelled: boolean; error: string }
+export type LoginResult = { ok: true; account: GitHubAccount } | { ok: false; cancelled: boolean; error: string };
 
 /** Connexion GitHub, commune à l'application et au studio. */
 export interface AuthApi {
-  getAuthStatus(): Promise<AuthStatus>
+  getAuthStatus(): Promise<AuthStatus>;
   /** Démarre la connexion par code : ouvre github.com/login/device dans le navigateur. */
-  startDeviceLogin(): Promise<{ ok: true; login: DeviceLogin } | { ok: false; error: string }>
+  startDeviceLogin(): Promise<{ ok: true; login: DeviceLogin } | { ok: false; error: string }>;
   /** Attend que le code soit validé sur GitHub. */
-  waitDeviceLogin(): Promise<LoginResult>
-  cancelDeviceLogin(): Promise<void>
-  loginWithToken(token: string): Promise<LoginResult>
-  logout(): Promise<AuthStatus>
+  waitDeviceLogin(): Promise<LoginResult>;
+  cancelDeviceLogin(): Promise<void>;
+  loginWithToken(token: string): Promise<LoginResult>;
+  logout(): Promise<AuthStatus>;
 }
 
 export interface RepoInfo {
-  repo: RepoRef
-  ownerAvatarUrl: string | null
-  private: boolean
+  repo: RepoRef;
+  ownerAvatarUrl: string | null;
+  private: boolean;
 }
 
 export type RoleResult =
   | { ok: true; settings: Settings; account: GitHubAccount | null; warning: string | null }
-  | { ok: false; error: string; needsLogin: boolean }
+  | { ok: false; error: string; needsLogin: boolean };
 
 export interface ShortcutStatus {
   /** Emplacement du raccourci sur le bureau. */
-  desktopPath: string
-  onDesktop: boolean
+  desktopPath: string;
+  onDesktop: boolean;
 }
 
-export type ShortcutLocation = 'desktop' | 'choose'
+export type ShortcutLocation = 'desktop' | 'choose';
 
-export type ShortcutResult = { ok: true; path: string } | { ok: false; cancelled: boolean; error?: string }
+export type ShortcutResult = { ok: true; path: string } | { ok: false; cancelled: boolean; error?: string };
 
-export type InstallPhase = 'preparing' | 'downloading' | 'verifying' | 'extracting' | 'finalizing'
+export type InstallPhase = 'preparing' | 'downloading' | 'verifying' | 'extracting' | 'finalizing';
 
 export interface InstallProgress {
-  id: string
-  version: string
-  phase: InstallPhase
+  id: string;
+  version: string;
+  phase: InstallPhase;
   /** Octets traités dans la phase courante. */
-  done: number
+  done: number;
   /** Total de la phase courante (0 si inconnu). */
-  total: number
-  bytesPerSecond: number
+  total: number;
+  bytesPerSecond: number;
 }
 
 /** Mise à jour automatique d'un modpack installé, annoncée à la fenêtre (qui suit sa progression et en dit l'issue). */
 export type AutoInstallEvent =
   | { kind: 'start'; version: ModpackVersion }
   /** `announce` : l'issue est à dire (un échec n'est dit qu'au premier essai d'une version). */
-  | { kind: 'end'; version: ModpackVersion; result: InstallResult; announce: boolean }
+  | { kind: 'end'; version: ModpackVersion; result: InstallResult; announce: boolean };
 
 export type InstallResult =
   | {
-      ok: true
-      installed: InstalledModpack
-      updated: boolean
-      curseForgeLaunched: boolean
+      ok: true;
+      installed: InstalledModpack;
+      updated: boolean;
+      curseForgeLaunched: boolean;
       /** CurseForge était déjà ouvert : il peut ne pas afficher le profil avant d'être relancé. */
-      curseForgeRunning: boolean
+      curseForgeRunning: boolean;
       /** Fichiers de configuration modifiés par le joueur gardés à la place de ceux de la nouvelle version. */
-      keptConfigs: number
+      keptConfigs: number;
     }
-  | { ok: false; cancelled: boolean; error: string }
+  | { ok: false; cancelled: boolean; error: string };
 
-export type CurseForgeRestartResult = { ok: true } | { ok: false; error: string }
+export type CurseForgeRestartResult = { ok: true } | { ok: false; error: string };
 
 export interface AppUpdateProgress {
   /** `installing` : l'installeur est lancé, l'application se ferme. */
-  phase: 'downloading' | 'installing'
-  done: number
-  total: number
+  phase: 'downloading' | 'installing';
+  done: number;
+  total: number;
 }
 
 /** `busy` : une opération en cours (installation d'un modpack, publication…) serait interrompue par le redémarrage. */
-export type AppUpdateResult = { ok: true } | { ok: false; reason: 'cancelled' | 'busy' | 'failed'; error: string }
+export type AppUpdateResult = { ok: true } | { ok: false; reason: 'cancelled' | 'busy' | 'failed'; error: string };
 
 export interface LaunchInfo {
   /** Vue demandée au lancement (`--studio`), sinon null. */
-  view: AppView | null
+  view: AppView | null;
   /** L'application vient d'être mise à jour : annoncé une seule fois. */
-  justUpdated: boolean
+  justUpdated: boolean;
   /** Version utilisée avant cette mise à jour : ses nouveautés depuis sont mises en avant (null si inconnue). */
-  previousVersion: string | null
+  previousVersion: string | null;
   /** La version proposée doit s'installer d'elle-même (réglage autoUpdate) : une seule fois, au démarrage. */
-  autoUpdate: boolean
+  autoUpdate: boolean;
 }
 
-export type ReportKind = 'bug' | 'suggestion'
+export type ReportKind = 'bug' | 'suggestion';
 
 /** Signalement saisi dans l'application : il devient une issue sur le dépôt de l'application. */
 export interface IssueReport {
-  kind: ReportKind
-  title: string
-  description: string
+  kind: ReportKind;
+  title: string;
+  description: string;
   /** Identifiant du modpack concerné, s'il y en a un. */
-  modpackId: string | null
+  modpackId: string | null;
   /** Joindre la version de l'application, celle de Windows et l'état de CurseForge. */
-  includeDiagnostics: boolean
+  includeDiagnostics: boolean;
 }
 
 export interface ReportInfo {
   /** Compte GitHub qui signera l'issue ; sans compte, le signalement s'ouvre dans le navigateur. */
-  account: GitHubAccount | null
+  account: GitHubAccount | null;
   /** Informations techniques proposées en complément. */
-  diagnostics: string[]
+  diagnostics: string[];
 }
 
-export type ReportResult = { ok: true; number: number; url: string } | { ok: false; error: string }
+export type ReportResult = { ok: true; number: number; url: string } | { ok: false; error: string };
 
 /** Choix du rôle, commun à l'application et au studio. */
 export interface RoleApi {
   /** Passe en récepteur ; un dépôt peut être fourni pour suivre les modpacks d'un autre publieur. */
-  becomeReceiver(repo: string | null): Promise<RoleResult>
+  becomeReceiver(repo: string | null): Promise<RoleResult>;
   /** Passe en publieur après avoir vérifié que le compte GitHub connecté peut publier sur le dépôt. */
-  becomePublisher(repo: string): Promise<RoleResult>
+  becomePublisher(repo: string): Promise<RoleResult>;
 }
 
 /** Connexion de l'application à Claude Code (serveur MCP du moteur), pour les publieurs. */
 export interface ClaudeCodeStatus {
   /** Le programme claude est présent sur ce PC. */
-  installed: boolean
+  installed: boolean;
   /** Le serveur MCP de cette installation est enregistré dans Claude Code. */
-  connected: boolean
+  connected: boolean;
   /** La commande à taper soi-même, si la connexion automatique est impossible. */
-  manualCommand: string
+  manualCommand: string;
 }
 
 export interface ClaudeApi {
-  getClaudeCodeStatus(): Promise<ClaudeCodeStatus>
-  connectClaudeCode(): Promise<{ ok: true } | { ok: false; error: string }>
+  getClaudeCodeStatus(): Promise<ClaudeCodeStatus>;
+  connectClaudeCode(): Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 /** `apiKey` : clé de l'API CurseForge (lire les mods) ; `uploadToken` : jeton d'auteur (mettre en ligne). */
-export type CurseForgeSecretKind = 'apiKey' | 'uploadToken'
+export type CurseForgeSecretKind = 'apiKey' | 'uploadToken';
 
 export interface CurseForgeSecretStatus {
   /** Où il a été trouvé : enregistré dans l'application, variable d'environnement, fichier .env ; null : absent. */
-  source: 'saved' | 'env' | 'dotenv' | null
+  source: 'saved' | 'env' | 'dotenv' | null;
   /** Accepté par CurseForge (true), refusé (false), ou pas vérifié (null : absent ou CurseForge injoignable). */
-  valid: boolean | null
-  error: string | null
+  valid: boolean | null;
+  error: string | null;
 }
 
 export interface CurseForgeAuthStatus {
-  apiKey: CurseForgeSecretStatus
-  uploadToken: CurseForgeSecretStatus
+  apiKey: CurseForgeSecretStatus;
+  uploadToken: CurseForgeSecretStatus;
 }
 
 export interface CurseForgeAuthApi {
-  getCurseForgeAuth(): Promise<CurseForgeAuthStatus>
+  getCurseForgeAuth(): Promise<CurseForgeAuthStatus>;
   /** Vérifie puis enregistre (chiffré) un secret ; null le retire. */
-  saveCurseForgeSecret(kind: CurseForgeSecretKind, value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+  saveCurseForgeSecret(
+    kind: CurseForgeSecretKind,
+    value: string | null,
+  ): Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 /** Jeton d'accès personnel Modrinth du publieur. */
 export interface ModrinthAuthStatus extends CurseForgeSecretStatus {
   /** Compte Modrinth du jeton, une fois vérifié. */
-  username: string | null
+  username: string | null;
 }
 
 /** Clé d'API Hangar du publieur (plugins). */
-export type HangarAuthStatus = ModrinthAuthStatus
+export type HangarAuthStatus = ModrinthAuthStatus;
 
 export interface HangarAuthApi {
-  getHangarAuth(): Promise<HangarAuthStatus>
+  getHangarAuth(): Promise<HangarAuthStatus>;
   /** Vérifie puis enregistre (chiffrée) la clé ; null la retire. */
-  saveHangarKey(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+  saveHangarKey(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 export interface ModrinthAuthApi {
-  getModrinthAuth(): Promise<ModrinthAuthStatus>
+  getModrinthAuth(): Promise<ModrinthAuthStatus>;
   /** Vérifie puis enregistre (chiffré) le jeton ; null le retire. */
-  saveModrinthToken(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>
+  saveModrinthToken(value: string | null): Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 /** Bibliothèque : contenus ajoutés par le joueur à un profil installé par l'application. */
 export interface ExtrasApi {
   /** Ajoute (ou met à jour) la version donnée d'un contenu dans le profil. */
-  installExtra(profilePath: string, kind: ContentRelease['kind'], id: string, version: string): Promise<{ ok: true; extra: InstalledExtra } | { ok: false; error: string }>
-  removeExtra(profilePath: string, kind: ContentRelease['kind'], id: string): Promise<{ ok: true } | { ok: false; error: string }>
+  installExtra(
+    profilePath: string,
+    kind: ContentRelease['kind'],
+    id: string,
+    version: string,
+  ): Promise<{ ok: true; extra: InstalledExtra } | { ok: false; error: string }>;
+  removeExtra(
+    profilePath: string,
+    kind: ContentRelease['kind'],
+    id: string,
+  ): Promise<{ ok: true } | { ok: false; error: string }>;
 }
 
 /** API exposée au renderer par le preload (`window.api`). */
-export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi, HangarAuthApi, ExtrasApi {
-  getLaunchInfo(): Promise<LaunchInfo>
+export interface RendererApi
+  extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuthApi, ModrinthAuthApi, HangarAuthApi, ExtrasApi {
+  getLaunchInfo(): Promise<LaunchInfo>;
   /** L'application a été relancée alors qu'elle tournait : relire l'état, et ouvrir la vue demandée. */
-  onActivated(listener: (view: AppView | null) => void): () => void
-  getCatalog(force?: boolean): Promise<Catalog>
-  getInstalled(): Promise<InstalledModpack[]>
-  getProfiles(): Promise<CurseForgeProfile[]>
-  install(version: ModpackVersion): Promise<InstallResult>
-  cancelInstall(id: string): Promise<void>
-  onInstallProgress(listener: (progress: InstallProgress) => void): () => void
+  onActivated(listener: (view: AppView | null) => void): () => void;
+  getCatalog(force?: boolean): Promise<Catalog>;
+  getInstalled(): Promise<InstalledModpack[]>;
+  getProfiles(): Promise<CurseForgeProfile[]>;
+  install(version: ModpackVersion): Promise<InstallResult>;
+  cancelInstall(id: string): Promise<void>;
+  onInstallProgress(listener: (progress: InstallProgress) => void): () => void;
   /** Un modpack installé se met à jour de lui-même (réglage autoUpdatePacks). */
-  onAutoInstall(listener: (event: AutoInstallEvent) => void): () => void
+  onAutoInstall(listener: (event: AutoInstallEvent) => void): () => void;
   /** Catalogue relu par une vérification automatique. */
-  onCatalog(listener: (catalog: Catalog) => void): () => void
-  getCurseForgeStatus(): Promise<CurseForgeStatus>
-  launchCurseForge(): Promise<boolean>
+  onCatalog(listener: (catalog: Catalog) => void): () => void;
+  getCurseForgeStatus(): Promise<CurseForgeStatus>;
+  launchCurseForge(): Promise<boolean>;
   /** Ferme puis rouvre CurseForge, pour qu'il relise ses profils. */
-  restartCurseForge(): Promise<CurseForgeRestartResult>
-  getSettings(): Promise<Settings>
-  updateSettings(patch: Partial<Settings>): Promise<Settings>
-  pickInstancesDir(): Promise<Settings | null>
-  getShortcutStatus(): Promise<ShortcutStatus>
-  createShortcut(location: ShortcutLocation): Promise<ShortcutResult>
-  openPath(path: string): Promise<void>
-  openExternal(url: string): Promise<void>
-  getReportInfo(): Promise<ReportInfo>
+  restartCurseForge(): Promise<CurseForgeRestartResult>;
+  getSettings(): Promise<Settings>;
+  updateSettings(patch: Partial<Settings>): Promise<Settings>;
+  pickInstancesDir(): Promise<Settings | null>;
+  getShortcutStatus(): Promise<ShortcutStatus>;
+  createShortcut(location: ShortcutLocation): Promise<ShortcutResult>;
+  openPath(path: string): Promise<void>;
+  openExternal(url: string): Promise<void>;
+  getReportInfo(): Promise<ReportInfo>;
   /** Crée l'issue avec le compte GitHub connecté. */
-  submitReport(report: IssueReport): Promise<ReportResult>
+  submitReport(report: IssueReport): Promise<ReportResult>;
   /** Ouvre la page « nouvelle issue » de GitHub, déjà remplie. */
-  openReportInBrowser(report: IssueReport): Promise<void>
-  getAppVersion(): Promise<string>
+  openReportInBrowser(report: IssueReport): Promise<void>;
+  getAppVersion(): Promise<string>;
   /** Télécharge puis lance l'installeur de la dernière version : l'application se ferme et se relance toute seule. */
-  installAppUpdate(): Promise<AppUpdateResult>
-  cancelAppUpdate(): Promise<void>
-  onAppUpdateProgress(listener: (progress: AppUpdateProgress) => void): () => void
-  minimizeWindow(): void
+  installAppUpdate(): Promise<AppUpdateResult>;
+  cancelAppUpdate(): Promise<void>;
+  onAppUpdateProgress(listener: (progress: AppUpdateProgress) => void): () => void;
+  minimizeWindow(): void;
   /** Agrandit la fenêtre ou la ramène au niveau inférieur ; en plein écran, en sort. */
-  toggleMaximize(): void
-  closeWindow(): void
-  onWindowStateChange(listener: (state: WindowState) => void): () => void
+  toggleMaximize(): void;
+  closeWindow(): void;
+  onWindowStateChange(listener: (state: WindowState) => void): () => void;
   /** Les écrans, pour le plan de Paramètres → Fenêtre à l'ouverture. */
-  getDisplays(): Promise<DisplayInfo[]>
+  getDisplays(): Promise<DisplayInfo[]>;
   /** Taille et position actuelles de la fenêtre (hors agrandissement). */
-  getWindowBounds(): Promise<WindowRect | null>
+  getWindowBounds(): Promise<WindowRect | null>;
 }

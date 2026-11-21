@@ -1,19 +1,33 @@
-import { Bug, CircleArrowUp, CircleHelp, CloudUpload, Coffee, Copy, Library, Minimize2, Minus, RefreshCw, Settings, Square, X } from 'lucide-react'
-import type { AppView, WindowState } from '../../../shared/types'
-import { useDocs } from '../docs/store'
-import { useStudio } from '../studio/store'
-import { useStore } from '../store'
-import { APP_NAME, SUPPORT_URL } from '../../../shared/config'
-import { IconButton } from './Button'
-import { Logo } from './Logo'
+import {
+  Bug,
+  CircleArrowUp,
+  CircleHelp,
+  CloudUpload,
+  Coffee,
+  Copy,
+  Library,
+  Minimize2,
+  Minus,
+  RefreshCw,
+  Settings,
+  Square,
+  X,
+} from 'lucide-react';
+import type { AppView, WindowState } from '../../../shared/types';
+import { useDocs } from '../docs/store';
+import { useStudio } from '../studio/store';
+import { useStore } from '../store';
+import { APP_NAME, SUPPORT_URL } from '../../../shared/config';
+import { IconButton } from './Button';
+import { Logo } from './Logo';
 
 function CurseForgeChip() {
-  const curseForge = useStore((s) => s.curseForge)
-  const launch = useStore((s) => s.launchCurseForge)
-  const openSettings = useStore((s) => s.setSettingsOpen)
-  if (!curseForge) return null
+  const curseForge = useStore((s) => s.curseForge);
+  const launch = useStore((s) => s.launchCurseForge);
+  const openSettings = useStore((s) => s.setSettingsOpen);
+  if (!curseForge) return null;
 
-  const ok = curseForge.installed
+  const ok = curseForge.installed;
   return (
     <button
       type="button"
@@ -27,7 +41,7 @@ function CurseForgeChip() {
       </span>
       {ok ? 'CurseForge' : 'CurseForge introuvable'}
     </button>
-  )
+  );
 }
 
 /** Soutenir le développeur : sa page Buy Me a Coffee, dans le navigateur. */
@@ -42,16 +56,16 @@ function CoffeeChip() {
       <Coffee size={14} strokeWidth={2.5} />
       Offrir un café
     </button>
-  )
+  );
 }
 
 /** Mise à jour remise à plus tard : un rappel discret, qui rouvre la proposition. */
 function UpdateChip() {
-  const version = useStore((s) => s.catalog?.appUpdate?.version ?? null)
-  const dismissed = useStore((s) => s.updateDismissed)
-  const updating = useStore((s) => s.appUpdateProgress !== null)
-  const show = useStore((s) => s.showAppUpdate)
-  if (!version || dismissed !== version || updating) return null
+  const version = useStore((s) => s.catalog?.appUpdate?.version ?? null);
+  const dismissed = useStore((s) => s.updateDismissed);
+  const updating = useStore((s) => s.appUpdateProgress !== null);
+  const show = useStore((s) => s.showAppUpdate);
+  if (!version || dismissed !== version || updating) return null;
   return (
     <button
       type="button"
@@ -63,40 +77,43 @@ function UpdateChip() {
       {/* Fenêtre étroite : l'icône seule, pour laisser sa place au reste de la barre de titre. */}
       <span className="hidden lg:inline">Mise à jour</span>
     </button>
-  )
+  );
 }
 
 /** Bouton agrandir / niveau inférieur, comme celui de Windows ; en plein écran (F11), il en fait sortir. */
 const MAXIMIZE_BUTTON: Record<WindowState, { icon: typeof Square; label: string; size: number }> = {
   normal: { icon: Square, label: 'Agrandir', size: 14 },
   maximized: { icon: Copy, label: 'Niveau inférieur', size: 14 },
-  fullscreen: { icon: Minimize2, label: 'Quitter le plein écran (F11)', size: 16 }
-}
+  fullscreen: { icon: Minimize2, label: 'Quitter le plein écran (F11)', size: 16 },
+};
 
 const VIEWS: Array<{ view: AppView; label: string; icon: typeof Library }> = [
   { view: 'library', label: 'Bibliothèque', icon: Library },
-  { view: 'studio', label: 'Studio', icon: CloudUpload }
-]
+  { view: 'studio', label: 'Studio', icon: CloudUpload },
+];
 
 /** Bibliothèque et Studio : deux vues de la même fenêtre, le Studio n'existant que pour un publieur. */
 function ViewTabs() {
-  const publisher = useStore((s) => s.settings?.role === 'publisher')
-  const view = useStore((s) => s.view)
-  const setView = useStore((s) => s.setView)
+  const publisher = useStore((s) => s.settings?.role === 'publisher');
+  const view = useStore((s) => s.view);
+  const setView = useStore((s) => s.setView);
   // L'aide recouvre la vue : aucun onglet n'est alors actif, et un clic sur l'un d'eux la referme.
-  const docsOpen = useDocs((s) => s.open)
-  const closeDocs = useDocs((s) => s.close)
-  if (!publisher) return null
+  const docsOpen = useDocs((s) => s.open);
+  const closeDocs = useDocs((s) => s.close);
+  if (!publisher) return null;
   return (
-    <nav className="no-drag ml-4 flex rounded-xl bg-tint/[0.04] p-1 ring-1 ring-inset ring-tint/[0.06]" aria-label="Vues">
+    <nav
+      className="no-drag ml-4 flex rounded-xl bg-tint/[0.04] p-1 ring-1 ring-inset ring-tint/[0.06]"
+      aria-label="Vues"
+    >
       {VIEWS.map((tab) => (
         <button
           key={tab.view}
           type="button"
           aria-current={!docsOpen && view === tab.view ? 'page' : undefined}
           onClick={() => {
-            closeDocs()
-            setView(tab.view)
+            closeDocs();
+            setView(tab.view);
           }}
           className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-[13px] font-semibold transition ${
             !docsOpen && view === tab.view ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
@@ -106,22 +123,22 @@ function ViewTabs() {
         </button>
       ))}
     </nav>
-  )
+  );
 }
 
 export function TitleBar() {
-  const libraryRefreshing = useStore((s) => s.refreshing)
-  const refresh = useStore((s) => s.refresh)
-  const refreshLocal = useStore((s) => s.refreshLocal)
-  const maximizeButton = MAXIMIZE_BUTTON[useStore((s) => s.windowState)]
-  const openSettings = useStore((s) => s.setSettingsOpen)
-  const openReport = useStore((s) => s.setReportOpen)
-  const studio = useStore((s) => s.view === 'studio' && s.settings?.role === 'publisher')
-  const studioRefreshing = useStudio((s) => s.pending > 0)
-  const refreshStudio = useStudio((s) => s.refresh)
-  const refreshing = studio ? studioRefreshing : libraryRefreshing
-  const docsOpen = useDocs((s) => s.open)
-  const toggleDocs = useDocs((s) => s.toggle)
+  const libraryRefreshing = useStore((s) => s.refreshing);
+  const refresh = useStore((s) => s.refresh);
+  const refreshLocal = useStore((s) => s.refreshLocal);
+  const maximizeButton = MAXIMIZE_BUTTON[useStore((s) => s.windowState)];
+  const openSettings = useStore((s) => s.setSettingsOpen);
+  const openReport = useStore((s) => s.setReportOpen);
+  const studio = useStore((s) => s.view === 'studio' && s.settings?.role === 'publisher');
+  const studioRefreshing = useStudio((s) => s.pending > 0);
+  const refreshStudio = useStudio((s) => s.refresh);
+  const refreshing = studio ? studioRefreshing : libraryRefreshing;
+  const docsOpen = useDocs((s) => s.open);
+  const toggleDocs = useDocs((s) => s.toggle);
 
   return (
     <header className="drag-region relative z-30 flex h-14 shrink-0 items-center gap-3 border-b border-tint/[0.05] bg-ink-900/70 pr-2 pl-5 backdrop-blur-xl">
@@ -167,5 +184,5 @@ export function TitleBar() {
         />
       </div>
     </header>
-  )
+  );
 }

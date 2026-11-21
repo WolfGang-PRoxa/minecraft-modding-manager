@@ -1,8 +1,8 @@
-import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises'
-import { basename, dirname, extname, join, resolve } from 'node:path'
-import { CONTENT_KINDS, CONTENT_KIND_IDS, isContentKind, type ContentKind } from '../../shared/content'
-import { normalizeExclusions } from '../../shared/exclusions'
-import { isValidModpackId, slugify } from '../../shared/releases'
+import { copyFile, mkdir, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { basename, dirname, extname, join, resolve } from 'node:path';
+import { CONTENT_KINDS, CONTENT_KIND_IDS, isContentKind, type ContentKind } from '../../shared/content';
+import { normalizeExclusions } from '../../shared/exclusions';
+import { isValidModpackId, slugify } from '../../shared/releases';
 import {
   DEFAULT_PACK_UPDATES,
   type DisabledMod,
@@ -15,122 +15,130 @@ import {
   type RangerOrders,
   type RangerPackPlan,
   type RangerPlan,
-  type UpdateFrequency
-} from '../../shared/studio'
-import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil'
-import { AnalysisCache, analyzeZip, describeError, githubSizeError, sha256File, StudioError, type CachedAnalysis } from './analyze'
-import { scanModFolder, type LocalJar, type LocalContentVersion } from './mods'
-import { scanPackFolder } from './packFiles'
-import { analyzePluginJar } from './pluginFiles'
+  type UpdateFrequency,
+} from '../../shared/studio';
+import { pathExists, renameWithRetry, writeJsonAtomic } from '../fsutil';
+import {
+  AnalysisCache,
+  analyzeZip,
+  describeError,
+  githubSizeError,
+  sha256File,
+  StudioError,
+  type CachedAnalysis,
+} from './analyze';
+import { scanModFolder, type LocalJar, type LocalContentVersion } from './mods';
+import { scanPackFolder } from './packFiles';
+import { analyzePluginJar } from './pluginFiles';
 
 /** Métadonnées d'un modpack, gérées par le studio dans son dossier. */
-export const PACK_FILE = 'pack.json'
-export const COVER_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp']
+export const PACK_FILE = 'pack.json';
+export const COVER_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp'];
 
 /** « Hardcore_Endgame-v12.zip » : un zip déjà rangé. */
-const NUMBERED_ZIP = /^(.*)-v(\d{1,6})\.zip$/i
+const NUMBERED_ZIP = /^(.*)-v(\d{1,6})\.zip$/i;
 
 /** Contenu de pack.json. Les réglages des versions n'y figurent que s'ils sont utilisés. */
 export interface PackFile extends PackSettings {
   /** Identifiant publié (tags GitHub, suivi des installations) : ne change plus une fois créé. */
-  id: string
+  id: string;
   /** Ce que contient le dossier (écrit seulement pour un autre type que le modpack). */
-  type: ContentKind
-  name: string
-  description: string
+  type: ContentKind;
+  name: string;
+  description: string;
   /** Plus grand numéro déjà attribué : un numéro n'est jamais réutilisé, même si son zip est supprimé. */
-  lastVersion: number
+  lastVersion: number;
   /** Notes de version en Markdown, par numéro de version. */
-  notes: Record<string, string>
+  notes: Record<string, string>;
   /** Profil CurseForge d'où viennent ses versions (écrit seulement s'il est connu). */
-  profile: PackProfileLink | null
+  profile: PackProfileLink | null;
   /** Faux : le modpack n'est pas publié sur GitHub (écrit seulement dans ce cas). */
-  github: boolean
+  github: boolean;
   /** Son projet CurseForge, s'il en a un. */
-  curseforge: PackCurseForge | null
+  curseforge: PackCurseForge | null;
   /** Mod : son projet Modrinth, s'il en a un. */
-  modrinth: PackModrinth | null
+  modrinth: PackModrinth | null;
   /** Plugin : son projet Hangar, s'il en a un. */
-  hangar: PackHangar | null
+  hangar: PackHangar | null;
   /** Mises à jour automatiques (écrit seulement s'il diffère des valeurs par défaut). */
-  updates: PackUpdates
+  updates: PackUpdates;
   /**
    * Mod : dossier d'où viennent ses versions (`releases/`, `build/libs/` de son projet). Pack de ressources ou shader :
    * dossier du pack en cours de création, zippé à chaque version. Écrit seulement s'il est lié.
    */
-  source: string | null
+  source: string | null;
   /** Pack de ressources ou shader : versions de Minecraft visées, à la place de celles du zip (écrit si donné). */
-  minecraftVersions: string[]
+  minecraftVersions: string[];
   /** Groupe du Studio : sous-dossier de la colonne de gauche qui le range avec d'autres (écrit s'il est donné). */
-  group: string | null
+  group: string | null;
 }
 
 export interface LocalFile {
-  fileName: string
-  path: string
-  size: number
-  mtimeMs: number
+  fileName: string;
+  path: string;
+  size: number;
+  mtimeMs: number;
 }
 
 export interface LocalZip extends LocalFile {
-  analysis: CachedAnalysis | null
+  analysis: CachedAnalysis | null;
   /** Zip inutilisable (pas une instance CurseForge, copie en cours…). */
-  error: string | null
+  error: string | null;
 }
 
 export interface LocalVersion extends LocalZip {
-  number: number
+  number: number;
 }
 
 export interface LocalCover extends LocalFile {
-  sha256: string
+  sha256: string;
 }
 
 export interface LocalPack {
-  folder: string
-  dir: string
-  meta: PackFile
-  hasPackFile: boolean
+  folder: string;
+  dir: string;
+  meta: PackFile;
+  hasPackFile: boolean;
   /** pack.json existe mais est inutilisable : on n'y touche pas. */
-  packFileError: string | null
-  cover: LocalCover | null
+  packFileError: string | null;
+  cover: LocalCover | null;
   /** Versions numérotées, de la plus ancienne à la plus récente. */
-  versions: LocalVersion[]
+  versions: LocalVersion[];
   /** Zips pas encore numérotés, du plus ancien au plus récent. */
-  pending: LocalZip[]
+  pending: LocalZip[];
   /** Mod : ses versions, de la plus ancienne à la plus récente (vide pour un modpack). */
-  contentVersions: LocalContentVersion[]
+  contentVersions: LocalContentVersion[];
   /** Mod : jars illisibles ou qui ne sont pas un mod. */
-  badJars: LocalJar[]
+  badJars: LocalJar[];
   /** Plus grand numéro trouvé dans les noms de fichiers (doublons compris). */
-  maxNumber: number
+  maxNumber: number;
   /** Erreurs qui bloquent la publication de ce modpack. */
-  errors: string[]
+  errors: string[];
 }
 
 export interface LocalWorkspace {
-  dir: string
-  exists: boolean
-  packs: LocalPack[]
-  strayZips: string[]
+  dir: string;
+  exists: boolean;
+  packs: LocalPack[];
+  strayZips: string[];
 }
 
 export function parseVersionNumber(fileName: string): number | null {
-  const match = NUMBERED_ZIP.exec(fileName)
-  const number = match ? Number(match[2]) : 0
-  return number >= 1 ? number : null
+  const match = NUMBERED_ZIP.exec(fileName);
+  const number = match ? Number(match[2]) : 0;
+  return number >= 1 ? number : null;
 }
 
 export function versionFileName(folder: string, number: number): string {
-  return `${folder}-v${number}.zip`
+  return `${folder}-v${number}.zip`;
 }
 
 export function nextVersionNumber(pack: LocalPack): number {
-  return Math.max(pack.meta.lastVersion, pack.maxNumber) + 1
+  return Math.max(pack.meta.lastVersion, pack.maxNumber) + 1;
 }
 
 function defaultPackFile(folder: string): PackFile {
-  const name = folder.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || folder
+  const name = folder.replace(/_+/g, ' ').replace(/\s+/g, ' ').trim() || folder;
   return {
     id: slugify(name).slice(0, 64).replace(/-+$/, '') || 'modpack',
     type: 'modpack',
@@ -149,53 +157,55 @@ function defaultPackFile(folder: string): PackFile {
     group: null,
     exclude: [],
     disabledMods: [],
-    keepPlayerConfigs: false
-  }
+    keepPlayerConfigs: false,
+  };
 }
 
 /** Mods désactivés valides et dédoublonnés (un même projet CurseForge, ou un même fichier, une seule fois). */
 export function normalizeDisabledMods(value: unknown): DisabledMod[] {
-  if (!Array.isArray(value)) return []
-  const seen = new Set<string>()
-  const mods: DisabledMod[] = []
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const mods: DisabledMod[] = [];
   for (const item of value as Array<Record<string, unknown>>) {
-    const file = typeof item?.file === 'string' ? item.file.trim() : ''
-    if (!file || /[\\/]/.test(file)) continue
-    const addonId = Number.isInteger(item.addonId) && (item.addonId as number) > 0 ? (item.addonId as number) : null
-    const key = addonId !== null ? `addon:${addonId}` : `file:${file.toLowerCase()}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim() : null
-    mods.push({ addonId, file, name })
+    const file = typeof item?.file === 'string' ? item.file.trim() : '';
+    if (!file || /[\\/]/.test(file)) continue;
+    const addonId = Number.isInteger(item.addonId) && (item.addonId as number) > 0 ? (item.addonId as number) : null;
+    const key = addonId !== null ? `addon:${addonId}` : `file:${file.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const name = typeof item.name === 'string' && item.name.trim() ? item.name.trim() : null;
+    mods.push({ addonId, file, name });
   }
-  return mods
+  return mods;
 }
 
 /** Réglages des versions lus dans pack.json (ou reçus de la fenêtre), remis au propre. */
 export function normalizePackSettings(data: Partial<Record<keyof PackSettings, unknown>>): PackSettings {
   return {
-    exclude: Array.isArray(data.exclude) ? normalizeExclusions(data.exclude.filter((e): e is string => typeof e === 'string')) : [],
+    exclude: Array.isArray(data.exclude)
+      ? normalizeExclusions(data.exclude.filter((e): e is string => typeof e === 'string'))
+      : [],
     disabledMods: normalizeDisabledMods(data.disabledMods),
-    keepPlayerConfigs: data.keepPlayerConfigs === true
-  }
+    keepPlayerConfigs: data.keepPlayerConfigs === true,
+  };
 }
 
 async function readPackFile(
   dir: string,
-  folder: string
+  folder: string,
 ): Promise<{ meta: PackFile; exists: boolean; error: string | null }> {
-  const defaults = defaultPackFile(folder)
-  let raw: string
+  const defaults = defaultPackFile(folder);
+  let raw: string;
   try {
-    raw = await readFile(join(dir, PACK_FILE), 'utf8')
+    raw = await readFile(join(dir, PACK_FILE), 'utf8');
   } catch {
-    return { meta: defaults, exists: false, error: null }
+    return { meta: defaults, exists: false, error: null };
   }
   try {
-    const data = JSON.parse(raw.replace(/^﻿/, '')) as Partial<PackFile>
-    const notes: Record<string, string> = {}
+    const data = JSON.parse(raw.replace(/^﻿/, '')) as Partial<PackFile>;
+    const notes: Record<string, string> = {};
     if (data.notes && typeof data.notes === 'object') {
-      for (const [key, value] of Object.entries(data.notes)) if (typeof value === 'string') notes[key] = value
+      for (const [key, value] of Object.entries(data.notes)) if (typeof value === 'string') notes[key] = value;
     }
     const meta: PackFile = {
       id: typeof data.id === 'string' && data.id ? data.id : defaults.id,
@@ -213,109 +223,152 @@ async function readPackFile(
       source: typeof data.source === 'string' && data.source.trim() ? data.source.trim() : null,
       minecraftVersions: normalizeMinecraftVersions(data.minecraftVersions),
       group: normalizeGroup(data.group),
-      ...normalizePackSettings(data)
-    }
+      ...normalizePackSettings(data),
+    };
     const error =
       data.type !== undefined && !isContentKind(data.type)
         ? `Type « ${String(data.type)} » inconnu dans pack.json (${CONTENT_KIND_IDS.join(', ')}).`
         : isValidModpackId(meta.id)
           ? null
-          : `Identifiant « ${meta.id} » invalide dans pack.json (lettres minuscules, chiffres et tirets).`
-    return { meta, exists: true, error }
+          : `Identifiant « ${meta.id} » invalide dans pack.json (lettres minuscules, chiffres et tirets).`;
+    return { meta, exists: true, error };
   } catch {
-    return { meta: defaults, exists: true, error: 'pack.json est illisible (JSON invalide) : corrige-le ou supprime-le.' }
+    return {
+      meta: defaults,
+      exists: true,
+      error: 'pack.json est illisible (JSON invalide) : corrige-le ou supprime-le.',
+    };
   }
 }
 
 export function normalizeProfileLink(value: unknown): PackProfileLink | null {
-  const link = value as Partial<PackProfileLink> | null | undefined
-  const name = typeof link?.name === 'string' ? link.name.trim() : ''
-  if (!name) return null
-  return { guid: typeof link?.guid === 'string' && link.guid.trim() ? link.guid.trim() : null, name }
+  const link = value as Partial<PackProfileLink> | null | undefined;
+  const name = typeof link?.name === 'string' ? link.name.trim() : '';
+  if (!name) return null;
+  return { guid: typeof link?.guid === 'string' && link.guid.trim() ? link.guid.trim() : null, name };
 }
 
 export function normalizeCurseForge(value: unknown): PackCurseForge | null {
-  const data = value as Partial<PackCurseForge> | null | undefined
-  const projectId = Number(data?.projectId)
-  if (!Number.isInteger(projectId) || projectId <= 0) return null
-  const files: Record<string, number> = {}
-  for (const [version, id] of Object.entries(data?.files ?? {})) if (Number.isInteger(id) && id > 0) files[version] = id
+  const data = value as Partial<PackCurseForge> | null | undefined;
+  const projectId = Number(data?.projectId);
+  if (!Number.isInteger(projectId) || projectId <= 0) return null;
+  const files: Record<string, number> = {};
+  for (const [version, id] of Object.entries(data?.files ?? {}))
+    if (Number.isInteger(id) && id > 0) files[version] = id;
   return {
     projectId,
     url: typeof data?.url === 'string' && /^https:\/\//.test(data.url) ? data.url : null,
-    overrides: Array.isArray(data?.overrides) ? normalizeExclusions(data.overrides.filter((o): o is string => typeof o === 'string')) : [],
-    files
-  }
+    overrides: Array.isArray(data?.overrides)
+      ? normalizeExclusions(data.overrides.filter((o): o is string => typeof o === 'string'))
+      : [],
+    files,
+  };
 }
 
 /** Nom de groupe du Studio : espaces resserrés, 64 caractères au plus ; vide ou invalide → aucun groupe. */
 export function normalizeGroup(value: unknown): string | null {
-  if (typeof value !== 'string') return null
-  const group = value.trim().replace(/\s+/g, ' ').slice(0, 64).trim()
-  return group || null
+  if (typeof value !== 'string') return null;
+  const group = value.trim().replace(/\s+/g, ' ').slice(0, 64).trim();
+  return group || null;
 }
 
 /** Versions de Minecraft données par le publieur (« 1.21.1 », « 26.3 »), dédoublonnées. */
 export function normalizeMinecraftVersions(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-  return [...new Set(value.filter((v): v is string => typeof v === 'string').map((v) => v.trim()).filter((v) => /^\d+(\.\d+)+$/.test(v)))]
+  if (!Array.isArray(value)) return [];
+  return [
+    ...new Set(
+      value
+        .filter((v): v is string => typeof v === 'string')
+        .map((v) => v.trim())
+        .filter((v) => /^\d+(\.\d+)+$/.test(v)),
+    ),
+  ];
 }
 
 export function normalizeModrinth(value: unknown): PackModrinth | null {
-  const data = value as Partial<PackModrinth> | null | undefined
-  if (typeof data?.projectId !== 'string' || !/^[A-Za-z0-9]{1,16}$/.test(data.projectId)) return null
-  const slug = typeof data.slug === 'string' && data.slug ? data.slug : data.projectId
-  const versions: Record<string, string> = {}
-  for (const [version, id] of Object.entries(data.versions ?? {})) if (typeof id === 'string' && id) versions[version] = id
+  const data = value as Partial<PackModrinth> | null | undefined;
+  if (typeof data?.projectId !== 'string' || !/^[A-Za-z0-9]{1,16}$/.test(data.projectId)) return null;
+  const slug = typeof data.slug === 'string' && data.slug ? data.slug : data.projectId;
+  const versions: Record<string, string> = {};
+  for (const [version, id] of Object.entries(data.versions ?? {}))
+    if (typeof id === 'string' && id) versions[version] = id;
   return {
     projectId: data.projectId,
     slug,
     url: typeof data.url === 'string' && /^https:\/\//.test(data.url) ? data.url : `https://modrinth.com/mod/${slug}`,
-    versions
-  }
+    versions,
+  };
 }
 
 export function normalizeHangar(value: unknown): PackHangar | null {
-  const data = value as Partial<PackHangar> | null | undefined
-  if (typeof data?.slug !== 'string' || !/^[A-Za-z0-9_.-]{1,64}$/.test(data.slug) || typeof data.owner !== 'string' || !data.owner) return null
+  const data = value as Partial<PackHangar> | null | undefined;
+  if (
+    typeof data?.slug !== 'string' ||
+    !/^[A-Za-z0-9_.-]{1,64}$/.test(data.slug) ||
+    typeof data.owner !== 'string' ||
+    !data.owner
+  )
+    return null;
   return {
     slug: data.slug,
     owner: data.owner,
-    url: typeof data.url === 'string' && /^https:\/\//.test(data.url) ? data.url : `https://hangar.papermc.io/${data.owner}/${data.slug}`,
-    versions: Array.isArray(data.versions) ? data.versions.filter((v): v is string => typeof v === 'string') : []
-  }
+    url:
+      typeof data.url === 'string' && /^https:\/\//.test(data.url)
+        ? data.url
+        : `https://hangar.papermc.io/${data.owner}/${data.slug}`,
+    versions: Array.isArray(data.versions) ? data.versions.filter((v): v is string => typeof v === 'string') : [],
+  };
 }
 
-const FREQUENCIES: UpdateFrequency[] = ['weekly', 'biweekly', 'monthly', 'manual', 'never']
+const FREQUENCIES: UpdateFrequency[] = ['weekly', 'biweekly', 'monthly', 'manual', 'never'];
 
 /** Réglages des mises à jour lus dans pack.json (ou reçus d'une commande), remis au propre. */
 export function normalizePackUpdates(value: unknown): PackUpdates {
-  const data = (value ?? {}) as Partial<Record<keyof PackUpdates, unknown>>
-  const pinned = new Map<number, string>()
+  const data = (value ?? {}) as Partial<Record<keyof PackUpdates, unknown>>;
+  const pinned = new Map<number, string>();
   for (const item of Array.isArray(data.pinned) ? (data.pinned as Array<Record<string, unknown>>) : []) {
-    const projectId = Number(item?.projectId)
-    if (!Number.isInteger(projectId) || projectId <= 0 || pinned.has(projectId)) continue
-    pinned.set(projectId, typeof item.name === 'string' && item.name.trim() ? item.name.trim() : `Projet ${projectId}`)
+    const projectId = Number(item?.projectId);
+    if (!Number.isInteger(projectId) || projectId <= 0 || pinned.has(projectId)) continue;
+    pinned.set(projectId, typeof item.name === 'string' && item.name.trim() ? item.name.trim() : `Projet ${projectId}`);
   }
   return {
-    frequency: FREQUENCIES.includes(data.frequency as UpdateFrequency) ? (data.frequency as UpdateFrequency) : DEFAULT_PACK_UPDATES.frequency,
+    frequency: FREQUENCIES.includes(data.frequency as UpdateFrequency)
+      ? (data.frequency as UpdateFrequency)
+      : DEFAULT_PACK_UPDATES.frequency,
     channel: data.channel === 'beta' ? 'beta' : 'release',
     pinned: [...pinned].map(([projectId, name]) => ({ projectId, name })),
-    autoPublish: data.autoPublish === true
-  }
+    autoPublish: data.autoPublish === true,
+  };
 }
 
 const isDefaultUpdates = (u: PackUpdates) =>
-  u.frequency === DEFAULT_PACK_UPDATES.frequency && u.channel === DEFAULT_PACK_UPDATES.channel && !u.pinned.length && !u.autoPublish
+  u.frequency === DEFAULT_PACK_UPDATES.frequency &&
+  u.channel === DEFAULT_PACK_UPDATES.channel &&
+  !u.pinned.length &&
+  !u.autoPublish;
 
 export async function writePackFile(dir: string, meta: PackFile): Promise<void> {
-  const { type, exclude, disabledMods, keepPlayerConfigs, profile, github, curseforge, modrinth, hangar, updates, source, minecraftVersions, group, ...info } =
-    meta
+  const {
+    type,
+    exclude,
+    disabledMods,
+    keepPlayerConfigs,
+    profile,
+    github,
+    curseforge,
+    modrinth,
+    hangar,
+    updates,
+    source,
+    minecraftVersions,
+    group,
+    ...info
+  } = meta;
   const notes = Object.fromEntries(
     Object.entries(meta.notes)
       .filter(([, text]) => text.trim())
-      .sort(([a], [b]) => Number(a) - Number(b))
-  )
+      .sort(([a], [b]) => Number(a) - Number(b)),
+  );
   await writeJsonAtomic(join(dir, PACK_FILE), {
     ...(type === 'modpack' ? {} : { type }),
     ...info,
@@ -331,31 +384,31 @@ export async function writePackFile(dir: string, meta: PackFile): Promise<void> 
     ...(isDefaultUpdates(updates) ? {} : { updates }),
     ...(exclude.length ? { exclude } : {}),
     ...(disabledMods.length ? { disabledMods } : {}),
-    ...(keepPlayerConfigs ? { keepPlayerConfigs } : {})
-  })
+    ...(keepPlayerConfigs ? { keepPlayerConfigs } : {}),
+  });
 }
 
 async function listFiles(dir: string): Promise<LocalFile[]> {
-  const files: LocalFile[] = []
+  const files: LocalFile[] = [];
   for (const entry of await readdir(dir, { withFileTypes: true }).catch(() => [])) {
-    if (!entry.isFile()) continue
-    const path = join(dir, entry.name)
-    const info = await stat(path).catch(() => null)
-    if (info) files.push({ fileName: entry.name, path, size: info.size, mtimeMs: info.mtimeMs })
+    if (!entry.isFile()) continue;
+    const path = join(dir, entry.name);
+    const info = await stat(path).catch(() => null);
+    if (info) files.push({ fileName: entry.name, path, size: info.size, mtimeMs: info.mtimeMs });
   }
-  return files
+  return files;
 }
 
 function findCover(files: LocalFile[]): LocalFile | null {
   for (const ext of COVER_EXTENSIONS) {
-    const file = files.find((f) => f.fileName.toLowerCase() === `cover${ext}`)
-    if (file) return file
+    const file = files.find((f) => f.fileName.toLowerCase() === `cover${ext}`);
+    if (file) return file;
   }
-  return null
+  return null;
 }
 
 const byDate = (a: LocalFile, b: LocalFile) =>
-  a.mtimeMs - b.mtimeMs || a.fileName.localeCompare(b.fileName, 'fr', { numeric: true })
+  a.mtimeMs - b.mtimeMs || a.fileName.localeCompare(b.fileName, 'fr', { numeric: true });
 
 async function analyze(
   folder: string,
@@ -363,20 +416,20 @@ async function analyze(
   cache: AnalysisCache | null,
   /** Modpack publié sur GitHub : un zip de plus de 2 Go n'y passerait pas. */
   github: boolean,
-  onAnalyze?: (fileName: string | null) => void
+  onAnalyze?: (fileName: string | null) => void,
 ): Promise<LocalZip> {
-  const tooLarge = githubSizeError(file.size, github)
-  if (tooLarge) return { ...file, analysis: null, error: tooLarge }
-  const key = AnalysisCache.key(folder, file.size, file.mtimeMs)
-  const cached = cache?.get(key)
-  if (cached) return { ...file, analysis: cached, error: null }
-  onAnalyze?.(file.fileName)
+  const tooLarge = githubSizeError(file.size, github);
+  if (tooLarge) return { ...file, analysis: null, error: tooLarge };
+  const key = AnalysisCache.key(folder, file.size, file.mtimeMs);
+  const cached = cache?.get(key);
+  if (cached) return { ...file, analysis: cached, error: null };
+  onAnalyze?.(file.fileName);
   try {
-    const analysis = await analyzeZip(file.path)
-    cache?.set(key, analysis)
-    return { ...file, analysis, error: null }
+    const analysis = await analyzeZip(file.path);
+    cache?.set(key, analysis);
+    return { ...file, analysis, error: null };
   } catch (err) {
-    return { ...file, analysis: null, error: describeError(err) }
+    return { ...file, analysis: null, error: describeError(err) };
   }
 }
 
@@ -384,23 +437,38 @@ async function scanPack(
   root: string,
   folder: string,
   cache: AnalysisCache | null,
-  onAnalyze?: (fileName: string | null) => void
+  onAnalyze?: (fileName: string | null) => void,
 ): Promise<LocalPack> {
-  const dir = join(root, folder)
-  const { meta, exists, error } = await readPackFile(dir, folder)
-  const errors = error ? [error] : []
-  const files = await listFiles(dir)
-  const coverFile = findCover(files)
-  const coverSha = coverFile ? await sha256File(coverFile.path).catch(() => null) : null
-  const cover = coverFile && coverSha ? { ...coverFile, sha256: coverSha } : null
+  const dir = join(root, folder);
+  const { meta, exists, error } = await readPackFile(dir, folder);
+  const errors = error ? [error] : [];
+  const files = await listFiles(dir);
+  const coverFile = findCover(files);
+  const coverSha = coverFile ? await sha256File(coverFile.path).catch(() => null) : null;
+  const cover = coverFile && coverSha ? { ...coverFile, sha256: coverSha } : null;
 
   // Type que le Studio ne sait pas encore lire : le dossier est montré, ses fichiers ne sont ni analysés ni publiés.
   if (!CONTENT_KINDS[meta.type].supported) {
-    errors.push(`Les ${CONTENT_KINDS[meta.type].plural} ne sont pas encore pris en charge par le Studio : ce dossier est ignoré.`)
-    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], contentVersions: [], badJars: [], maxNumber: 0, errors }
+    errors.push(
+      `Les ${CONTENT_KINDS[meta.type].plural} ne sont pas encore pris en charge par le Studio : ce dossier est ignoré.`,
+    );
+    return {
+      folder,
+      dir,
+      meta,
+      hasPackFile: exists,
+      packFileError: error,
+      cover,
+      versions: [],
+      pending: [],
+      contentVersions: [],
+      badJars: [],
+      maxNumber: 0,
+      errors,
+    };
   }
   if (meta.type === 'resourcepack' || meta.type === 'shader') {
-    const scan = await scanPackFolder(dir, meta.type, meta.minecraftVersions)
+    const scan = await scanPackFolder(dir, meta.type, meta.minecraftVersions);
     return {
       folder,
       dir,
@@ -410,42 +478,64 @@ async function scanPack(
       cover,
       versions: [],
       // Zips déposés à la main : le rangement les numérote, comme ceux d'un modpack.
-      pending: scan.pending.map((zip) => ({ fileName: zip.fileName, path: zip.path, size: zip.size, mtimeMs: zip.mtimeMs, analysis: null, error: zip.error })),
+      pending: scan.pending.map((zip) => ({
+        fileName: zip.fileName,
+        path: zip.path,
+        size: zip.size,
+        mtimeMs: zip.mtimeMs,
+        analysis: null,
+        error: zip.error,
+      })),
       contentVersions: scan.versions,
       badJars: scan.badFiles,
       maxNumber: scan.maxNumber,
-      errors: [...errors, ...scan.errors]
-    }
+      errors: [...errors, ...scan.errors],
+    };
   }
   if (meta.type === 'mod' || meta.type === 'plugin') {
-    const mods = await scanModFolder(dir, meta.type === 'plugin' ? analyzePluginJar : undefined)
+    const mods = await scanModFolder(dir, meta.type === 'plugin' ? analyzePluginJar : undefined);
     // Plugin : les versions de Minecraft données à la main remplacent l'api-version du jar.
     if (meta.type === 'plugin' && meta.minecraftVersions.length) {
-      for (const version of mods.versions) for (const file of version.files) file.analysis = { ...file.analysis, minecraftVersions: meta.minecraftVersions }
+      for (const version of mods.versions)
+        for (const file of version.files)
+          file.analysis = { ...file.analysis, minecraftVersions: meta.minecraftVersions };
     }
-    return { folder, dir, meta, hasPackFile: exists, packFileError: error, cover, versions: [], pending: [], contentVersions: mods.versions, badJars: mods.badJars, maxNumber: 0, errors: [...errors, ...mods.errors] }
+    return {
+      folder,
+      dir,
+      meta,
+      hasPackFile: exists,
+      packFileError: error,
+      cover,
+      versions: [],
+      pending: [],
+      contentVersions: mods.versions,
+      badJars: mods.badJars,
+      maxNumber: 0,
+      errors: [...errors, ...mods.errors],
+    };
   }
 
-  const byNumber = new Map<number, LocalFile[]>()
-  const unnumbered: LocalFile[] = []
+  const byNumber = new Map<number, LocalFile[]>();
+  const unnumbered: LocalFile[] = [];
   for (const file of files) {
-    if (!/\.zip$/i.test(file.fileName)) continue
-    const number = parseVersionNumber(file.fileName)
-    if (number === null) unnumbered.push(file)
-    else byNumber.set(number, [...(byNumber.get(number) ?? []), file])
+    if (!/\.zip$/i.test(file.fileName)) continue;
+    const number = parseVersionNumber(file.fileName);
+    if (number === null) unnumbered.push(file);
+    else byNumber.set(number, [...(byNumber.get(number) ?? []), file]);
   }
 
-  const versions: LocalVersion[] = []
+  const versions: LocalVersion[] = [];
   for (const [number, list] of [...byNumber].sort(([a], [b]) => a - b)) {
     if (list.length > 1) {
-      errors.push(`Plusieurs zips pour la v${number} (${list.map((f) => f.fileName).join(', ')}) : n’en garde qu’un.`)
-      continue
+      errors.push(`Plusieurs zips pour la v${number} (${list.map((f) => f.fileName).join(', ')}) : n’en garde qu’un.`);
+      continue;
     }
-    versions.push({ ...(await analyze(folder, list[0], cache, meta.github, onAnalyze)), number })
+    versions.push({ ...(await analyze(folder, list[0], cache, meta.github, onAnalyze)), number });
   }
   // Analysés dès maintenant : le rangement écarte les zips invalides, et l'empreinte reste en cache après renommage.
-  const pending: LocalZip[] = []
-  for (const file of unnumbered.sort(byDate)) pending.push(await analyze(folder, file, cache, meta.github, onAnalyze))
+  const pending: LocalZip[] = [];
+  for (const file of unnumbered.sort(byDate)) pending.push(await analyze(folder, file, cache, meta.github, onAnalyze));
 
   return {
     folder,
@@ -459,59 +549,60 @@ async function scanPack(
     contentVersions: [],
     badJars: [],
     maxNumber: Math.max(0, ...byNumber.keys()),
-    errors
-  }
+    errors,
+  };
 }
 
 /** Lit le dossier des contenus : un sous-dossier par contenu, ses versions, son image et son pack.json. */
 export async function scanWorkspace(
   dir: string,
   cache: AnalysisCache | null,
-  onAnalyze?: (fileName: string | null) => void
+  onAnalyze?: (fileName: string | null) => void,
 ): Promise<LocalWorkspace> {
-  let entries
+  let entries;
   try {
-    entries = await readdir(dir, { withFileTypes: true })
+    entries = await readdir(dir, { withFileTypes: true });
   } catch {
-    return { dir, exists: false, packs: [], strayZips: [] }
+    return { dir, exists: false, packs: [], strayZips: [] };
   }
 
-  cache?.beginScan()
-  const packs: LocalPack[] = []
-  const strayZips: string[] = []
-  const sorted = entries.sort((a, b) => a.name.localeCompare(b.name, 'fr', { numeric: true }))
+  cache?.beginScan();
+  const packs: LocalPack[] = [];
+  const strayZips: string[] = [];
+  const sorted = entries.sort((a, b) => a.name.localeCompare(b.name, 'fr', { numeric: true }));
   try {
     for (const entry of sorted) {
-      if (entry.isDirectory() && !entry.name.startsWith('.')) packs.push(await scanPack(dir, entry.name, cache, onAnalyze))
-      else if (entry.isFile() && /\.zip$/i.test(entry.name)) strayZips.push(entry.name)
+      if (entry.isDirectory() && !entry.name.startsWith('.'))
+        packs.push(await scanPack(dir, entry.name, cache, onAnalyze));
+      else if (entry.isFile() && /\.zip$/i.test(entry.name)) strayZips.push(entry.name);
     }
   } finally {
-    onAnalyze?.(null)
+    onAnalyze?.(null);
   }
-  await cache?.endScan()
+  await cache?.endScan();
 
   // Deux dossiers ne peuvent pas publier sous le même identifiant.
-  const byId = new Map<string, LocalPack[]>()
-  for (const pack of packs) byId.set(pack.meta.id, [...(byId.get(pack.meta.id) ?? []), pack])
+  const byId = new Map<string, LocalPack[]>();
+  for (const pack of packs) byId.set(pack.meta.id, [...(byId.get(pack.meta.id) ?? []), pack]);
   for (const [id, list] of byId) {
-    if (list.length < 2) continue
+    if (list.length < 2) continue;
     for (const pack of list) {
-      const others = list.filter((p) => p !== pack).map((p) => p.folder)
-      pack.errors.push(`Identifiant « ${id} » déjà utilisé par ${others.join(', ')} : change « id » dans pack.json.`)
+      const others = list.filter((p) => p !== pack).map((p) => p.folder);
+      pack.errors.push(`Identifiant « ${id} » déjà utilisé par ${others.join(', ')} : change « id » dans pack.json.`);
     }
   }
 
-  return { dir, exists: true, packs, strayZips }
+  return { dir, exists: true, packs, strayZips };
 }
 
 // ---------------------------------------------------------------------------------------------
 // Rangement
 
 function orderPending(pending: LocalZip[], order: string[] | undefined): LocalZip[] {
-  if (!order) return pending
-  const byName = new Map(pending.map((f) => [f.fileName, f]))
-  const chosen = order.map((name) => byName.get(name)).filter((f): f is LocalZip => Boolean(f))
-  return [...chosen, ...pending.filter((f) => !chosen.includes(f))]
+  if (!order) return pending;
+  const byName = new Map(pending.map((f) => [f.fileName, f]));
+  const chosen = order.map((name) => byName.get(name)).filter((f): f is LocalZip => Boolean(f));
+  return [...chosen, ...pending.filter((f) => !chosen.includes(f))];
 }
 
 /**
@@ -519,63 +610,70 @@ function orderPending(pending: LocalZip[], order: string[] | undefined): LocalZi
  * sauf ordre choisi), et renomme au nom du dossier les zips déjà numérotés qui ne le sont pas.
  */
 export function planRanger(workspace: LocalWorkspace, orders: RangerOrders = {}): RangerPlan {
-  const packs: RangerPackPlan[] = []
+  const packs: RangerPackPlan[] = [];
   for (const pack of workspace.packs) {
     if (pack.packFileError) {
-      if (pack.pending.length) packs.push({ folder: pack.folder, name: pack.meta.name, renames: [], errors: [pack.packFileError] })
-      continue
+      if (pack.pending.length)
+        packs.push({ folder: pack.folder, name: pack.meta.name, renames: [], errors: [pack.packFileError] });
+      continue;
     }
-    const plan: RangerPackPlan = { folder: pack.folder, name: pack.meta.name, renames: [], errors: [] }
+    const plan: RangerPackPlan = { folder: pack.folder, name: pack.meta.name, renames: [], errors: [] };
 
     for (const version of pack.versions) {
-      const wanted = versionFileName(pack.folder, version.number)
+      const wanted = versionFileName(pack.folder, version.number);
       if (version.fileName !== wanted) {
-        plan.renames.push({ from: version.fileName, to: wanted, number: version.number, kind: 'rename', warning: null })
+        plan.renames.push({
+          from: version.fileName,
+          to: wanted,
+          number: version.number,
+          kind: 'rename',
+          warning: null,
+        });
       }
     }
 
-    const newest = pack.versions.reduce<LocalVersion | null>((a, b) => (!a || b.mtimeMs > a.mtimeMs ? b : a), null)
-    let next = nextVersionNumber(pack)
+    const newest = pack.versions.reduce<LocalVersion | null>((a, b) => (!a || b.mtimeMs > a.mtimeMs ? b : a), null);
+    let next = nextVersionNumber(pack);
     for (const file of orderPending(pack.pending, orders[pack.folder])) {
       if (file.error) {
-        plan.errors.push(`${file.fileName} n’est pas rangé : ${file.error}`)
-        continue
+        plan.errors.push(`${file.fileName} n’est pas rangé : ${file.error}`);
+        continue;
       }
-      const number = next++
-      const older = newest && file.mtimeMs < newest.mtimeMs
+      const number = next++;
+      const older = newest && file.mtimeMs < newest.mtimeMs;
       plan.renames.push({
         from: file.fileName,
         to: versionFileName(pack.folder, number),
         number,
         kind: 'new',
-        warning: older ? `Plus ancien que la v${newest.number} : il deviendra quand même la v${number}.` : null
-      })
+        warning: older ? `Plus ancien que la v${newest.number} : il deviendra quand même la v${number}.` : null,
+      });
     }
-    if (plan.renames.length || plan.errors.length) packs.push(plan)
+    if (plan.renames.length || plan.errors.length) packs.push(plan);
   }
-  return { packs, total: packs.reduce((sum, p) => sum + p.renames.length, 0) }
+  return { packs, total: packs.reduce((sum, p) => sum + p.renames.length, 0) };
 }
 
 export async function applyRanger(workspace: LocalWorkspace, plan: RangerPlan): Promise<number> {
-  let renamed = 0
+  let renamed = 0;
   for (const packPlan of plan.packs) {
-    const pack = workspace.packs.find((p) => p.folder === packPlan.folder)
-    if (!pack || pack.packFileError || packPlan.renames.length === 0) continue
+    const pack = workspace.packs.find((p) => p.folder === packPlan.folder);
+    if (!pack || pack.packFileError || packPlan.renames.length === 0) continue;
     for (const rename of packPlan.renames) {
-      const to = join(pack.dir, rename.to)
-      const caseOnly = rename.from.toLowerCase() === rename.to.toLowerCase()
-      if (!caseOnly && (await pathExists(to))) throw new StudioError(`${pack.folder}\\${rename.to} existe déjà.`)
+      const to = join(pack.dir, rename.to);
+      const caseOnly = rename.from.toLowerCase() === rename.to.toLowerCase();
+      if (!caseOnly && (await pathExists(to))) throw new StudioError(`${pack.folder}\\${rename.to} existe déjà.`);
       try {
-        await renameWithRetry(join(pack.dir, rename.from), to)
+        await renameWithRetry(join(pack.dir, rename.from), to);
       } catch (err) {
-        throw new StudioError(`Impossible de renommer ${rename.from} : ${describeError(err)}`)
+        throw new StudioError(`Impossible de renommer ${rename.from} : ${describeError(err)}`);
       }
-      renamed++
+      renamed++;
     }
-    const highest = Math.max(pack.meta.lastVersion, pack.maxNumber, ...packPlan.renames.map((r) => r.number))
-    await writePackFile(pack.dir, { ...pack.meta, lastVersion: highest })
+    const highest = Math.max(pack.meta.lastVersion, pack.maxNumber, ...packPlan.renames.map((r) => r.number));
+    await writePackFile(pack.dir, { ...pack.meta, lastVersion: highest });
   }
-  return renamed
+  return renamed;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -583,16 +681,18 @@ export async function applyRanger(workspace: LocalWorkspace, plan: RangerPlan): 
 
 /** Lit un modpack sans analyser ses zips (pour modifier ses infos). */
 export async function loadPackMeta(root: string, folder: string): Promise<{ dir: string; meta: PackFile }> {
-  const dir = resolve(root, folder)
-  if (dirname(dir) !== resolve(root) || !(await pathExists(dir))) throw new StudioError(`Le dossier ${folder} est introuvable.`)
-  const { meta, error, exists } = await readPackFile(dir, folder)
-  if (exists && error) throw new StudioError(error)
-  return { dir, meta }
+  const dir = resolve(root, folder);
+  if (dirname(dir) !== resolve(root) || !(await pathExists(dir)))
+    throw new StudioError(`Le dossier ${folder} est introuvable.`);
+  const { meta, error, exists } = await readPackFile(dir, folder);
+  if (exists && error) throw new StudioError(error);
+  return { dir, meta };
 }
 
 /** Refuse une opération propre aux modpacks (profil source, zips d'instance, CurseForge…) sur un autre contenu. */
 export function requireModpack(meta: PackFile, folder: string): void {
-  if (meta.type !== 'modpack') throw new StudioError(`${folder} contient des ${CONTENT_KINDS[meta.type].plural}, pas un modpack.`)
+  if (meta.type !== 'modpack')
+    throw new StudioError(`${folder} contient des ${CONTENT_KINDS[meta.type].plural}, pas un modpack.`);
 }
 
 function folderNameFor(name: string): string {
@@ -600,78 +700,80 @@ function folderNameFor(name: string): string {
     .replace(/[<>:"/\\|?*\u0000-\u001f]/g, '')
     .replace(/[. ]+$/, '')
     .trim()
-    .replace(/\s+/g, '_')
+    .replace(/\s+/g, '_');
 }
 
 /** Ce qu'un nouveau dossier reçoit d'emblée (un mod : son type, l'identifiant de son jar, son dossier lié). */
-export type NewPackInit = Partial<Pick<PackFile, 'type' | 'id' | 'description' | 'source'>>
+export type NewPackInit = Partial<Pick<PackFile, 'type' | 'id' | 'description' | 'source'>>;
 
 export async function createPack(workspace: LocalWorkspace, name: string, init: NewPackInit = {}): Promise<string> {
-  const display = name.trim().replace(/\s+/g, ' ')
-  const folder = folderNameFor(display)
-  const kind = CONTENT_KINDS[init.type ?? 'modpack'].label
-  if (!folder || folder.startsWith('.')) throw new StudioError(`Donne un nom au ${kind}.`)
-  const dir = join(workspace.dir, folder)
-  if (await pathExists(dir)) throw new StudioError(`Le dossier ${folder} existe déjà.`)
+  const display = name.trim().replace(/\s+/g, ' ');
+  const folder = folderNameFor(display);
+  const kind = CONTENT_KINDS[init.type ?? 'modpack'].label;
+  if (!folder || folder.startsWith('.')) throw new StudioError(`Donne un nom au ${kind}.`);
+  const dir = join(workspace.dir, folder);
+  if (await pathExists(dir)) throw new StudioError(`Le dossier ${folder} existe déjà.`);
 
-  const taken = new Set(workspace.packs.map((p) => p.meta.id))
-  const wanted = init.id && isValidModpackId(init.id) ? init.id : null
-  const base = wanted ?? defaultPackFile(folder).id
-  let id = base
-  for (let i = 2; taken.has(id); i++) id = `${base.slice(0, 60)}-${i}`
+  const taken = new Set(workspace.packs.map((p) => p.meta.id));
+  const wanted = init.id && isValidModpackId(init.id) ? init.id : null;
+  const base = wanted ?? defaultPackFile(folder).id;
+  let id = base;
+  for (let i = 2; taken.has(id); i++) id = `${base.slice(0, 60)}-${i}`;
 
-  await mkdir(dir, { recursive: true })
-  await writePackFile(dir, { ...defaultPackFile(folder), ...init, id, name: display })
-  return folder
+  await mkdir(dir, { recursive: true });
+  await writePackFile(dir, { ...defaultPackFile(folder), ...init, id, name: display });
+  return folder;
 }
 
 async function removeCoverFiles(dir: string): Promise<void> {
   for (const file of await listFiles(dir)) {
-    if (COVER_EXTENSIONS.some((ext) => file.fileName.toLowerCase() === `cover${ext}`)) await rm(file.path, { force: true })
+    if (COVER_EXTENSIONS.some((ext) => file.fileName.toLowerCase() === `cover${ext}`))
+      await rm(file.path, { force: true });
   }
 }
 
 export async function setCover(dir: string, source: string | null): Promise<void> {
   if (source) {
-    const ext = extname(source).toLowerCase()
-    if (!COVER_EXTENSIONS.includes(ext)) throw new StudioError('Image non prise en charge : utilise un PNG, un JPG ou un WebP.')
-    const target = join(dir, `cover${ext}`)
-    if (resolve(source).toLowerCase() === target.toLowerCase()) return
-    await removeCoverFiles(dir)
-    await copyFile(source, target)
+    const ext = extname(source).toLowerCase();
+    if (!COVER_EXTENSIONS.includes(ext))
+      throw new StudioError('Image non prise en charge : utilise un PNG, un JPG ou un WebP.');
+    const target = join(dir, `cover${ext}`);
+    if (resolve(source).toLowerCase() === target.toLowerCase()) return;
+    await removeCoverFiles(dir);
+    await copyFile(source, target);
   } else {
-    await removeCoverFiles(dir)
+    await removeCoverFiles(dir);
   }
 }
 
 async function uniqueTarget(dir: string, fileName: string): Promise<string> {
-  const ext = extname(fileName)
-  const stem = basename(fileName, ext)
-  let candidate = join(dir, fileName)
-  for (let i = 2; await pathExists(candidate); i++) candidate = join(dir, `${stem} (${i})${ext}`)
-  return candidate
+  const ext = extname(fileName);
+  const stem = basename(fileName, ext);
+  let candidate = join(dir, fileName);
+  for (let i = 2; await pathExists(candidate); i++) candidate = join(dir, `${stem} (${i})${ext}`);
+  return candidate;
 }
 
 /** Copie dans le dossier du modpack les zips (et l'image) glissés dans le studio. */
 export async function importFiles(
   dir: string,
-  paths: string[]
+  paths: string[],
 ): Promise<{ zips: number; cover: boolean; ignored: string[] }> {
-  let zips = 0
-  let cover: string | null = null
-  const ignored: string[] = []
+  let zips = 0;
+  let cover: string | null = null;
+  const ignored: string[] = [];
   for (const path of paths) {
-    const ext = extname(path).toLowerCase()
+    const ext = extname(path).toLowerCase();
     if (ext === '.zip') {
-      if (resolve(dirname(path)).toLowerCase() === resolve(dir).toLowerCase()) continue
-      await copyFile(path, await uniqueTarget(dir, basename(path)))
-      zips++
+      if (resolve(dirname(path)).toLowerCase() === resolve(dir).toLowerCase()) continue;
+      await copyFile(path, await uniqueTarget(dir, basename(path)));
+      zips++;
     } else if (COVER_EXTENSIONS.includes(ext)) {
-      cover = path
+      cover = path;
     } else {
-      ignored.push(basename(path))
+      ignored.push(basename(path));
     }
   }
-  if (cover) await setCover(dir, cover)
-  return { zips, cover: cover !== null, ignored }
+  if (cover) await setCover(dir, cover);
+  return { zips, cover: cover !== null, ignored };
 }

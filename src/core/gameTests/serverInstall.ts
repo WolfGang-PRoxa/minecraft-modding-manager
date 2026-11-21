@@ -1,52 +1,52 @@
 // Serveur Minecraft dédié pour tester un profil : installé une fois par chargeur (Fabric, Forge, NeoForge) dans un
 // dossier de cache, avec ses bibliothèques, puis réutilisé à chaque test. Seuls les outils officiels des chargeurs
 // sont utilisés (lanceur de serveur Fabric, installeurs Forge et NeoForge en mode serveur).
-import { spawn } from 'node:child_process'
-import { createHash } from 'node:crypto'
-import { createWriteStream } from 'node:fs'
-import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import { pathExists } from '../fsutil'
-import { StudioError } from '../studio/analyze'
+import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { createWriteStream } from 'node:fs';
+import { mkdir, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { pathExists } from '../fsutil';
+import { StudioError } from '../studio/analyze';
 
 export interface LoaderSpec {
-  kind: 'fabric' | 'forge' | 'neoforge'
+  kind: 'fabric' | 'forge' | 'neoforge';
   /** Version du chargeur (« 0.19.5 », « 47.4.18 », « 21.1.215 »). */
-  version: string
-  minecraftVersion: string
+  version: string;
+  minecraftVersion: string;
 }
 
 /** Le chargeur d'un profil d'après ce qu'écrit CurseForge (« forge-47.4.18 », « fabric-0.19.5-26.3 »…). */
 export function parseLoader(modLoader: string | null, minecraftVersion: string): LoaderSpec | null {
-  const match = /^(neoforge|forge|fabric)-([^-]+)/i.exec(modLoader ?? '')
-  if (!match) return null
-  return { kind: match[1].toLowerCase() as LoaderSpec['kind'], version: match[2], minecraftVersion }
+  const match = /^(neoforge|forge|fabric)-([^-]+)/i.exec(modLoader ?? '');
+  if (!match) return null;
+  return { kind: match[1].toLowerCase() as LoaderSpec['kind'], version: match[2], minecraftVersion };
 }
 
 /** Nom du dossier de cache d'un serveur. */
-export const serverKey = (loader: LoaderSpec) => `${loader.kind}-${loader.minecraftVersion}-${loader.version}`
+export const serverKey = (loader: LoaderSpec) => `${loader.kind}-${loader.minecraftVersion}-${loader.version}`;
 
-const INSTALLED_MARK = '.mpm-installed'
+const INSTALLED_MARK = '.mpm-installed';
 
 async function get(url: string, timeoutMs: number): Promise<Response> {
-  let res: Response
+  let res: Response;
   try {
-    res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) })
+    res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
   } catch {
-    throw new StudioError(`Téléchargement impossible (${new URL(url).host}) : vérifie ta connexion internet.`)
+    throw new StudioError(`Téléchargement impossible (${new URL(url).host}) : vérifie ta connexion internet.`);
   }
-  if (!res.ok || !res.body) throw new StudioError(`Téléchargement refusé (${res.status}) : ${url}`)
-  return res
+  if (!res.ok || !res.body) throw new StudioError(`Téléchargement refusé (${res.status}) : ${url}`);
+  return res;
 }
 
 /** Empreinte SHA-256 publiée à côté d'un fichier (`<fichier>.sha256`), comme le font les dépôts de Forge et NeoForge. */
 async function publishedSha256(url: string): Promise<string> {
-  const text = await (await get(`${url}.sha256`, 30_000)).text()
-  const hash = /^\s*([0-9a-f]{64})\b/i.exec(text)?.[1]
-  if (!hash) throw new StudioError(`Empreinte illisible pour ${url.split('/').pop()} : installation refusée.`)
-  return hash.toLowerCase()
+  const text = await (await get(`${url}.sha256`, 30_000)).text();
+  const hash = /^\s*([0-9a-f]{64})\b/i.exec(text)?.[1];
+  if (!hash) throw new StudioError(`Empreinte illisible pour ${url.split('/').pop()} : installation refusée.`);
+  return hash.toLowerCase();
 }
 
 /**
@@ -54,100 +54,115 @@ async function publishedSha256(url: string): Promise<string> {
  * d'empreinte publiée : seul le HTTPS le protège.
  */
 async function download(url: string, destination: string, sha256?: string): Promise<void> {
-  const res = await get(url, 300_000)
-  const part = `${destination}.part`
-  const hash = createHash('sha256')
+  const res = await get(url, 300_000);
+  const part = `${destination}.part`;
+  const hash = createHash('sha256');
   try {
     await pipeline(
       Readable.fromWeb(res.body as never),
       async function* (source) {
         for await (const chunk of source) {
-          hash.update(chunk as Buffer)
-          yield chunk
+          hash.update(chunk as Buffer);
+          yield chunk;
         }
       },
-      createWriteStream(part)
-    )
+      createWriteStream(part),
+    );
     if (sha256 && hash.digest('hex') !== sha256) {
-      throw new StudioError(`${url.split('/').pop()} ne correspond pas à l’empreinte publiée : installation refusée.`)
+      throw new StudioError(`${url.split('/').pop()} ne correspond pas à l’empreinte publiée : installation refusée.`);
     }
-    await rename(part, destination)
+    await rename(part, destination);
   } catch (err) {
-    await rm(part, { force: true })
-    throw err
+    await rm(part, { force: true });
+    throw err;
   }
 }
 
 /** Lance une commande et attend sa fin ; renvoie la fin de sa sortie pour expliquer un échec. */
 function run(java: string, args: string[], cwd: string): Promise<{ code: number | null; tail: string }> {
   return new Promise((resolve, reject) => {
-    const child = spawn(java, args, { cwd, windowsHide: true })
-    let tail = ''
-    const keep = (chunk: Buffer) => (tail = (tail + chunk.toString()).slice(-4000))
-    child.stdout.on('data', keep)
-    child.stderr.on('data', keep)
-    child.on('error', reject)
-    child.on('close', (code) => resolve({ code, tail }))
-  })
+    const child = spawn(java, args, { cwd, windowsHide: true });
+    let tail = '';
+    const keep = (chunk: Buffer) => (tail = (tail + chunk.toString()).slice(-4000));
+    child.stdout.on('data', keep);
+    child.stderr.on('data', keep);
+    child.on('error', reject);
+    child.on('close', (code) => resolve({ code, tail }));
+  });
 }
 
 async function latestFabricInstaller(): Promise<string> {
-  const res = await fetch('https://meta.fabricmc.net/v2/versions/installer', { signal: AbortSignal.timeout(30_000) }).catch(() => null)
-  const list = res?.ok ? ((await res.json()) as Array<{ version: string; stable: boolean }>) : []
-  const stable = list.find((i) => i.stable) ?? list[0]
-  if (!stable) throw new StudioError('Impossible de lire les versions du lanceur Fabric (meta.fabricmc.net).')
-  return stable.version
+  const res = await fetch('https://meta.fabricmc.net/v2/versions/installer', {
+    signal: AbortSignal.timeout(30_000),
+  }).catch(() => null);
+  const list = res?.ok ? ((await res.json()) as Array<{ version: string; stable: boolean }>) : [];
+  const stable = list.find((i) => i.stable) ?? list[0];
+  if (!stable) throw new StudioError('Impossible de lire les versions du lanceur Fabric (meta.fabricmc.net).');
+  return stable.version;
 }
 
 /** Ce qu'il faut passer à Java pour démarrer le serveur, une fois installé (sans la mémoire). */
 export interface ServerLaunch {
-  dir: string
-  args: string[]
+  dir: string;
+  args: string[];
 }
 
 async function argsFile(dir: string, path: string[]): Promise<string[]> {
-  const file = join(dir, 'libraries', ...path, 'win_args.txt')
-  if (!(await pathExists(file))) throw new StudioError('Installation du serveur incomplète (win_args.txt introuvable).')
-  return [`@${join('libraries', ...path, 'win_args.txt')}`, 'nogui']
+  const file = join(dir, 'libraries', ...path, 'win_args.txt');
+  if (!(await pathExists(file)))
+    throw new StudioError('Installation du serveur incomplète (win_args.txt introuvable).');
+  return [`@${join('libraries', ...path, 'win_args.txt')}`, 'nogui'];
 }
 
 /** Installe (une fois) le serveur du chargeur et dit comment le démarrer. */
-export async function ensureServer(cacheDir: string, loader: LoaderSpec, java: string, onStep: (text: string) => void): Promise<ServerLaunch> {
-  const dir = join(cacheDir, serverKey(loader))
-  const installed = await pathExists(join(dir, INSTALLED_MARK))
-  await mkdir(dir, { recursive: true })
-  const { kind, version, minecraftVersion: mc } = loader
+export async function ensureServer(
+  cacheDir: string,
+  loader: LoaderSpec,
+  java: string,
+  onStep: (text: string) => void,
+): Promise<ServerLaunch> {
+  const dir = join(cacheDir, serverKey(loader));
+  const installed = await pathExists(join(dir, INSTALLED_MARK));
+  await mkdir(dir, { recursive: true });
+  const { kind, version, minecraftVersion: mc } = loader;
 
   if (kind === 'fabric') {
-    const jar = join(dir, 'fabric-server-launch.jar')
+    const jar = join(dir, 'fabric-server-launch.jar');
     if (!installed) {
-      onStep('Téléchargement du lanceur de serveur Fabric')
-      const installer = await latestFabricInstaller()
-      await download(`https://meta.fabricmc.net/v2/versions/loader/${mc}/${version}/${installer}/server/jar`, jar)
-      await writeFile(join(dir, INSTALLED_MARK), new Date().toISOString())
+      onStep('Téléchargement du lanceur de serveur Fabric');
+      const installer = await latestFabricInstaller();
+      await download(`https://meta.fabricmc.net/v2/versions/loader/${mc}/${version}/${installer}/server/jar`, jar);
+      await writeFile(join(dir, INSTALLED_MARK), new Date().toISOString());
     }
     // Au premier démarrage, le lanceur télécharge lui-même le serveur de Minecraft et ses bibliothèques.
-    return { dir, args: ['-jar', 'fabric-server-launch.jar', 'nogui'] }
+    return { dir, args: ['-jar', 'fabric-server-launch.jar', 'nogui'] };
   }
 
   const [group, name, full] =
     kind === 'forge'
       ? ['https://maven.minecraftforge.net/net/minecraftforge/forge', 'forge', `${mc}-${version}`]
-      : ['https://maven.neoforged.net/releases/net/neoforged/neoforge', 'neoforge', version]
-  const libraryPath = kind === 'forge' ? ['net', 'minecraftforge', 'forge', full] : ['net', 'neoforged', 'neoforge', full]
+      : ['https://maven.neoforged.net/releases/net/neoforged/neoforge', 'neoforge', version];
+  const libraryPath =
+    kind === 'forge' ? ['net', 'minecraftforge', 'forge', full] : ['net', 'neoforged', 'neoforge', full];
   if (!installed) {
-    onStep(`Installation du serveur ${kind === 'forge' ? 'Forge' : 'NeoForge'} ${version} (une seule fois)`)
-    const installer = join(dir, 'installer.jar')
-    const url = `${group}/${full}/${name}-${full}-installer.jar`
-    await download(url, installer, await publishedSha256(url))
-    const { code, tail } = await run(java, ['-jar', 'installer.jar', '--installServer'], dir)
-    await rm(installer, { force: true })
-    if (code !== 0) throw new StudioError(`L’installeur du serveur a échoué (code ${code}) : ${tail.trim().split('\n').slice(-3).join(' ')}`)
-    await writeFile(join(dir, INSTALLED_MARK), new Date().toISOString())
+    onStep(`Installation du serveur ${kind === 'forge' ? 'Forge' : 'NeoForge'} ${version} (une seule fois)`);
+    const installer = join(dir, 'installer.jar');
+    const url = `${group}/${full}/${name}-${full}-installer.jar`;
+    await download(url, installer, await publishedSha256(url));
+    const { code, tail } = await run(java, ['-jar', 'installer.jar', '--installServer'], dir);
+    await rm(installer, { force: true });
+    if (code !== 0)
+      throw new StudioError(
+        `L’installeur du serveur a échoué (code ${code}) : ${tail.trim().split('\n').slice(-3).join(' ')}`,
+      );
+    await writeFile(join(dir, INSTALLED_MARK), new Date().toISOString());
   }
-  if (await pathExists(join(dir, 'libraries', ...libraryPath, 'win_args.txt'))) return { dir, args: await argsFile(dir, libraryPath) }
+  if (await pathExists(join(dir, 'libraries', ...libraryPath, 'win_args.txt')))
+    return { dir, args: await argsFile(dir, libraryPath) };
   // Avant Minecraft 1.17, Forge s'installe en un jar à lancer directement.
-  const universal = (await readdir(dir)).find((f) => new RegExp(`^${name}-.*\\.jar$`, 'i').test(f) && !/installer/i.test(f))
-  if (!universal) throw new StudioError('Installation du serveur incomplète : jar du serveur introuvable.')
-  return { dir, args: ['-jar', universal, 'nogui'] }
+  const universal = (await readdir(dir)).find(
+    (f) => new RegExp(`^${name}-.*\\.jar$`, 'i').test(f) && !/installer/i.test(f),
+  );
+  if (!universal) throw new StudioError('Installation du serveur incomplète : jar du serveur introuvable.');
+  return { dir, args: ['-jar', universal, 'nogui'] };
 }

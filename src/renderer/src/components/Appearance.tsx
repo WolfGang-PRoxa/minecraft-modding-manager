@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { Check, Copy, Palette, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react'
+import { useState, type ReactNode } from 'react';
+import { Check, Copy, Palette, Pencil, Plus, Trash2, TriangleAlert } from 'lucide-react';
 import {
   CORNER_LABELS,
   FONT_LABELS,
@@ -14,31 +14,35 @@ import {
   type Corners,
   type DisplayFont,
   type Theme,
-  type ThemeColors
-} from '../../../shared/appearance'
-import { themePreviewStyle, themePreviewTone } from '../lib/appearance'
-import { Modal, TextInput } from '../studio/Modal'
-import { useStore } from '../store'
-import { Button } from './Button'
-import { Toggle } from './Toggle'
+  type ThemeColors,
+} from '../../../shared/appearance';
+import { themePreviewStyle, themePreviewTone } from '../lib/appearance';
+import { Modal, TextInput } from '../studio/Modal';
+import { useStore } from '../store';
+import { Button } from './Button';
+import { Toggle } from './Toggle';
 
 function Label({ children }: { children: ReactNode }) {
-  return <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">{children}</span>
+  return <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">{children}</span>;
 }
 
 function Segmented<T extends string | number>({
   value,
   options,
   onChange,
-  label
+  label,
 }: {
-  value: T
-  options: { value: T; label: ReactNode }[]
-  onChange: (value: T) => void
-  label: string
+  value: T;
+  options: { value: T; label: ReactNode }[];
+  onChange: (value: T) => void;
+  label: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="inline-flex flex-wrap rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-tint/[0.06]">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="inline-flex flex-wrap rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-tint/[0.06]"
+    >
       {options.map((option) => (
         <button
           key={String(option.value)}
@@ -54,7 +58,7 @@ function Segmented<T extends string | number>({
         </button>
       ))}
     </div>
-  )
+  );
 }
 
 /** Vignette d'un style, dessinée avec ses propres couleurs. */
@@ -67,7 +71,11 @@ function ThemeSwatch({ theme, selected, onSelect }: { theme: Theme; selected: bo
       title={theme.name}
       className={`group relative rounded-2xl p-1 text-left transition ${selected ? 'ring-2 ring-grass-400' : 'ring-1 ring-tint/[0.06] hover:ring-tint/20'}`}
     >
-      <div style={themePreviewStyle(theme)} data-tone={themePreviewTone(theme)} className="overflow-hidden rounded-xl bg-ink-900">
+      <div
+        style={themePreviewStyle(theme)}
+        data-tone={themePreviewTone(theme)}
+        className="overflow-hidden rounded-xl bg-ink-900"
+      >
         <div className="flex items-center gap-1 bg-ink-950 px-2.5 py-1.5">
           <span className="size-1.5 rounded-full bg-ink-600" />
           <span className="size-1.5 rounded-full bg-ink-600" />
@@ -89,36 +97,45 @@ function ThemeSwatch({ theme, selected, onSelect }: { theme: Theme; selected: bo
         </div>
       </div>
     </button>
-  )
+  );
 }
 
 /** Paramètres → Apparence : style de couleurs et taille de l'interface. */
 export function AppearanceSection() {
-  const appearance = useStore((s) => s.settings?.appearance)
-  const updateAppearance = useStore((s) => s.updateAppearance)
-  const [editing, setEditing] = useState<{ theme: Theme; isNew: boolean } | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  if (!appearance) return null
+  const appearance = useStore((s) => s.settings?.appearance);
+  const updateAppearance = useStore((s) => s.updateAppearance);
+  const [editing, setEditing] = useState<{ theme: Theme; isNew: boolean } | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  if (!appearance) return null;
 
-  const current = findTheme(appearance)
-  const custom = appearance.customThemes.some((t) => t.id === current.id)
-  const full = appearance.customThemes.length >= MAX_CUSTOM_THEMES
+  const current = findTheme(appearance);
+  const custom = appearance.customThemes.some((t) => t.id === current.id);
+  const full = appearance.customThemes.length >= MAX_CUSTOM_THEMES;
   const select = (id: string) => {
-    setConfirmDelete(false)
-    void updateAppearance({ theme: id })
-  }
-  const copyOf = (theme: Theme): Theme => ({ ...theme, id: newThemeId(), name: `${theme.name} (copie)`.slice(0, MAX_THEME_NAME) })
+    setConfirmDelete(false);
+    void updateAppearance({ theme: id });
+  };
+  const copyOf = (theme: Theme): Theme => ({
+    ...theme,
+    id: newThemeId(),
+    name: `${theme.name} (copie)`.slice(0, MAX_THEME_NAME),
+  });
 
   const save = (theme: Theme) => {
-    const exists = appearance.customThemes.some((t) => t.id === theme.id)
-    const customThemes = exists ? appearance.customThemes.map((t) => (t.id === theme.id ? theme : t)) : [...appearance.customThemes, theme]
-    void updateAppearance({ customThemes, theme: theme.id })
-    setEditing(null)
-  }
+    const exists = appearance.customThemes.some((t) => t.id === theme.id);
+    const customThemes = exists
+      ? appearance.customThemes.map((t) => (t.id === theme.id ? theme : t))
+      : [...appearance.customThemes, theme];
+    void updateAppearance({ customThemes, theme: theme.id });
+    setEditing(null);
+  };
   const remove = () => {
-    void updateAppearance({ customThemes: appearance.customThemes.filter((t) => t.id !== current.id), theme: PRESET_THEMES[0].id })
-    setConfirmDelete(false)
-  }
+    void updateAppearance({
+      customThemes: appearance.customThemes.filter((t) => t.id !== current.id),
+      theme: PRESET_THEMES[0].id,
+    });
+    setConfirmDelete(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -126,7 +143,12 @@ export function AppearanceSection() {
         <Label>Style</Label>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-3">
           {[...PRESET_THEMES, ...appearance.customThemes].map((theme) => (
-            <ThemeSwatch key={theme.id} theme={theme} selected={theme.id === current.id} onSelect={() => select(theme.id)} />
+            <ThemeSwatch
+              key={theme.id}
+              theme={theme}
+              selected={theme.id === current.id}
+              onSelect={() => select(theme.id)}
+            />
           ))}
           {!full && (
             <button
@@ -146,17 +168,32 @@ export function AppearanceSection() {
                 Modifier
               </Button>
               {!full && (
-                <Button size="sm" variant="ghost" icon={Copy} onClick={() => setEditing({ theme: copyOf(current), isNew: true })}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={Copy}
+                  onClick={() => setEditing({ theme: copyOf(current), isNew: true })}
+                >
                   Dupliquer
                 </Button>
               )}
-              <Button size="sm" variant={confirmDelete ? 'danger' : 'ghost'} icon={Trash2} onClick={() => (confirmDelete ? remove() : setConfirmDelete(true))}>
+              <Button
+                size="sm"
+                variant={confirmDelete ? 'danger' : 'ghost'}
+                icon={Trash2}
+                onClick={() => (confirmDelete ? remove() : setConfirmDelete(true))}
+              >
                 {confirmDelete ? 'Supprimer définitivement' : 'Supprimer'}
               </Button>
             </>
           ) : (
             !full && (
-              <Button size="sm" variant="ghost" icon={Palette} onClick={() => setEditing({ theme: copyOf(current), isNew: true })}>
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={Palette}
+                onClick={() => setEditing({ theme: copyOf(current), isNew: true })}
+              >
                 Personnaliser « {current.name} »
               </Button>
             )
@@ -182,27 +219,43 @@ export function AppearanceSection() {
         </p>
       </div>
 
-      {editing && <ThemeEditor initial={editing.theme} isNew={editing.isNew} onCancel={() => setEditing(null)} onSave={save} />}
+      {editing && (
+        <ThemeEditor initial={editing.theme} isNew={editing.isNew} onCancel={() => setEditing(null)} onSave={save} />
+      )}
     </div>
-  )
+  );
 }
 
 function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="rounded bg-ink-950/60 px-1.5 py-0.5 font-mono text-[11px] text-ink-200 ring-1 ring-inset ring-tint/10">{children}</kbd>
+  return (
+    <kbd className="rounded bg-ink-950/60 px-1.5 py-0.5 font-mono text-[11px] text-ink-200 ring-1 ring-inset ring-tint/10">
+      {children}
+    </kbd>
+  );
 }
 
 const COLOR_FIELDS: { key: keyof ThemeColors; label: string; hint: string }[] = [
   { key: 'background', label: 'Fond', hint: 'La fenêtre, les champs ; les cartes et les surfaces en sont tirées.' },
   { key: 'text', label: 'Texte', hint: 'Le texte principal ; les textes secondaires vont du fond vers lui.' },
-  { key: 'accent', label: 'Accent', hint: 'Boutons principaux, liens, interrupteurs et sélection.' }
-]
+  { key: 'accent', label: 'Accent', hint: 'Boutons principaux, liens, interrupteurs et sélection.' },
+];
 
-function ColorField({ label, hint, value, onChange }: { label: string; hint: string; value: string; onChange: (value: string) => void }) {
-  const [draft, setDraft] = useState(value)
-  const [lastValue, setLastValue] = useState(value)
+function ColorField({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [lastValue, setLastValue] = useState(value);
   if (value !== lastValue) {
-    setLastValue(value)
-    setDraft(value)
+    setLastValue(value);
+    setDraft(value);
   }
   return (
     <div className="flex items-center gap-3">
@@ -223,24 +276,35 @@ function ColorField({ label, hint, value, onChange }: { label: string; hint: str
         maxLength={7}
         spellCheck={false}
         onChange={(e) => {
-          const next = e.target.value.trim()
-          setDraft(next)
-          const hex = next.startsWith('#') ? next : `#${next}`
-          if (isHexColor(hex)) onChange(hex.toLowerCase())
+          const next = e.target.value.trim();
+          setDraft(next);
+          const hex = next.startsWith('#') ? next : `#${next}`;
+          if (isHexColor(hex)) onChange(hex.toLowerCase());
         }}
         className="w-28! py-2! font-mono"
       />
     </div>
-  )
+  );
 }
 
 /** Petite fenêtre de création ou de modification d'un style personnalisé, avec son aperçu. */
-function ThemeEditor({ initial, isNew, onCancel, onSave }: { initial: Theme; isNew: boolean; onCancel: () => void; onSave: (theme: Theme) => void }) {
-  const [theme, setTheme] = useState(initial)
-  const set = (patch: Partial<Theme>) => setTheme((t) => ({ ...t, ...patch }))
-  const setColor = (key: keyof ThemeColors, value: string) => setTheme((t) => ({ ...t, colors: { ...t.colors, [key]: value } }))
-  const lowContrast = Math.abs(lightness(theme.colors.text) - lightness(theme.colors.background)) < 0.45
-  const name = theme.name.trim()
+function ThemeEditor({
+  initial,
+  isNew,
+  onCancel,
+  onSave,
+}: {
+  initial: Theme;
+  isNew: boolean;
+  onCancel: () => void;
+  onSave: (theme: Theme) => void;
+}) {
+  const [theme, setTheme] = useState(initial);
+  const set = (patch: Partial<Theme>) => setTheme((t) => ({ ...t, ...patch }));
+  const setColor = (key: keyof ThemeColors, value: string) =>
+    setTheme((t) => ({ ...t, colors: { ...t.colors, [key]: value } }));
+  const lowContrast = Math.abs(lightness(theme.colors.text) - lightness(theme.colors.background)) < 0.45;
+  const name = theme.name.trim();
 
   return (
     <Modal
@@ -264,14 +328,25 @@ function ThemeEditor({ initial, isNew, onCancel, onSave }: { initial: Theme; isN
         <div className="space-y-6">
           <div>
             <Label>Nom</Label>
-            <TextInput value={theme.name} maxLength={MAX_THEME_NAME} onChange={(e) => set({ name: e.target.value })} placeholder="Mon style" />
+            <TextInput
+              value={theme.name}
+              maxLength={MAX_THEME_NAME}
+              onChange={(e) => set({ name: e.target.value })}
+              placeholder="Mon style"
+            />
           </div>
 
           <div>
             <Label>Couleurs</Label>
             <div className="space-y-3">
               {COLOR_FIELDS.map((field) => (
-                <ColorField key={field.key} label={field.label} hint={field.hint} value={theme.colors[field.key]} onChange={(v) => setColor(field.key, v)} />
+                <ColorField
+                  key={field.key}
+                  label={field.label}
+                  hint={field.hint}
+                  value={theme.colors[field.key]}
+                  onChange={(v) => setColor(field.key, v)}
+                />
               ))}
             </div>
             {lowContrast && (
@@ -312,7 +387,9 @@ function ThemeEditor({ initial, isNew, onCancel, onSave }: { initial: Theme; isN
             <div className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-sm text-ink-200">Effets de flou</div>
-                <div className="text-xs text-ink-400">Arrière-plan flouté derrière les fenêtres, lueurs décoratives.</div>
+                <div className="text-xs text-ink-400">
+                  Arrière-plan flouté derrière les fenêtres, lueurs décoratives.
+                </div>
               </div>
               <Toggle label="Effets de flou" checked={theme.blur} onChange={(blur) => set({ blur })} />
             </div>
@@ -322,14 +399,18 @@ function ThemeEditor({ initial, isNew, onCancel, onSave }: { initial: Theme; isN
         <ThemePreview theme={theme} />
       </div>
     </Modal>
-  )
+  );
 }
 
 /** Aperçu d'un style : quelques éléments de l'application, dessinés avec ses variables. */
 function ThemePreview({ theme }: { theme: Theme }) {
-  const [on, setOn] = useState(true)
+  const [on, setOn] = useState(true);
   return (
-    <div style={themePreviewStyle(theme)} data-tone={themePreviewTone(theme)} className="self-start overflow-hidden rounded-3xl bg-ink-900 text-ink-100 ring-1 ring-tint/10">
+    <div
+      style={themePreviewStyle(theme)}
+      data-tone={themePreviewTone(theme)}
+      className="self-start overflow-hidden rounded-3xl bg-ink-900 text-ink-100 ring-1 ring-tint/10"
+    >
       <div className="flex items-center gap-3 border-b border-tint/[0.06] bg-ink-950 px-5 py-3">
         <span className="font-display text-sm font-bold">{theme.name.trim() || 'Mon style'}</span>
         <span className="ml-auto rounded-md bg-tint/[0.06] px-2 py-0.5 text-[11px] text-ink-300">Bibliothèque</span>
@@ -340,8 +421,12 @@ function ThemePreview({ theme }: { theme: Theme }) {
           <div className="mt-1 font-display text-2xl font-bold tracking-tight">Aventure en Create</div>
           <p className="mt-1 text-sm text-ink-300">Version 12 · Forge 1.20.1 · 154 mods</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <span className="rounded-lg bg-tint/[0.06] px-2.5 py-1 text-xs text-ink-200 ring-1 ring-inset ring-tint/[0.06]">Horreur</span>
-            <span className="rounded-lg bg-grass-950 px-2.5 py-1 text-xs text-grass-300 ring-1 ring-inset ring-grass-400/30">Installé</span>
+            <span className="rounded-lg bg-tint/[0.06] px-2.5 py-1 text-xs text-ink-200 ring-1 ring-inset ring-tint/[0.06]">
+              Horreur
+            </span>
+            <span className="rounded-lg bg-grass-950 px-2.5 py-1 text-xs text-grass-300 ring-1 ring-inset ring-grass-400/30">
+              Installé
+            </span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="primary" size="sm">
@@ -375,5 +460,5 @@ function ThemePreview({ theme }: { theme: Theme }) {
         </p>
       </div>
     </div>
-  )
+  );
 }

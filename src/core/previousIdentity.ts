@@ -1,22 +1,22 @@
 // Reprise de ce que les identités précédentes (« Modpack Manager » 1.9.x, « Modpack Downloader » jusqu'à la 1.8) ont
 // laissé sur le PC, faite par le moteur pour qu'elle serve à l'application comme aux commandes : les dossiers des
 // données, et le marqueur de chaque profil installé. Voir shared/previousIdentity.ts.
-import { existsSync, readdirSync, renameSync, rmdirSync } from 'node:fs'
-import { rename } from 'node:fs/promises'
-import { join } from 'node:path'
-import { APP_NAME, INSTANCE_MARKER_FILE } from '../shared/config'
-import { PREVIOUS_IDENTITIES, PREVIOUS_INSTANCE_MARKERS, PREVIOUS_PRODUCT } from '../shared/previousIdentity'
-import { readJson } from './fsutil'
+import { existsSync, readdirSync, renameSync, rmdirSync } from 'node:fs';
+import { rename } from 'node:fs/promises';
+import { join } from 'node:path';
+import { APP_NAME, INSTANCE_MARKER_FILE } from '../shared/config';
+import { PREVIOUS_IDENTITIES, PREVIOUS_INSTANCE_MARKERS, PREVIOUS_PRODUCT } from '../shared/previousIdentity';
+import { readJson } from './fsutil';
 
 /**
  * Déplacer et renommer ce qu'ont laissé les identités précédentes : seulement depuis l'application installée (et ses
  * commandes, dans app.asar). En développement, l'application installée, peut-être encore ancienne, se sert des mêmes
  * fichiers : on lit alors l'ancien nom sans rien déplacer.
  */
-let migrate = typeof __dirname === 'string' && __dirname.includes('app.asar')
+let migrate = typeof __dirname === 'string' && __dirname.includes('app.asar');
 
 export function enablePreviousIdentityMigration(enabled: boolean): void {
-  migrate = enabled
+  migrate = enabled;
 }
 
 /**
@@ -25,13 +25,13 @@ export function enablePreviousIdentityMigration(enabled: boolean): void {
  */
 function moveInto(previous: string, current: string): void {
   if (!existsSync(current)) {
-    renameSync(previous, current)
-    return
+    renameSync(previous, current);
+    return;
   }
   for (const entry of readdirSync(previous)) {
-    if (!existsSync(join(current, entry))) renameSync(join(previous, entry), join(current, entry))
+    if (!existsSync(join(current, entry))) renameSync(join(previous, entry), join(current, entry));
   }
-  if (readdirSync(previous).length === 0) rmdirSync(previous)
+  if (readdirSync(previous).length === 0) rmdirSync(previous);
 }
 
 /**
@@ -41,16 +41,18 @@ function moveInto(previous: string, current: string): void {
  * l'ancien dossier sert encore cette fois ; on réessaie au lancement suivant. Rien n'est jamais écrasé.
  */
 export function migrateDataDir(appData: string): string {
-  const current = join(appData, APP_NAME)
-  if (existsSync(join(current, 'settings.json'))) return current
-  const previous = PREVIOUS_IDENTITIES.map((identity) => join(appData, identity.dataDir)).find((dir) => existsSync(dir))
-  if (!previous) return current
-  if (!migrate) return previous
+  const current = join(appData, APP_NAME);
+  if (existsSync(join(current, 'settings.json'))) return current;
+  const previous = PREVIOUS_IDENTITIES.map((identity) => join(appData, identity.dataDir)).find((dir) =>
+    existsSync(dir),
+  );
+  if (!previous) return current;
+  if (!migrate) return previous;
   try {
-    moveInto(previous, current)
-    return current
+    moveInto(previous, current);
+    return current;
   } catch {
-    return existsSync(join(current, 'settings.json')) ? current : previous
+    return existsSync(join(current, 'settings.json')) ? current : previous;
   }
 }
 
@@ -60,15 +62,15 @@ export function migrateDataDir(appData: string): string {
  * l'être, il sert encore cette fois.
  */
 export function migrateLocalDataDir(localAppData: string): string {
-  const current = join(localAppData, APP_NAME)
-  const previous = join(localAppData, PREVIOUS_PRODUCT.localDataDir)
-  if (!existsSync(previous) || previous.toLowerCase() === current.toLowerCase()) return current
-  if (!migrate) return existsSync(current) ? current : previous
+  const current = join(localAppData, APP_NAME);
+  const previous = join(localAppData, PREVIOUS_PRODUCT.localDataDir);
+  if (!existsSync(previous) || previous.toLowerCase() === current.toLowerCase()) return current;
+  if (!migrate) return existsSync(current) ? current : previous;
   try {
-    moveInto(previous, current)
-    return current
+    moveInto(previous, current);
+    return current;
   } catch {
-    return existsSync(current) ? current : previous
+    return existsSync(current) ? current : previous;
   }
 }
 
@@ -77,20 +79,20 @@ export function migrateLocalDataDir(localAppData: string): string {
  * l'être, il est lu tel quel).
  */
 export async function readInstanceMarker<T>(dir: string): Promise<T | null> {
-  const marker = await readJson<T>(join(dir, INSTANCE_MARKER_FILE))
-  if (marker) return marker
+  const marker = await readJson<T>(join(dir, INSTANCE_MARKER_FILE));
+  if (marker) return marker;
   for (const name of PREVIOUS_INSTANCE_MARKERS) {
-    const previous = join(dir, name)
-    const old = await readJson<T>(previous)
-    if (!old) continue
-    if (migrate) await rename(previous, join(dir, INSTANCE_MARKER_FILE)).catch(() => {})
-    return old
+    const previous = join(dir, name);
+    const old = await readJson<T>(previous);
+    if (!old) continue;
+    if (migrate) await rename(previous, join(dir, INSTANCE_MARKER_FILE)).catch(() => {});
+    return old;
   }
-  return null
+  return null;
 }
 
 /** Le dépôt de l'application sous un ancien nom devient le dépôt actuel (GitHub ne fait que rediriger l'ancien). */
 export function currentRepoName(owner: string, name: string, app: { owner: string; name: string }): string {
-  if (owner.toLowerCase() !== app.owner.toLowerCase()) return name
-  return PREVIOUS_IDENTITIES.some((identity) => identity.repoName === name.toLowerCase()) ? app.name : name
+  if (owner.toLowerCase() !== app.owner.toLowerCase()) return name;
+  return PREVIOUS_IDENTITIES.some((identity) => identity.repoName === name.toLowerCase()) ? app.name : name;
 }

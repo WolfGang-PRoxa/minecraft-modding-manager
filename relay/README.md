@@ -21,7 +21,7 @@ branche poussée ──webhook──▶ relais ──mail 2──▶ propriétai
 - **`/github`** (`netlify/functions/github.mts`) reçoit le webhook du dépôt, dont il vérifie la signature.
   - `issues` ouverte : la routine d'évaluation est lancée, et le mail part quand elle a poussé son évaluation (voir
     plus bas). Au-delà de `EVAL_DAILY_MAX` issues en 24 h, ou sans routine configurée, le mail part tout de suite,
-    sans évaluation, avec un bouton *Faire évaluer le risque*. Une issue rouverte reprend son évaluation, s'il y en a
+    sans évaluation, avec un bouton _Faire évaluer le risque_. Une issue rouverte reprend son évaluation, s'il y en a
     une. Fermée, sa branche d'évaluation est supprimée.
   - `push` sur une branche `…/issue-<N>` : mail de validation, avec le titre et le résumé repris du message du
     dernier commit et la liste des fichiers modifiés. Une branche sans aucun fichier modifié donne un mail « pas de
@@ -30,12 +30,12 @@ branche poussée ──webhook──▶ relais ──mail 2──▶ propriétai
     élevé, avec ce qui la fonde, ou « évaluation indisponible » et sa raison.
 - **`/action`** (`netlify/functions/action.mts`) est la page ouverte par les boutons. Un lien n'agit jamais tout
   seul (les messageries visitent les liens pour les vérifier) : `GET` affiche une confirmation, `POST` agit.
-  - *Corriger* / *Ajouter du contexte* : lance une session de correction. Le texte de l'issue et ses derniers
+  - _Corriger_ / _Ajouter du contexte_ : lance une session de correction. Le texte de l'issue et ses derniers
     commentaires partent avec la demande, pour que la session n'ait pas à les relire sur GitHub.
-  - *Valider* : pose la proposition sur la branche principale (`src/merge.mts`), **au commit exact résumé dans le
+  - _Valider_ : pose la proposition sur la branche principale (`src/merge.mts`), **au commit exact résumé dans le
     mail** ; un mail plus ancien qu'une nouvelle proposition ne peut donc rien fusionner. La branche est supprimée,
     l'issue fermée.
-  - *Valider* est refusé pour une proposition qui touche un **fichier sensible** (`src/sensitive.mts` : `.github/`,
+  - _Valider_ est refusé pour une proposition qui touche un **fichier sensible** (`src/sensitive.mts` : `.github/`,
     `relay/`, `build/`, `scripts/`, `.claude/`, `CLAUDE.md`, `package.json`, `package-lock.json`, `.npmrc`,
     `electron-builder.yml`, `electron.vite.config.*`, `.gitattributes`), ou qui modifie trop de fichiers pour être
     vérifiée. Le mail l'annonce en rouge et ne propose pas le bouton ; la page le revérifie sur GitHub au moment du
@@ -43,8 +43,8 @@ branche poussée ──webhook──▶ relais ──mail 2──▶ propriétai
     restent dans la liste parce qu'en ajouter un donnerait des consignes aux sessions suivantes. Les règles de travail
     de la session de correction sont écrites dans `routine-correction.md`, et la référence technique du code dans
     `docs/developpement.md`.
-  - *Invalider* : renvoie la correction en session, avec les recommandations saisies.
-  - *Faire évaluer le risque* : lance la routine d'évaluation (une évaluation précédente est remplacée).
+  - _Invalider_ : renvoie la correction en session, avec les recommandations saisies.
+  - _Faire évaluer le risque_ : lance la routine d'évaluation (une évaluation précédente est remplacée).
 - Tant que la branche de correction existe, une proposition attend une réponse. L'issue porte en plus l'étiquette
   `correction-en-cours` puis `correction-proposee`, pour suivre où elle en est.
 - **`/etat`** (`netlify/functions/status.mts`) est une page pour le propriétaire seul (lien signé) : variables
@@ -101,26 +101,26 @@ commit qui le précède (celle des commits du dépôt), le titre et le résumé 
 
 ## Variables d'environnement
 
-| Variable | Rôle |
-|---|---|
-| `GITHUB_REPO` | Dépôt surveillé, `propriétaire/nom`. |
-| `GITHUB_TOKEN` | Jeton GitHub *fine-grained* limité à ce dépôt : **Contents** et **Issues** en lecture et écriture. |
-| `GITHUB_WEBHOOK_SECRET` | Secret du webhook du dépôt. |
-| `LINK_SECRET` | Secret qui signe les liens des mails. |
-| `RESEND_API_KEY` | Clé de [Resend](https://resend.com), qui envoie les mails. Sans domaine vérifié, Resend n'écrit qu'à l'adresse du compte : c'est justement celle du propriétaire. |
-| `OWNER_EMAIL` | Adresse qui reçoit les mails. |
-| `MAIL_FROM` | Expéditeur (facultatif, par défaut `Modding Manager <onboarding@resend.dev>`). |
-| `ROUTINE_FIRE_URL`, `ROUTINE_TOKEN` | Point d'entrée et jeton de la routine qui ouvre les sessions de correction (consignes : `routine-correction.md`). |
-| `RELAY_URL` | Adresse publique du relais, pour les liens des mails. |
-| `EVAL_ROUTINE_FIRE_URL`, `EVAL_ROUTINE_TOKEN` | Point d'entrée et jeton de la routine d'évaluation (facultatifs : sans eux, les mails partent sans évaluation). |
-| `EVAL_DAILY_MAX` | Issues évaluées d'office par 24 h (facultatif, 3 par défaut ; 0 : seulement sur demande). |
+| Variable                                      | Rôle                                                                                                                                                              |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_REPO`                                 | Dépôt surveillé, `propriétaire/nom`.                                                                                                                              |
+| `GITHUB_TOKEN`                                | Jeton GitHub _fine-grained_ limité à ce dépôt : **Contents** et **Issues** en lecture et écriture.                                                                |
+| `GITHUB_WEBHOOK_SECRET`                       | Secret du webhook du dépôt.                                                                                                                                       |
+| `LINK_SECRET`                                 | Secret qui signe les liens des mails.                                                                                                                             |
+| `RESEND_API_KEY`                              | Clé de [Resend](https://resend.com), qui envoie les mails. Sans domaine vérifié, Resend n'écrit qu'à l'adresse du compte : c'est justement celle du propriétaire. |
+| `OWNER_EMAIL`                                 | Adresse qui reçoit les mails.                                                                                                                                     |
+| `MAIL_FROM`                                   | Expéditeur (facultatif, par défaut `Modding Manager <onboarding@resend.dev>`).                                                                                    |
+| `ROUTINE_FIRE_URL`, `ROUTINE_TOKEN`           | Point d'entrée et jeton de la routine qui ouvre les sessions de correction (consignes : `routine-correction.md`).                                                 |
+| `RELAY_URL`                                   | Adresse publique du relais, pour les liens des mails.                                                                                                             |
+| `EVAL_ROUTINE_FIRE_URL`, `EVAL_ROUTINE_TOKEN` | Point d'entrée et jeton de la routine d'évaluation (facultatifs : sans eux, les mails partent sans évaluation).                                                   |
+| `EVAL_DAILY_MAX`                              | Issues évaluées d'office par 24 h (facultatif, 3 par défaut ; 0 : seulement sur demande).                                                                         |
 
 Une variable modifiée n'est prise en compte qu'au déploiement suivant. Une variable manquante ne casse rien :
 l'appel répond `503` en nommant ce qu'il faut renseigner.
 
 ## Webhook du dépôt
 
-Dans *Settings → Webhooks* du dépôt : adresse `https://<relais>/github`, type `application/json`, le secret de
+Dans _Settings → Webhooks_ du dépôt : adresse `https://<relais>/github`, type `application/json`, le secret de
 `GITHUB_WEBHOOK_SECRET`, événements **Issues** et **Pushes**. Les livraisons récentes y montrent la réponse du relais.
 
 ## Déployer

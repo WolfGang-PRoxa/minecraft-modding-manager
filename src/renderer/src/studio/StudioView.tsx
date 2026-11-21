@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react';
 import {
   ArrowDownWideNarrow,
   Blocks,
@@ -13,34 +13,44 @@ import {
   KeyRound,
   RefreshCw,
   Trash2,
-  TriangleAlert
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type { StudioOverview } from '../../../shared/studio'
-import { Button } from '../components/Button'
-import { Logo } from '../components/Logo'
-import { showDocs } from '../docs/store'
-import { formatBytes, formatRelative } from '../lib/format'
-import { Spinner } from './Modal'
-import { ContentsDialog } from './ContentsDialog'
-import { DeleteDialog } from './DeleteDialog'
-import { MinecraftVersionsDialog, ModCard, ModImportDialog, NewContentDialog, PublishModCurseForgeDialog } from './ModCard'
-import { ModrinthDialog, PublishModrinthDialog } from './ModrinthPanel'
-import { HangarDialog, PublishHangarDialog } from './HangarPanel'
-import { PackCard } from './PackCard'
-import { CurseForgeDialog, CurseForgeVersionsDialog, PublishCurseForgeDialog } from './CurseForgePanel'
-import { UpdatesDialog } from './MaintenancePanel'
-import { FromProfileDialog, ImportDialog, NewPackDialog, NotesDialog, PackInfoDialog } from './PackDialogs'
-import { PackSettingsDialog, StripDialog } from './PackSettingsDialog'
-import { ProfileDetail, ProfilesSidebar, UnlinkedPackDetail } from './Profiles'
-import { PublishDialog } from './PublishDialog'
-import { usePublications } from './publications'
-import { RangerDialog } from './RangerDialog'
-import { useStore } from '../store'
-import { openPath, useStudio } from './store'
+  TriangleAlert,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { StudioOverview } from '../../../shared/studio';
+import { Button } from '../components/Button';
+import { Logo } from '../components/Logo';
+import { showDocs } from '../docs/store';
+import { formatBytes, formatRelative } from '../lib/format';
+import { Spinner } from './Modal';
+import { ContentsDialog } from './ContentsDialog';
+import { DeleteDialog } from './DeleteDialog';
+import {
+  MinecraftVersionsDialog,
+  ModCard,
+  ModImportDialog,
+  NewContentDialog,
+  PublishModCurseForgeDialog,
+} from './ModCard';
+import { ModrinthDialog, PublishModrinthDialog } from './ModrinthPanel';
+import { HangarDialog, PublishHangarDialog } from './HangarPanel';
+import { PackCard } from './PackCard';
+import { CurseForgeDialog, CurseForgeVersionsDialog, PublishCurseForgeDialog } from './CurseForgePanel';
+import { UpdatesDialog } from './MaintenancePanel';
+import { FromProfileDialog, ImportDialog, NewPackDialog, NotesDialog, PackInfoDialog } from './PackDialogs';
+import { PackSettingsDialog, StripDialog } from './PackSettingsDialog';
+import { ProfileDetail, ProfilesSidebar, UnlinkedPackDetail } from './Profiles';
+import { PublishDialog } from './PublishDialog';
+import { usePublications } from './publications';
+import { RangerDialog } from './RangerDialog';
+import { useStore } from '../store';
+import { openPath, useStudio } from './store';
 
 function Centered({ children }: { children: ReactNode }) {
-  return <div className="animate-rise flex min-h-full flex-col items-center justify-center px-8 py-12 text-center">{children}</div>
+  return (
+    <div className="animate-rise flex min-h-full flex-col items-center justify-center px-8 py-12 text-center">
+      {children}
+    </div>
+  );
 }
 
 function FolderTree() {
@@ -51,24 +61,28 @@ function FolderTree() {
     ['2', 'Hardcore_Endgame-v2.zip', 'rangé'],
     ['2', 'ma-derniere-maj.zip', '→ deviendra la v3'],
     ['2', 'cover.png', 'image (facultatif)'],
-    ['1', 'Mon_Mod/', 'mod, pack de ressources, shader, plugin…']
-  ]
+    ['1', 'Mon_Mod/', 'mod, pack de ressources, shader, plugin…'],
+  ];
   return (
     <div className="mx-auto mt-8 w-full max-w-md rounded-2xl bg-ink-950/60 p-5 text-left font-mono text-[13px] ring-1 ring-inset ring-tint/[0.06]">
       {lines.map(([depth, name, note]) => (
-        <div key={name} className="flex items-baseline gap-3 leading-7" style={{ paddingLeft: `${Number(depth) * 1.25}rem` }}>
+        <div
+          key={name}
+          className="flex items-baseline gap-3 leading-7"
+          style={{ paddingLeft: `${Number(depth) * 1.25}rem` }}
+        >
           <span className={name.endsWith('/') ? 'text-grass-300' : 'text-ink-200'}>{name}</span>
           {note && <span className="font-sans text-xs text-ink-500">{note}</span>}
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function Welcome({ overview }: { overview: StudioOverview }) {
-  const run = useStudio((s) => s.run)
-  const refresh = useStudio((s) => s.refresh)
-  const missing = overview.settings.workspaceDir !== null
+  const run = useStudio((s) => s.run);
+  const refresh = useStudio((s) => s.refresh);
+  const missing = overview.settings.workspaceDir !== null;
   return (
     <Centered>
       <div className="relative">
@@ -81,8 +95,8 @@ function Welcome({ overview }: { overview: StudioOverview }) {
       <p className="mt-3 max-w-xl text-ink-300">
         {missing ? (
           <>
-            <span className="font-mono text-ink-200 select-text">{overview.settings.workspaceDir}</span> n’existe plus (disque
-            débranché, dossier déplacé ?). Choisis où se trouvent tes contenus.
+            <span className="font-mono text-ink-200 select-text">{overview.settings.workspaceDir}</span> n’existe plus
+            (disque débranché, dossier déplacé ?). Choisis où se trouvent tes contenus.
           </>
         ) : (
           'Choisis le dossier où tu ranges tes contenus : un sous-dossier par modpack, mod, pack de ressources, shader ou plugin, dans lequel tu déposes chaque nouvelle version. Le studio les numérote et les publie.'
@@ -97,8 +111,8 @@ function Welcome({ overview }: { overview: StudioOverview }) {
             icon={FolderPlus}
             onClick={() =>
               void run(window.studio.useDefaultWorkspace()).then(() => {
-                void useStore.getState().refreshLocal()
-                return refresh({ remote: true })
+                void useStore.getState().refreshLocal();
+                return refresh({ remote: true });
               })
             }
           >
@@ -111,9 +125,9 @@ function Welcome({ overview }: { overview: StudioOverview }) {
           icon={FolderSearch}
           onClick={() =>
             void window.studio.pickWorkspaceDir().then((picked) => {
-              if (!picked) return
-              void useStore.getState().refreshLocal()
-              void refresh({ remote: true })
+              if (!picked) return;
+              void useStore.getState().refreshLocal();
+              void refresh({ remote: true });
             })
           }
         >
@@ -130,38 +144,48 @@ function Welcome({ overview }: { overview: StudioOverview }) {
         </button>
       )}
     </Centered>
-  )
+  );
 }
 
-function Panel({ icon: Icon, tone, children, action }: { icon: LucideIcon; tone: string; children: ReactNode; action?: ReactNode }) {
+function Panel({
+  icon: Icon,
+  tone,
+  children,
+  action,
+}: {
+  icon: LucideIcon;
+  tone: string;
+  children: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <div className={`flex items-center gap-4 rounded-2xl px-5 py-4 ring-1 ring-inset ${tone}`}>
       <Icon size={22} className="shrink-0" />
       <div className="min-w-0 flex-1 text-sm text-ink-100">{children}</div>
       {action}
     </div>
-  )
+  );
 }
 
 function plural(n: number, singular: string, pluralForm = `${singular}s`) {
-  return `${n} ${n > 1 ? pluralForm : singular}`
+  return `${n} ${n > 1 ? pluralForm : singular}`;
 }
 
 function SyncPanel({ overview }: { overview: StudioOverview }) {
-  const checking = useStudio((s) => s.checkingGitHub)
-  const refresh = useStudio((s) => s.refresh)
-  const openDialog = useStudio((s) => s.openDialog)
-  const openSettings = useStudio((s) => s.openSettings)
-  const publishing = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null)
-  const follow = usePublications((s) => s.follow)
-  const { github, plan } = overview
+  const checking = useStudio((s) => s.checkingGitHub);
+  const refresh = useStudio((s) => s.refresh);
+  const openDialog = useStudio((s) => s.openDialog);
+  const openSettings = useStudio((s) => s.openSettings);
+  const publishing = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null);
+  const follow = usePublications((s) => s.follow);
+  const { github, plan } = overview;
 
   if (checking && !plan) {
     return (
       <Panel icon={RefreshCw} tone="bg-tint/[0.03] text-ink-300 ring-tint/[0.06] [&>svg]:animate-spin">
         Comparaison avec GitHub…
       </Panel>
-    )
+    );
   }
   if (overview.settings.role !== 'publisher') {
     return (
@@ -179,7 +203,7 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
           Pour publier, passe en publieur (Paramètres → Utilisation) : indique ton dépôt et connecte ton compte GitHub.
         </span>
       </Panel>
-    )
+    );
   }
   if (github.state === 'no-token') {
     return (
@@ -193,9 +217,11 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
         }
       >
         <strong className="font-semibold">GitHub n’est pas connecté.</strong>{' '}
-        <span className="text-ink-300">Connecte ton compte GitHub dans les paramètres pour publier sur {github.repo}.</span>
+        <span className="text-ink-300">
+          Connecte ton compte GitHub dans les paramètres pour publier sur {github.repo}.
+        </span>
       </Panel>
-    )
+    );
   }
   if (github.state === 'error' || !plan) {
     return (
@@ -211,12 +237,12 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
         <strong className="font-semibold">GitHub injoignable.</strong>{' '}
         <span className="text-ink-300 select-text">{github.error ?? 'Vérifie ta connexion internet.'}</span>
       </Panel>
-    )
+    );
   }
 
-  const counts = { create: 0, update: 0, delete: 0 }
-  for (const action of plan.actions) counts[action.kind]++
-  const checkedAt = github.checkedAt ? ` · vérifié ${formatRelative(github.checkedAt)}` : ''
+  const counts = { create: 0, update: 0, delete: 0 };
+  for (const action of plan.actions) counts[action.kind]++;
+  const checkedAt = github.checkedAt ? ` · vérifié ${formatRelative(github.checkedAt)}` : '';
 
   return (
     <div className="space-y-3">
@@ -231,7 +257,9 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
           }
         >
           <strong className="font-semibold">Publication en cours :</strong>{' '}
-          <span className="text-ink-300">{publishing.subject} vers GitHub. Le Studio reste utilisable pendant l’envoi.</span>
+          <span className="text-ink-300">
+            {publishing.subject} vers GitHub. Le Studio reste utilisable pendant l’envoi.
+          </span>
         </Panel>
       ) : plan.actions.length === 0 ? (
         <Panel
@@ -261,7 +289,7 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
             {[
               counts.create && plural(counts.create, 'nouvelle version', 'nouvelles versions'),
               counts.update && plural(counts.update, 'mise à jour', 'mises à jour'),
-              counts.delete && plural(counts.delete, 'suppression')
+              counts.delete && plural(counts.delete, 'suppression'),
             ]
               .filter(Boolean)
               .join(' · ')}
@@ -273,7 +301,8 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
         <Panel icon={TriangleAlert} tone="bg-amber-glow/10 text-amber-glow ring-amber-glow/25">
           <strong className="font-semibold">Le dépôt {github.repo} est privé :</strong>{' '}
           <span className="text-ink-300">
-            les joueurs ne voient aucun modpack. Rends-le public sur GitHub (Settings → General → Danger Zone → Change visibility).
+            les joueurs ne voient aucun modpack. Rends-le public sur GitHub (Settings → General → Danger Zone → Change
+            visibility).
           </span>
         </Panel>
       )}
@@ -284,23 +313,23 @@ function SyncPanel({ overview }: { overview: StudioOverview }) {
         </Panel>
       )}
     </div>
-  )
+  );
 }
 
 /** Ce que montre la colonne de droite : tous les modpacks, un profil CurseForge, ou un modpack sans profil. */
 function SelectionContent({ overview }: { overview: StudioOverview }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const selection = useStudio((s) => s.selection)
-  const library = useStudio((s) => s.library)
-  const { packs } = overview
+  const openDialog = useStudio((s) => s.openDialog);
+  const selection = useStudio((s) => s.selection);
+  const library = useStudio((s) => s.library);
+  const { packs } = overview;
 
   if (selection.kind === 'profile') {
-    const profile = library?.folders.flatMap((f) => f.profiles).find((p) => p.path === selection.path)
-    if (profile) return <ProfileDetail key={profile.path} profile={profile} />
+    const profile = library?.folders.flatMap((f) => f.profiles).find((p) => p.path === selection.path);
+    if (profile) return <ProfileDetail key={profile.path} profile={profile} />;
   }
   if (selection.kind === 'pack') {
-    const pack = packs.find((p) => p.folder === selection.folder)
-    if (pack) return pack.type !== 'modpack' ? <ModCard pack={pack} index={0} /> : <UnlinkedPackDetail pack={pack} />
+    const pack = packs.find((p) => p.folder === selection.folder);
+    if (pack) return pack.type !== 'modpack' ? <ModCard pack={pack} index={0} /> : <UnlinkedPackDetail pack={pack} />;
   }
   return packs.length === 0 ? (
     <div className="rounded-3xl bg-ink-850 px-10 py-12 text-center ring-1 ring-tint/[0.06]">
@@ -317,10 +346,14 @@ function SelectionContent({ overview }: { overview: StudioOverview }) {
   ) : (
     <div className="space-y-6">
       {packs.map((pack, index) =>
-        pack.type !== 'modpack' ? <ModCard key={pack.folder} pack={pack} index={index} /> : <PackCard key={pack.folder} pack={pack} index={index} />
+        pack.type !== 'modpack' ? (
+          <ModCard key={pack.folder} pack={pack} index={index} />
+        ) : (
+          <PackCard key={pack.folder} pack={pack} index={index} />
+        ),
       )}
     </div>
-  )
+  );
 }
 
 function WorkspaceView({ overview }: { overview: StudioOverview }) {
@@ -331,16 +364,16 @@ function WorkspaceView({ overview }: { overview: StudioOverview }) {
         <WorkspaceColumn overview={overview} />
       </div>
     </div>
-  )
+  );
 }
 
 function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
-  const openDialog = useStudio((s) => s.openDialog)
-  const publishing = usePublications((s) => s.running.some((p) => p.target === 'github'))
-  const follow = usePublications((s) => s.follow)
+  const openDialog = useStudio((s) => s.openDialog);
+  const publishing = usePublications((s) => s.running.some((p) => p.target === 'github'));
+  const follow = usePublications((s) => s.follow);
 
-  const { plan, strayZips, orphanPacks, toRange, settings } = overview
-  const changes = plan?.actions.length ?? 0
+  const { plan, strayZips, orphanPacks, toRange, settings } = overview;
+  const changes = plan?.actions.length ?? 0;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-8 pt-8 pb-16">
@@ -363,7 +396,11 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
           <Button icon={FolderPlus} onClick={() => openDialog({ kind: 'new-pack' })}>
             Nouveau modpack
           </Button>
-          <Button icon={Blocks} onClick={() => openDialog({ kind: 'new-content' })} title="Un mod, un pack de ressources, un shader ou un plugin">
+          <Button
+            icon={Blocks}
+            onClick={() => openDialog({ kind: 'new-content' })}
+            title="Un mod, un pack de ressources, un shader ou un plugin"
+          >
             Nouveau contenu
           </Button>
           <Button
@@ -439,7 +476,13 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
                 onClick={() =>
                   openDialog({
                     kind: 'delete',
-                    target: { type: 'releases', name: orphan.name, versions: orphan.versions, tags: orphan.tags, orphan: true }
+                    target: {
+                      type: 'releases',
+                      name: orphan.name,
+                      versions: orphan.versions,
+                      tags: orphan.tags,
+                      orphan: true,
+                    },
                   })
                 }
               >
@@ -450,8 +493,8 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
             <strong className="font-semibold">« {orphan.name} » sera retiré de GitHub.</strong>{' '}
             <span className="text-ink-300">
               Son dossier n’existe plus : {orphan.versions.length > 1 ? 'ses versions' : 'sa version'}{' '}
-              {orphan.versions.map((v) => `v${v}`).join(', ')} {orphan.versions.length > 1 ? 'seront supprimées' : 'sera supprimée'} à
-              la prochaine publication.
+              {orphan.versions.map((v) => `v${v}`).join(', ')}{' '}
+              {orphan.versions.length > 1 ? 'seront supprimées' : 'sera supprimée'} à la prochaine publication.
             </span>
           </Panel>
         ))}
@@ -461,97 +504,133 @@ function WorkspaceColumn({ overview }: { overview: StudioOverview }) {
         <SelectionContent overview={overview} />
       </div>
     </div>
-  )
+  );
 }
 
 function Count({ tone, children }: { tone: string; children: ReactNode }) {
-  return <span className={`-mr-1 rounded-md px-1.5 py-0.5 text-xs leading-none font-bold ${tone}`}>{children}</span>
+  return <span className={`-mr-1 rounded-md px-1.5 py-0.5 text-xs leading-none font-bold ${tone}`}>{children}</span>;
 }
 
 function Dialogs() {
-  const dialog = useStudio((s) => s.dialog)
-  if (!dialog) return null
+  const dialog = useStudio((s) => s.dialog);
+  if (!dialog) return null;
   switch (dialog.kind) {
     case 'new-pack':
-      return <NewPackDialog />
+      return <NewPackDialog />;
     case 'pack-info':
-      return <PackInfoDialog key={dialog.folder} folder={dialog.folder} />
+      return <PackInfoDialog key={dialog.folder} folder={dialog.folder} />;
     case 'pack-settings':
-      return <PackSettingsDialog key={dialog.folder} folder={dialog.folder} tab={dialog.tab} />
+      return <PackSettingsDialog key={dialog.folder} folder={dialog.folder} tab={dialog.tab} />;
     case 'strip':
-      return <StripDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />
+      return <StripDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />;
     case 'notes':
-      return <NotesDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
+      return (
+        <NotesDialog
+          key={`${dialog.folder}-${dialog.version}`}
+          folder={dialog.folder}
+          version={dialog.version}
+          versions={dialog.versions}
+        />
+      );
     case 'mod-import':
-      return <ModImportDialog key={dialog.folder} folder={dialog.folder} />
+      return <ModImportDialog key={dialog.folder} folder={dialog.folder} />;
     case 'new-content':
-      return <NewContentDialog />
+      return <NewContentDialog />;
     case 'minecraft-versions':
-      return <MinecraftVersionsDialog key={dialog.folder} folder={dialog.folder} />
+      return <MinecraftVersionsDialog key={dialog.folder} folder={dialog.folder} />;
     case 'hangar':
-      return <HangarDialog key={dialog.folder} folder={dialog.folder} />
+      return <HangarDialog key={dialog.folder} folder={dialog.folder} />;
     case 'hangar-publish':
-      return <PublishHangarDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+      return (
+        <PublishHangarDialog
+          key={`${dialog.folder}-${dialog.version}`}
+          folder={dialog.folder}
+          version={dialog.version}
+        />
+      );
     case 'modrinth':
-      return <ModrinthDialog key={dialog.folder} folder={dialog.folder} />
+      return <ModrinthDialog key={dialog.folder} folder={dialog.folder} />;
     case 'modrinth-publish':
-      return <PublishModrinthDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
+      return (
+        <PublishModrinthDialog
+          key={`${dialog.folder}-${dialog.version}`}
+          folder={dialog.folder}
+          version={dialog.version}
+          versions={dialog.versions}
+        />
+      );
     case 'mod-curseforge-publish':
-      return <PublishModCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} versions={dialog.versions} />
+      return (
+        <PublishModCurseForgeDialog
+          key={`${dialog.folder}-${dialog.version}`}
+          folder={dialog.folder}
+          version={dialog.version}
+          versions={dialog.versions}
+        />
+      );
     case 'import':
-      return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />
+      return <ImportDialog key={dialog.folder} folder={dialog.folder} profilePath={dialog.profilePath} />;
     case 'curseforge':
-      return <CurseForgeDialog key={dialog.folder} folder={dialog.folder} />
+      return <CurseForgeDialog key={dialog.folder} folder={dialog.folder} />;
     case 'curseforge-versions':
-      return <CurseForgeVersionsDialog key={dialog.folder} folder={dialog.folder} />
+      return <CurseForgeVersionsDialog key={dialog.folder} folder={dialog.folder} />;
     case 'curseforge-publish':
-      return <PublishCurseForgeDialog key={`${dialog.folder}-${dialog.version}`} folder={dialog.folder} version={dialog.version} />
+      return (
+        <PublishCurseForgeDialog
+          key={`${dialog.folder}-${dialog.version}`}
+          folder={dialog.folder}
+          version={dialog.version}
+        />
+      );
     case 'updates':
-      return <UpdatesDialog key={dialog.folder} folder={dialog.folder} />
+      return <UpdatesDialog key={dialog.folder} folder={dialog.folder} />;
     case 'from-profile':
-      return <FromProfileDialog key={dialog.profilePath} profilePath={dialog.profilePath} profileName={dialog.profileName} />
+      return (
+        <FromProfileDialog key={dialog.profilePath} profilePath={dialog.profilePath} profileName={dialog.profileName} />
+      );
     case 'ranger':
-      return <RangerDialog />
+      return <RangerDialog />;
     case 'publish':
-      return <PublishDialog />
+      return <PublishDialog />;
     case 'delete':
-      return <DeleteDialog target={dialog.target} />
+      return <DeleteDialog target={dialog.target} />;
     case 'contents':
-      return <ContentsDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />
+      return <ContentsDialog key={`${dialog.folder}/${dialog.fileName}`} {...dialog} />;
   }
 }
 
 function AnalyzingPill() {
-  const analyzing = useStudio((s) => s.analyzing)
-  if (!analyzing) return null
+  const analyzing = useStudio((s) => s.analyzing);
+  if (!analyzing) return null;
   return (
     <div className="animate-rise fixed bottom-6 left-6 z-40 flex items-center gap-3 rounded-full bg-ink-800/95 py-2.5 pr-5 pl-4 text-sm text-ink-200 shadow-2xl ring-1 ring-tint/10 backdrop-blur-xl">
-      <Spinner className="text-grass-300" /> Analyse de <span className="max-w-72 truncate font-medium text-ink-100">{analyzing}</span>
+      <Spinner className="text-grass-300" /> Analyse de{' '}
+      <span className="max-w-72 truncate font-medium text-ink-100">{analyzing}</span>
     </div>
-  )
+  );
 }
 
 /** Vue Studio de la fenêtre (publieurs) : dossier des contenus, rangement et publication. */
 export function StudioView() {
-  const init = useStudio((s) => s.init)
-  const overview = useStudio((s) => s.overview)
+  const init = useStudio((s) => s.init);
+  const overview = useStudio((s) => s.overview);
 
   useEffect(() => {
-    void init()
-  }, [init])
+    void init();
+  }, [init]);
 
-  let content: ReactNode
+  let content: ReactNode;
   if (!overview) {
     content = (
       <Centered>
         <Spinner size={28} className="text-grass-300" />
         <p className="mt-4 text-ink-300">Lecture du dossier des contenus…</p>
       </Centered>
-    )
+    );
   } else if (!overview.settings.workspaceDir || !overview.workspaceExists) {
-    content = <Welcome overview={overview} />
+    content = <Welcome overview={overview} />;
   } else {
-    content = <WorkspaceView overview={overview} />
+    content = <WorkspaceView overview={overview} />;
   }
 
   return (
@@ -560,5 +639,5 @@ export function StudioView() {
       <Dialogs />
       <AnalyzingPill />
     </>
-  )
+  );
 }

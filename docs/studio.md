@@ -11,12 +11,12 @@ quelques clics. Il est réservé au rôle de publieur (voir [Devenir publieur](p
 Le dossier des contenus, sur le PC du publieur, est la référence. GitHub en est le miroir : à chaque publication, le
 Studio compare les deux et propose exactement les changements qui mettent GitHub en accord avec le dossier.
 
-| Sur le PC | Sur GitHub, à la publication |
-|---|---|
-| Nouveau zip rangé (`Mon_Pack-v3.zip`) | Nouvelle release `pack-<id>-v3` (zip, `modpack.json`, image) |
-| Zip, image, nom, description ou notes modifiés | Release mise à jour |
-| Zip supprimé | Release **supprimée**, avec son tag |
-| Dossier du modpack supprimé | Toutes ses releases **supprimées** |
+| Sur le PC                                      | Sur GitHub, à la publication                                 |
+| ---------------------------------------------- | ------------------------------------------------------------ |
+| Nouveau zip rangé (`Mon_Pack-v3.zip`)          | Nouvelle release `pack-<id>-v3` (zip, `modpack.json`, image) |
+| Zip, image, nom, description ou notes modifiés | Release mise à jour                                          |
+| Zip supprimé                                   | Release **supprimée**, avec son tag                          |
+| Dossier du modpack supprimé                    | Toutes ses releases **supprimées**                           |
 
 Deux exceptions protègent ce qui est publié :
 
@@ -71,17 +71,17 @@ boutons :
 
 Dessous, des encarts résument la situation :
 
-| Encart | Signification |
-|---|---|
-| **Tout est en ligne.** | GitHub correspond exactement au dossier. **Vérifier** relit GitHub. |
-| **N changements à publier** | Nouvelles versions, mises à jour et suppressions en attente. **Voir et publier** ouvre l’aperçu. |
-| **N zips à ranger** | Des zips déposés attendent leur numéro de version. |
-| **GitHub n’est pas connecté.** | Aucune connexion GitHub : **Connecter GitHub** ouvre les paramètres. |
-| **GitHub injoignable.** | Pas de connexion internet, ou GitHub a refusé la demande. **Réessayer** relit GitHub. |
-| **Le dépôt … est privé** | Les joueurs ne voient rien : le dépôt doit être rendu public sur GitHub. |
-| **Ce compte GitHub ne peut pas publier sur …** | Le compte connecté n’a pas l’accès en écriture au dépôt. |
-| **Zips hors de tout modpack** | Des zips sont à la racine du dossier : ils sont à déplacer dans le dossier de leur modpack. |
-| **« … » sera retiré de GitHub.** | Le dossier de ce modpack n’existe plus : ses releases seront supprimées. **Retirer maintenant** le fait tout de suite. |
+| Encart                                         | Signification                                                                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **Tout est en ligne.**                         | GitHub correspond exactement au dossier. **Vérifier** relit GitHub.                                                    |
+| **N changements à publier**                    | Nouvelles versions, mises à jour et suppressions en attente. **Voir et publier** ouvre l’aperçu.                       |
+| **N zips à ranger**                            | Des zips déposés attendent leur numéro de version.                                                                     |
+| **GitHub n’est pas connecté.**                 | Aucune connexion GitHub : **Connecter GitHub** ouvre les paramètres.                                                   |
+| **GitHub injoignable.**                        | Pas de connexion internet, ou GitHub a refusé la demande. **Réessayer** relit GitHub.                                  |
+| **Le dépôt … est privé**                       | Les joueurs ne voient rien : le dépôt doit être rendu public sur GitHub.                                               |
+| **Ce compte GitHub ne peut pas publier sur …** | Le compte connecté n’a pas l’accès en écriture au dépôt.                                                               |
+| **Zips hors de tout modpack**                  | Des zips sont à la racine du dossier : ils sont à déplacer dans le dossier de leur modpack.                            |
+| **« … » sera retiré de GitHub.**               | Le dossier de ce modpack n’existe plus : ses releases seront supprimées. **Retirer maintenant** le fait tout de suite. |
 
 Le Studio surveille le dossier : un zip copié, renommé ou supprimé dans l’Explorateur apparaît dans la seconde. La
 première fois qu’il voit un zip, il l’analyse (contenu, empreinte) : une pastille **Analyse de …** s’affiche en bas
@@ -115,17 +115,17 @@ image remplace son image de couverture, et les autres fichiers sont ignorés.
 
 ## Les statuts
 
-| Statut | Signification |
-|---|---|
-| **En ligne** | Publiée sur GitHub, identique au dossier. |
-| **À publier** | Pas encore sur GitHub : elle sera créée à la prochaine publication. |
-| **Modifiée** | Sur GitHub, mais quelque chose a changé (zip, image, nom, description, notes ou réglages des versions). Le survol du statut montre quoi. |
-| **Non publiable** | Le zip est refusé, ou le modpack est en erreur. |
-| **GitHub non vérifié** | GitHub n’a pas encore pu être lu. |
-| **Sera retirée** | Sa release est sur GitHub mais son zip n’est plus dans le dossier : elle sera supprimée. |
-| **À ranger** | Zip déposé, pas encore numéroté. La ligne indique le numéro qu’il recevra. |
-| **Refusé** | Zip inutilisable (voir [Ce que doit contenir un zip](versions.md#ce-que-doit-contenir-un-zip)). |
-| **Version sur CurseForge** | Cette version est celle de l’un des profils CurseForge du PC. |
+| Statut                     | Signification                                                                                                                            |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **En ligne**               | Publiée sur GitHub, identique au dossier.                                                                                                |
+| **À publier**              | Pas encore sur GitHub : elle sera créée à la prochaine publication.                                                                      |
+| **Modifiée**               | Sur GitHub, mais quelque chose a changé (zip, image, nom, description, notes ou réglages des versions). Le survol du statut montre quoi. |
+| **Non publiable**          | Le zip est refusé, ou le modpack est en erreur.                                                                                          |
+| **GitHub non vérifié**     | GitHub n’a pas encore pu être lu.                                                                                                        |
+| **Sera retirée**           | Sa release est sur GitHub mais son zip n’est plus dans le dossier : elle sera supprimée.                                                 |
+| **À ranger**               | Zip déposé, pas encore numéroté. La ligne indique le numéro qu’il recevra.                                                               |
+| **Refusé**                 | Zip inutilisable (voir [Ce que doit contenir un zip](versions.md#ce-que-doit-contenir-un-zip)).                                          |
+| **Version sur CurseForge** | Cette version est celle de l’un des profils CurseForge du PC.                                                                            |
 
 ## Les profils CurseForge
 
@@ -136,12 +136,12 @@ nom de profil ou de modpack ; la flèche circulaire relit les profils (après un
 Chaque profil indique sa version de Minecraft, son mod loader et, s’il en a un, le modpack qui en vient. Une pastille
 résume son état :
 
-| Pastille | Signification |
-|---|---|
-| Verte | **À jour** : le profil a exactement les mods de la dernière version du modpack. |
-| Bleue | **Changé** : ses mods ne sont ceux d’aucune version. Il a été modifié depuis la dernière : de quoi créer la suivante. |
-| Orange | Il a les mods d’une version **plus ancienne** que la dernière. |
-| Grise | Son modpack n’a encore **aucune version**. |
+| Pastille | Signification                                                                                                         |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
+| Verte    | **À jour** : le profil a exactement les mods de la dernière version du modpack.                                       |
+| Bleue    | **Changé** : ses mods ne sont ceux d’aucune version. Il a été modifié depuis la dernière : de quoi créer la suivante. |
+| Orange   | Il a les mods d’une version **plus ancienne** que la dernière.                                                        |
+| Grise    | Son modpack n’a encore **aucune version**.                                                                            |
 
 `CF` marque un profil installé depuis un modpack publié sur CurseForge ; une flèche, un profil installé par
 l’application depuis GitHub (la copie d’un joueur, jamais la source d’un modpack).
@@ -374,25 +374,25 @@ publications ni chez les joueurs. Depuis le terminal ou Claude Code : `packs gro
 
 Chaque dossier de modpack contient un fichier `pack.json`, géré par le Studio :
 
-| Champ | Contenu |
-|---|---|
-| `id` | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
-| `type` | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders), `plugin` pour un [plugin](#les-plugins). |
-| `group` | Le [groupe](#ranger-dans-des-groupes) où il est rangé dans la colonne de gauche du Studio (64 caractères au plus). Absent s’il n’en a pas. |
-| `source` | Mod ou plugin : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié. |
-| `minecraftVersions` | Pack de ressources, shader ou plugin : les versions de Minecraft visées, à la place de celles de son fichier. Absent sinon. |
-| `modrinth`, `hangar` | Son projet Modrinth (mod, pack de ressources, shader, plugin) ou Hangar (plugin), et les versions envoyées par l’application. Absents s’il n’y en a pas. |
-| `name` | Le nom affiché aux joueurs. |
-| `description` | La description courte. |
-| `lastVersion` | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé. |
-| `notes` | Les notes de chaque version, en Markdown, par numéro (par version déclarée pour un mod). |
-| `exclude` | Les [fichiers exclus](reglages.md#exclure-des-fichiers) : des chemins depuis la racine de l’instance. Absent s’il n’y en a pas. |
-| `disabledMods` | Les [mods désactivés chez les joueurs](reglages.md#désactiver-des-mods-chez-les-joueurs) : pour chacun, son projet CurseForge (`addonId`, ou `null`), son fichier (`file`) et son nom (`name`). Absent s’il n’y en a pas. |
-| `keepPlayerConfigs` | `true` pour [garder les configurations modifiées par les joueurs](reglages.md#garder-les-configurations-des-joueurs). Absent sinon. |
-| `profile` | Le profil CurseForge d’où viennent ses versions : `guid` et nom. Absent s’il n’est pas connu. |
-| `github` | `false` si le modpack n’est publié que sur CurseForge. Absent sinon. |
-| `curseforge` | Son [projet CurseForge](publication.md#publier-sur-curseforge) : numéro, page, fichiers joints à l’export, et le fichier CurseForge de chaque version publiée. Absent s’il n’en a pas. |
-| `updates` | Ses [mises à jour automatiques](automatique.md#régler-un-modpack) : `frequency` (`weekly`, `biweekly`, `monthly`, `manual`, `never`), `channel` (`release` ou `beta`), `pinned` (mods figés) et `autoPublish`. Absent tant qu’elles restent à la demande, sans rien d’autre. |
+| Champ                | Contenu                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                 | L’**identifiant** du modpack : lettres minuscules, chiffres et tirets (64 caractères au plus). Il est dérivé du nom à la création, et figure dans les tags GitHub (`pack-<id>-v3`) comme dans les profils des joueurs. **Il ne change jamais** : le modifier après une publication ferait apparaître un nouveau modpack chez les joueurs. |
+| `type`               | Ce que contient le dossier : absent pour un modpack, `mod` pour un [mod](#les-mods), `resourcepack` ou `shader` pour un [pack de ressources ou un shader](#les-packs-de-ressources-et-les-shaders), `plugin` pour un [plugin](#les-plugins).                                                                                              |
+| `group`              | Le [groupe](#ranger-dans-des-groupes) où il est rangé dans la colonne de gauche du Studio (64 caractères au plus). Absent s’il n’en a pas.                                                                                                                                                                                                |
+| `source`             | Mod ou plugin : le dossier où son projet dépose ses jars ; pack de ressources ou shader : le dossier du pack en cours de création. Absent s’il n’est pas lié.                                                                                                                                                                             |
+| `minecraftVersions`  | Pack de ressources, shader ou plugin : les versions de Minecraft visées, à la place de celles de son fichier. Absent sinon.                                                                                                                                                                                                               |
+| `modrinth`, `hangar` | Son projet Modrinth (mod, pack de ressources, shader, plugin) ou Hangar (plugin), et les versions envoyées par l’application. Absents s’il n’y en a pas.                                                                                                                                                                                  |
+| `name`               | Le nom affiché aux joueurs.                                                                                                                                                                                                                                                                                                               |
+| `description`        | La description courte.                                                                                                                                                                                                                                                                                                                    |
+| `lastVersion`        | Le plus grand numéro de version jamais attribué : un numéro n’est jamais réutilisé.                                                                                                                                                                                                                                                       |
+| `notes`              | Les notes de chaque version, en Markdown, par numéro (par version déclarée pour un mod).                                                                                                                                                                                                                                                  |
+| `exclude`            | Les [fichiers exclus](reglages.md#exclure-des-fichiers) : des chemins depuis la racine de l’instance. Absent s’il n’y en a pas.                                                                                                                                                                                                           |
+| `disabledMods`       | Les [mods désactivés chez les joueurs](reglages.md#désactiver-des-mods-chez-les-joueurs) : pour chacun, son projet CurseForge (`addonId`, ou `null`), son fichier (`file`) et son nom (`name`). Absent s’il n’y en a pas.                                                                                                                 |
+| `keepPlayerConfigs`  | `true` pour [garder les configurations modifiées par les joueurs](reglages.md#garder-les-configurations-des-joueurs). Absent sinon.                                                                                                                                                                                                       |
+| `profile`            | Le profil CurseForge d’où viennent ses versions : `guid` et nom. Absent s’il n’est pas connu.                                                                                                                                                                                                                                             |
+| `github`             | `false` si le modpack n’est publié que sur CurseForge. Absent sinon.                                                                                                                                                                                                                                                                      |
+| `curseforge`         | Son [projet CurseForge](publication.md#publier-sur-curseforge) : numéro, page, fichiers joints à l’export, et le fichier CurseForge de chaque version publiée. Absent s’il n’en a pas.                                                                                                                                                    |
+| `updates`            | Ses [mises à jour automatiques](automatique.md#régler-un-modpack) : `frequency` (`weekly`, `biweekly`, `monthly`, `manual`, `never`), `channel` (`release` ou `beta`), `pinned` (mods figés) et `autoPublish`. Absent tant qu’elles restent à la demande, sans rien d’autre.                                                              |
 
 Le fichier peut être modifié à la main, avec précaution : un fichier illisible, un identifiant invalide ou déjà
 utilisé par un autre dossier bloquent la publication du modpack, avec un message qui dit quoi corriger.

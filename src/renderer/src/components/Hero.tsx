@@ -1,16 +1,16 @@
-import { ChevronRight, Sparkles } from 'lucide-react'
-import type { Modpack } from '../../../shared/types'
-import { formatRelative } from '../lib/format'
-import { useStore } from '../store'
-import { PackBadges, VersionMeta } from './Badges'
-import { Button } from './Button'
-import { Cover } from './Cover'
-import { InstallButton } from './InstallButton'
-import { Notes } from './Notes'
+import { ChevronRight, Sparkles } from 'lucide-react';
+import type { Modpack } from '../../../shared/types';
+import { formatRelative } from '../lib/format';
+import { useStore } from '../store';
+import { PackBadges, VersionMeta } from './Badges';
+import { Button } from './Button';
+import { Cover } from './Cover';
+import { InstallButton } from './InstallButton';
+import { Notes } from './Notes';
 
 export function Hero({ modpack }: { modpack: Modpack }) {
-  const select = useStore((s) => s.select)
-  const latest = modpack.latest
+  const select = useStore((s) => s.select);
+  const latest = modpack.latest;
 
   return (
     <section className="animate-rise relative mx-8 mt-6 overflow-hidden rounded-[calc(var(--radius-4xl)*0.875)] ring-1 ring-tint/[0.07]">
@@ -76,5 +76,5 @@ export function Hero({ modpack }: { modpack: Modpack }) {
         )}
       </div>
     </section>
-  )
+  );
 }

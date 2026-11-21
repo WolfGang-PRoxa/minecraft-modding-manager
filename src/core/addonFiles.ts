@@ -2,20 +2,24 @@
 // de CurseForge, comme le ferait CurseForge : téléchargement vérifié, ancien fichier retiré, entrée d'installedAddons
 // mise à jour dans le format de CurseForge (voir docs/developpement.md, « Faits CurseForge vérifiés »). À n'utiliser
 // que sur une copie d'essai : le profil d'origine du publieur n'est jamais modifié ainsi.
-import { createHash, randomUUID } from 'node:crypto'
-import { createReadStream, createWriteStream } from 'node:fs'
-import { mkdir, rename, rm } from 'node:fs/promises'
-import { join } from 'node:path'
-import { Readable } from 'node:stream'
-import { pipeline } from 'node:stream/promises'
-import type { AddonKind } from '../shared/studio'
-import { CLASS_IDS, type CfFile, type CfMod } from './curseforgeApi'
-import { StudioError } from './studio/analyze'
+import { createHash, randomUUID } from 'node:crypto';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { mkdir, rename, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import type { AddonKind } from '../shared/studio';
+import { CLASS_IDS, type CfFile, type CfMod } from './curseforgeApi';
+import { StudioError } from './studio/analyze';
 
-type Json = Record<string, unknown>
+type Json = Record<string, unknown>;
 
 /** Dossier d'un projet dans le profil, d'après sa catégorie. */
-export const ADDON_FOLDERS: Record<AddonKind, string> = { mod: 'mods', resourcepack: 'resourcepacks', shader: 'shaderpacks' }
+export const ADDON_FOLDERS: Record<AddonKind, string> = {
+  mod: 'mods',
+  resourcepack: 'resourcepacks',
+  shader: 'shaderpacks',
+};
 
 /** `installedFile` de CurseForge à partir d'un fichier de l'API (mêmes valeurs, autres noms de champs). */
 export function installedFileFrom(file: CfFile & Json, previous: Json = {}, fileNameOnDisk = file.fileName): Json {
@@ -35,14 +39,14 @@ export function installedFileFrom(file: CfFile & Json, previous: Json = {}, file
     modules: ((file.modules as Array<{ name: string; fingerprint: number }> | undefined) ?? []).map((m) => ({
       foldername: m.name,
       fingerprint: m.fingerprint,
-      invalidFingerprint: false
+      invalidFingerprint: false,
     })),
     packageFingerprint: file.fileFingerprint ?? 0,
     gameVersion: file.gameVersions,
     sortableGameVersion: ((file.sortableGameVersions as Json[] | undefined) ?? []).map((v) => ({
       gameVersion: v.gameVersion,
       gameVersionName: v.gameVersionName,
-      gameVersionTypeId: v.gameVersionTypeId
+      gameVersionTypeId: v.gameVersionTypeId,
     })),
     isCompatibleWithClient: previous.isCompatibleWithClient ?? false,
     isEarlyAccessContent: file.isEarlyAccessContent ?? false,
@@ -50,80 +54,89 @@ export function installedFileFrom(file: CfFile & Json, previous: Json = {}, file
     projectStatus: previous.projectStatus ?? 4,
     projectId: file.modId,
     fileNameOnDisk,
-    hashes: file.hashes.map((h) => ({ type: h.algo, value: h.value }))
-  }
+    hashes: file.hashes.map((h) => ({ type: h.algo, value: h.value })),
+  };
 }
 
 /** Télécharge un fichier de CurseForge et vérifie son empreinte SHA-1 ; le fichier n'apparaît qu'une fois vérifié. */
 export async function downloadCurseForgeFile(file: CfFile, destination: string, apiKey: string): Promise<void> {
   if (!file.downloadUrl) {
-    throw new StudioError(`${file.fileName} : son auteur n’autorise pas le téléchargement hors de CurseForge. Mets-le à jour dans CurseForge.`)
+    throw new StudioError(
+      `${file.fileName} : son auteur n’autorise pas le téléchargement hors de CurseForge. Mets-le à jour dans CurseForge.`,
+    );
   }
-  const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase()
+  const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase();
   // Sans empreinte, rien ne permettrait de savoir si le fichier reçu est bien celui publié.
-  if (!expected) throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`)
-  const part = `${destination}.part`
-  let res: Response
+  if (!expected)
+    throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`);
+  const part = `${destination}.part`;
+  let res: Response;
   try {
-    res = await fetch(file.downloadUrl, { headers: { 'x-api-key': apiKey }, signal: AbortSignal.timeout(300_000) })
+    res = await fetch(file.downloadUrl, { headers: { 'x-api-key': apiKey }, signal: AbortSignal.timeout(300_000) });
   } catch {
-    throw new StudioError(`Téléchargement de ${file.fileName} impossible : vérifie ta connexion internet.`)
+    throw new StudioError(`Téléchargement de ${file.fileName} impossible : vérifie ta connexion internet.`);
   }
-  if (!res.ok || !res.body) throw new StudioError(`Téléchargement de ${file.fileName} refusé (${res.status}).`)
-  const hash = createHash('sha1')
+  if (!res.ok || !res.body) throw new StudioError(`Téléchargement de ${file.fileName} refusé (${res.status}).`);
+  const hash = createHash('sha1');
   try {
     await pipeline(
       Readable.fromWeb(res.body as never),
       async function* (source) {
         for await (const chunk of source) {
-          hash.update(chunk as Buffer)
-          yield chunk
+          hash.update(chunk as Buffer);
+          yield chunk;
         }
       },
-      createWriteStream(part)
-    )
-    if (hash.digest('hex') !== expected) throw new StudioError(`${file.fileName} est arrivé abîmé (empreinte différente).`)
-    await rename(part, destination)
+      createWriteStream(part),
+    );
+    if (hash.digest('hex') !== expected)
+      throw new StudioError(`${file.fileName} est arrivé abîmé (empreinte différente).`);
+    await rename(part, destination);
   } catch (err) {
-    await rm(part, { force: true })
-    throw err
+    await rm(part, { force: true });
+    throw err;
   }
 }
 
 /** Télécharge un fichier vers sa destination (avec la clé de l'API : CurseForgeClient.download). */
-export type Download = (file: CfFile, destination: string) => Promise<void>
+export type Download = (file: CfFile, destination: string) => Promise<void>;
 
 /**
  * Téléchargement depuis le site de CurseForge, comme le ferait le publieur : la page du fichier est ouverte et le
  * fichier qu'elle envoie est écrit à `destination`. Fourni par l'application (fenêtre cachée), absent en ligne de
  * commande. Sert aux fichiers que l'API ne sert pas (l'auteur n'autorise que CurseForge).
  */
-export type SiteDownload = (pageUrl: string, destination: string) => Promise<void>
+export type SiteDownload = (pageUrl: string, destination: string) => Promise<void>;
 
 /** Page de téléchargement d'un fichier sur le site de CurseForge, d'après la page de son projet. */
-export const curseForgeFilePage = (projectUrl: string, fileId: number) => `${projectUrl.replace(/\/+$/, '')}/download/${fileId}`
+export const curseForgeFilePage = (projectUrl: string, fileId: number) =>
+  `${projectUrl.replace(/\/+$/, '')}/download/${fileId}`;
 
 /** Le téléchargement depuis le site, vérifié par l'empreinte SHA-1 de l'API : le fichier n'apparaît qu'une fois vérifié. */
 export function siteDownloader(site: SiteDownload, projectUrl: string): Download {
   return async (file, destination) => {
-    const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase()
-    if (!expected) throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`)
-    const part = `${destination}.part`
+    const expected = file.hashes.find((h) => h.algo === 1)?.value.toLowerCase();
+    if (!expected)
+      throw new StudioError(`${file.fileName} n’a pas d’empreinte sur CurseForge : mets-le à jour dans CurseForge.`);
+    const part = `${destination}.part`;
     try {
-      await site(curseForgeFilePage(projectUrl, file.id), part)
-      if ((await sha1Of(part)) !== expected) throw new StudioError(`${file.fileName}, téléchargé depuis le site de CurseForge, n’est pas le fichier attendu (empreinte différente).`)
-      await rename(part, destination)
+      await site(curseForgeFilePage(projectUrl, file.id), part);
+      if ((await sha1Of(part)) !== expected)
+        throw new StudioError(
+          `${file.fileName}, téléchargé depuis le site de CurseForge, n’est pas le fichier attendu (empreinte différente).`,
+        );
+      await rename(part, destination);
     } catch (err) {
-      await rm(part, { force: true })
-      throw err
+      await rm(part, { force: true });
+      throw err;
     }
-  }
+  };
 }
 
 async function sha1Of(path: string): Promise<string> {
-  const hash = createHash('sha1')
-  for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer)
-  return hash.digest('hex')
+  const hash = createHash('sha1');
+  for await (const chunk of createReadStream(path)) hash.update(chunk as Buffer);
+  return hash.digest('hex');
 }
 
 /**
@@ -136,23 +149,23 @@ export async function replaceAddonFile(
   projectId: number,
   kind: AddonKind,
   file: CfFile & Json,
-  download: Download
+  download: Download,
 ): Promise<void> {
-  const addons = (instance.installedAddons as Json[] | undefined) ?? []
-  const entry = addons.find((a) => Number(a.addonID) === projectId)
-  if (!entry) throw new StudioError(`Le projet ${projectId} n’est pas dans ce profil.`)
-  const folder = join(profilePath, ADDON_FOLDERS[kind])
-  await mkdir(folder, { recursive: true })
-  const onDisk = entry.isEnabled === false ? `${file.fileName}.disabled` : file.fileName
-  await download(file, join(folder, onDisk))
+  const addons = (instance.installedAddons as Json[] | undefined) ?? [];
+  const entry = addons.find((a) => Number(a.addonID) === projectId);
+  if (!entry) throw new StudioError(`Le projet ${projectId} n’est pas dans ce profil.`);
+  const folder = join(profilePath, ADDON_FOLDERS[kind]);
+  await mkdir(folder, { recursive: true });
+  const onDisk = entry.isEnabled === false ? `${file.fileName}.disabled` : file.fileName;
+  await download(file, join(folder, onDisk));
 
-  const previous = typeof entry.fileNameOnDisk === 'string' ? entry.fileNameOnDisk : null
-  if (previous && previous.toLowerCase() !== onDisk.toLowerCase()) await rm(join(folder, previous), { force: true })
-  entry.installedFile = installedFileFrom(file, (entry.installedFile as Json) ?? {}, file.fileName)
-  entry.fileNameOnDisk = onDisk
-  entry.filePaths = [join(folder, onDisk)]
-  entry.modFolderPath = folder
-  entry.dateUpdated = new Date().toISOString()
+  const previous = typeof entry.fileNameOnDisk === 'string' ? entry.fileNameOnDisk : null;
+  if (previous && previous.toLowerCase() !== onDisk.toLowerCase()) await rm(join(folder, previous), { force: true });
+  entry.installedFile = installedFileFrom(file, (entry.installedFile as Json) ?? {}, file.fileName);
+  entry.fileNameOnDisk = onDisk;
+  entry.filePaths = [join(folder, onDisk)];
+  entry.modFolderPath = folder;
+  entry.dateUpdated = new Date().toISOString();
 }
 
 /**
@@ -166,18 +179,18 @@ export async function addAddon(
   mod: CfMod,
   kind: AddonKind,
   file: CfFile & Json,
-  download: Download
+  download: Download,
 ): Promise<void> {
-  const addons = (instance.installedAddons as Json[] | undefined) ?? []
-  if (addons.some((a) => Number(a.addonID) === mod.id)) throw new StudioError(`${mod.name} est déjà dans ce profil.`)
-  const folder = join(profilePath, ADDON_FOLDERS[kind])
-  await mkdir(folder, { recursive: true })
-  await download(file, join(folder, file.fileName))
+  const addons = (instance.installedAddons as Json[] | undefined) ?? [];
+  if (addons.some((a) => Number(a.addonID) === mod.id)) throw new StudioError(`${mod.name} est déjà dans ce profil.`);
+  const folder = join(profilePath, ADDON_FOLDERS[kind]);
+  await mkdir(folder, { recursive: true });
+  await download(file, join(folder, file.fileName));
 
-  const classId = CLASS_IDS[kind]
-  const template = addons.find((a) => Number(a.categoryClassID) === classId) ?? addons[0] ?? {}
-  const now = new Date().toISOString()
-  const installed = installedFileFrom(file, {}, file.fileName)
+  const classId = CLASS_IDS[kind];
+  const template = addons.find((a) => Number(a.categoryClassID) === classId) ?? addons[0] ?? {};
+  const now = new Date().toISOString();
+  const installed = installedFileFrom(file, {}, file.fileName);
   const entry: Json = {
     ...structuredClone(template),
     instanceID: randomUUID(),
@@ -210,9 +223,9 @@ export async function addAddon(
     isFuzzyMatch: false,
     manifestName: null,
     installedTargets: [],
-    allowModDistribution: mod.allowModDistribution ?? null
-  }
-  if (!template.categorySection) delete entry.categorySection
-  addons.push(entry)
-  instance.installedAddons = addons
+    allowModDistribution: mod.allowModDistribution ?? null,
+  };
+  if (!template.categorySection) delete entry.categorySection;
+  addons.push(entry);
+  instance.installedAddons = addons;
 }

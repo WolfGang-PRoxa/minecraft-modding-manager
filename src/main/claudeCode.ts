@@ -2,78 +2,83 @@
 // l'utilisateur par la commande `claude mcp add`, pour que Claude gère les modpacks par les commandes du moteur.
 // L'exécutable de l'application est lancé en mode Node (ELECTRON_RUN_AS_NODE) sur out/main/cli.js : rien d'autre à
 // installer, et le chemin ne change pas d'une mise à jour à l'autre.
-import { app, ipcMain } from 'electron'
-import { execFile, spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { tmpdir } from 'node:os'
-import { MCP_SERVER_NAME } from '../core/maintenance/claude'
-import type { ClaudeCodeStatus } from '../shared/types'
+import { app, ipcMain } from 'electron';
+import { execFile, spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { MCP_SERVER_NAME } from '../core/maintenance/claude';
+import type { ClaudeCodeStatus } from '../shared/types';
 
 /** Commande qui démarre le serveur MCP de cette installation. */
 function mcpLaunch(): { command: string; args: string[] } {
   const cli = app.isPackaged
     ? join(process.resourcesPath, 'app.asar', 'out', 'main', 'cli.js')
-    : join(app.getAppPath(), 'out', 'main', 'cli.js')
-  return { command: process.execPath, args: [cli, 'mcp'] }
+    : join(app.getAppPath(), 'out', 'main', 'cli.js');
+  return { command: process.execPath, args: [cli, 'mcp'] };
 }
 
-const quote = (arg: string) => (/[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '""')}"` : arg)
+const quote = (arg: string) => (/[\s"&|<>^]/.test(arg) ? `"${arg.replace(/"/g, '""')}"` : arg);
 
 function addArgs(): string[] {
-  const { command, args } = mcpLaunch()
-  return ['mcp', 'add', '--scope', 'user', MCP_SERVER_NAME, '--env', 'ELECTRON_RUN_AS_NODE=1', '--', command, ...args]
+  const { command, args } = mcpLaunch();
+  return ['mcp', 'add', '--scope', 'user', MCP_SERVER_NAME, '--env', 'ELECTRON_RUN_AS_NODE=1', '--', command, ...args];
 }
 
 /** Le programme `claude` : installation native d'abord, puis le PATH (installation par npm : claude.cmd). */
 function findClaude(): Promise<string | null> {
-  const native = join(homedir(), '.local', 'bin', 'claude.exe')
-  if (existsSync(native)) return Promise.resolve(native)
+  const native = join(homedir(), '.local', 'bin', 'claude.exe');
+  if (existsSync(native)) return Promise.resolve(native);
   return new Promise((resolve) => {
     execFile('where.exe', ['claude'], { windowsHide: true, timeout: 10_000 }, (err, stdout) => {
-      const found = err ? [] : stdout.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
-      resolve(found.find((p) => /\.exe$/i.test(p)) ?? found.find((p) => /\.cmd$/i.test(p)) ?? null)
-    })
-  })
+      const found = err
+        ? []
+        : stdout
+            .split(/\r?\n/)
+            .map((l) => l.trim())
+            .filter(Boolean);
+      resolve(found.find((p) => /\.exe$/i.test(p)) ?? found.find((p) => /\.cmd$/i.test(p)) ?? null);
+    });
+  });
 }
 
 function runClaude(claude: string, args: string[]): Promise<{ code: number; output: string }> {
   // Un .cmd passe par cmd.exe, qui recompose la ligne de commande : chaque argument y est cité.
   const [file, fileArgs, verbatim] = /\.cmd$/i.test(claude)
     ? ['cmd.exe', ['/d', '/s', '/c', `"${[claude, ...args].map(quote).join(' ')}"`], true]
-    : [claude, args, false]
+    : [claude, args, false];
   return new Promise((resolve) => {
     execFile(
       file,
       fileArgs,
       { windowsHide: true, timeout: 60_000, windowsVerbatimArguments: verbatim, cwd: dirname(process.execPath) },
       (err, stdout, stderr) => {
-        const code = err ? (typeof err.code === 'number' ? err.code : 1) : 0
-        resolve({ code, output: `${stdout}${stderr}`.trim() })
-      }
-    )
-  })
+        const code = err ? (typeof err.code === 'number' ? err.code : 1) : 0;
+        resolve({ code, output: `${stdout}${stderr}`.trim() });
+      },
+    );
+  });
 }
 
 async function status(): Promise<ClaudeCodeStatus> {
-  const manualCommand = ['claude', ...addArgs()].map(quote).join(' ')
-  const claude = await findClaude()
-  if (!claude) return { installed: false, connected: false, manualCommand }
-  const { code, output } = await runClaude(claude, ['mcp', 'get', MCP_SERVER_NAME])
-  const { args } = mcpLaunch()
+  const manualCommand = ['claude', ...addArgs()].map(quote).join(' ');
+  const claude = await findClaude();
+  if (!claude) return { installed: false, connected: false, manualCommand };
+  const { code, output } = await runClaude(claude, ['mcp', 'get', MCP_SERVER_NAME]);
+  const { args } = mcpLaunch();
   // Enregistré, et vers cette installation (pas vers un ancien emplacement).
-  const connected = code === 0 && output.toLowerCase().includes(args[0].toLowerCase())
-  return { installed: true, connected, manualCommand }
+  const connected = code === 0 && output.toLowerCase().includes(args[0].toLowerCase());
+  return { installed: true, connected, manualCommand };
 }
 
 async function connect(): Promise<{ ok: true } | { ok: false; error: string }> {
-  const claude = await findClaude()
-  if (!claude) return { ok: false, error: 'Claude Code est introuvable sur ce PC.' }
+  const claude = await findClaude();
+  if (!claude) return { ok: false, error: 'Claude Code est introuvable sur ce PC.' };
   // Un enregistrement précédent (autre emplacement) est remplacé.
-  await runClaude(claude, ['mcp', 'remove', '--scope', 'user', MCP_SERVER_NAME])
-  const { code, output } = await runClaude(claude, addArgs())
-  return code === 0 ? { ok: true } : { ok: false, error: output || `claude mcp add a échoué (code ${code}).` }
+  await runClaude(claude, ['mcp', 'remove', '--scope', 'user', MCP_SERVER_NAME]);
+  const { code, output } = await runClaude(claude, addArgs());
+  return code === 0 ? { ok: true } : { ok: false, error: output || `claude mcp add a échoué (code ${code}).` };
 }
 
 /**
@@ -81,14 +86,17 @@ async function connect(): Promise<{ ok: true } | { ok: false; error: string }> {
  * la commande enregistrée) : elle est retirée et refaite vers celle-ci. Sans effet si Claude Code n'était pas
  * connecté à une ancienne installation.
  */
-export async function reconnectPrevious(previousServerName: string, previousExecutables: readonly string[]): Promise<void> {
-  const claude = await findClaude()
-  if (!claude) return
-  const { code, output } = await runClaude(claude, ['mcp', 'get', previousServerName])
-  const text = output.toLowerCase()
-  if (code !== 0 || !previousExecutables.some((exe) => text.includes(exe.toLowerCase()))) return
-  await runClaude(claude, ['mcp', 'remove', '--scope', 'user', previousServerName])
-  await connect()
+export async function reconnectPrevious(
+  previousServerName: string,
+  previousExecutables: readonly string[],
+): Promise<void> {
+  const claude = await findClaude();
+  if (!claude) return;
+  const { code, output } = await runClaude(claude, ['mcp', 'get', previousServerName]);
+  const text = output.toLowerCase();
+  if (code !== 0 || !previousExecutables.some((exe) => text.includes(exe.toLowerCase()))) return;
+  await runClaude(claude, ['mcp', 'remove', '--scope', 'user', previousServerName]);
+  await connect();
 }
 
 /**
@@ -99,62 +107,78 @@ export async function reconnectPrevious(previousServerName: string, previousExec
 export async function askClaude(
   prompt: string,
   tools: string[],
-  timeoutMs = 10 * 60_000
+  timeoutMs = 10 * 60_000,
 ): Promise<{ ok: true; answer: string } | { ok: false; error: string }> {
-  const claude = await findClaude()
-  if (!claude) return { ok: false, error: 'Claude Code est introuvable sur ce PC.' }
-  if (/\.cmd$/i.test(claude)) return { ok: false, error: 'Seul Claude Code installé en version native (claude.exe) peut analyser les échecs.' }
-  const { command, args } = mcpLaunch()
-  const mcpConfig = JSON.stringify({ mcpServers: { [MCP_SERVER_NAME]: { command, args, env: { ELECTRON_RUN_AS_NODE: '1' } } } })
+  const claude = await findClaude();
+  if (!claude) return { ok: false, error: 'Claude Code est introuvable sur ce PC.' };
+  if (/\.cmd$/i.test(claude))
+    return { ok: false, error: 'Seul Claude Code installé en version native (claude.exe) peut analyser les échecs.' };
+  const { command, args } = mcpLaunch();
+  const mcpConfig = JSON.stringify({
+    mcpServers: { [MCP_SERVER_NAME]: { command, args, env: { ELECTRON_RUN_AS_NODE: '1' } } },
+  });
   const claudeArgs = [
     '-p',
-    '--output-format', 'text',
-    '--strict-mcp-config', '--mcp-config', mcpConfig,
-    '--tools', '',
-    '--allowedTools', ...tools,
-    '--permission-mode', 'dontAsk',
-    '--no-session-persistence'
-  ]
+    '--output-format',
+    'text',
+    '--strict-mcp-config',
+    '--mcp-config',
+    mcpConfig,
+    '--tools',
+    '',
+    '--allowedTools',
+    ...tools,
+    '--permission-mode',
+    'dontAsk',
+    '--no-session-persistence',
+  ];
   return new Promise((resolve) => {
-    const env = { ...process.env }
-    delete env.ELECTRON_RUN_AS_NODE
-    let child: ReturnType<typeof spawn>
+    const env = { ...process.env };
+    delete env.ELECTRON_RUN_AS_NODE;
+    let child: ReturnType<typeof spawn>;
     try {
-      child = spawn(claude, claudeArgs, { windowsHide: true, cwd: tmpdir(), env })
+      child = spawn(claude, claudeArgs, { windowsHide: true, cwd: tmpdir(), env });
     } catch (err) {
-      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${(err as Error).message}` })
-      return
+      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${(err as Error).message}` });
+      return;
     }
-    let out = ''
-    let err = ''
-    let timedOut = false
-    child.stdout!.on('data', (d: Buffer) => (out += d.toString()))
-    child.stderr!.on('data', (d: Buffer) => (err += d.toString()))
+    let out = '';
+    let err = '';
+    let timedOut = false;
+    child.stdout!.on('data', (d: Buffer) => (out += d.toString()));
+    child.stderr!.on('data', (d: Buffer) => (err += d.toString()));
     const timer = setTimeout(() => {
-      timedOut = true
-      child.kill()
-    }, timeoutMs)
+      timedOut = true;
+      child.kill();
+    }, timeoutMs);
     child.on('error', (e) => {
-      clearTimeout(timer)
-      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${e.message}` })
-    })
+      clearTimeout(timer);
+      resolve({ ok: false, error: `Claude Code n’a pas pu être lancé : ${e.message}` });
+    });
     child.on('close', (code) => {
-      clearTimeout(timer)
-      const answer = out.trim()
-      if (timedOut) resolve({ ok: false, error: `Pas de réponse de Claude Code au bout de ${Math.round(timeoutMs / 60_000)} minutes.` })
-      else if (code === 0 && answer) resolve({ ok: true, answer })
+      clearTimeout(timer);
+      const answer = out.trim();
+      if (timedOut)
+        resolve({
+          ok: false,
+          error: `Pas de réponse de Claude Code au bout de ${Math.round(timeoutMs / 60_000)} minutes.`,
+        });
+      else if (code === 0 && answer) resolve({ ok: true, answer });
       else {
         // Ce que Claude Code a dit en s'arrêtant (connexion expirée, limite d'utilisation…), sa fin seulement.
-        const said = (err.trim() || answer).replace(/\s+/g, ' ').slice(-400)
-        resolve({ ok: false, error: `Claude Code s’est arrêté sans réponse (code ${code ?? '?'})${said ? ` : ${said}` : '.'}` })
+        const said = (err.trim() || answer).replace(/\s+/g, ' ').slice(-400);
+        resolve({
+          ok: false,
+          error: `Claude Code s’est arrêté sans réponse (code ${code ?? '?'})${said ? ` : ${said}` : '.'}`,
+        });
       }
-    })
-    child.stdin!.end(prompt)
-  })
+    });
+    child.stdin!.end(prompt);
+  });
 }
 
 /** Canaux `claude:*`. */
 export function registerClaudeCodeIpc(): void {
-  ipcMain.handle('claude:status', () => status())
-  ipcMain.handle('claude:connect', () => connect())
+  ipcMain.handle('claude:status', () => status());
+  ipcMain.handle('claude:connect', () => connect());
 }

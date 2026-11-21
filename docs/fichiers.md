@@ -4,25 +4,25 @@ Où Modding Manager range ce qu’il installe et ce qu’il retient, et comment 
 
 ## Sur le PC
 
-| Emplacement | Contenu |
-|---|---|
-| `%LOCALAPPDATA%\Programs\minecraft-modding-manager` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal). |
-| `%APPDATA%\Modding Manager\settings.json` | Les réglages (voir ci-dessous). |
-| `%APPDATA%\Modding Manager\github-auth.json` | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows. |
-| `%APPDATA%\Modding Manager\curseforge-auth.json` | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)). |
-| `%APPDATA%\Modding Manager\journal.jsonl` | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)). |
-| `%APPDATA%\Modding Manager\operation.lock` | Présent pendant une opération d’écriture : dit laquelle, et qui la fait. |
-| `%APPDATA%\Modding Manager\maintenance.json` | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente). |
-| `%APPDATA%\Modding Manager\maintenance.lock` | Présent pendant un passage des mises à jour automatiques. |
-| `%APPDATA%\Modding Manager\cache` | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées. |
-| `%TEMP%\modding-manager` | Les téléchargements en cours des zips de modpack. Vidé automatiquement. |
-| `%LOCALAPPDATA%\Modding Manager\mises-a-jour` | L’installeur de la version installée de l’application, gardé pour que la mise à jour suivante ne télécharge que ce qui a changé (voir [Téléchargement différentiel](mises-a-jour.md#téléchargement-différentiel)), et celui d’une mise à jour en cours. Les autres sont supprimés au lancement. |
-| `%LOCALAPPDATA%\Modding Manager\test-servers` | Publieurs : les serveurs Minecraft des [tests](studio.md#tester-un-profil), un par chargeur et par version, téléchargés une fois. |
-| `%LOCALAPPDATA%\Modding Manager\test-clients` | Publieurs : les dossiers de jeu des joueurs de la partie de test, vidés à chaque test. |
-| `%LOCALAPPDATA%\Modding Manager\test-reports` | Publieurs : le dernier résultat de chaque test, par profil. |
-| Dossier `Instances` de CurseForge | Les modpacks installés : un dossier par profil. |
-| `.modding-manager`, à côté du dossier `Instances` | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre). |
-| Dossier des contenus (publieurs) | Les modpacks du publieur, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-contenus). |
+| Emplacement                                         | Contenu                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `%LOCALAPPDATA%\Programs\minecraft-modding-manager` | L’application elle-même, remplacée à chaque mise à jour, avec `mpm.cmd` (les [commandes](commandes.md) dans un terminal).                                                                                                                                                                       |
+| `%APPDATA%\Modding Manager\settings.json`           | Les réglages (voir ci-dessous).                                                                                                                                                                                                                                                                 |
+| `%APPDATA%\Modding Manager\github-auth.json`        | La connexion GitHub faite dans l’application : le nom du compte et le jeton, chiffré par Windows.                                                                                                                                                                                               |
+| `%APPDATA%\Modding Manager\curseforge-auth.json`    | Publieurs : la clé de l’API CurseForge et le jeton d’auteur, chiffrés par Windows (voir [Compte CurseForge](parametres.md#compte-curseforge)).                                                                                                                                                  |
+| `%APPDATA%\Modding Manager\journal.jsonl`           | Le journal des opérations d’écriture du Studio, de l’application comme des commandes (voir [Claude Code et commandes](commandes.md#plusieurs-opérations-en-même-temps)).                                                                                                                        |
+| `%APPDATA%\Modding Manager\operation.lock`          | Présent pendant une opération d’écriture : dit laquelle, et qui la fait.                                                                                                                                                                                                                        |
+| `%APPDATA%\Modding Manager\maintenance.json`        | Publieurs : le dernier passage des [mises à jour automatiques](automatique.md) de chaque modpack (résultat, mises à jour essayées, essai en attente).                                                                                                                                           |
+| `%APPDATA%\Modding Manager\maintenance.lock`        | Présent pendant un passage des mises à jour automatiques.                                                                                                                                                                                                                                       |
+| `%APPDATA%\Modding Manager\cache`                   | La dernière liste lue sur GitHub (affichée hors ligne) et les descriptions de modpacks déjà téléchargées.                                                                                                                                                                                       |
+| `%TEMP%\modding-manager`                            | Les téléchargements en cours des zips de modpack. Vidé automatiquement.                                                                                                                                                                                                                         |
+| `%LOCALAPPDATA%\Modding Manager\mises-a-jour`       | L’installeur de la version installée de l’application, gardé pour que la mise à jour suivante ne télécharge que ce qui a changé (voir [Téléchargement différentiel](mises-a-jour.md#téléchargement-différentiel)), et celui d’une mise à jour en cours. Les autres sont supprimés au lancement. |
+| `%LOCALAPPDATA%\Modding Manager\test-servers`       | Publieurs : les serveurs Minecraft des [tests](studio.md#tester-un-profil), un par chargeur et par version, téléchargés une fois.                                                                                                                                                               |
+| `%LOCALAPPDATA%\Modding Manager\test-clients`       | Publieurs : les dossiers de jeu des joueurs de la partie de test, vidés à chaque test.                                                                                                                                                                                                          |
+| `%LOCALAPPDATA%\Modding Manager\test-reports`       | Publieurs : le dernier résultat de chaque test, par profil.                                                                                                                                                                                                                                     |
+| Dossier `Instances` de CurseForge                   | Les modpacks installés : un dossier par profil.                                                                                                                                                                                                                                                 |
+| `.modding-manager`, à côté du dossier `Instances`   | Le dossier de travail d’une installation en cours, supprimé à la fin (conservé seulement si une mise à jour échoue, pour ne rien perdre).                                                                                                                                                       |
+| Dossier des contenus (publieurs)                    | Les modpacks du publieur, rangés pour le Studio : voir [Le Studio](studio.md#choisir-le-dossier-des-contenus).                                                                                                                                                                                  |
 
 `%APPDATA%\Modding Manager` contient aussi les fichiers internes de la fenêtre de l’application (cache du
 navigateur intégré…). Tout ce dossier est conservé lors d’une mise à jour ou d’une désinstallation.
@@ -38,22 +38,22 @@ et jusqu’à la 1.8 ceux de **Modpack Downloader** (`%APPDATA%\Modpack Download
 Les réglages de l’application, partagés avec les [commandes](commandes.md). Mieux vaut les modifier
 depuis les paramètres ; pour les modifier à la main, fermer d’abord l’application.
 
-| Champ | Contenu |
-|---|---|
-| `role` | `receiver` (récepteur), `publisher` (publieur), ou `null` avant le premier lancement. |
-| `repo` | Le dépôt des modpacks suivi : `{ "owner": "…", "name": "…" }`. |
-| `instancesDir` | Le dossier `Instances` choisi à la main, ou `null` pour la détection automatique. |
-| `openCurseForgeAfterInstall` | Ouvrir CurseForge après une installation (`true` par défaut). |
-| `shortcutPrompted` | La proposition de raccourci a reçu une réponse. |
-| `workspaceDir` | Le dossier des contenus du Studio. |
-| `lastView` | La dernière vue affichée (`library` ou `studio`), rouverte au lancement. |
-| `lastRunVersion` | La version de l’application au dernier lancement : sert à annoncer une mise à jour. |
-| `maintenanceClaude` | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut). |
-| `autoUpdate` | Installer d’elle-même une nouvelle version de l’application, au lancement et en arrière-plan (`true` par défaut). |
-| `launchAtStartup` | Lancer l’application au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, avec `--minimized`. |
-| `launchMode` | Lancée avec Windows : `background` (par défaut, en arrière-plan, icône de la zone de notification seulement) ou `window` (fenêtre réduite dans la barre des tâches). |
-| `window` | Taille et position de la fenêtre à l’ouverture : `mode` `maximized` (par défaut) ou `custom`, et `bounds` (`x`, `y`, `width`, `height`, en pixels Windows). |
-| `backgroundHintShown` | La bulle « reste ouvert en arrière-plan » a été montrée à la première fermeture de la fenêtre. |
+| Champ                        | Contenu                                                                                                                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `role`                       | `receiver` (récepteur), `publisher` (publieur), ou `null` avant le premier lancement.                                                                                           |
+| `repo`                       | Le dépôt des modpacks suivi : `{ "owner": "…", "name": "…" }`.                                                                                                                  |
+| `instancesDir`               | Le dossier `Instances` choisi à la main, ou `null` pour la détection automatique.                                                                                               |
+| `openCurseForgeAfterInstall` | Ouvrir CurseForge après une installation (`true` par défaut).                                                                                                                   |
+| `shortcutPrompted`           | La proposition de raccourci a reçu une réponse.                                                                                                                                 |
+| `workspaceDir`               | Le dossier des contenus du Studio.                                                                                                                                              |
+| `lastView`                   | La dernière vue affichée (`library` ou `studio`), rouverte au lancement.                                                                                                        |
+| `lastRunVersion`             | La version de l’application au dernier lancement : sert à annoncer une mise à jour.                                                                                             |
+| `maintenanceClaude`          | Confier à Claude Code les mises à jour automatiques qui échouent (`false` par défaut).                                                                                          |
+| `autoUpdate`                 | Installer d’elle-même une nouvelle version de l’application, au lancement et en arrière-plan (`true` par défaut).                                                               |
+| `launchAtStartup`            | Lancer l’application au démarrage de Windows (`true` par défaut) : valeur `Modding Manager` de la clé `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`, avec `--minimized`. |
+| `launchMode`                 | Lancée avec Windows : `background` (par défaut, en arrière-plan, icône de la zone de notification seulement) ou `window` (fenêtre réduite dans la barre des tâches).            |
+| `window`                     | Taille et position de la fenêtre à l’ouverture : `mode` `maximized` (par défaut) ou `custom`, et `bounds` (`x`, `y`, `width`, `height`, en pixels Windows).                     |
+| `backgroundHintShown`        | La bulle « reste ouvert en arrière-plan » a été montrée à la première fermeture de la fenêtre.                                                                                  |
 
 ## Dans un profil installé
 
@@ -86,20 +86,20 @@ Chaque version d’un modpack est une release du dépôt suivi :
 
 Le fichier `modpack.json` décrit la version :
 
-| Champ | Contenu |
-|---|---|
-| `schema` | Version du format : `1`. |
-| `id` | Identifiant du modpack (lettres minuscules, chiffres, tirets). |
-| `name`, `description` | Nom et description affichés. |
-| `version` | Numéro de la version. |
-| `minecraftVersion`, `modLoader`, `modCount` | Version de Minecraft, mod loader (`forge-47.2.0`, `neoforge-…`, `fabric-…`) et nombre de mods. |
-| `archive`, `archiveSize`, `archiveSha256` | Nom, taille et empreinte SHA-256 du zip, vérifiée après chaque téléchargement. |
-| `cover`, `coverSha256` | Nom et empreinte de l’image, ou `null`. |
-| `modsSignature` | Empreinte des mods (voir ci-dessous). |
-| `disabledMods` | Les fichiers du dossier `mods` installés désactivés (voir [Réglages des versions](reglages.md#désactiver-des-mods-chez-les-joueurs)). Absent s’il n’y en a pas. |
-| `keepPlayerConfigs` | `true` si une mise à jour garde les configurations modifiées par le joueur. Absent sinon. |
-| `author` | Propriétaire du dépôt. |
-| `createdAt` | Date de première publication de la version. |
+| Champ                                       | Contenu                                                                                                                                                         |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `schema`                                    | Version du format : `1`.                                                                                                                                        |
+| `id`                                        | Identifiant du modpack (lettres minuscules, chiffres, tirets).                                                                                                  |
+| `name`, `description`                       | Nom et description affichés.                                                                                                                                    |
+| `version`                                   | Numéro de la version.                                                                                                                                           |
+| `minecraftVersion`, `modLoader`, `modCount` | Version de Minecraft, mod loader (`forge-47.2.0`, `neoforge-…`, `fabric-…`) et nombre de mods.                                                                  |
+| `archive`, `archiveSize`, `archiveSha256`   | Nom, taille et empreinte SHA-256 du zip, vérifiée après chaque téléchargement.                                                                                  |
+| `cover`, `coverSha256`                      | Nom et empreinte de l’image, ou `null`.                                                                                                                         |
+| `modsSignature`                             | Empreinte des mods (voir ci-dessous).                                                                                                                           |
+| `disabledMods`                              | Les fichiers du dossier `mods` installés désactivés (voir [Réglages des versions](reglages.md#désactiver-des-mods-chez-les-joueurs)). Absent s’il n’y en a pas. |
+| `keepPlayerConfigs`                         | `true` si une mise à jour garde les configurations modifiées par le joueur. Absent sinon.                                                                       |
+| `author`                                    | Propriétaire du dépôt.                                                                                                                                          |
+| `createdAt`                                 | Date de première publication de la version.                                                                                                                     |
 
 Une release sans `modpack.json` est tout de même acceptée si son tag suit la convention et qu’elle contient un zip :
 son nom et sa version sont alors tirés du tag et du titre. Une release en brouillon n’est jamais affichée ; une
@@ -137,14 +137,14 @@ il prend quelques dizaines de millisecondes, même pour des milliers de mods.
 
 ## Options de lancement
 
-| Option | Effet |
-|---|---|
-| `--studio` | Ouvre l’application sur le Studio (publieurs). Relancée ainsi alors qu’elle tourne déjà, elle passe sur le Studio. |
-| `--updated` | Passée par l’installeur après une mise à jour : l’application annonce sa nouvelle version. |
-| `--minimized` | Lancement avec Windows : l’application démarre en arrière-plan ou réduite, selon `launchMode`. L’installeur la passe aussi à l’application qu’il relance si sa fenêtre était réduite. |
-| `--background` | Passée par l’installeur à l’application qu’il relance si elle tournait en arrière-plan : elle y reste. |
-| `--maintenance` | Passée par la tâche planifiée : l’application fait, sans fenêtre, les [mises à jour automatiques](automatique.md) dont le tour est venu, puis se ferme. |
-| `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modding Manager` (tests). |
+| Option                      | Effet                                                                                                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--studio`                  | Ouvre l’application sur le Studio (publieurs). Relancée ainsi alors qu’elle tourne déjà, elle passe sur le Studio.                                                                    |
+| `--updated`                 | Passée par l’installeur après une mise à jour : l’application annonce sa nouvelle version.                                                                                            |
+| `--minimized`               | Lancement avec Windows : l’application démarre en arrière-plan ou réduite, selon `launchMode`. L’installeur la passe aussi à l’application qu’il relance si sa fenêtre était réduite. |
+| `--background`              | Passée par l’installeur à l’application qu’il relance si elle tournait en arrière-plan : elle y reste.                                                                                |
+| `--maintenance`             | Passée par la tâche planifiée : l’application fait, sans fenêtre, les [mises à jour automatiques](automatique.md) dont le tour est venu, puis se ferme.                               |
+| `--user-data-dir=<dossier>` | Utilise un autre dossier de données que `%APPDATA%\Modding Manager` (tests).                                                                                                          |
 
 L’installeur accepte `/S` (installation silencieuse : ni question ni fenêtre) et `--updated` (mise à jour lancée
 par l’application : la fenêtre **Mise à jour** s’affiche, puis l’application est relancée avec `--updated`).

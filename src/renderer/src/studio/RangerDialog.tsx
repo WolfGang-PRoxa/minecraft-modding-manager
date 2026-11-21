@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react'
-import { ArrowDown, ArrowRight, ArrowUp, CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react'
-import type { RangerOrders, RangerPackPlan, RangerPlan } from '../../../shared/studio'
-import { Button, IconButton } from '../components/Button'
-import { Modal, Spinner } from './Modal'
-import { errorMessage, useStudio } from './store'
+import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowRight, ArrowUp, CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react';
+import type { RangerOrders, RangerPackPlan, RangerPlan } from '../../../shared/studio';
+import { Button, IconButton } from '../components/Button';
+import { Modal, Spinner } from './Modal';
+import { errorMessage, useStudio } from './store';
 
 function PackPlan({ plan, onMove }: { plan: RangerPackPlan; onMove: (from: number, to: number) => void }) {
-  const newOnes = plan.renames.filter((r) => r.kind === 'new')
+  const newOnes = plan.renames.filter((r) => r.kind === 'new');
   return (
     <section>
       <h3 className="mb-2 font-display text-lg font-semibold text-ink-100">{plan.name}</h3>
       <div className="space-y-2">
         {plan.renames.map((rename) => {
-          const index = newOnes.indexOf(rename)
+          const index = newOnes.indexOf(rename);
           return (
             <div key={rename.from} className="rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.05]">
               <div className="flex items-center gap-3">
@@ -20,10 +20,18 @@ function PackPlan({ plan, onMove }: { plan: RangerPackPlan; onMove: (from: numbe
                   {rename.from}
                 </span>
                 <ArrowRight size={16} className="shrink-0 text-ink-500" />
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-grass-300 select-text">{rename.to}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold text-grass-300 select-text">
+                  {rename.to}
+                </span>
                 {rename.kind === 'new' ? (
                   <div className="flex shrink-0">
-                    <IconButton icon={ArrowUp} label="Plus ancien" size={16} disabled={index === 0} onClick={() => onMove(index, index - 1)} />
+                    <IconButton
+                      icon={ArrowUp}
+                      label="Plus ancien"
+                      size={16}
+                      disabled={index === 0}
+                      onClick={() => onMove(index, index - 1)}
+                    />
                     <IconButton
                       icon={ArrowDown}
                       label="Plus récent"
@@ -33,7 +41,9 @@ function PackPlan({ plan, onMove }: { plan: RangerPackPlan; onMove: (from: numbe
                     />
                   </div>
                 ) : (
-                  <span className="w-[72px] shrink-0 text-right text-[11px] leading-tight text-ink-500">au nom du dossier</span>
+                  <span className="w-[72px] shrink-0 text-right text-[11px] leading-tight text-ink-500">
+                    au nom du dossier
+                  </span>
                 )}
               </div>
               {rename.warning && (
@@ -42,67 +52,72 @@ function PackPlan({ plan, onMove }: { plan: RangerPackPlan; onMove: (from: numbe
                 </p>
               )}
             </div>
-          )
+          );
         })}
         {plan.errors.map((error) => (
-          <p key={error} className="flex gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300 ring-1 ring-inset ring-red-400/20">
+          <p
+            key={error}
+            className="flex gap-2 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300 ring-1 ring-inset ring-red-400/20"
+          >
             <CircleAlert size={16} className="mt-0.5 shrink-0" /> <span className="select-text">{error}</span>
           </p>
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 export function RangerDialog() {
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const [orders, setOrders] = useState<RangerOrders>({})
-  const [plan, setPlan] = useState<RangerPlan | null>(null)
-  const [applying, setApplying] = useState(false)
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const [orders, setOrders] = useState<RangerOrders>({});
+  const [plan, setPlan] = useState<RangerPlan | null>(null);
+  const [applying, setApplying] = useState(false);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     window.studio
       .getRangerPlan(orders)
       .then((next) => !cancelled && setPlan(next))
-      .catch((err: unknown) => pushToast({ kind: 'error', title: 'Lecture du dossier impossible', message: errorMessage(err) }))
+      .catch((err: unknown) =>
+        pushToast({ kind: 'error', title: 'Lecture du dossier impossible', message: errorMessage(err) }),
+      );
     return () => {
-      cancelled = true
-    }
-  }, [orders, pushToast])
+      cancelled = true;
+    };
+  }, [orders, pushToast]);
 
   function move(pack: RangerPackPlan, from: number, to: number) {
-    const names = pack.renames.filter((r) => r.kind === 'new').map((r) => r.from)
-    ;[names[from], names[to]] = [names[to], names[from]]
-    setOrders((current) => ({ ...current, [pack.folder]: names }))
+    const names = pack.renames.filter((r) => r.kind === 'new').map((r) => r.from);
+    [names[from], names[to]] = [names[to], names[from]];
+    setOrders((current) => ({ ...current, [pack.folder]: names }));
   }
 
   async function apply() {
-    setApplying(true)
+    setApplying(true);
     try {
-      const result = await window.studio.applyRanger(orders)
+      const result = await window.studio.applyRanger(orders);
       if (result.ok) {
-        const n = result.renamed ?? 0
+        const n = result.renamed ?? 0;
         pushToast({
           kind: 'success',
           title: `${n} fichier${n > 1 ? 's' : ''} renommé${n > 1 ? 's' : ''}`,
-          message: 'Les nouvelles versions sont prêtes : ajoute leurs notes puis publie.'
-        })
-        close()
+          message: 'Les nouvelles versions sont prêtes : ajoute leurs notes puis publie.',
+        });
+        close();
       } else {
-        pushToast({ kind: 'error', title: 'Rangement interrompu', message: result.error })
+        pushToast({ kind: 'error', title: 'Rangement interrompu', message: result.error });
       }
     } catch (err) {
-      pushToast({ kind: 'error', title: 'Rangement interrompu', message: errorMessage(err) })
+      pushToast({ kind: 'error', title: 'Rangement interrompu', message: errorMessage(err) });
     } finally {
-      setApplying(false)
-      void refresh()
+      setApplying(false);
+      void refresh();
     }
   }
 
-  const total = plan?.total ?? 0
+  const total = plan?.total ?? 0;
   return (
     <Modal
       title="Ranger les zips"
@@ -113,7 +128,8 @@ export function RangerDialog() {
       footer={
         <>
           <p className="flex-1 text-xs leading-relaxed text-ink-400">
-            Un numéro n’est jamais réutilisé : si tu supprimes un zip, sa version disparaîtra de GitHub à la prochaine publication.
+            Un numéro n’est jamais réutilisé : si tu supprimes un zip, sa version disparaîtra de GitHub à la prochaine
+            publication.
           </p>
           <Button variant="ghost" onClick={close} disabled={applying}>
             {total ? 'Annuler' : 'Fermer'}
@@ -143,5 +159,5 @@ export function RangerDialog() {
         </div>
       )}
     </Modal>
-  )
+  );
 }

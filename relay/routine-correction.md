@@ -90,6 +90,7 @@ faire et le dire dans le résumé.
      passage) : ce qui causait le problème, ce qui change pour l'utilisateur, ce qui a été vérifié, ce qu'il reste à
      essayer à la main, les limites. Texte simple, phrases courtes, ton impersonnel, sans titres ni tableaux
      Markdown, quinze lignes au plus, sans ligne d'attribution.
+
 5. Pousser la branche une seule fois, à la fin : `git push origin HEAD:<branche>`. Si ce nom de branche est refusé,
    pousser sur `claude/issue-<n>` à la place.
 

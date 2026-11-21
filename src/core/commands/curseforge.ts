@@ -1,10 +1,10 @@
-import { isAbsolute } from 'node:path'
-import { z } from 'zod'
-import { StudioError } from '../studio/analyze'
-import { packOf, packParam } from './refs'
-import { command } from './registry'
+import { isAbsolute } from 'node:path';
+import { z } from 'zod';
+import { StudioError } from '../studio/analyze';
+import { packOf, packParam } from './refs';
+import { command } from './registry';
 
-const versionParam = z.number().int().positive().describe('Numéro de la version (v28 → 28).')
+const versionParam = z.number().int().positive().describe('Numéro de la version (v28 → 28).');
 
 export const curseforgeLink = command({
   name: 'curseforge link',
@@ -13,16 +13,19 @@ export const curseforgeLink = command({
     'Pour un projet qui a déjà des versions, la numérotation du modpack continue après la plus haute (« _V27 » → la ' +
     'prochaine est la v28) et les fichiers joints à l’export (overrides) sont ceux de sa dernière version. Le projet ' +
     'doit exister : on le crée une fois sur le site de CurseForge.',
-  params: z.object({ pack: packParam, project: z.string().min(1).describe('Numéro, slug ou adresse de la page du projet.') }),
+  params: z.object({
+    pack: packParam,
+    project: z.string().min(1).describe('Numéro, slug ou adresse de la page du projet.'),
+  }),
   kind: 'write',
   async run({ pack: ref, project }, ctx) {
-    const pack = await packOf(ctx, ref)
-    return { folder: pack.folder, ...(await ctx.service.linkCurseForge(pack.folder, project)) }
+    const pack = await packOf(ctx, ref);
+    return { folder: pack.folder, ...(await ctx.service.linkCurseForge(pack.folder, project)) };
   },
   print: (r) =>
     `${r.folder} est lié à « ${r.name} » (${r.projectId}).${r.highestVersion ? ` Dernière version publiée : V${r.highestVersion}.` : ''}\n` +
-    `Fichiers joints : ${r.overrides.join(', ') || 'aucun'}`
-})
+    `Fichiers joints : ${r.overrides.join(', ') || 'aucun'}`,
+});
 
 export const curseforgeTargets = command({
   name: 'curseforge targets',
@@ -35,29 +38,38 @@ export const curseforgeTargets = command({
     pack: packParam,
     overrides: z.array(z.string()).optional().describe('Fichiers joints à l’export (remplace la liste).'),
     github: z.boolean().optional().describe('Publier aussi sur GitHub.'),
-    unlink: z.boolean().optional().describe('Retirer le lien avec le projet CurseForge.')
+    unlink: z.boolean().optional().describe('Retirer le lien avec le projet CurseForge.'),
   }),
   kind: 'write',
   async run({ pack: ref, overrides, github, unlink }, ctx) {
-    const pack = await packOf(ctx, ref)
-    await ctx.service.updatePublishTargets(pack.folder, { overrides: overrides?.filter((o) => o.trim()), github, unlinkCurseForge: unlink })
-    const updated = await packOf(ctx, pack.folder)
-    return { folder: updated.folder, github: updated.github, curseforge: updated.curseforge }
-  }
-})
+    const pack = await packOf(ctx, ref);
+    await ctx.service.updatePublishTargets(pack.folder, {
+      overrides: overrides?.filter((o) => o.trim()),
+      github,
+      unlinkCurseForge: unlink,
+    });
+    const updated = await packOf(ctx, pack.folder);
+    return { folder: updated.folder, github: updated.github, curseforge: updated.curseforge };
+  },
+});
 
 export const curseforgeExport = command({
   name: 'curseforge export',
   summary: 'Crée l’export CurseForge d’une version dans un fichier, sans l’envoyer, pour le vérifier.',
-  params: z.object({ pack: packParam, version: versionParam, output: z.string().min(1).describe('Chemin absolu du zip à créer.') }),
+  params: z.object({
+    pack: packParam,
+    version: versionParam,
+    output: z.string().min(1).describe('Chemin absolu du zip à créer.'),
+  }),
   kind: 'write',
   async run({ pack: ref, version, output }, ctx) {
-    if (!isAbsolute(output)) throw new StudioError('Le chemin du zip doit être absolu.')
-    const pack = await packOf(ctx, ref)
-    return { output, ...(await ctx.service.exportCurseForge(pack.folder, version, output)) }
+    if (!isAbsolute(output)) throw new StudioError('Le chemin du zip doit être absolu.');
+    const pack = await packOf(ctx, ref);
+    return { output, ...(await ctx.service.exportCurseForge(pack.folder, version, output)) };
   },
-  print: (r) => `${r.output} : ${r.projects} projets CurseForge, fichiers joints : ${r.overrides.join(', ') || 'aucun'}`
-})
+  print: (r) =>
+    `${r.output} : ${r.projects} projets CurseForge, fichiers joints : ${r.overrides.join(', ') || 'aucun'}`,
+});
 
 export const curseforgePublish = command({
   name: 'curseforge publish',
@@ -70,20 +82,29 @@ export const curseforgePublish = command({
   params: z.object({
     pack: packParam,
     version: versionParam,
-    releaseType: z.enum(['release', 'beta', 'alpha']).optional().describe('Type de version (release par défaut).')
+    releaseType: z.enum(['release', 'beta', 'alpha']).optional().describe('Type de version (release par défaut).'),
   }),
   kind: 'destructive',
   async run({ pack: ref, version, releaseType }, ctx) {
-    const pack = await packOf(ctx, ref)
-    const fileId = await ctx.service.publishToCurseForge(pack.folder, version, releaseType ?? 'release', (text) => ctx.progress(text))
-    return { folder: pack.folder, version, fileId, url: pack.curseforge?.url ? `${pack.curseforge.url}/files/${fileId}` : null }
+    const pack = await packOf(ctx, ref);
+    const fileId = await ctx.service.publishToCurseForge(pack.folder, version, releaseType ?? 'release', (text) =>
+      ctx.progress(text),
+    );
+    return {
+      folder: pack.folder,
+      version,
+      fileId,
+      url: pack.curseforge?.url ? `${pack.curseforge.url}/files/${fileId}` : null,
+    };
   },
-  print: (r) => `v${r.version} envoyée sur CurseForge (fichier ${r.fileId}), en modération.${r.url ? `\n${r.url}` : ''}`
-})
+  print: (r) =>
+    `v${r.version} envoyée sur CurseForge (fichier ${r.fileId}), en modération.${r.url ? `\n${r.url}` : ''}`,
+});
 
 export const curseforgeVersions = command({
   name: 'curseforge versions',
-  summary: 'Versions du projet CurseForge d’un modpack, de la plus récente à la plus ancienne, avec leur état (en modération, approuvée, refusée…).',
+  summary:
+    'Versions du projet CurseForge d’un modpack, de la plus récente à la plus ancienne, avec leur état (en modération, approuvée, refusée…).',
   description:
     'Toutes les versions du projet lié : celles envoyées par l’application (sentByApp) et celles mises en ligne depuis ' +
     'le site. number : numéro donné par l’application, sinon le « _V<N> » du nom affiché (null sans numéro). Un numéro ' +
@@ -91,14 +112,17 @@ export const curseforgeVersions = command({
   params: z.object({ pack: packParam }),
   kind: 'read',
   async run({ pack: ref }, ctx) {
-    const pack = await packOf(ctx, ref)
-    if (!pack.curseforge) throw new StudioError(`${pack.name} n’est lié à aucun projet CurseForge (curseforge link).`)
-    return { folder: pack.folder, versions: await ctx.service.curseForgeVersions(pack.folder) }
+    const pack = await packOf(ctx, ref);
+    if (!pack.curseforge) throw new StudioError(`${pack.name} n’est lié à aucun projet CurseForge (curseforge link).`);
+    return { folder: pack.folder, versions: await ctx.service.curseForgeVersions(pack.folder) };
   },
   print: (r) =>
     r.versions.length
       ? r.versions
-          .map((v) => `${v.number === null ? '—' : `V${v.number}`} : ${v.displayName || `fichier ${v.fileId}`}, ${v.label}${v.date ? `, ${v.date.slice(0, 10)}` : ''}${v.sentByApp ? ' (envoyée par l’application)' : ''}`)
+          .map(
+            (v) =>
+              `${v.number === null ? '—' : `V${v.number}`} : ${v.displayName || `fichier ${v.fileId}`}, ${v.label}${v.date ? `, ${v.date.slice(0, 10)}` : ''}${v.sentByApp ? ' (envoyée par l’application)' : ''}`,
+          )
           .join('\n')
-      : `${r.folder} n’a encore aucune version sur CurseForge.`
-})
+      : `${r.folder} n’a encore aucune version sur CurseForge.`,
+});

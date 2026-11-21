@@ -4,37 +4,38 @@
 // automatiques, connexion de Claude Code. Le nouvel installeur a désinstallé l'ancienne application
 // (build/installer.nsh) ; au premier lancement, tout cela est dirigé vers la nouvelle, une fois.
 // Voir shared/previousIdentity.ts.
-import { app, shell } from 'electron'
-import { existsSync } from 'node:fs'
-import { readdir, rm, unlink, writeFile } from 'node:fs/promises'
-import { basename, dirname, join } from 'node:path'
+import { app, shell } from 'electron';
+import { existsSync } from 'node:fs';
+import { readdir, rm, unlink, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import {
   installMaintenanceTask,
   maintenanceTaskExecutable,
   readMaintenanceTask,
-  removeMaintenanceTask
-} from '../core/maintenance/scheduledTask'
-import { APP_NAME } from '../shared/config'
-import { PREVIOUS_EXECUTABLES, PREVIOUS_IDENTITIES, PREVIOUS_PRODUCT } from '../shared/previousIdentity'
-import { reconnectPrevious } from './claudeCode'
-import { maintenanceLauncher } from './maintenance'
-import { refreshShellIcons, WINDOWS_APP_ID } from './shortcut'
+  removeMaintenanceTask,
+} from '../core/maintenance/scheduledTask';
+import { APP_NAME } from '../shared/config';
+import { PREVIOUS_EXECUTABLES, PREVIOUS_IDENTITIES, PREVIOUS_PRODUCT } from '../shared/previousIdentity';
+import { reconnectPrevious } from './claudeCode';
+import { maintenanceLauncher } from './maintenance';
+import { refreshShellIcons, WINDOWS_APP_ID } from './shortcut';
 
 // Marque la reprise faite. Pas celui de la 1.9.0 (« previous-identity.done »), venu avec le dossier des données.
-const DONE_FILE = 'previous-identity-2.done'
+const DONE_FILE = 'previous-identity-2.done';
 
-const isPrevious = (target: string) => PREVIOUS_EXECUTABLES.some((exe) => basename(target).toLowerCase() === exe.toLowerCase())
+const isPrevious = (target: string) =>
+  PREVIOUS_EXECUTABLES.some((exe) => basename(target).toLowerCase() === exe.toLowerCase());
 
 /** Les raccourcis (.lnk) d'un dossier et, si demandé, de ses sous-dossiers. */
 async function shortcutsIn(dir: string, recursive: boolean): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true }).catch(() => [])
-  const found: string[] = []
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  const found: string[] = [];
   for (const entry of entries) {
-    const path = join(dir, entry.name)
-    if (entry.isFile() && /\.lnk$/i.test(entry.name)) found.push(path)
-    else if (recursive && entry.isDirectory()) found.push(...(await shortcutsIn(path, true)))
+    const path = join(dir, entry.name);
+    if (entry.isFile() && /\.lnk$/i.test(entry.name)) found.push(path);
+    else if (recursive && entry.isDirectory()) found.push(...(await shortcutsIn(path, true)));
   }
-  return found
+  return found;
 }
 
 /**
@@ -44,43 +45,47 @@ async function shortcutsIn(dir: string, recursive: boolean): Promise<string[]> {
  * Windows retient).
  */
 async function retargetShortcuts(): Promise<number> {
-  const roaming = app.getPath('appData')
-  const desktop = app.getPath('desktop')
+  const roaming = app.getPath('appData');
+  const desktop = app.getPath('desktop');
   const files = [
     ...(await shortcutsIn(desktop, false)),
     ...(await shortcutsIn(join(roaming, 'Microsoft', 'Windows', 'Start Menu', 'Programs'), true)),
-    ...(await shortcutsIn(join(roaming, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar'), false))
-  ]
-  let changed = 0
+    ...(await shortcutsIn(
+      join(roaming, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar'),
+      false,
+    )),
+  ];
+  let changed = 0;
   for (const file of files) {
-    let link: Electron.ShortcutDetails
+    let link: Electron.ShortcutDetails;
     try {
-      link = shell.readShortcutLink(file)
+      link = shell.readShortcutLink(file);
     } catch {
-      continue
+      continue;
     }
-    if (!isPrevious(link.target)) continue
+    if (!isPrevious(link.target)) continue;
     const details: Electron.ShortcutDetails = {
       ...link,
       target: process.execPath,
       cwd: dirname(process.execPath),
       icon: process.execPath,
       iconIndex: 0,
-      appUserModelId: WINDOWS_APP_ID
-    }
-    const renamed = join(desktop, `${APP_NAME}.lnk`)
-    const rename = dirname(file) === desktop && basename(file).toLowerCase() === `${PREVIOUS_PRODUCT.name}.lnk`.toLowerCase()
+      appUserModelId: WINDOWS_APP_ID,
+    };
+    const renamed = join(desktop, `${APP_NAME}.lnk`);
+    const rename =
+      dirname(file) === desktop && basename(file).toLowerCase() === `${PREVIOUS_PRODUCT.name}.lnk`.toLowerCase();
     if (rename && !existsSync(renamed)) {
       if (shell.writeShortcutLink(renamed, 'create', details)) {
-        await unlink(file).catch(() => {})
-        changed++
+        await unlink(file).catch(() => {});
+        changed++;
       }
-      continue
+      continue;
     }
-    if (shell.writeShortcutLink(file, 'replace', details)) changed++
+    if (shell.writeShortcutLink(file, 'replace', details)) changed++;
   }
-  if (changed) refreshShellIcons()
-  return changed
+  if (changed) refreshShellIcons();
+  return changed;
 }
 
 /**
@@ -88,23 +93,25 @@ async function retargetShortcuts(): Promise<number> {
  * celui-ci à la même heure.
  */
 async function retargetMaintenanceTask(): Promise<void> {
-  const executable = await maintenanceTaskExecutable(PREVIOUS_PRODUCT.maintenanceTask)
-  if (!executable || !isPrevious(executable)) return
-  const task = await readMaintenanceTask(null, PREVIOUS_PRODUCT.maintenanceTask)
-  if (task.time) await installMaintenanceTask(maintenanceLauncher(), { time: task.time, wake: task.wake })
-  await removeMaintenanceTask(PREVIOUS_PRODUCT.maintenanceTask)
+  const executable = await maintenanceTaskExecutable(PREVIOUS_PRODUCT.maintenanceTask);
+  if (!executable || !isPrevious(executable)) return;
+  const task = await readMaintenanceTask(null, PREVIOUS_PRODUCT.maintenanceTask);
+  if (task.time) await installMaintenanceTask(maintenanceLauncher(), { time: task.time, wake: task.wake });
+  await removeMaintenanceTask(PREVIOUS_PRODUCT.maintenanceTask);
 }
 
 /** Une seule fois par dossier de données, et seulement pour l'application installée. Ne lève jamais. */
 export async function migratePreviousInstallation(): Promise<void> {
-  if (!app.isPackaged || process.platform !== 'win32') return
-  const done = join(app.getPath('userData'), DONE_FILE)
-  if (existsSync(done)) return
+  if (!app.isPackaged || process.platform !== 'win32') return;
+  const done = join(app.getPath('userData'), DONE_FILE);
+  if (existsSync(done)) return;
   await Promise.allSettled([
     retargetShortcuts(),
     retargetMaintenanceTask(),
     reconnectPrevious(PREVIOUS_PRODUCT.mcpServer, PREVIOUS_EXECUTABLES),
-    ...PREVIOUS_IDENTITIES.map((identity) => rm(join(app.getPath('temp'), identity.tempDir), { recursive: true, force: true }))
-  ])
-  await writeFile(done, new Date().toISOString()).catch(() => {})
+    ...PREVIOUS_IDENTITIES.map((identity) =>
+      rm(join(app.getPath('temp'), identity.tempDir), { recursive: true, force: true }),
+    ),
+  ]);
+  await writeFile(done, new Date().toISOString()).catch(() => {});
 }

@@ -14,5 +14,15 @@
     "isolatedModules": true,
     "composite": true
   },
-  "include": ["electron.vite.config.ts", "src/main/**/*", "src/core/**/*", "src/cli/**/*", "src/mcp/**/*", "src/preload/**/*", "src/shared/**/*", "scripts/**/*", "test/**/*"]
+  "include": [
+    "electron.vite.config.ts",
+    "src/main/**/*",
+    "src/core/**/*",
+    "src/cli/**/*",
+    "src/mcp/**/*",
+    "src/preload/**/*",
+    "src/shared/**/*",
+    "scripts/**/*",
+    "test/**/*"
+  ]
 }

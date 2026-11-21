@@ -1,30 +1,42 @@
 // Mises à jour automatiques côté application : le passage lancé par la tâche planifiée (`--maintenance` : sans
 // fenêtre, puis une notification), et les canaux `maintenance:*` de la vue Studio. Le travail est dans
 // src/core/maintenance/.
-import { app, ipcMain, Notification, type BrowserWindow } from 'electron'
-import { spawn } from 'node:child_process'
-import type { MaintenanceRecord, PackUpdates } from '../shared/studio'
-import { createCommandRuntime } from '../core/commands/context'
-import { ANALYSIS_TOOLS, failurePrompt } from '../core/maintenance/claude'
-import { discardPending, finishPending, maintenanceStatus, runMaintenance, summarize, type MaintenanceOptions } from '../core/maintenance/pipeline'
-import { installMaintenanceTask, readMaintenanceTask, removeMaintenanceTask, type MaintenanceLauncher } from '../core/maintenance/scheduledTask'
-import { saveRecord } from '../core/maintenance/state'
-import { maintenanceLock, operationTools } from '../core/operations'
-import { getSettings, updateSettings } from '../core/settings'
-import { describeError } from '../core/studio/analyze'
-import type { StudioService } from '../core/studio/service'
-import { askClaude } from './claudeCode'
-import { downloadFromCurseForgeSite } from './siteDownload'
+import { app, ipcMain, Notification, type BrowserWindow } from 'electron';
+import { spawn } from 'node:child_process';
+import type { MaintenanceRecord, PackUpdates } from '../shared/studio';
+import { createCommandRuntime } from '../core/commands/context';
+import { ANALYSIS_TOOLS, failurePrompt } from '../core/maintenance/claude';
+import {
+  discardPending,
+  finishPending,
+  maintenanceStatus,
+  runMaintenance,
+  summarize,
+  type MaintenanceOptions,
+} from '../core/maintenance/pipeline';
+import {
+  installMaintenanceTask,
+  readMaintenanceTask,
+  removeMaintenanceTask,
+  type MaintenanceLauncher,
+} from '../core/maintenance/scheduledTask';
+import { saveRecord } from '../core/maintenance/state';
+import { maintenanceLock, operationTools } from '../core/operations';
+import { getSettings, updateSettings } from '../core/settings';
+import { describeError } from '../core/studio/analyze';
+import type { StudioService } from '../core/studio/service';
+import { askClaude } from './claudeCode';
+import { downloadFromCurseForgeSite } from './siteDownload';
 
 /** Argument qui lance un passage sans fenêtre (tâche planifiée). */
-export const MAINTENANCE_SWITCH = '--maintenance'
+export const MAINTENANCE_SWITCH = '--maintenance';
 
 /** Ce que la tâche planifiée lance : cette installation (en développement : Electron sur le dossier du projet). */
 export function maintenanceLauncher(): MaintenanceLauncher {
   return {
     execute: process.execPath,
-    arguments: app.isPackaged ? MAINTENANCE_SWITCH : `"${app.getAppPath()}" ${MAINTENANCE_SWITCH}`
-  }
+    arguments: app.isPackaged ? MAINTENANCE_SWITCH : `"${app.getAppPath()}" ${MAINTENANCE_SWITCH}`,
+  };
 }
 
 /**
@@ -32,137 +44,156 @@ export function maintenanceLauncher(): MaintenanceLauncher {
  * raison prend sa place (affichée dans le Studio) et va au journal : un échec silencieux ne s'explique plus après coup.
  */
 async function analyzeFailures(records: MaintenanceRecord[], holder: string): Promise<void> {
-  const { journal } = operationTools(holder)
+  const { journal } = operationTools(holder);
   for (const record of records.filter((r) => r.outcome === 'failed')) {
-    const started = Date.now()
-    const result = await askClaude(failurePrompt(record), ANALYSIS_TOOLS).catch((err): { ok: false; error: string } => ({ ok: false, error: describeError(err) }))
-    const operation = `l’analyse par Claude de l’échec de ${record.name}`
-    await journal.append(result.ok ? { operation, ok: true, durationMs: Date.now() - started } : { operation, ok: false, error: result.error, durationMs: Date.now() - started })
-    record.claude = result.ok ? result.answer : `Analyse impossible : ${result.error}`
-    await saveRecord(record, { replace: true })
+    const started = Date.now();
+    const result = await askClaude(failurePrompt(record), ANALYSIS_TOOLS).catch(
+      (err): { ok: false; error: string } => ({ ok: false, error: describeError(err) }),
+    );
+    const operation = `l’analyse par Claude de l’échec de ${record.name}`;
+    await journal.append(
+      result.ok
+        ? { operation, ok: true, durationMs: Date.now() - started }
+        : { operation, ok: false, error: result.error, durationMs: Date.now() - started },
+    );
+    record.claude = result.ok ? result.answer : `Analyse impossible : ${result.error}`;
+    await saveRecord(record, { replace: true });
   }
 }
 
 /** Ouvre l'application sur la vue Studio (ou la ramène au premier plan si elle tourne). */
 function openStudio(): void {
-  const env = { ...process.env }
-  delete env.ELECTRON_RUN_AS_NODE
-  const args = app.isPackaged ? ['--studio'] : [app.getAppPath(), '--studio']
-  spawn(process.execPath, args, { detached: true, stdio: 'ignore', env }).unref()
+  const env = { ...process.env };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const args = app.isPackaged ? ['--studio'] : [app.getAppPath(), '--studio'];
+  spawn(process.execPath, args, { detached: true, stdio: 'ignore', env }).unref();
 }
 
 /** Notification Windows ; un clic ouvre le Studio. Attend qu'elle soit lue ou rangée (2 minutes au plus). */
 function notify(body: string): Promise<void> {
-  if (!Notification.isSupported()) return Promise.resolve()
+  if (!Notification.isSupported()) return Promise.resolve();
   return new Promise((resolve) => {
-    const notification = new Notification({ title: 'Mises à jour des modpacks', body: body.length > 300 ? `${body.slice(0, 297)}…` : body })
-    const timer = setTimeout(done, 120_000)
+    const notification = new Notification({
+      title: 'Mises à jour des modpacks',
+      body: body.length > 300 ? `${body.slice(0, 297)}…` : body,
+    });
+    const timer = setTimeout(done, 120_000);
     function done() {
-      clearTimeout(timer)
-      resolve()
+      clearTimeout(timer);
+      resolve();
     }
     notification.on('click', () => {
-      openStudio()
-      done()
-    })
-    notification.on('close', done)
-    notification.show()
-  })
+      openStudio();
+      done();
+    });
+    notification.on('close', done);
+    notification.show();
+  });
 }
 
 /** Passage de la tâche planifiée : les modpacks dont le tour est venu, puis une notification s'il y a du nouveau. */
 export async function runScheduledMaintenance(): Promise<void> {
   try {
-    const settings = await getSettings()
-    if (settings.role !== 'publisher') return
-    const holder = 'la tâche planifiée'
-    const { service } = await createCommandRuntime({ holder, launcher: maintenanceLauncher(), siteDownload: downloadFromCurseForgeSite })
-    const records = await runMaintenance({ due: true }, { service, lock: maintenanceLock(holder) })
-    if (settings.maintenanceClaude) await analyzeFailures(records, holder)
-    const summary = summarize(records)
-    if (summary) await notify(summary)
+    const settings = await getSettings();
+    if (settings.role !== 'publisher') return;
+    const holder = 'la tâche planifiée';
+    const { service } = await createCommandRuntime({
+      holder,
+      launcher: maintenanceLauncher(),
+      siteDownload: downloadFromCurseForgeSite,
+    });
+    const records = await runMaintenance({ due: true }, { service, lock: maintenanceLock(holder) });
+    if (settings.maintenanceClaude) await analyzeFailures(records, holder);
+    const summary = summarize(records);
+    if (summary) await notify(summary);
   } catch (err) {
     // Un autre passage en cours (fenêtre, ligne de commande) : rien à signaler.
-    if (!/^Patiente/.test(describeError(err))) await notify(`Le passage automatique n’a pas pu se faire : ${describeError(err)}`)
+    if (!/^Patiente/.test(describeError(err)))
+      await notify(`Le passage automatique n’a pas pu se faire : ${describeError(err)}`);
   } finally {
-    app.quit()
+    app.quit();
   }
 }
 
-let runController: AbortController | null = null
+let runController: AbortController | null = null;
 
 /** Arrête un passage lancé depuis la fenêtre (fermeture de la fenêtre). */
 export function stopMaintenance(): void {
-  runController?.abort()
+  runController?.abort();
 }
 
 /** Canaux `maintenance:*` de la vue Studio. */
 export function registerMaintenanceIpc(service: () => StudioService, window: () => BrowserWindow | null): void {
-  const lock = maintenanceLock('l’application')
+  const lock = maintenanceLock('l’application');
   const send = (channel: string, payload: unknown) => {
-    const win = window()
-    if (win && !win.isDestroyed()) win.webContents.send(channel, payload)
-  }
+    const win = window();
+    if (win && !win.isDestroyed()) win.webContents.send(channel, payload);
+  };
   const options = (signal?: AbortSignal): MaintenanceOptions => ({
     service: service(),
     lock,
     onStep: (text) => send('maintenance:progress', text),
-    signal
-  })
+    signal,
+  });
   const outcome = async <T>(run: () => Promise<T>) => {
     try {
-      return { ok: true as const, ...(await run()) }
+      return { ok: true as const, ...(await run()) };
     } catch (err) {
-      return { ok: false as const, error: describeError(err) }
+      return { ok: false as const, error: describeError(err) };
     }
-  }
+  };
   const packView = async (folder: string) => {
-    const pack = (await service().overview()).packs.find((p) => p.folder === folder)
-    if (!pack) throw new Error(`Le modpack ${folder} est introuvable.`)
-    return pack
-  }
-  const task = () => (process.platform === 'win32' ? readMaintenanceTask(maintenanceLauncher()).catch(() => null) : Promise.resolve(null))
+    const pack = (await service().overview()).packs.find((p) => p.folder === folder);
+    if (!pack) throw new Error(`Le modpack ${folder} est introuvable.`);
+    return pack;
+  };
+  const task = () =>
+    process.platform === 'win32' ? readMaintenanceTask(maintenanceLauncher()).catch(() => null) : Promise.resolve(null);
 
   ipcMain.handle('maintenance:status', async () => ({
     ...(await maintenanceStatus(service(), lock, await task())),
-    claude: (await getSettings()).maintenanceClaude
-  }))
+    claude: (await getSettings()).maintenanceClaude,
+  }));
   ipcMain.handle('maintenance:configure', (_e, folder: string, changes: Partial<PackUpdates>) =>
-    outcome(async () => ({ updates: await service().updatePackUpdates(folder, changes ?? {}) }))
-  )
+    outcome(async () => ({ updates: await service().updatePackUpdates(folder, changes ?? {}) })),
+  );
   ipcMain.handle('maintenance:run', (_e, folders: string[]) =>
     outcome(async () => {
-      runController = new AbortController()
+      runController = new AbortController();
       try {
-        const records = await runMaintenance({ folders }, options(runController.signal))
-        if ((await getSettings()).maintenanceClaude) await analyzeFailures(records, 'l’application')
-        return { records }
+        const records = await runMaintenance({ folders }, options(runController.signal));
+        if ((await getSettings()).maintenanceClaude) await analyzeFailures(records, 'l’application');
+        return { records };
       } finally {
-        runController = null
+        runController = null;
       }
-    })
-  )
-  ipcMain.handle('maintenance:cancel', () => runController?.abort())
+    }),
+  );
+  ipcMain.handle('maintenance:cancel', () => runController?.abort());
   ipcMain.handle('maintenance:validate', (_e, folder: string, publish: boolean) =>
-    outcome(async () => ({ record: await finishPending(await packView(folder), publish === true, options()) }))
-  )
+    outcome(async () => ({ record: await finishPending(await packView(folder), publish === true, options()) })),
+  );
   ipcMain.handle('maintenance:discard', (_e, folder: string) =>
-    outcome(async () => ({ record: await discardPending(await packView(folder), options()) }))
-  )
+    outcome(async () => ({ record: await discardPending(await packView(folder), options()) })),
+  );
   ipcMain.handle('maintenance:schedule', (_e, schedule: { time: string; wake: boolean } | null) =>
     outcome(async () => {
-      if (schedule) await installMaintenanceTask(maintenanceLauncher(), { time: String(schedule.time), wake: schedule.wake === true })
-      else await removeMaintenanceTask()
-      return { task: await readMaintenanceTask(maintenanceLauncher()) }
-    })
-  )
+      if (schedule)
+        await installMaintenanceTask(maintenanceLauncher(), {
+          time: String(schedule.time),
+          wake: schedule.wake === true,
+        });
+      else await removeMaintenanceTask();
+      return { task: await readMaintenanceTask(maintenanceLauncher()) };
+    }),
+  );
   ipcMain.handle('maintenance:setClaude', async (_e, enabled: boolean) => {
-    await updateSettings({ maintenanceClaude: enabled === true })
-  })
+    await updateSettings({ maintenanceClaude: enabled === true });
+  });
 }
 
 /** Un passage tourne-t-il (dans n'importe quel processus) ? La mise à jour de l'application l'attend. */
 export function maintenanceTask(): string | null {
-  const info = maintenanceLock('l’application').currentSync()
-  return info ? `${info.operation} (${info.holder})` : null
+  const info = maintenanceLock('l’application').currentSync();
+  return info ? `${info.operation} (${info.holder})` : null;
 }

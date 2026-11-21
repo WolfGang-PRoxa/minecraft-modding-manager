@@ -1,97 +1,118 @@
-import { useEffect, useSyncExternalStore, type ReactNode } from 'react'
-import { BookOpen, Bug, ExternalLink, FolderCog, FolderOpen, Monitor, RefreshCw, RotateCcw, Sparkles, X } from 'lucide-react'
-import { findRelease } from '../../../shared/changelog'
-import { APP_REPO_URL, CURSEFORGE_DOWNLOAD_URL } from '../../../shared/config'
-import { changelog, CHANGELOG_PAGE, HOME } from '../docs/content'
-import { showDocs } from '../docs/store'
-import { formatDate } from '../lib/format'
-import { useStore } from '../store'
-import { Button, IconButton } from './Button'
-import { Toggle } from './Toggle'
-import { CheckInterval } from './CheckInterval'
-import { ClaudeCodeSetting, CurseForgeAccountSetting, HangarAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
-import { MAINTENANCE_SETTINGS_ID } from '../studio/maintenanceStore'
-import { PlayerUsageSection } from './Usage'
-import { AppearanceSection } from './Appearance'
-import { WindowPlacementSection } from './WindowPlacement'
-import { APP_NAME } from '../../../shared/config'
+import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
+import {
+  BookOpen,
+  Bug,
+  ExternalLink,
+  FolderCog,
+  FolderOpen,
+  Monitor,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  X,
+} from 'lucide-react';
+import { findRelease } from '../../../shared/changelog';
+import { APP_REPO_URL, CURSEFORGE_DOWNLOAD_URL } from '../../../shared/config';
+import { changelog, CHANGELOG_PAGE, HOME } from '../docs/content';
+import { showDocs } from '../docs/store';
+import { formatDate } from '../lib/format';
+import { useStore } from '../store';
+import { Button, IconButton } from './Button';
+import { Toggle } from './Toggle';
+import { CheckInterval } from './CheckInterval';
+import {
+  ClaudeCodeSetting,
+  CurseForgeAccountSetting,
+  HangarAccountSetting,
+  MaintenanceSetting,
+  ModrinthAccountSetting,
+  WorkspaceFolderSetting,
+} from '../studio/StudioSettings';
+import { MAINTENANCE_SETTINGS_ID } from '../studio/maintenanceStore';
+import { PlayerUsageSection } from './Usage';
+import { AppearanceSection } from './Appearance';
+import { WindowPlacementSection } from './WindowPlacement';
+import { APP_NAME } from '../../../shared/config';
 
 const SOURCE_LABELS = {
   settings: 'Choisi manuellement',
   curseforge: 'Détecté automatiquement depuis CurseForge',
-  default: 'Emplacement par défaut de CurseForge'
-}
+  default: 'Emplacement par défaut de CurseForge',
+};
 
 /** Largeur à partir de laquelle les paramètres du publieur tiennent sur trois colonnes (`2xl` de Tailwind). */
-const WIDE_QUERY = '(min-width: 1536px)'
+const WIDE_QUERY = '(min-width: 1536px)';
 
 function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
     (onChange) => {
-      const list = window.matchMedia(query)
-      list.addEventListener('change', onChange)
-      return () => list.removeEventListener('change', onChange)
+      const list = window.matchMedia(query);
+      list.addEventListener('change', onChange);
+      return () => list.removeEventListener('change', onChange);
     },
-    () => window.matchMedia(query).matches
-  )
+    () => window.matchMedia(query).matches,
+  );
 }
 
 function Section({ title, id, children }: { title: string; id?: string; children: ReactNode }) {
   return (
-    <section id={id} className="mb-4 break-inside-avoid scroll-mt-4 rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]">
+    <section
+      id={id}
+      className="mb-4 break-inside-avoid scroll-mt-4 rounded-2xl bg-ink-800/50 p-5 ring-1 ring-inset ring-tint/[0.06]"
+    >
       <h3 className="mb-3 text-xs font-semibold tracking-widest text-ink-400 uppercase">{title}</h3>
       {children}
     </section>
-  )
+  );
 }
 
 export function SettingsDialog() {
-  const open = useStore((s) => s.settingsOpen)
-  const setOpen = useStore((s) => s.setSettingsOpen)
-  const settings = useStore((s) => s.settings)
-  const curseForge = useStore((s) => s.curseForge)
-  const appVersion = useStore((s) => s.appVersion)
-  const updateSettings = useStore((s) => s.updateSettings)
-  const pickInstancesDir = useStore((s) => s.pickInstancesDir)
-  const restartCurseForge = useStore((s) => s.restartCurseForge)
-  const publisher = useStore((s) => s.settings?.role === 'publisher')
-  const shortcut = useStore((s) => s.shortcut)
-  const createShortcut = useStore((s) => s.createShortcut)
-  const update = useStore((s) => s.catalog?.appUpdate ?? null)
-  const checking = useStore((s) => s.refreshing)
-  const checkAppUpdate = useStore((s) => s.checkAppUpdate)
-  const openReport = useStore((s) => s.setReportOpen)
-  const wide = useMediaQuery(WIDE_QUERY)
-  const releasedOn = findRelease(changelog, appVersion)?.date ?? null
+  const open = useStore((s) => s.settingsOpen);
+  const setOpen = useStore((s) => s.setSettingsOpen);
+  const settings = useStore((s) => s.settings);
+  const curseForge = useStore((s) => s.curseForge);
+  const appVersion = useStore((s) => s.appVersion);
+  const updateSettings = useStore((s) => s.updateSettings);
+  const pickInstancesDir = useStore((s) => s.pickInstancesDir);
+  const restartCurseForge = useStore((s) => s.restartCurseForge);
+  const publisher = useStore((s) => s.settings?.role === 'publisher');
+  const shortcut = useStore((s) => s.shortcut);
+  const createShortcut = useStore((s) => s.createShortcut);
+  const update = useStore((s) => s.catalog?.appUpdate ?? null);
+  const checking = useStore((s) => s.refreshing);
+  const checkAppUpdate = useStore((s) => s.checkAppUpdate);
+  const openReport = useStore((s) => s.setReportOpen);
+  const wide = useMediaQuery(WIDE_QUERY);
+  const releasedOn = findRelease(changelog, appVersion)?.date ?? null;
   // L'aide s'affiche sous les fenêtres de dialogue : les paramètres se referment pour la laisser voir.
   const openDocs = (slug: string) => {
-    setOpen(false)
-    showDocs(slug)
-  }
+    setOpen(false);
+    showDocs(slug);
+  };
 
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     // Échap ferme la fenêtre ouverte par-dessus (éditeur de style), pas les paramètres.
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && document.querySelectorAll('[aria-modal="true"]').length === 1) setOpen(false)
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, setOpen])
+      if (e.key === 'Escape' && document.querySelectorAll('[aria-modal="true"]').length === 1) setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, setOpen]);
 
-  if (!open || !settings) return null
+  if (!open || !settings) return null;
 
   const usage = (
     <Section key="usage" title="Utilisation">
       <PlayerUsageSection />
     </Section>
-  )
+  );
 
   const appearanceSection = (
     <Section key="appearance" title="Apparence">
       <AppearanceSection />
     </Section>
-  )
+  );
 
   const curseForgeSection = (
     <Section key="curseforge" title="CurseForge">
@@ -103,7 +124,8 @@ export function SettingsDialog() {
               {curseForge.flavor === 'overwolf' ? ' (version Overwolf)' : ' (application autonome)'}.
             </p>
             <p className="mt-0.5 text-xs text-ink-400">
-              Un modpack installé pendant que CurseForge était ouvert n’y apparaît pas ? Relance-le : il relit ses profils.
+              Un modpack installé pendant que CurseForge était ouvert n’y apparaît pas ? Relance-le : il relit ses
+              profils.
             </p>
           </div>
           <Button size="sm" icon={RotateCcw} onClick={() => void restartCurseForge()}>
@@ -138,7 +160,7 @@ export function SettingsDialog() {
         />
       </div>
     </Section>
-  )
+  );
 
   const instances = (
     <Section key="instances" title="Dossier des instances">
@@ -158,12 +180,22 @@ export function SettingsDialog() {
           Modifier…
         </Button>
         {curseForge?.instancesDirExists && (
-          <Button size="sm" variant="ghost" icon={FolderOpen} onClick={() => void window.api.openPath(curseForge.instancesDir)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={FolderOpen}
+            onClick={() => void window.api.openPath(curseForge.instancesDir)}
+          >
             Ouvrir
           </Button>
         )}
         {settings.instancesDir && (
-          <Button size="sm" variant="ghost" icon={RotateCcw} onClick={() => void updateSettings({ instancesDir: null })}>
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={RotateCcw}
+            onClick={() => void updateSettings({ instancesDir: null })}
+          >
             Détection automatique
           </Button>
         )}
@@ -172,12 +204,14 @@ export function SettingsDialog() {
         À modifier seulement si tu as changé le dossier d’installation dans les paramètres Minecraft de CurseForge.
       </p>
     </Section>
-  )
+  );
 
   const shortcutSection = (
     <Section key="shortcut" title="Raccourci">
       <p className="text-sm text-ink-200">
-        {shortcut?.onDesktop ? `${APP_NAME} a un raccourci sur ton bureau.` : 'Pas de raccourci sur ton bureau pour l’instant.'}
+        {shortcut?.onDesktop
+          ? `${APP_NAME} a un raccourci sur ton bureau.`
+          : 'Pas de raccourci sur ton bureau pour l’instant.'}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button size="sm" icon={Monitor} onClick={() => void createShortcut('desktop')}>
@@ -188,13 +222,13 @@ export function SettingsDialog() {
         </Button>
       </div>
     </Section>
-  )
+  );
 
   const windowSection = (
     <Section key="window" title="Fenêtre à l’ouverture">
       <WindowPlacementSection />
     </Section>
-  )
+  );
 
   const startup = (
     <Section key="startup" title="Démarrage et mises à jour">
@@ -209,7 +243,9 @@ export function SettingsDialog() {
           onChange={(value) => void updateSettings({ launchAtStartup: value })}
         />
       </div>
-      <div className={`mt-4 ml-4 flex items-center justify-between gap-6 border-l border-tint/10 pl-4 ${settings.launchAtStartup ? '' : 'opacity-50'}`}>
+      <div
+        className={`mt-4 ml-4 flex items-center justify-between gap-6 border-l border-tint/10 pl-4 ${settings.launchAtStartup ? '' : 'opacity-50'}`}
+      >
         <div>
           <div className="text-sm font-medium text-ink-100">Ouvrir la fenêtre au démarrage</div>
           <div className="mt-0.5 text-xs text-ink-400">
@@ -227,7 +263,8 @@ export function SettingsDialog() {
       </div>
       <p className="mt-4 text-xs leading-relaxed text-ink-400">
         Fermer la fenêtre laisse l’application tourner en arrière-plan, prête à se rouvrir. Pour la quitter : clic droit
-        sur son icône en bas à droite de l’écran (zone de notification), puis <strong className="font-semibold text-ink-300">Quitter</strong>.
+        sur son icône en bas à droite de l’écran (zone de notification), puis{' '}
+        <strong className="font-semibold text-ink-300">Quitter</strong>.
       </p>
       <div className="mt-5 flex items-center justify-between gap-6">
         <div>
@@ -254,8 +291,8 @@ export function SettingsDialog() {
         <div>
           <div className="text-sm font-medium text-ink-100">Mettre l’application à jour automatiquement</div>
           <div className="mt-0.5 text-xs text-ink-400">
-            Une nouvelle version s’installe d’elle-même au lancement, ou pendant que l’application tourne en arrière-plan
-            (et au réveil du PC). Fenêtre ouverte, elle attend que tu la refermes.
+            Une nouvelle version s’installe d’elle-même au lancement, ou pendant que l’application tourne en
+            arrière-plan (et au réveil du PC). Fenêtre ouverte, elle attend que tu la refermes.
           </div>
         </div>
         <Toggle
@@ -272,7 +309,7 @@ export function SettingsDialog() {
         />
       </div>
     </Section>
-  )
+  );
 
   const about = (
     <Section key="about" title="À propos">
@@ -300,51 +337,71 @@ export function SettingsDialog() {
         <Button size="sm" variant="ghost" icon={Bug} onClick={() => openReport(true)}>
           Signaler un problème
         </Button>
-        <Button size="sm" variant="ghost" icon={ExternalLink} onClick={() => void window.api.openExternal(APP_REPO_URL)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          icon={ExternalLink}
+          onClick={() => void window.api.openExternal(APP_REPO_URL)}
+        >
           Dépôt GitHub
         </Button>
       </div>
     </Section>
-  )
+  );
 
   const workspace = (
     <Section key="workspace" title="Dossier des contenus">
       <WorkspaceFolderSetting />
     </Section>
-  )
+  );
   const curseForgeAccount = (
     <Section key="curseforge-account" title="Compte CurseForge">
       <CurseForgeAccountSetting />
     </Section>
-  )
+  );
   const modrinthAccount = (
     <Section key="modrinth-account" title="Compte Modrinth">
       <ModrinthAccountSetting />
     </Section>
-  )
+  );
   const hangarAccount = (
     <Section key="hangar-account" title="Compte Hangar">
       <HangarAccountSetting />
     </Section>
-  )
+  );
   const maintenance = (
     <Section key="maintenance" id={MAINTENANCE_SETTINGS_ID} title="Mises à jour automatiques">
       <MaintenanceSetting />
     </Section>
-  )
+  );
   const claude = (
     <Section key="claude" title="Claude Code et terminal">
       <ClaudeCodeSetting />
     </Section>
-  )
+  );
 
   // Une colonne sur une fenêtre étroite, deux sinon ; trois pour le publieur sur un grand écran. Les sections se
   // suivent de haut en bas, colonne après colonne, et le navigateur équilibre les colonnes (colonnes CSS) : la place
   // reste bien remplie quelle que soit la hauteur de chaque section (états, messages, style ouvert…).
   const sections = publisher
-    ? [usage, appearanceSection, startup, windowSection, shortcutSection, about, curseForgeSection, instances, workspace, maintenance, claude, curseForgeAccount, modrinthAccount, hangarAccount]
-    : [usage, appearanceSection, windowSection, curseForgeSection, instances, startup, shortcutSection, about]
-  const threeColumns = publisher && wide
+    ? [
+        usage,
+        appearanceSection,
+        startup,
+        windowSection,
+        shortcutSection,
+        about,
+        curseForgeSection,
+        instances,
+        workspace,
+        maintenance,
+        claude,
+        curseForgeAccount,
+        modrinthAccount,
+        hangarAccount,
+      ]
+    : [usage, appearanceSection, windowSection, curseForgeSection, instances, startup, shortcutSection, about];
+  const threeColumns = publisher && wide;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -367,5 +424,5 @@ export function SettingsDialog() {
         </div>
       </div>
     </div>
-  )
+  );
 }

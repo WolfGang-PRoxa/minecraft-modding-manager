@@ -1,11 +1,11 @@
-import { useMemo, type ReactNode } from 'react'
-import type { LucideIcon } from 'lucide-react'
-import { Blocks, Cpu, HardDrive, Package } from 'lucide-react'
-import { formatPresentVersions, type PresentVersion } from '../../../shared/presence'
-import type { Modpack, ModpackVersion } from '../../../shared/types'
-import { formatBytes, formatLoader } from '../lib/format'
-import { packStatus } from '../lib/status'
-import { useStore } from '../store'
+import { useMemo, type ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import { Blocks, Cpu, HardDrive, Package } from 'lucide-react';
+import { formatPresentVersions, type PresentVersion } from '../../../shared/presence';
+import type { Modpack, ModpackVersion } from '../../../shared/types';
+import { formatBytes, formatLoader } from '../lib/format';
+import { packStatus } from '../lib/status';
+import { useStore } from '../store';
 
 export function MetaChip({ icon: Icon, children }: { icon: LucideIcon; children: ReactNode }) {
   return (
@@ -13,44 +13,48 @@ export function MetaChip({ icon: Icon, children }: { icon: LucideIcon; children:
       <Icon size={13} strokeWidth={2.25} className="text-ink-300" />
       {children}
     </span>
-  )
+  );
 }
 
 export function VersionMeta({ version, withSize = true }: { version: ModpackVersion; withSize?: boolean }) {
-  const loader = formatLoader(version.modLoader)
+  const loader = formatLoader(version.modLoader);
   return (
     <div className="flex flex-wrap gap-2">
       {version.minecraftVersion && <MetaChip icon={Blocks}>Minecraft {version.minecraftVersion}</MetaChip>}
       {loader && <MetaChip icon={Cpu}>{loader}</MetaChip>}
-      {version.modCount !== null && <MetaChip icon={Package}>{version.modCount} mod{version.modCount > 1 ? 's' : ''}</MetaChip>}
+      {version.modCount !== null && (
+        <MetaChip icon={Package}>
+          {version.modCount} mod{version.modCount > 1 ? 's' : ''}
+        </MetaChip>
+      )}
       {withSize && version.archiveSize > 0 && <MetaChip icon={HardDrive}>{formatBytes(version.archiveSize)}</MetaChip>}
     </div>
-  )
+  );
 }
 
 const TONES = {
   grass: 'bg-grass-400/15 text-grass-300 ring-grass-400/30',
   sky: 'bg-sky-400/15 text-sky-300 ring-sky-400/30',
-  amber: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35'
-}
+  amber: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35',
+};
 
 // Posées sur l'image d'un modpack : un fond sombre, pour rester lisibles quelle que soit l'image.
 const SOLID_TONES: typeof TONES = {
   grass: 'bg-ink-950/75 text-grass-300 ring-grass-400/40',
   sky: 'bg-ink-950/75 text-sky-300 ring-sky-400/40',
-  amber: 'bg-ink-950/75 text-amber-glow ring-amber-glow/45'
-}
+  amber: 'bg-ink-950/75 text-amber-glow ring-amber-glow/45',
+};
 
 function Badge({
   tone,
   solid = false,
   title,
-  children
+  children,
 }: {
-  tone: keyof typeof TONES
-  solid?: boolean
-  title?: string
-  children: ReactNode
+  tone: keyof typeof TONES;
+  solid?: boolean;
+  title?: string;
+  children: ReactNode;
 }) {
   return (
     <span
@@ -60,13 +64,13 @@ function Badge({
       <span className="size-1.5 rounded-full bg-current" />
       {children}
     </span>
-  )
+  );
 }
 
 /** « v2 : profil « Mon pack », reconnu à ses mods » : d'où vient une version trouvée dans CurseForge. */
 export function describePresence(present: PresentVersion): string {
-  const origin = present.source === 'mods' ? 'reconnu à ses mods' : 'installé par l’application'
-  return `v${present.version} : profil « ${present.profileName} », ${origin}`
+  const origin = present.source === 'mods' ? 'reconnu à ses mods' : 'installé par l’application';
+  return `v${present.version} : profil « ${present.profileName} », ${origin}`;
 }
 
 /**
@@ -75,22 +79,22 @@ export function describePresence(present: PresentVersion): string {
  */
 export function PackBadges({
   modpack,
-  onCover = false
+  onCover = false,
 }: {
-  modpack: Modpack
+  modpack: Modpack;
   /** Sur l'image d'une carte : pastilles empilées, sur fond sombre. */
-  onCover?: boolean
+  onCover?: boolean;
 }) {
-  const installed = useStore((s) => s.installed)
-  const present = useStore((s) => s.present)
-  const mine = useMemo(() => present.filter((p) => p.id === modpack.id), [present, modpack.id])
-  const status = packStatus(modpack, installed)
+  const installed = useStore((s) => s.installed);
+  const present = useStore((s) => s.present);
+  const mine = useMemo(() => present.filter((p) => p.id === modpack.id), [present, modpack.id]);
+  const status = packStatus(modpack, installed);
   // Version installée par l'application mais retirée de GitHub : elle n'apparaît pas parmi les versions présentes.
-  const unlisted = status.kind !== 'available' && !mine.some((p) => p.profilePath === status.installed.instancePath)
+  const unlisted = status.kind !== 'available' && !mine.some((p) => p.profilePath === status.installed.instancePath);
 
-  if (mine.length === 0 && status.kind === 'available') return null
-  const hasLatest = mine.some((p) => p.version === modpack.latest.version)
-  const several = new Set(mine.map((p) => p.version)).size > 1
+  if (mine.length === 0 && status.kind === 'available') return null;
+  const hasLatest = mine.some((p) => p.version === modpack.latest.version);
+  const several = new Set(mine.map((p) => p.version)).size > 1;
   return (
     <div className={`flex gap-1.5 ${onCover ? 'flex-col items-start' : 'flex-wrap items-center'}`}>
       {mine.length > 0 && (
@@ -109,5 +113,5 @@ export function PackBadges({
         </Badge>
       )}
     </div>
-  )
+  );
 }

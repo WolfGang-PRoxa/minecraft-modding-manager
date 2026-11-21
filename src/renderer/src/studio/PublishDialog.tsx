@@ -1,18 +1,24 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import { Check, CircleCheck, CircleMinus, CircleX, Minus, Plus, RefreshCw, TriangleAlert, Upload } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type { PublishProgress, SyncAction, SyncActionKind } from '../../../shared/studio'
-import { Button } from '../components/Button'
-import { formatBytes, formatSpeed } from '../lib/format'
-import { Modal, ProgressBar, Spinner } from './Modal'
-import { useStudio } from './store'
-import { publishToGitHub, stopGitHubPublication, TARGET_NAMES, usePublications, useRunningPublication } from './publications'
+import { useEffect, useState, type ReactNode } from 'react';
+import { Check, CircleCheck, CircleMinus, CircleX, Minus, Plus, RefreshCw, TriangleAlert, Upload } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { PublishProgress, SyncAction, SyncActionKind } from '../../../shared/studio';
+import { Button } from '../components/Button';
+import { formatBytes, formatSpeed } from '../lib/format';
+import { Modal, ProgressBar, Spinner } from './Modal';
+import { useStudio } from './store';
+import {
+  publishToGitHub,
+  stopGitHubPublication,
+  TARGET_NAMES,
+  usePublications,
+  useRunningPublication,
+} from './publications';
 
 export const KINDS: Record<SyncActionKind, { title: string; step: string; icon: LucideIcon; tone: string }> = {
   create: { title: 'Nouvelles versions', step: 'Nouvelle version', icon: Plus, tone: 'bg-sky-400/15 text-sky-300' },
   update: { title: 'Mises à jour', step: 'Mise à jour', icon: RefreshCw, tone: 'bg-amber-glow/15 text-amber-glow' },
-  delete: { title: 'Suppressions', step: 'Suppression', icon: Minus, tone: 'bg-red-500/15 text-red-300' }
-}
+  delete: { title: 'Suppressions', step: 'Suppression', icon: Minus, tone: 'bg-red-500/15 text-red-300' },
+};
 
 function WarningBox({ children }: { children: ReactNode }) {
   return (
@@ -20,11 +26,11 @@ function WarningBox({ children }: { children: ReactNode }) {
       <TriangleAlert size={18} className="mt-0.5 shrink-0 text-amber-glow" />
       <div className="space-y-1">{children}</div>
     </div>
-  )
+  );
 }
 
 function ActionRow({ action }: { action: SyncAction }) {
-  const kind = KINDS[action.kind]
+  const kind = KINDS[action.kind];
   return (
     <div className="flex gap-3 rounded-xl bg-tint/[0.03] px-4 py-3 ring-1 ring-inset ring-tint/[0.05]">
       <span className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg ${kind.tone}`}>
@@ -44,7 +50,7 @@ function ActionRow({ action }: { action: SyncAction }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 const STEP_ICONS = {
@@ -52,8 +58,8 @@ const STEP_ICONS = {
   running: <Spinner size={16} className="text-grass-300" />,
   done: <Check size={16} strokeWidth={3} className="text-grass-400" />,
   error: <CircleX size={16} className="text-red-400" />,
-  skipped: <CircleMinus size={16} className="text-ink-500" />
-}
+  skipped: <CircleMinus size={16} className="text-ink-500" />,
+};
 
 export function ProgressView({ progress }: { progress: PublishProgress | null }) {
   if (!progress) {
@@ -61,18 +67,23 @@ export function ProgressView({ progress }: { progress: PublishProgress | null })
       <div className="flex items-center gap-3 py-6 text-ink-300">
         <Spinner /> Dernière vérification de GitHub…
       </div>
-    )
+    );
   }
   return (
     <div className="space-y-1">
       {progress.steps.map((step, i) => {
-        const running = step.status === 'running'
-        const current = running ? progress.current : null
+        const running = step.status === 'running';
+        const current = running ? progress.current : null;
         return (
-          <div key={step.tag} className={`rounded-xl px-4 py-3 ${running ? 'bg-tint/[0.05] ring-1 ring-inset ring-tint/[0.06]' : ''}`}>
+          <div
+            key={step.tag}
+            className={`rounded-xl px-4 py-3 ${running ? 'bg-tint/[0.05] ring-1 ring-inset ring-tint/[0.06]' : ''}`}
+          >
             <div className="flex items-center gap-3">
               <span className="flex size-5 items-center justify-center">{STEP_ICONS[step.status]}</span>
-              <span className={`flex-1 font-medium ${step.status === 'pending' || step.status === 'skipped' ? 'text-ink-400' : 'text-ink-100'}`}>
+              <span
+                className={`flex-1 font-medium ${step.status === 'pending' || step.status === 'skipped' ? 'text-ink-400' : 'text-ink-100'}`}
+              >
                 {KINDS[step.kind].step} · {step.label}
               </span>
               <span className="text-xs text-ink-500">
@@ -94,21 +105,21 @@ export function ProgressView({ progress }: { progress: PublishProgress | null })
             )}
             {step.error && <p className="mt-2 pl-8 text-sm text-red-300 select-text">{step.error}</p>}
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 /** Suivi de la publication sur GitHub, en cours ou terminée ; la fermer ne l'arrête pas. */
 export function PublishFollowDialog() {
-  const github = usePublications((s) => s.github)
-  const following = usePublications((s) => s.following)
-  const follow = usePublications((s) => s.follow)
-  const running = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null)
-  if (!following || !github) return null
-  const { result } = github
-  const hide = () => follow(false)
+  const github = usePublications((s) => s.github);
+  const following = usePublications((s) => s.following);
+  const follow = usePublications((s) => s.follow);
+  const running = usePublications((s) => s.running.find((p) => p.target === 'github') ?? null);
+  if (!following || !github) return null;
+  const { result } = github;
+  const hide = () => follow(false);
 
   return (
     <Modal
@@ -118,7 +129,9 @@ export function PublishFollowDialog() {
       footer={
         running ? (
           <>
-            <p className="flex-1 text-xs text-ink-400">Arrêter laisse GitHub dans un état cohérent : l’étape en cours est annulée proprement.</p>
+            <p className="flex-1 text-xs text-ink-400">
+              Arrêter laisse GitHub dans un état cohérent : l’étape en cours est annulée proprement.
+            </p>
             <Button variant="danger" disabled={running.stopping} onClick={stopGitHubPublication}>
               {running.stopping ? 'Arrêt…' : 'Arrêter'}
             </Button>
@@ -165,27 +178,27 @@ export function PublishFollowDialog() {
       )}
       <ProgressView progress={github.progress} />
     </Modal>
-  )
+  );
 }
 
 export function PublishDialog() {
-  const plan = useStudio((s) => s.overview?.plan ?? null)
-  const github = useStudio((s) => s.overview?.github)
-  const refresh = useStudio((s) => s.refresh)
-  const close = useStudio((s) => s.closeDialog)
-  const busy = useRunningPublication()
-  const [checking, setChecking] = useState(true)
+  const plan = useStudio((s) => s.overview?.plan ?? null);
+  const github = useStudio((s) => s.overview?.github);
+  const refresh = useStudio((s) => s.refresh);
+  const close = useStudio((s) => s.closeDialog);
+  const busy = useRunningPublication();
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     // L'aperçu repart d'un état de GitHub tout frais.
-    void refresh({ remote: true }).then(() => setChecking(false))
-  }, [refresh])
+    void refresh({ remote: true }).then(() => setChecking(false));
+  }, [refresh]);
 
   function start() {
-    if (!plan) return
+    if (!plan) return;
     // La fenêtre se ferme : la publication continue en arrière-plan, suivie dans l'encart des publications.
-    close()
-    void publishToGitHub(plan.fingerprint, plan.actions.length)
+    close();
+    void publishToGitHub(plan.fingerprint, plan.actions.length);
   }
 
   if (checking) {
@@ -195,7 +208,7 @@ export function PublishDialog() {
           <Spinner size={20} /> Comparaison du dossier avec GitHub…
         </div>
       </Modal>
-    )
+    );
   }
 
   if (!plan) {
@@ -213,13 +226,13 @@ export function PublishDialog() {
           </div>
         </div>
       </Modal>
-    )
+    );
   }
 
   const groups = (['create', 'update', 'delete'] as const)
     .map((kind) => ({ kind, actions: plan.actions.filter((a) => a.kind === kind) }))
-    .filter((g) => g.actions.length > 0)
-  const deletions = plan.actions.filter((a) => a.kind === 'delete').length
+    .filter((g) => g.actions.length > 0);
+  const deletions = plan.actions.filter((a) => a.kind === 'delete').length;
 
   return (
     <Modal
@@ -247,12 +260,7 @@ export function PublishDialog() {
             <Button variant="ghost" onClick={close}>
               Annuler
             </Button>
-            <Button
-              variant={deletions ? 'danger' : 'primary'}
-              icon={Upload}
-              disabled={!!busy}
-              onClick={start}
-            >
+            <Button variant={deletions ? 'danger' : 'primary'} icon={Upload} disabled={!!busy} onClick={start}>
               Publier {plan.actions.length} changement{plan.actions.length > 1 ? 's' : ''}
             </Button>
           </>
@@ -263,8 +271,8 @@ export function PublishDialog() {
         {plan.pendingZips > 0 && (
           <WarningBox>
             {plan.pendingZips} zip{plan.pendingZips > 1 ? 's ne sont' : ' n’est'} pas encore rangé
-            {plan.pendingZips > 1 ? 's' : ''} : {plan.pendingZips > 1 ? 'ils seront ignorés' : 'il sera ignoré'}. Ferme cette
-            fenêtre et clique sur « Ranger les zips » pour {plan.pendingZips > 1 ? 'les' : 'le'} publier.
+            {plan.pendingZips > 1 ? 's' : ''} : {plan.pendingZips > 1 ? 'ils seront ignorés' : 'il sera ignoré'}. Ferme
+            cette fenêtre et clique sur « Ranger les zips » pour {plan.pendingZips > 1 ? 'les' : 'le'} publier.
           </WarningBox>
         )}
         {plan.warnings.length > 0 && (
@@ -304,5 +312,5 @@ export function PublishDialog() {
         )}
       </div>
     </Modal>
-  )
+  );
 }

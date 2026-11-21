@@ -1,34 +1,34 @@
-import { useMemo } from 'react'
-import { CircleArrowUp, Download, LoaderCircle, Sparkles } from 'lucide-react'
-import { parseReleaseNotes } from '../../../shared/changelog'
-import { CHANGELOG_PAGE } from '../docs/content'
-import { showDocs } from '../docs/store'
-import { formatBytes } from '../lib/format'
-import { useStore } from '../store'
-import { Button } from './Button'
+import { useMemo } from 'react';
+import { CircleArrowUp, Download, LoaderCircle, Sparkles } from 'lucide-react';
+import { parseReleaseNotes } from '../../../shared/changelog';
+import { CHANGELOG_PAGE } from '../docs/content';
+import { showDocs } from '../docs/store';
+import { formatBytes } from '../lib/format';
+import { useStore } from '../store';
+import { Button } from './Button';
 
 /**
  * Proposition de mise à jour de l'application, juste sous la barre de titre : hors de la zone qui défile,
  * elle reste visible dans toutes les vues (bibliothèque, studio, premier lancement).
  */
 export function UpdateBar() {
-  const update = useStore((s) => s.catalog?.appUpdate ?? null)
-  const appVersion = useStore((s) => s.appVersion)
-  const progress = useStore((s) => s.appUpdateProgress)
-  const dismissed = useStore((s) => s.updateDismissed)
-  const installing = useStore((s) => s.busyId !== null)
-  const install = useStore((s) => s.installAppUpdate)
-  const cancel = useStore((s) => s.cancelAppUpdate)
-  const dismiss = useStore((s) => s.dismissAppUpdate)
+  const update = useStore((s) => s.catalog?.appUpdate ?? null);
+  const appVersion = useStore((s) => s.appVersion);
+  const progress = useStore((s) => s.appUpdateProgress);
+  const dismissed = useStore((s) => s.updateDismissed);
+  const installing = useStore((s) => s.busyId !== null);
+  const install = useStore((s) => s.installAppUpdate);
+  const cancel = useStore((s) => s.cancelAppUpdate);
+  const dismiss = useStore((s) => s.dismissAppUpdate);
   // Les releases publiées avec leurs notes (tirées de CHANGELOG.md) disent ce que la mise à jour apporte.
   const hasNotes = useMemo(
     () => (update?.releases ?? []).some((release) => parseReleaseNotes(release.notes).sections.length > 0),
-    [update]
-  )
-  if (!update || (!progress && dismissed === update.version)) return null
+    [update],
+  );
+  if (!update || (!progress && dismissed === update.version)) return null;
 
-  const percent = progress?.total ? Math.min(100, Math.round((progress.done / progress.total) * 100)) : 0
-  const restarting = progress?.phase === 'installing'
+  const percent = progress?.total ? Math.min(100, Math.round((progress.done / progress.total) * 100)) : 0;
+  const restarting = progress?.phase === 'installing';
   return (
     <div
       role="status"
@@ -45,8 +45,8 @@ export function UpdateBar() {
         <p className="min-w-0 flex-1 text-sm text-ink-300">
           {restarting ? (
             <>
-              <strong className="font-semibold text-ink-100">Installation de la version {update.version}…</strong> L’application
-              se ferme puis se relance toute seule.
+              <strong className="font-semibold text-ink-100">Installation de la version {update.version}…</strong>{' '}
+              L’application se ferme puis se relance toute seule.
             </>
           ) : progress ? (
             <>
@@ -57,9 +57,9 @@ export function UpdateBar() {
             </>
           ) : (
             <>
-              <strong className="font-semibold text-ink-100">Nouvelle version disponible : {update.version}</strong> · tu
-              utilises la {appVersion}. La mise à jour est automatique ({formatBytes(update.installerSize)}) : l’application
-              se relance toute seule.
+              <strong className="font-semibold text-ink-100">Nouvelle version disponible : {update.version}</strong> ·
+              tu utilises la {appVersion}. La mise à jour est automatique ({formatBytes(update.installerSize)}) :
+              l’application se relance toute seule.
             </>
           )}
         </p>
@@ -101,5 +101,5 @@ export function UpdateBar() {
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -1,30 +1,30 @@
-import { execFile, spawn } from 'node:child_process'
-import { open, readdir, stat } from 'node:fs/promises'
-import { homedir } from 'node:os'
-import { dirname, join } from 'node:path'
-import { promisify } from 'node:util'
-import { CURSEFORGE_OVERWOLF_UID } from '../shared/config'
-import type { CurseForgeFlavor, CurseForgeRestartResult, CurseForgeStatus, Settings } from '../shared/types'
-import { pathExists } from './fsutil'
+import { execFile, spawn } from 'node:child_process';
+import { open, readdir, stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { promisify } from 'node:util';
+import { CURSEFORGE_OVERWOLF_UID } from '../shared/config';
+import type { CurseForgeFlavor, CurseForgeRestartResult, CurseForgeStatus, Settings } from '../shared/types';
+import { pathExists } from './fsutil';
 
-const execFileAsync = promisify(execFile)
+const execFileAsync = promisify(execFile);
 
 interface Launcher {
-  flavor: CurseForgeFlavor
-  command: string
-  args: string[]
+  flavor: CurseForgeFlavor;
+  command: string;
+  args: string[];
 }
 
-const localAppData = () => process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local')
-const roamingAppData = () => process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming')
+const localAppData = () => process.env.LOCALAPPDATA ?? join(homedir(), 'AppData', 'Local');
+const roamingAppData = () => process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming');
 
-export const defaultInstancesDir = () => join(homedir(), 'curseforge', 'minecraft', 'Instances')
+export const defaultInstancesDir = () => join(homedir(), 'curseforge', 'minecraft', 'Instances');
 
 /** Découpe une ligne de commande Windows en respectant les guillemets. */
 function splitCommandLine(commandLine: string): string[] {
-  const tokens: string[] = []
-  for (const match of commandLine.matchAll(/"([^"]*)"|(\S+)/g)) tokens.push(match[1] ?? match[2])
-  return tokens
+  const tokens: string[] = [];
+  for (const match of commandLine.matchAll(/"([^"]*)"|(\S+)/g)) tokens.push(match[1] ?? match[2]);
+  return tokens;
 }
 
 /** Commande associée au protocole curseforge:// (enregistrée par les deux versions de CurseForge). */
@@ -32,36 +32,36 @@ async function launcherFromProtocol(): Promise<Launcher | null> {
   try {
     const { stdout } = await execFileAsync('reg', ['query', 'HKCR\\curseforge\\shell\\open\\command', '/ve'], {
       windowsHide: true,
-      timeout: 5000
-    })
-    const commandLine = /REG_(?:EXPAND_)?SZ\s+(.+)/.exec(stdout)?.[1]?.trim()
-    if (!commandLine) return null
-    const [command, ...rest] = splitCommandLine(commandLine)
-    if (!command || !(await pathExists(command))) return null
+      timeout: 5000,
+    });
+    const commandLine = /REG_(?:EXPAND_)?SZ\s+(.+)/.exec(stdout)?.[1]?.trim();
+    if (!commandLine) return null;
+    const [command, ...rest] = splitCommandLine(commandLine);
+    if (!command || !(await pathExists(command))) return null;
     // On retire les arguments propres au lien cliqué (%1, --origin=urlscheme).
-    const args = rest.filter((arg) => !arg.includes('%1') && !arg.startsWith('--origin'))
-    const flavor: CurseForgeFlavor = /overwolf/i.test(commandLine) ? 'overwolf' : 'standalone'
-    return { flavor, command, args }
+    const args = rest.filter((arg) => !arg.includes('%1') && !arg.startsWith('--origin'));
+    const flavor: CurseForgeFlavor = /overwolf/i.test(commandLine) ? 'overwolf' : 'standalone';
+    return { flavor, command, args };
   } catch {
-    return null
+    return null;
   }
 }
 
 async function launcherFromKnownPaths(): Promise<Launcher | null> {
-  const standalone = join(localAppData(), 'Programs', 'CurseForge Windows', 'CurseForge.exe')
-  if (await pathExists(standalone)) return { flavor: 'standalone', command: standalone, args: [] }
+  const standalone = join(localAppData(), 'Programs', 'CurseForge Windows', 'CurseForge.exe');
+  if (await pathExists(standalone)) return { flavor: 'standalone', command: standalone, args: [] };
 
-  const programFilesX86 = process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)'
-  const overwolf = join(programFilesX86, 'Overwolf', 'OverwolfLauncher.exe')
-  const extension = join(localAppData(), 'Overwolf', 'Extensions', CURSEFORGE_OVERWOLF_UID)
+  const programFilesX86 = process.env['ProgramFiles(x86)'] ?? 'C:\\Program Files (x86)';
+  const overwolf = join(programFilesX86, 'Overwolf', 'OverwolfLauncher.exe');
+  const extension = join(localAppData(), 'Overwolf', 'Extensions', CURSEFORGE_OVERWOLF_UID);
   if ((await pathExists(overwolf)) && (await pathExists(extension))) {
-    return { flavor: 'overwolf', command: overwolf, args: ['-launchapp', CURSEFORGE_OVERWOLF_UID, '-from-desktop'] }
+    return { flavor: 'overwolf', command: overwolf, args: ['-launchapp', CURSEFORGE_OVERWOLF_UID, '-from-desktop'] };
   }
-  return null
+  return null;
 }
 
 async function findLauncher(): Promise<Launcher | null> {
-  return (await launcherFromProtocol()) ?? (await launcherFromKnownPaths())
+  return (await launcherFromProtocol()) ?? (await launcherFromKnownPaths());
 }
 
 /**
@@ -69,16 +69,16 @@ async function findLauncher(): Promise<Launcher | null> {
  * se contentent de remettre leur fenêtre au premier plan.
  */
 export async function launchCurseForge(): Promise<boolean> {
-  const launcher = await findLauncher()
-  if (!launcher) return false
-  const child = spawn(launcher.command, launcher.args, { detached: true, stdio: 'ignore' })
-  child.on('error', () => {})
-  child.unref()
-  return true
+  const launcher = await findLauncher();
+  if (!launcher) return false;
+  const child = spawn(launcher.command, launcher.args, { detached: true, stdio: 'ignore' });
+  child.on('error', () => {});
+  child.unref();
+  return true;
 }
 
 const LOG_PATTERN =
-  /(?:Setting file watcher on instance directory|Resolving Minecraft instances list from) ([^"\r\n]+)/g
+  /(?:Setting file watcher on instance directory|Resolving Minecraft instances list from) ([^"\r\n]+)/g;
 
 /**
  * CurseForge n'expose pas son dossier d'instances dans un fichier de réglages lisible,
@@ -88,63 +88,63 @@ async function instancesDirFromLogs(): Promise<string | null> {
   const logDirs = [
     join(localAppData(), 'Overwolf', 'Log', 'Apps', 'CurseForge', 'CurseClient'),
     join(roamingAppData(), 'CurseForge', 'logs'),
-    join(localAppData(), 'CurseForge', 'logs')
-  ]
-  const files: Array<{ path: string; mtime: number }> = []
+    join(localAppData(), 'CurseForge', 'logs'),
+  ];
+  const files: Array<{ path: string; mtime: number }> = [];
   for (const dir of logDirs) {
-    const names = await readdir(dir).catch(() => [] as string[])
+    const names = await readdir(dir).catch(() => [] as string[]);
     for (const name of names) {
-      if (!/\.(json|log|txt)$/i.test(name)) continue
-      const path = join(dir, name)
-      const info = await stat(path).catch(() => null)
-      if (info?.isFile()) files.push({ path, mtime: info.mtimeMs })
+      if (!/\.(json|log|txt)$/i.test(name)) continue;
+      const path = join(dir, name);
+      const info = await stat(path).catch(() => null);
+      if (info?.isFile()) files.push({ path, mtime: info.mtimeMs });
     }
   }
-  files.sort((a, b) => b.mtime - a.mtime)
+  files.sort((a, b) => b.mtime - a.mtime);
 
   for (const file of files.slice(0, 4)) {
-    const handle = await open(file.path, 'r').catch(() => null)
-    if (!handle) continue
+    const handle = await open(file.path, 'r').catch(() => null);
+    if (!handle) continue;
     try {
-      const buffer = Buffer.alloc(2 * 1024 * 1024)
-      const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0)
-      const text = buffer.toString('utf8', 0, bytesRead)
-      let found: string | null = null
-      for (const match of text.matchAll(LOG_PATTERN)) found = match[1]
-      if (found) return found.trim().replace(/\\\\/g, '\\')
+      const buffer = Buffer.alloc(2 * 1024 * 1024);
+      const { bytesRead } = await handle.read(buffer, 0, buffer.length, 0);
+      const text = buffer.toString('utf8', 0, bytesRead);
+      let found: string | null = null;
+      for (const match of text.matchAll(LOG_PATTERN)) found = match[1];
+      if (found) return found.trim().replace(/\\\\/g, '\\');
     } finally {
-      await handle.close()
+      await handle.close();
     }
   }
-  return null
+  return null;
 }
 
 export async function resolveInstancesDir(
-  settings: Pick<Settings, 'instancesDir'>
+  settings: Pick<Settings, 'instancesDir'>,
 ): Promise<{ dir: string; source: CurseForgeStatus['instancesDirSource'] }> {
-  if (settings.instancesDir) return { dir: settings.instancesDir, source: 'settings' }
-  const fromLogs = await instancesDirFromLogs()
-  if (fromLogs) return { dir: fromLogs, source: 'curseforge' }
-  return { dir: defaultInstancesDir(), source: 'default' }
+  if (settings.instancesDir) return { dir: settings.instancesDir, source: 'settings' };
+  const fromLogs = await instancesDirFromLogs();
+  if (fromLogs) return { dir: fromLogs, source: 'curseforge' };
+  return { dir: defaultInstancesDir(), source: 'default' };
 }
 
 export async function getCurseForgeStatus(settings: Settings): Promise<CurseForgeStatus> {
-  const [launcher, { dir, source }] = await Promise.all([findLauncher(), resolveInstancesDir(settings)])
+  const [launcher, { dir, source }] = await Promise.all([findLauncher(), resolveInstancesDir(settings)]);
   return {
     installed: launcher !== null,
     flavor: launcher?.flavor ?? null,
     instancesDir: dir,
     instancesDirSource: source,
-    instancesDirExists: await pathExists(dir)
-  }
+    instancesDirExists: await pathExists(dir),
+  };
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface CurseForgeProcess {
-  pid: number
+  pid: number;
   /** Page de l'application dans Overwolf : sans fenêtre à elle (celle qu'on voit appartient à Overwolf.exe). */
-  overwolfPage: boolean
+  overwolfPage: boolean;
 }
 
 /**
@@ -159,27 +159,29 @@ export function matchCurseForgeProcess(
   path: string,
   commandLine: string,
   roots: string[],
-  gameRoot: string
+  gameRoot: string,
 ): Omit<CurseForgeProcess, 'pid'> | null {
-  if (/\\javaw?\.exe$/.test(path) || path.startsWith(gameRoot)) return null
-  if (path.includes(`\\${CURSEFORGE_OVERWOLF_UID}\\`) || roots.some((root) => path.startsWith(root))) return { overwolfPage: false }
-  if (/\\overwolfbrowser\.exe$/.test(path) && commandLine.includes(`--uid=${CURSEFORGE_OVERWOLF_UID}`)) return { overwolfPage: true }
-  return null
+  if (/\\javaw?\.exe$/.test(path) || path.startsWith(gameRoot)) return null;
+  if (path.includes(`\\${CURSEFORGE_OVERWOLF_UID}\\`) || roots.some((root) => path.startsWith(root)))
+    return { overwolfPage: false };
+  if (/\\overwolfbrowser\.exe$/.test(path) && commandLine.includes(`--uid=${CURSEFORGE_OVERWOLF_UID}`))
+    return { overwolfPage: true };
+  return null;
 }
 
 /** Processus de CurseForge en cours (voir `matchCurseForgeProcess`). */
 async function curseForgeProcesses(instancesDir: string): Promise<CurseForgeProcess[]> {
-  if (process.platform !== 'win32') return []
-  const launcher = await findLauncher()
+  if (process.platform !== 'win32') return [];
+  const launcher = await findLauncher();
   // Comparés en minuscules, avec des « \ » et un « \ » final : « C:\A\B » ne doit pas couvrir « C:\A\Bis ».
-  const folder = (path: string) => `${path.replace(/\//g, '\\').replace(/\\+$/, '')}\\`.toLowerCase()
+  const folder = (path: string) => `${path.replace(/\//g, '\\').replace(/\\+$/, '')}\\`.toLowerCase();
   const roots = [
     join(localAppData(), 'Programs', 'CurseForge Windows'),
     join(roamingAppData(), 'CurseForge'),
     join(localAppData(), 'CurseForge'),
-    ...(launcher?.flavor === 'standalone' ? [dirname(launcher.command)] : [])
-  ].map(folder)
-  const gameRoot = folder(dirname(instancesDir))
+    ...(launcher?.flavor === 'standalone' ? [dirname(launcher.command)] : []),
+  ].map(folder);
+  const gameRoot = folder(dirname(instancesDir));
   try {
     // Ligne de commande en dernier : elle peut contenir des « | ».
     const { stdout } = await execFileAsync(
@@ -188,54 +190,54 @@ async function curseForgeProcesses(instancesDir: string): Promise<CurseForgeProc
         '-NoProfile',
         '-NonInteractive',
         '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath } | ForEach-Object { '{0}|{1}|{2}' -f $_.ProcessId, $_.ExecutablePath, $_.CommandLine }"
+        "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath } | ForEach-Object { '{0}|{1}|{2}' -f $_.ProcessId, $_.ExecutablePath, $_.CommandLine }",
       ],
-      { windowsHide: true, timeout: 15_000, maxBuffer: 64 * 1024 * 1024 }
-    )
-    const found: CurseForgeProcess[] = []
+      { windowsHide: true, timeout: 15_000, maxBuffer: 64 * 1024 * 1024 },
+    );
+    const found: CurseForgeProcess[] = [];
     for (const line of stdout.split(/\r?\n/)) {
-      const [id, rawPath, ...rest] = line.split('|')
-      const pid = Number(id)
-      if (!pid || rawPath === undefined || pid === process.pid) continue
-      const path = rawPath.trim().replace(/\//g, '\\').toLowerCase()
-      const match = matchCurseForgeProcess(path, rest.join('|').toLowerCase(), roots, gameRoot)
-      if (match) found.push({ pid, ...match })
+      const [id, rawPath, ...rest] = line.split('|');
+      const pid = Number(id);
+      if (!pid || rawPath === undefined || pid === process.pid) continue;
+      const path = rawPath.trim().replace(/\//g, '\\').toLowerCase();
+      const match = matchCurseForgeProcess(path, rest.join('|').toLowerCase(), roots, gameRoot);
+      if (match) found.push({ pid, ...match });
     }
-    return found
+    return found;
   } catch {
-    return []
+    return [];
   }
 }
 
 /** CurseForge est ouvert (fenêtre ou zone de notification). */
 export async function isCurseForgeRunning(instancesDir: string): Promise<boolean> {
-  return (await curseForgeProcesses(instancesDir)).length > 0
+  return (await curseForgeProcesses(instancesDir)).length > 0;
 }
 
 function isAlive(pid: number): boolean {
   try {
-    process.kill(pid, 0)
-    return true
+    process.kill(pid, 0);
+    return true;
   } catch (err) {
-    return (err as NodeJS.ErrnoException).code === 'EPERM'
+    return (err as NodeJS.ErrnoException).code === 'EPERM';
   }
 }
 
 /** Attend la fin de ces processus ; renvoie ceux qui tournent encore au bout du délai. */
 async function waitForExit(pids: number[], timeoutMs: number): Promise<number[]> {
-  const deadline = Date.now() + timeoutMs
-  let alive = pids.filter(isAlive)
+  const deadline = Date.now() + timeoutMs;
+  let alive = pids.filter(isAlive);
   while (alive.length > 0 && Date.now() < deadline) {
-    await sleep(250)
-    alive = alive.filter(isAlive)
+    await sleep(250);
+    alive = alive.filter(isAlive);
   }
-  return alive
+  return alive;
 }
 
 /** Sans `force`, Windows demande à leurs fenêtres de se fermer, comme un clic sur la croix. */
 function taskkill(pids: number[], force: boolean): Promise<void> {
-  const args = [...(force ? ['/F'] : []), ...pids.flatMap((pid) => ['/PID', String(pid)])]
-  return new Promise((resolve) => execFile('taskkill', args, { windowsHide: true, timeout: 15_000 }, () => resolve()))
+  const args = [...(force ? ['/F'] : []), ...pids.flatMap((pid) => ['/PID', String(pid)])];
+  return new Promise((resolve) => execFile('taskkill', args, { windowsHide: true, timeout: 15_000 }, () => resolve()));
 }
 
 /**
@@ -245,36 +247,38 @@ function taskkill(pids: number[], force: boolean): Promise<void> {
  */
 export async function restartCurseForge(instancesDir: string): Promise<CurseForgeRestartResult> {
   if (await isGameRunningFrom(instancesDir)) {
-    return { ok: false, error: 'Minecraft est lancé depuis CurseForge : ferme le jeu, puis relance CurseForge.' }
+    return { ok: false, error: 'Minecraft est lancé depuis CurseForge : ferme le jeu, puis relance CurseForge.' };
   }
-  const stopped = await stopCurseForge(instancesDir)
-  if (!stopped.ok) return stopped
-  return (await launchCurseForge()) ? { ok: true } : { ok: false, error: 'CurseForge est introuvable sur ce PC.' }
+  const stopped = await stopCurseForge(instancesDir);
+  if (!stopped.ok) return stopped;
+  return (await launchCurseForge()) ? { ok: true } : { ok: false, error: 'CurseForge est introuvable sur ce PC.' };
 }
 
 /** Ferme CurseForge s'il est ouvert ; `wasRunning` dit s'il faudra le rouvrir. */
-export async function stopCurseForge(instancesDir: string): Promise<{ ok: true; wasRunning: boolean } | { ok: false; error: string }> {
-  const processes = await curseForgeProcesses(instancesDir)
-  if (processes.length === 0) return { ok: true, wasRunning: false }
-  const notClosed = { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.' } as const
+export async function stopCurseForge(
+  instancesDir: string,
+): Promise<{ ok: true; wasRunning: boolean } | { ok: false; error: string }> {
+  const processes = await curseForgeProcesses(instancesDir);
+  if (processes.length === 0) return { ok: true, wasRunning: false };
+  const notClosed = { ok: false, error: 'CurseForge ne s’est pas fermé : ferme-le à la main, puis réessaie.' } as const;
   // D'abord comme la croix de sa fenêtre ; s'il reste dans la zone de notification, de force. La page de
   // l'application Overwolf n'a pas de fenêtre à elle : elle est arrêtée de force tout de suite.
-  const windowed = processes.filter((p) => !p.overwolfPage).map((p) => p.pid)
+  const windowed = processes.filter((p) => !p.overwolfPage).map((p) => p.pid);
   if (windowed.length > 0) {
-    await taskkill(windowed, false)
-    await waitForExit(windowed, 5000)
+    await taskkill(windowed, false);
+    await waitForExit(windowed, 5000);
   }
-  let alive = processes.map((p) => p.pid).filter(isAlive)
+  let alive = processes.map((p) => p.pid).filter(isAlive);
   if (alive.length > 0) {
-    await taskkill(alive, true)
-    alive = await waitForExit(alive, 5000)
+    await taskkill(alive, true);
+    alive = await waitForExit(alive, 5000);
   }
-  if (alive.length > 0) return notClosed
+  if (alive.length > 0) return notClosed;
   // Le temps pour Overwolf de constater la fermeture de l'application avant de la relancer ; s'il l'a déjà
   // relancée d'elle-même, elle surveillerait de nouveau les profils.
-  await sleep(1000)
-  if ((await curseForgeProcesses(instancesDir)).length > 0) return notClosed
-  return { ok: true, wasRunning: true }
+  await sleep(1000);
+  if ((await curseForgeProcesses(instancesDir)).length > 0) return notClosed;
+  return { ok: true, wasRunning: true };
 }
 
 /**
@@ -282,12 +286,12 @@ export async function stopCurseForge(instancesDir: string): Promise<{ ok: true; 
  * réécrit lui-même, une modification faite pendant qu'il tourne pourrait être perdue ou ignorée.
  */
 export async function withCurseForgeClosed<T>(instancesDir: string, run: () => Promise<T>): Promise<T> {
-  const stopped = await stopCurseForge(instancesDir)
-  if (!stopped.ok) throw new Error(stopped.error)
+  const stopped = await stopCurseForge(instancesDir);
+  if (!stopped.ok) throw new Error(stopped.error);
   try {
-    return await run()
+    return await run();
   } finally {
-    if (stopped.wasRunning) await launchCurseForge()
+    if (stopped.wasRunning) await launchCurseForge();
   }
 }
 
@@ -300,13 +304,13 @@ export async function isGameRunningFrom(instancePath: string): Promise<boolean> 
         '-NoProfile',
         '-NonInteractive',
         '-Command',
-        "Get-CimInstance Win32_Process -Filter \"Name='javaw.exe' OR Name='java.exe'\" | ForEach-Object { $_.CommandLine }"
+        "Get-CimInstance Win32_Process -Filter \"Name='javaw.exe' OR Name='java.exe'\" | ForEach-Object { $_.CommandLine }",
       ],
-      { windowsHide: true, timeout: 15_000, maxBuffer: 16 * 1024 * 1024 }
-    )
-    const needle = instancePath.replace(/[\\/]+$/, '').toLowerCase()
-    return stdout.toLowerCase().includes(needle)
+      { windowsHide: true, timeout: 15_000, maxBuffer: 16 * 1024 * 1024 },
+    );
+    const needle = instancePath.replace(/[\\/]+$/, '').toLowerCase();
+    return stdout.toLowerCase().includes(needle);
   } catch {
-    return false
+    return false;
   }
 }

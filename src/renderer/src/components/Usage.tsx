@@ -1,59 +1,67 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { CloudUpload, Download, LoaderCircle, PencilLine, TriangleAlert } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import { APP_REPO } from '../../../shared/config'
-import { parseRepo, repoSlug, sameRepo } from '../../../shared/repo'
-import type { AuthApi, AuthStatus, RepoRef, RoleApi, RoleResult, Settings, UserRole } from '../../../shared/types'
-import { showDocs } from '../docs/store'
-import { useStore } from '../store'
-import { Button } from './Button'
-import { Avatar, GitHubAccount } from './GitHubAccount'
-import { refreshStudioIfOpen } from '../studio/store'
-import { APP_NAME } from '../../../shared/config'
-import { Logo } from './Logo'
-import type { ToastItem } from './Toasts'
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { CloudUpload, Download, LoaderCircle, PencilLine, TriangleAlert } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { APP_REPO } from '../../../shared/config';
+import { parseRepo, repoSlug, sameRepo } from '../../../shared/repo';
+import type { AuthApi, AuthStatus, RepoRef, RoleApi, RoleResult, Settings, UserRole } from '../../../shared/types';
+import { showDocs } from '../docs/store';
+import { useStore } from '../store';
+import { Button } from './Button';
+import { Avatar, GitHubAccount } from './GitHubAccount';
+import { refreshStudioIfOpen } from '../studio/store';
+import { APP_NAME } from '../../../shared/config';
+import { Logo } from './Logo';
+import type { ToastItem } from './Toasts';
 
-type RoleSuccess = Extract<RoleResult, { ok: true }>
+type RoleSuccess = Extract<RoleResult, { ok: true }>;
 
 /** Ce qui change entre l'application et le studio : API du preload, notifications, suites d'un changement de rôle. */
 export interface UsageContext {
-  api: AuthApi & RoleApi
-  openLink: (url: string) => void
+  api: AuthApi & RoleApi;
+  openLink: (url: string) => void;
   /** Enregistre un changement de rôle réussi (réglages, catalogue, état de GitHub…). */
-  onApplied: (result: RoleSuccess) => Promise<void> | void
-  notify: (toast: Omit<ToastItem, 'id'>) => void
+  onApplied: (result: RoleSuccess) => Promise<void> | void;
+  notify: (toast: Omit<ToastItem, 'id'>) => void;
   /** Affiche la vue Studio. */
-  openStudio?: () => void
-  onAccountChange?: (status: AuthStatus) => void
+  openStudio?: () => void;
+  onAccountChange?: (status: AuthStatus) => void;
 }
 
 const inputClass =
-  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
+  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60';
 
 function Label({ children }: { children: ReactNode }) {
-  return <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">{children}</span>
+  return <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">{children}</span>;
 }
 
 /** Valeur qui ne suit la saisie qu'après une pause (évite de charger un avatar à chaque lettre). */
 function useSettled<T>(value: T, delay = 400): T {
-  const [settled, setSettled] = useState(value)
+  const [settled, setSettled] = useState(value);
   useEffect(() => {
-    const timer = setTimeout(() => setSettled(value), delay)
-    return () => clearTimeout(timer)
-  }, [value, delay])
-  return settled
+    const timer = setTimeout(() => setSettled(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return settled;
 }
 
-function RepoField({ value, onChange, onSubmit }: { value: string; onChange: (value: string) => void; onSubmit?: () => void }) {
-  const repo = parseRepo(value)
-  const owner = useSettled(repo?.owner ?? null)
+function RepoField({
+  value,
+  onChange,
+  onSubmit,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onSubmit?: () => void;
+}) {
+  const repo = parseRepo(value);
+  const owner = useSettled(repo?.owner ?? null);
   return (
     <div>
       <form
         className="flex items-center gap-3"
         onSubmit={(e) => {
-          e.preventDefault()
-          if (repo) onSubmit?.()
+          e.preventDefault();
+          if (repo) onSubmit?.();
         }}
       >
         <Avatar login={owner} size={40} />
@@ -68,14 +76,15 @@ function RepoField({ value, onChange, onSubmit }: { value: string; onChange: (va
       <p className="mt-2 text-xs text-ink-400">
         {repo ? (
           <>
-            Compte : <strong className="text-ink-200">{repo.owner}</strong> · dépôt <strong className="text-ink-200">{repo.name}</strong>
+            Compte : <strong className="text-ink-200">{repo.owner}</strong> · dépôt{' '}
+            <strong className="text-ink-200">{repo.name}</strong>
           </>
         ) : (
           'Format : propriétaire/dépôt, ou l’adresse github.com du dépôt.'
         )}
       </p>
     </div>
-  )
+  );
 }
 
 function RepoLine({ repo }: { repo: RepoRef }) {
@@ -84,37 +93,37 @@ function RepoLine({ repo }: { repo: RepoRef }) {
       <Avatar login={repo.owner} size={28} />
       <span className="truncate font-medium text-ink-100 select-text">{repoSlug(repo)}</span>
     </span>
-  )
+  );
 }
 
 interface PublisherFormProps {
-  ctx: UsageContext
-  initialRepo: RepoRef
-  submitLabel: string
-  onDone: (result: RoleSuccess) => void
-  onCancel?: () => void
+  ctx: UsageContext;
+  initialRepo: RepoRef;
+  submitLabel: string;
+  onDone: (result: RoleSuccess) => void;
+  onCancel?: () => void;
 }
 
 /** Dépôt + compte GitHub : le compte connecté doit pouvoir publier sur le dépôt. */
 function PublisherForm({ ctx, initialRepo, submitLabel, onDone, onCancel }: PublisherFormProps) {
-  const [repoInput, setRepoInput] = useState(repoSlug(initialRepo))
-  const [error, setError] = useState<string | null>(null)
-  const [needsLogin, setNeedsLogin] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [repoInput, setRepoInput] = useState(repoSlug(initialRepo));
+  const [error, setError] = useState<string | null>(null);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   async function submit() {
-    setBusy(true)
-    setError(null)
-    const result = await ctx.api.becomePublisher(repoInput)
-    setBusy(false)
+    setBusy(true);
+    setError(null);
+    const result = await ctx.api.becomePublisher(repoInput);
+    setBusy(false);
     if (!result.ok) {
-      setError(result.error)
-      setNeedsLogin(result.needsLogin)
-      return
+      setError(result.error);
+      setNeedsLogin(result.needsLogin);
+      return;
     }
-    setNeedsLogin(false)
-    await ctx.onApplied(result)
-    onDone(result)
+    setNeedsLogin(false);
+    await ctx.onApplied(result);
+    onDone(result);
   }
 
   return (
@@ -134,17 +143,20 @@ function PublisherForm({ ctx, initialRepo, submitLabel, onDone, onCancel }: Publ
           openLink={ctx.openLink}
           promptLogin={needsLogin}
           onChange={(status) => {
-            ctx.onAccountChange?.(status)
+            ctx.onAccountChange?.(status);
             // Après une connexion demandée par la vérification, on la relance d'elle-même.
-            if (needsLogin && status.account) void submit()
+            if (needsLogin && status.account) void submit();
           }}
         />
         <p className="mt-2 text-xs leading-relaxed text-ink-400">
-          Ce compte doit pouvoir publier sur le dépôt (propriétaire ou collaborateur) : c’est ce qui atteste qu’il s’agit bien de toi.
+          Ce compte doit pouvoir publier sur le dépôt (propriétaire ou collaborateur) : c’est ce qui atteste qu’il
+          s’agit bien de toi.
         </p>
       </div>
       {error && (
-        <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300 ring-1 ring-inset ring-red-400/25 select-text">{error}</p>
+        <p className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300 ring-1 ring-inset ring-red-400/25 select-text">
+          {error}
+        </p>
       )}
       <div className="flex items-center justify-end gap-2">
         {onCancel && (
@@ -163,7 +175,7 @@ function PublisherForm({ ctx, initialRepo, submitLabel, onDone, onCancel }: Publ
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 function RoleCard({
@@ -172,14 +184,14 @@ function RoleCard({
   badge,
   selected,
   onSelect,
-  children
+  children,
 }: {
-  icon: LucideIcon
-  title: string
-  badge?: string
-  selected: boolean
-  onSelect: () => void
-  children: ReactNode
+  icon: LucideIcon;
+  title: string;
+  badge?: string;
+  selected: boolean;
+  onSelect: () => void;
+  children: ReactNode;
 }) {
   return (
     <button
@@ -191,57 +203,63 @@ function RoleCard({
       }`}
     >
       <div className="flex items-center gap-3">
-        <span className={`flex size-11 items-center justify-center rounded-2xl ${selected ? 'bg-grass-400 text-ink-950' : 'bg-tint/[0.07] text-ink-200'}`}>
+        <span
+          className={`flex size-11 items-center justify-center rounded-2xl ${selected ? 'bg-grass-400 text-ink-950' : 'bg-tint/[0.07] text-ink-200'}`}
+        >
           <Icon size={22} />
         </span>
         <span className="font-display text-xl font-bold text-ink-100">{title}</span>
         {badge && (
-          <span className="rounded-md bg-tint/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-ink-200 uppercase">{badge}</span>
+          <span className="rounded-md bg-tint/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-ink-200 uppercase">
+            {badge}
+          </span>
         )}
-        <span className={`ml-auto flex size-5 items-center justify-center rounded-full ring-2 ${selected ? 'ring-grass-400' : 'ring-ink-500'}`}>
+        <span
+          className={`ml-auto flex size-5 items-center justify-center rounded-full ring-2 ${selected ? 'ring-grass-400' : 'ring-ink-500'}`}
+        >
           {selected && <span className="size-2.5 rounded-full bg-grass-400" />}
         </span>
       </div>
       <div className="mt-4 text-sm leading-relaxed text-ink-300">{children}</div>
     </button>
-  )
+  );
 }
 
 /** Contexte de la fenêtre : un changement de rôle fait basculer la vue (voir `applyRoleResult`). */
 function usePlayerContext(): UsageContext {
-  const applyRoleResult = useStore((s) => s.applyRoleResult)
-  const pushToast = useStore((s) => s.pushToast)
-  const openStudio = useStore((s) => s.openStudio)
+  const applyRoleResult = useStore((s) => s.applyRoleResult);
+  const pushToast = useStore((s) => s.pushToast);
+  const openStudio = useStore((s) => s.openStudio);
   return useMemo(
     () => ({
       api: window.api,
       openLink: (url: string) => void window.api.openExternal(url),
       onApplied: async (result: RoleSuccess) => {
-        await applyRoleResult(result)
+        await applyRoleResult(result);
         // Dépôt ou compte changés : le Studio, s'il a déjà été ouvert, relit GitHub.
-        refreshStudioIfOpen({ remote: true })
+        refreshStudioIfOpen({ remote: true });
       },
       notify: pushToast,
       openStudio,
-      onAccountChange: () => refreshStudioIfOpen({ remote: true })
+      onAccountChange: () => refreshStudioIfOpen({ remote: true }),
     }),
-    [applyRoleResult, pushToast, openStudio]
-  )
+    [applyRoleResult, pushToast, openStudio],
+  );
 }
 
 /** Premier lancement (juste après l'installation) : récepteur ou publieur. */
 export function SetupView() {
-  const settings = useStore((s) => s.settings)!
-  const ctx = usePlayerContext()
-  const [role, setRole] = useState<UserRole>('receiver')
-  const [busy, setBusy] = useState(false)
+  const settings = useStore((s) => s.settings)!;
+  const ctx = usePlayerContext();
+  const [role, setRole] = useState<UserRole>('receiver');
+  const [busy, setBusy] = useState(false);
 
   async function continueAsReceiver() {
-    setBusy(true)
-    const result = await ctx.api.becomeReceiver(null)
-    setBusy(false)
-    if (result.ok) await ctx.onApplied(result)
-    else ctx.notify({ kind: 'error', title: 'Impossible de continuer', message: result.error })
+    setBusy(true);
+    const result = await ctx.api.becomeReceiver(null);
+    setBusy(false);
+    if (result.ok) await ctx.onApplied(result);
+    else ctx.notify({ kind: 'error', title: 'Impossible de continuer', message: result.error });
   }
 
   return (
@@ -265,15 +283,26 @@ export function SetupView() {
       </header>
 
       <div className="mt-10 grid gap-4 md:grid-cols-2">
-        <RoleCard icon={Download} title="Récepteur" badge="Par défaut" selected={role === 'receiver'} onSelect={() => setRole('receiver')}>
+        <RoleCard
+          icon={Download}
+          title="Récepteur"
+          badge="Par défaut"
+          selected={role === 'receiver'}
+          onSelect={() => setRole('receiver')}
+        >
           J’installe les modpacks publiés et je joue. L’application les ajoute à CurseForge et les garde à jour.
           <span className="mt-4 flex min-w-0 items-center gap-2 text-xs text-ink-400">
             <span className="shrink-0 whitespace-nowrap">Modpacks de</span> <RepoLine repo={settings.repo} />
           </span>
         </RoleCard>
-        <RoleCard icon={CloudUpload} title="Publieur" selected={role === 'publisher'} onSelect={() => setRole('publisher')}>
-          Je crée des modpacks et je les publie sur mon dépôt GitHub avec le Studio. Je peux aussi les installer
-          comme un récepteur.
+        <RoleCard
+          icon={CloudUpload}
+          title="Publieur"
+          selected={role === 'publisher'}
+          onSelect={() => setRole('publisher')}
+        >
+          Je crée des modpacks et je les publie sur mon dépôt GitHub avec le Studio. Je peux aussi les installer comme
+          un récepteur.
         </RoleCard>
       </div>
 
@@ -293,14 +322,15 @@ export function SetupView() {
               ctx.notify({
                 kind: 'success',
                 title: 'Mode publieur activé',
-                message: 'Tu es dans le Studio : il range tes zips et les publie sur ton dépôt. La bibliothèque reste accessible en haut.'
+                message:
+                  'Tu es dans le Studio : il range tes zips et les publie sur ton dépôt. La bibliothèque reste accessible en haut.',
               })
             }
           />
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -308,40 +338,40 @@ export function SetupView() {
  * s'exécute quand on joue. L'app vérifie que les fichiers reçus sont bien ceux publiés, pas ce qu'ils font.
  */
 function OtherRepoWarning({ value }: { value: string }) {
-  const repo = parseRepo(value)
-  if (!repo || sameRepo(repo, APP_REPO)) return null
+  const repo = parseRepo(value);
+  if (!repo || sameRepo(repo, APP_REPO)) return null;
   return (
     <div className="mt-3 flex gap-2.5 rounded-xl bg-amber-glow/10 px-3.5 py-3 text-xs leading-relaxed text-amber-glow ring-1 ring-inset ring-amber-glow/25">
       <TriangleAlert size={16} className="mt-0.5 shrink-0" />
       <p>
         Les modpacks de ce dépôt sont publiés par <strong className="font-semibold">{repo.owner}</strong>, pas par{' '}
-        {repoSlug(APP_REPO)}. Un modpack contient des mods, c’est-à-dire du code qui s’exécute sur ton PC quand tu
-        joues : ne suis que le dépôt d’une personne en qui tu as confiance.
+        {repoSlug(APP_REPO)}. Un modpack contient des mods, c’est-à-dire du code qui s’exécute sur ton PC quand tu joues
+        : ne suis que le dépôt d’une personne en qui tu as confiance.
       </p>
     </div>
-  )
+  );
 }
 
 /** Section « Utilisation » des paramètres : rôle, dépôt et compte GitHub (application et studio). */
 export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: Pick<Settings, 'role' | 'repo'> }) {
-  const [editing, setEditing] = useState<'publisher' | 'source' | null>(null)
-  const [source, setSource] = useState(repoSlug(settings.repo))
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const publisher = settings.role === 'publisher'
+  const [editing, setEditing] = useState<'publisher' | 'source' | null>(null);
+  const [source, setSource] = useState(repoSlug(settings.repo));
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const publisher = settings.role === 'publisher';
 
   async function becomeReceiver(repo: string | null) {
-    setBusy(true)
-    setError(null)
-    const result = await ctx.api.becomeReceiver(repo)
-    setBusy(false)
+    setBusy(true);
+    setError(null);
+    const result = await ctx.api.becomeReceiver(repo);
+    setBusy(false);
     if (!result.ok) {
-      setError(result.error)
-      return
+      setError(result.error);
+      return;
     }
-    await ctx.onApplied(result)
-    setEditing(null)
-    ctx.notify({ kind: 'success', title: repo ? 'Source des modpacks changée' : 'Tu es maintenant récepteur' })
+    await ctx.onApplied(result);
+    setEditing(null);
+    ctx.notify({ kind: 'success', title: repo ? 'Source des modpacks changée' : 'Tu es maintenant récepteur' });
   }
 
   return (
@@ -350,19 +380,20 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
         {(
           [
             { value: 'receiver', label: 'Récepteur', icon: Download },
-            { value: 'publisher', label: 'Publieur', icon: CloudUpload }
+            { value: 'publisher', label: 'Publieur', icon: CloudUpload },
           ] as const
         ).map((tab) => {
-          const active = tab.value === 'publisher' ? publisher || editing === 'publisher' : !publisher && editing !== 'publisher'
+          const active =
+            tab.value === 'publisher' ? publisher || editing === 'publisher' : !publisher && editing !== 'publisher';
           return (
             <button
               key={tab.value}
               type="button"
               disabled={busy}
               onClick={() => {
-                if (tab.value === 'publisher' && !publisher) setEditing('publisher')
-                else if (tab.value === 'receiver' && publisher) void becomeReceiver(null)
-                else if (tab.value === 'receiver') setEditing(null)
+                if (tab.value === 'publisher' && !publisher) setEditing('publisher');
+                else if (tab.value === 'receiver' && publisher) void becomeReceiver(null);
+                else if (tab.value === 'receiver') setEditing(null);
               }}
               className={`inline-flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-semibold transition ${
                 active ? 'bg-tint/10 text-ink-100' : 'text-ink-400 hover:text-ink-200'
@@ -370,7 +401,7 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
             >
               <tab.icon size={15} /> {tab.label}
             </button>
-          )
+          );
         })}
       </div>
 
@@ -381,8 +412,8 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
           submitLabel={publisher ? 'Enregistrer' : 'Devenir publieur'}
           onCancel={() => setEditing(null)}
           onDone={() => {
-            setEditing(null)
-            ctx.notify({ kind: 'success', title: publisher ? 'Dépôt mis à jour' : 'Mode publieur activé' })
+            setEditing(null);
+            ctx.notify({ kind: 'success', title: publisher ? 'Dépôt mis à jour' : 'Mode publieur activé' });
           }}
         />
       ) : publisher ? (
@@ -420,7 +451,12 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditing(null)}>
               Annuler
             </Button>
-            <Button size="sm" variant="primary" disabled={busy || !parseRepo(source)} onClick={() => void becomeReceiver(source)}>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={busy || !parseRepo(source)}
+              onClick={() => void becomeReceiver(source)}
+            >
               {busy ? 'Vérification…' : 'Enregistrer'}
             </Button>
           </div>
@@ -435,8 +471,8 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
               variant="ghost"
               icon={PencilLine}
               onClick={() => {
-                setSource(repoSlug(settings.repo))
-                setEditing('source')
+                setSource(repoSlug(settings.repo));
+                setEditing('source');
               }}
             >
               Changer
@@ -446,12 +482,12 @@ export function UsageSection({ ctx, settings }: { ctx: UsageContext; settings: P
       )}
       {error && editing !== 'publisher' && <p className="text-sm text-red-300 select-text">{error}</p>}
     </div>
-  )
+  );
 }
 
 /** Section « Utilisation » de l'application des joueurs. */
 export function PlayerUsageSection() {
-  const settings = useStore((s) => s.settings)
-  const ctx = usePlayerContext()
-  return settings ? <UsageSection ctx={ctx} settings={settings} /> : null
+  const settings = useStore((s) => s.settings);
+  const ctx = usePlayerContext();
+  return settings ? <UsageSection ctx={ctx} settings={settings} /> : null;
 }

@@ -1,32 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Eye, FolderPlus, ImagePlus, PackagePlus, PencilLine, Trash2 } from 'lucide-react'
-import type { CurseForgeInstanceInfo, ZipProgress } from '../../../shared/studio'
-import { Button } from '../components/Button'
-import { Cover } from '../components/Cover'
-import { Notes } from '../components/Notes'
-import { formatBytes, formatLoader, formatRelative } from '../lib/format'
-import { Field, Modal, ProgressBar, Spinner, TextArea, TextInput } from './Modal'
-import { errorMessage, openLink, useStudio } from './store'
+import { useEffect, useMemo, useState } from 'react';
+import { Eye, FolderPlus, ImagePlus, PackagePlus, PencilLine, Trash2 } from 'lucide-react';
+import type { CurseForgeInstanceInfo, ZipProgress } from '../../../shared/studio';
+import { Button } from '../components/Button';
+import { Cover } from '../components/Cover';
+import { Notes } from '../components/Notes';
+import { formatBytes, formatLoader, formatRelative } from '../lib/format';
+import { Field, Modal, ProgressBar, Spinner, TextArea, TextInput } from './Modal';
+import { errorMessage, openLink, useStudio } from './store';
 
 function usePack(folder: string) {
-  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null)
+  return useStudio((s) => s.overview?.packs.find((p) => p.folder === folder) ?? null);
 }
 
 export function NewPackDialog() {
-  const close = useStudio((s) => s.closeDialog)
-  const run = useStudio((s) => s.run)
-  const [name, setName] = useState('')
-  const [saving, setSaving] = useState(false)
+  const close = useStudio((s) => s.closeDialog);
+  const run = useStudio((s) => s.run);
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
   const folder = name
     .trim()
     .replace(/[<>:"/\\|?*]/g, '')
     .replace(/[. ]+$/, '')
-    .replace(/\s+/g, '_')
+    .replace(/\s+/g, '_');
 
   async function create() {
-    setSaving(true)
-    if (await run(window.studio.createPack(name), `Modpack « ${name.trim()} » créé`)) close()
-    setSaving(false)
+    setSaving(true);
+    if (await run(window.studio.createPack(name), `Modpack « ${name.trim()} » créé`)) close();
+    setSaving(false);
   }
 
   return (
@@ -49,8 +49,8 @@ export function NewPackDialog() {
     >
       <form
         onSubmit={(e) => {
-          e.preventDefault()
-          if (folder && !saving) void create()
+          e.preventDefault();
+          if (folder && !saving) void create();
         }}
       >
         <Field label="Nom affiché" hint={folder ? `Dossier créé : ${folder}` : 'Par exemple : Hardcore Endgame'}>
@@ -58,29 +58,38 @@ export function NewPackDialog() {
         </Field>
       </form>
     </Modal>
-  )
+  );
 }
 
 export function PackInfoDialog({ folder }: { folder: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const run = useStudio((s) => s.run)
-  const [name, setName] = useState(pack?.name ?? '')
-  const [description, setDescription] = useState(pack?.description ?? '')
-  const [group, setGroup] = useState(pack?.group ?? '')
-  const packs = useStudio((s) => s.overview?.packs)
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const run = useStudio((s) => s.run);
+  const [name, setName] = useState(pack?.name ?? '');
+  const [description, setDescription] = useState(pack?.description ?? '');
+  const [group, setGroup] = useState(pack?.group ?? '');
+  const packs = useStudio((s) => s.overview?.packs);
   // Groupes déjà utilisés par les contenus du même type : proposés à la saisie.
   const groups = useMemo(
-    () => [...new Set((packs ?? []).filter((p) => p.type === pack?.type && p.group).map((p) => p.group!))].sort((a, b) => a.localeCompare(b, 'fr')),
-    [packs, pack?.type]
-  )
-  const [saving, setSaving] = useState(false)
-  if (!pack) return null
+    () =>
+      [...new Set((packs ?? []).filter((p) => p.type === pack?.type && p.group).map((p) => p.group!))].sort((a, b) =>
+        a.localeCompare(b, 'fr'),
+      ),
+    [packs, pack?.type],
+  );
+  const [saving, setSaving] = useState(false);
+  if (!pack) return null;
 
   async function save() {
-    setSaving(true)
-    if (await run(window.studio.updatePackInfo(folder, { name, description, group: group.trim() || null }), 'Infos enregistrées')) close()
-    setSaving(false)
+    setSaving(true);
+    if (
+      await run(
+        window.studio.updatePackInfo(folder, { name, description, group: group.trim() || null }),
+        'Infos enregistrées',
+      )
+    )
+      close();
+    setSaving(false);
   }
 
   return (
@@ -102,7 +111,9 @@ export function PackInfoDialog({ folder }: { folder: string }) {
     >
       <div className="space-y-6">
         <div>
-          <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">Image de couverture</span>
+          <span className="mb-2 block text-xs font-semibold tracking-widest text-ink-400 uppercase">
+            Image de couverture
+          </span>
           <div className="flex items-end gap-4">
             <Cover
               id={pack.id}
@@ -115,28 +126,45 @@ export function PackInfoDialog({ folder }: { folder: string }) {
                 Choisir une image…
               </Button>
               {pack.coverUrl && (
-                <Button size="sm" variant="ghost" icon={Trash2} onClick={() => void run(window.studio.removeCover(folder))}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={Trash2}
+                  onClick={() => void run(window.studio.removeCover(folder))}
+                >
                   Retirer
                 </Button>
               )}
             </div>
           </div>
           <p className="mt-2 text-xs text-ink-400">
-            PNG, JPG ou WebP, idéalement au format 16:9 (1920 × 1080 par exemple). Une image d’un autre format, carrée par
-            exemple, est affichée en entier, réduite pour tenir dans le cadre. Enregistrée comme cover dans le dossier.
+            PNG, JPG ou WebP, idéalement au format 16:9 (1920 × 1080 par exemple). Une image d’un autre format, carrée
+            par exemple, est affichée en entier, réduite pour tenir dans le cadre. Enregistrée comme cover dans le
+            dossier.
           </p>
         </div>
         <Field label="Nom affiché">
           <TextInput value={name} onChange={(e) => setName(e.target.value)} />
         </Field>
         <Field label="Description courte" hint="Une ou deux phrases, affichées sous le nom du modpack.">
-          <TextArea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Survie difficile, donjons et technologie…" />
+          <TextArea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Survie difficile, donjons et technologie…"
+          />
         </Field>
         <Field
           label="Groupe"
           hint="Range ce contenu dans un sous-dossier de la colonne de gauche, avec les autres du même groupe. Vide : aucun groupe. Rien ne change pour les joueurs."
         >
-          <TextInput value={group} onChange={(e) => setGroup(e.target.value)} list="studio-groups" maxLength={64} placeholder="Aucun groupe" />
+          <TextInput
+            value={group}
+            onChange={(e) => setGroup(e.target.value)}
+            list="studio-groups"
+            maxLength={64}
+            placeholder="Aucun groupe"
+          />
           <datalist id="studio-groups">
             {groups.map((g) => (
               <option key={g} value={g} />
@@ -144,47 +172,60 @@ export function PackInfoDialog({ folder }: { folder: string }) {
           </datalist>
         </Field>
         <p className="text-xs text-ink-500">
-          Identifiant : <span className="font-mono text-ink-300 select-text">{pack.id}</span> · utilisé dans les tags GitHub et pour
-          reconnaître le modpack chez les joueurs, il ne change jamais.
+          Identifiant : <span className="font-mono text-ink-300 select-text">{pack.id}</span> · utilisé dans les tags
+          GitHub et pour reconnaître le modpack chez les joueurs, il ne change jamais.
         </p>
       </div>
     </Modal>
-  )
+  );
 }
 
 /**
  * Notes d'une version. `versions` : celles d'un groupe de versions d'un mod (une par jar), qui reçoivent toutes les
  * mêmes notes ; `version` est alors leur version de publication (`1.0.0`).
  */
-export function NotesDialog({ folder, version, versions }: { folder: string; version: number | string; versions?: string[] }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const run = useStudio((s) => s.run)
-  const members = versions ? (pack?.contentVersions.filter((v) => versions.includes(v.version)) ?? []) : []
-  const current = typeof version === 'number' ? pack?.versions.find((v) => v.number === version) : versions ? members.find((v) => v.notes) : pack?.contentVersions.find((v) => v.version === version)
-  const label = typeof version === 'number' ? `v${version}` : `version ${version}`
-  const differ = new Set(members.map((v) => v.notes)).size > 1
-  const [notes, setNotes] = useState(current?.notes ?? '')
-  const [preview, setPreview] = useState(false)
-  const [saving, setSaving] = useState(false)
-  if (!pack) return null
+export function NotesDialog({
+  folder,
+  version,
+  versions,
+}: {
+  folder: string;
+  version: number | string;
+  versions?: string[];
+}) {
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const run = useStudio((s) => s.run);
+  const members = versions ? (pack?.contentVersions.filter((v) => versions.includes(v.version)) ?? []) : [];
+  const current =
+    typeof version === 'number'
+      ? pack?.versions.find((v) => v.number === version)
+      : versions
+        ? members.find((v) => v.notes)
+        : pack?.contentVersions.find((v) => v.version === version);
+  const label = typeof version === 'number' ? `v${version}` : `version ${version}`;
+  const differ = new Set(members.map((v) => v.notes)).size > 1;
+  const [notes, setNotes] = useState(current?.notes ?? '');
+  const [preview, setPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
+  if (!pack) return null;
 
   async function save() {
-    setSaving(true)
+    setSaving(true);
     const saved = versions
       ? await run(
           (async () => {
             for (const member of versions) {
-              const result = await window.studio.setNotes(folder, member, notes)
-              if (!result.ok) return result
+              const result = await window.studio.setNotes(folder, member, notes);
+              if (!result.ok) return result;
             }
-            return { ok: true as const }
+            return { ok: true as const };
           })(),
-          `Notes enregistrées pour ${versions.length} versions`
+          `Notes enregistrées pour ${versions.length} versions`,
         )
-      : await run(window.studio.setNotes(folder, version, notes), 'Notes enregistrées')
-    if (saved) close()
-    setSaving(false)
+      : await run(window.studio.setNotes(folder, version, notes), 'Notes enregistrées');
+    if (saved) close();
+    setSaving(false);
   }
 
   return (
@@ -212,7 +253,7 @@ export function NotesDialog({ folder, version, versions }: { folder: string; ver
       <div className="mb-3 inline-flex rounded-xl bg-ink-950/60 p-1 ring-1 ring-inset ring-tint/[0.06]">
         {[
           { value: false, label: 'Écrire', icon: PencilLine },
-          { value: true, label: 'Aperçu', icon: Eye }
+          { value: true, label: 'Aperçu', icon: Eye },
         ].map((tab) => (
           <button
             key={tab.label}
@@ -241,26 +282,26 @@ export function NotesDialog({ folder, version, versions }: { folder: string; ver
         />
       )}
     </Modal>
-  )
+  );
 }
 
 function InstanceRow({
   instance,
   selected,
-  onSelect
+  onSelect,
 }: {
-  instance: CurseForgeInstanceInfo
-  selected: boolean
-  onSelect: () => void
+  instance: CurseForgeInstanceInfo;
+  selected: boolean;
+  onSelect: () => void;
 }) {
   const meta = [
     instance.minecraftVersion && `Minecraft ${instance.minecraftVersion}`,
     formatLoader(instance.modLoader),
     instance.modCount !== null && `${instance.modCount} mod${instance.modCount > 1 ? 's' : ''}`,
-    instance.lastPlayed && `joué ${formatRelative(instance.lastPlayed)}`
+    instance.lastPlayed && `joué ${formatRelative(instance.lastPlayed)}`,
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' · ');
   return (
     <button
       type="button"
@@ -279,47 +320,53 @@ function InstanceRow({
         <span className="block truncate text-xs text-ink-400">{meta}</span>
       </span>
     </button>
-  )
+  );
 }
 
 export function ImportDialog({ folder, profilePath }: { folder: string; profilePath?: string }) {
-  const pack = usePack(folder)
-  const close = useStudio((s) => s.closeDialog)
-  const openDialog = useStudio((s) => s.openDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const [data, setData] = useState<{ dir: string; instances: CurseForgeInstanceInfo[] } | null>(null)
-  const [selected, setSelected] = useState<string | null>(profilePath ?? null)
-  const [includeSaves, setIncludeSaves] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [progress, setProgress] = useState<ZipProgress | null>(null)
+  const pack = usePack(folder);
+  const close = useStudio((s) => s.closeDialog);
+  const openDialog = useStudio((s) => s.openDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const [data, setData] = useState<{ dir: string; instances: CurseForgeInstanceInfo[] } | null>(null);
+  const [selected, setSelected] = useState<string | null>(profilePath ?? null);
+  const [includeSaves, setIncludeSaves] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<ZipProgress | null>(null);
 
   useEffect(() => {
     window.studio
       .listInstances()
       .then(setData)
-      .catch((err: unknown) => pushToast({ kind: 'error', title: 'Instances introuvables', message: errorMessage(err) }))
-  }, [pushToast])
-  useEffect(() => window.studio.onZipProgress(setProgress), [])
-  if (!pack) return null
+      .catch((err: unknown) =>
+        pushToast({ kind: 'error', title: 'Instances introuvables', message: errorMessage(err) }),
+      );
+  }, [pushToast]);
+  useEffect(() => window.studio.onZipProgress(setProgress), []);
+  if (!pack) return null;
 
   async function start() {
-    if (!selected) return
-    setRunning(true)
-    setProgress(null)
+    if (!selected) return;
+    setRunning(true);
+    setProgress(null);
     try {
-      const result = await window.studio.zipInstance(folder, selected, includeSaves)
+      const result = await window.studio.zipInstance(folder, selected, includeSaves);
       if (result.ok) {
-        pushToast({ kind: 'success', title: `${result.fileName} créé`, message: 'Ajoute ses notes de version, puis publie.' })
-        close()
+        pushToast({
+          kind: 'success',
+          title: `${result.fileName} créé`,
+          message: 'Ajoute ses notes de version, puis publie.',
+        });
+        close();
       } else {
-        pushToast({ kind: 'error', title: 'Zip non créé', message: result.error })
+        pushToast({ kind: 'error', title: 'Zip non créé', message: result.error });
       }
     } catch (err) {
-      pushToast({ kind: 'error', title: 'Zip non créé', message: errorMessage(err) })
+      pushToast({ kind: 'error', title: 'Zip non créé', message: errorMessage(err) });
     } finally {
-      setRunning(false)
-      void refresh()
+      setRunning(false);
+      void refresh();
     }
   }
 
@@ -400,7 +447,9 @@ export function ImportDialog({ folder, profilePath }: { folder: string; profileP
             <span className="font-mono text-ink-300 select-text">{pack.settings.exclude.join(' · ')}</span>
           </>
         ) : (
-          <span>Pour laisser d’autres fichiers de côté (shaders, options…), exclus-les dans les réglages du modpack.</span>
+          <span>
+            Pour laisser d’autres fichiers de côté (shaders, options…), exclus-les dans les réglages du modpack.
+          </span>
         )}
         {!running && (
           <button
@@ -413,38 +462,42 @@ export function ImportDialog({ folder, profilePath }: { folder: string; profileP
         )}
       </p>
     </Modal>
-  )
+  );
 }
 
 /** Crée un modpack depuis un profil CurseForge : son dossier, sa fiche, sa v1, et le lien vers le profil. */
 export function FromProfileDialog({ profilePath, profileName }: { profilePath: string; profileName: string }) {
-  const close = useStudio((s) => s.closeDialog)
-  const pushToast = useStudio((s) => s.pushToast)
-  const refresh = useStudio((s) => s.refresh)
-  const select = useStudio((s) => s.select)
-  const [name, setName] = useState(profileName.replace(/[~]/g, '').trim())
-  const [includeSaves, setIncludeSaves] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [progress, setProgress] = useState<ZipProgress | null>(null)
-  useEffect(() => window.studio.onZipProgress(setProgress), [])
+  const close = useStudio((s) => s.closeDialog);
+  const pushToast = useStudio((s) => s.pushToast);
+  const refresh = useStudio((s) => s.refresh);
+  const select = useStudio((s) => s.select);
+  const [name, setName] = useState(profileName.replace(/[~]/g, '').trim());
+  const [includeSaves, setIncludeSaves] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [progress, setProgress] = useState<ZipProgress | null>(null);
+  useEffect(() => window.studio.onZipProgress(setProgress), []);
 
   async function create() {
-    setRunning(true)
-    setProgress(null)
+    setRunning(true);
+    setProgress(null);
     try {
-      const result = await window.studio.createPackFromProfile(name, profilePath, includeSaves)
+      const result = await window.studio.createPackFromProfile(name, profilePath, includeSaves);
       if (result.ok) {
-        pushToast({ kind: 'success', title: `Modpack « ${name.trim()} » créé`, message: 'Sa v1 est prête : ajoute ses notes, puis publie.' })
-        close()
-        select({ kind: 'profile', path: profilePath })
+        pushToast({
+          kind: 'success',
+          title: `Modpack « ${name.trim()} » créé`,
+          message: 'Sa v1 est prête : ajoute ses notes, puis publie.',
+        });
+        close();
+        select({ kind: 'profile', path: profilePath });
       } else {
-        pushToast({ kind: 'error', title: 'Modpack non créé', message: result.error })
+        pushToast({ kind: 'error', title: 'Modpack non créé', message: result.error });
       }
     } catch (err) {
-      pushToast({ kind: 'error', title: 'Modpack non créé', message: errorMessage(err) })
+      pushToast({ kind: 'error', title: 'Modpack non créé', message: errorMessage(err) });
     } finally {
-      setRunning(false)
-      void refresh()
+      setRunning(false);
+      void refresh();
     }
   }
 
@@ -497,5 +550,5 @@ export function FromProfileDialog({ profilePath, profileName }: { profilePath: s
         <TextInput value={name} onChange={(e) => setName(e.target.value)} autoFocus disabled={running} />
       </Field>
     </Modal>
-  )
+  );
 }

@@ -1,25 +1,33 @@
-import { useEffect, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react'
-import { LoaderCircle, X } from 'lucide-react'
-import { IconButton } from '../components/Button'
+import { useEffect, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react';
+import { LoaderCircle, X } from 'lucide-react';
+import { IconButton } from '../components/Button';
 
 interface ModalProps {
-  title: string
-  subtitle?: ReactNode
-  onClose: () => void
-  children: ReactNode
-  footer?: ReactNode
-  width?: string
+  title: string;
+  subtitle?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+  width?: string;
   /** Faux pendant une opération qu'on ne peut pas abandonner en fermant la fenêtre. */
-  closable?: boolean
+  closable?: boolean;
 }
 
-export function Modal({ title, subtitle, onClose, children, footer, width = 'max-w-2xl', closable = true }: ModalProps) {
+export function Modal({
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  width = 'max-w-2xl',
+  closable = true,
+}: ModalProps) {
   useEffect(() => {
-    if (!closable) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [closable, onClose])
+    if (!closable) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [closable, onClose]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
@@ -48,7 +56,7 @@ export function Modal({ title, subtitle, onClose, children, footer, width = 'max
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export function Field({ label, hint, children }: { label: string; hint?: ReactNode; children: ReactNode }) {
@@ -58,22 +66,22 @@ export function Field({ label, hint, children }: { label: string; hint?: ReactNo
       {children}
       {hint && <span className="mt-2 block text-xs leading-relaxed text-ink-400">{hint}</span>}
     </label>
-  )
+  );
 }
 
 const inputClass =
-  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60'
+  'w-full rounded-xl bg-ink-950/60 px-4 py-3 text-sm text-ink-100 ring-1 ring-inset ring-tint/10 outline-none transition placeholder:text-ink-500 select-text focus:ring-grass-400/60';
 
 export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />
+  return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />;
 }
 
 export function TextArea(props: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={`${inputClass} resize-none leading-relaxed ${props.className ?? ''}`} />
+  return <textarea {...props} className={`${inputClass} resize-none leading-relaxed ${props.className ?? ''}`} />;
 }
 
 export function Spinner({ size = 16, className = '' }: { size?: number; className?: string }) {
-  return <LoaderCircle size={size} className={`animate-spin ${className}`} />
+  return <LoaderCircle size={size} className={`animate-spin ${className}`} />;
 }
 
 export function ProgressBar({ ratio, className = '' }: { ratio: number; className?: string }) {
@@ -84,5 +92,5 @@ export function ProgressBar({ ratio, className = '' }: { ratio: number; classNam
         style={{ width: `${Math.max(2, Math.min(1, ratio) * 100)}%` }}
       />
     </div>
-  )
+  );
 }

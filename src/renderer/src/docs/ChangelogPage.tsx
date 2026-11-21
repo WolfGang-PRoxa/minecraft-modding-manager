@@ -1,71 +1,92 @@
-import { useMemo, useState } from 'react'
-import type { LucideIcon } from 'lucide-react'
-import { CircleArrowUp, CircleMinus, Download, ExternalLink, ShieldCheck, Sparkles, Tag, TrendingUp, Wrench } from 'lucide-react'
+import { useMemo, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  CircleArrowUp,
+  CircleMinus,
+  Download,
+  ExternalLink,
+  ShieldCheck,
+  Sparkles,
+  Tag,
+  TrendingUp,
+  Wrench,
+} from 'lucide-react';
 import {
   CHANGELOG_CATEGORIES,
   parseReleaseNotes,
   releaseHasChanges,
   UNRELEASED,
   type ChangelogRelease,
-  type ChangelogSection
-} from '../../../shared/changelog'
-import { APP_REPO_URL } from '../../../shared/config'
-import { compareVersions } from '../../../shared/releases'
-import { Button } from '../components/Button'
-import { formatDate } from '../lib/format'
-import { useStore } from '../store'
-import { changelog, releaseAnchor, type DocLink } from './content'
-import { DocMarkdown } from './DocMarkdown'
-import { useDocs } from './store'
-import { APP_NAME } from '../../../shared/config'
+  type ChangelogSection,
+} from '../../../shared/changelog';
+import { APP_REPO_URL } from '../../../shared/config';
+import { compareVersions } from '../../../shared/releases';
+import { Button } from '../components/Button';
+import { formatDate } from '../lib/format';
+import { useStore } from '../store';
+import { changelog, releaseAnchor, type DocLink } from './content';
+import { DocMarkdown } from './DocMarkdown';
+import { useDocs } from './store';
+import { APP_NAME } from '../../../shared/config';
 
 const CATEGORY_STYLES: Record<string, { icon: LucideIcon; accent: string; chip: string }> = {
   Ajouts: { icon: Sparkles, accent: 'text-grass-300', chip: 'bg-grass-400/15 text-grass-300 ring-grass-400/30' },
   Améliorations: { icon: TrendingUp, accent: 'text-sky-300', chip: 'bg-sky-400/15 text-sky-300 ring-sky-400/30' },
   Corrections: { icon: Wrench, accent: 'text-amber-glow', chip: 'bg-amber-glow/15 text-amber-glow ring-amber-glow/35' },
-  Sécurité: { icon: ShieldCheck, accent: 'text-violet-300', chip: 'bg-violet-400/15 text-violet-300 ring-violet-400/30' },
-  Suppressions: { icon: CircleMinus, accent: 'text-red-300', chip: 'bg-red-500/15 text-red-300 ring-red-400/30' }
-}
-const OTHER_CATEGORY = { icon: Tag, accent: 'text-ink-200', chip: 'bg-tint/[0.06] text-ink-200 ring-tint/10' }
+  Sécurité: {
+    icon: ShieldCheck,
+    accent: 'text-violet-300',
+    chip: 'bg-violet-400/15 text-violet-300 ring-violet-400/30',
+  },
+  Suppressions: { icon: CircleMinus, accent: 'text-red-300', chip: 'bg-red-500/15 text-red-300 ring-red-400/30' },
+};
+const OTHER_CATEGORY = { icon: Tag, accent: 'text-ink-200', chip: 'bg-tint/[0.06] text-ink-200 ring-tint/10' };
 
-const CHANGELOG_PATH = 'CHANGELOG.md'
-const releaseUrl = (version: string) => `${APP_REPO_URL}/releases/tag/app-v${version}`
-const asList = (items: string[]) => items.map((item) => `- ${item.replace(/\n/g, '\n  ')}`).join('\n')
+const CHANGELOG_PATH = 'CHANGELOG.md';
+const releaseUrl = (version: string) => `${APP_REPO_URL}/releases/tag/app-v${version}`;
+const asList = (items: string[]) => items.map((item) => `- ${item.replace(/\n/g, '\n  ')}`).join('\n');
 
 function Pill({ className, children }: { className: string; children: string }) {
   return (
-    <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ring-1 ring-inset ${className}`}>
+    <span
+      className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide whitespace-nowrap uppercase ring-1 ring-inset ${className}`}
+    >
       {children}
     </span>
-  )
+  );
 }
 
 function Sections({
   sections,
   filter,
-  onLink
+  onLink,
 }: {
-  sections: ChangelogSection[]
-  filter: string | null
-  onLink: (link: DocLink) => void
+  sections: ChangelogSection[];
+  filter: string | null;
+  onLink: (link: DocLink) => void;
 }) {
   return (
     <div className="mt-4 space-y-5">
       {sections
         .filter((section) => section.items.length > 0 && (!filter || section.title === filter))
         .map((section) => {
-          const style = CATEGORY_STYLES[section.title] ?? OTHER_CATEGORY
+          const style = CATEGORY_STYLES[section.title] ?? OTHER_CATEGORY;
           return (
             <div key={section.title}>
               <h3 className={`flex items-center gap-2 text-xs font-semibold tracking-widest uppercase ${style.accent}`}>
                 <style.icon size={14} strokeWidth={2.5} /> {section.title}
               </h3>
-              <DocMarkdown markdown={asList(section.items)} path={CHANGELOG_PATH} onLink={onLink} className="changelog-items" />
+              <DocMarkdown
+                markdown={asList(section.items)}
+                path={CHANGELOG_PATH}
+                onLink={onLink}
+                className="changelog-items"
+              />
             </div>
-          )
+          );
         })}
     </div>
-  )
+  );
 }
 
 function ReleaseEntry({
@@ -73,18 +94,21 @@ function ReleaseEntry({
   appVersion,
   updatedFrom,
   filter,
-  onLink
+  onLink,
 }: {
-  release: ChangelogRelease
-  appVersion: string
-  updatedFrom: string | null
-  filter: string | null
-  onLink: (link: DocLink) => void
+  release: ChangelogRelease;
+  appVersion: string;
+  updatedFrom: string | null;
+  filter: string | null;
+  onLink: (link: DocLink) => void;
 }) {
-  const { version } = release
-  const current = version !== null && version === appVersion
+  const { version } = release;
+  const current = version !== null && version === appVersion;
   const fresh =
-    version !== null && updatedFrom !== null && compareVersions(version, updatedFrom) > 0 && compareVersions(version, appVersion) <= 0
+    version !== null &&
+    updatedFrom !== null &&
+    compareVersions(version, updatedFrom) > 0 &&
+    compareVersions(version, appVersion) <= 0;
   return (
     <section id={releaseAnchor(release)} className="relative scroll-mt-24 pb-10 pl-9 last:pb-2">
       <span
@@ -104,8 +128,8 @@ function ReleaseEntry({
           <a
             href={releaseUrl(version)}
             onClick={(e) => {
-              e.preventDefault()
-              onLink({ kind: 'external', url: releaseUrl(version) })
+              e.preventDefault();
+              onLink({ kind: 'external', url: releaseUrl(version) });
             }}
             className="ml-auto inline-flex items-center gap-1.5 text-xs font-semibold text-ink-400 transition hover:text-ink-100"
           >
@@ -113,23 +137,25 @@ function ReleaseEntry({
           </a>
         )}
       </header>
-      {release.summary && <DocMarkdown markdown={release.summary} path={CHANGELOG_PATH} onLink={onLink} className="mt-2" />}
+      {release.summary && (
+        <DocMarkdown markdown={release.summary} path={CHANGELOG_PATH} onLink={onLink} className="mt-2" />
+      )}
       <Sections sections={release.sections} filter={filter} onLink={onLink} />
     </section>
-  )
+  );
 }
 
 /** Mise à jour disponible : ce qu'elle apporte, tiré des notes des releases GitHub, et le bouton pour l'installer. */
 function AvailableUpdate({ onLink }: { onLink: (link: DocLink) => void }) {
-  const update = useStore((s) => s.catalog?.appUpdate ?? null)
-  const progress = useStore((s) => s.appUpdateProgress)
-  const installing = useStore((s) => s.busyId !== null)
-  const install = useStore((s) => s.installAppUpdate)
+  const update = useStore((s) => s.catalog?.appUpdate ?? null);
+  const progress = useStore((s) => s.appUpdateProgress);
+  const installing = useStore((s) => s.busyId !== null);
+  const install = useStore((s) => s.installAppUpdate);
   const notes = useMemo(
     () => (update?.releases ?? []).map((release) => ({ release, notes: parseReleaseNotes(release.notes) })),
-    [update]
-  )
-  if (!update) return null
+    [update],
+  );
+  if (!update) return null;
 
   return (
     <section className="mb-12 rounded-3xl bg-sky-400/[0.06] p-7 ring-1 ring-sky-400/25">
@@ -159,7 +185,9 @@ function AvailableUpdate({ onLink }: { onLink: (link: DocLink) => void }) {
           )}
           {parsed.sections.length > 0 ? (
             <>
-              {parsed.summary && <DocMarkdown markdown={parsed.summary} path={CHANGELOG_PATH} onLink={onLink} className="mt-2" />}
+              {parsed.summary && (
+                <DocMarkdown markdown={parsed.summary} path={CHANGELOG_PATH} onLink={onLink} className="mt-2" />
+              )}
               <Sections sections={parsed.sections} filter={null} onLink={onLink} />
             </>
           ) : (
@@ -178,21 +206,27 @@ function AvailableUpdate({ onLink }: { onLink: (link: DocLink) => void }) {
         </div>
       ))}
     </section>
-  )
+  );
 }
 
 /** Page « Nouveautés » de l'aide : l'historique des versions de l'application (CHANGELOG.md). */
 export function ChangelogPage({ title, onLink }: { title: string; onLink: (link: DocLink) => void }) {
-  const appVersion = useStore((s) => s.appVersion)
-  const updatedFrom = useDocs((s) => s.updatedFrom)
-  const [filter, setFilter] = useState<string | null>(null)
+  const appVersion = useStore((s) => s.appVersion);
+  const updatedFrom = useDocs((s) => s.updatedFrom);
+  const [filter, setFilter] = useState<string | null>(null);
 
   // « Non publié » n'est montré qu'en développement : c'est le brouillon de la prochaine version.
-  const releases = changelog.releases.filter((release) => releaseHasChanges(release) && (release.version !== null || import.meta.env.DEV))
+  const releases = changelog.releases.filter(
+    (release) => releaseHasChanges(release) && (release.version !== null || import.meta.env.DEV),
+  );
   const categories = CHANGELOG_CATEGORIES.filter((category) =>
-    releases.some((release) => release.sections.some((section) => section.title === category && section.items.length > 0))
-  )
-  const shown = filter ? releases.filter((release) => release.sections.some((s) => s.title === filter && s.items.length > 0)) : releases
+    releases.some((release) =>
+      release.sections.some((section) => section.title === category && section.items.length > 0),
+    ),
+  );
+  const shown = filter
+    ? releases.filter((release) => release.sections.some((s) => s.title === filter && s.items.length > 0))
+    : releases;
 
   return (
     <div>
@@ -214,8 +248,8 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
       {categories.length > 1 && (
         <div className="mb-8 flex flex-wrap gap-2" role="group" aria-label="Filtrer par rubrique">
           {[null, ...categories].map((category) => {
-            const active = filter === category
-            const style = category ? (CATEGORY_STYLES[category] ?? OTHER_CATEGORY) : null
+            const active = filter === category;
+            const style = category ? (CATEGORY_STYLES[category] ?? OTHER_CATEGORY) : null;
             return (
               <button
                 key={category ?? 'tout'}
@@ -231,7 +265,7 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
                 {style && <style.icon size={13} strokeWidth={2.5} />}
                 {category ?? 'Tout'}
               </button>
-            )
+            );
           })}
         </div>
       )}
@@ -249,5 +283,5 @@ export function ChangelogPage({ title, onLink }: { title: string; onLink: (link:
         ))}
       </div>
     </div>
-  )
+  );
 }

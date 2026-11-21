@@ -1,40 +1,48 @@
-import type { ReactNode } from 'react'
-import { CircleCheck, CircleX, Info, X } from 'lucide-react'
-import { useStore } from '../store'
+import type { ReactNode } from 'react';
+import { CircleCheck, CircleX, Info, X } from 'lucide-react';
+import { useStore } from '../store';
 
 export interface ToastItem {
-  id: number
-  kind: 'success' | 'error' | 'info'
-  title: string
-  message?: string
-  action?: { label: string; run: () => void }
+  id: number;
+  kind: 'success' | 'error' | 'info';
+  title: string;
+  message?: string;
+  action?: { label: string; run: () => void };
   /** Reste affichée jusqu'à ce qu'on la ferme (une action qu'on ne doit pas manquer). */
-  sticky?: boolean
+  sticky?: boolean;
 }
 
 const STYLES = {
   success: { icon: CircleCheck, color: 'text-grass-400', ring: 'ring-grass-400/25' },
   error: { icon: CircleX, color: 'text-red-400', ring: 'ring-red-400/25' },
-  info: { icon: Info, color: 'text-sky-300', ring: 'ring-sky-300/20' }
-}
+  info: { icon: Info, color: 'text-sky-300', ring: 'ring-sky-300/20' },
+};
 
 /** `children` : encarts posés au-dessus des notifications (publications en cours). */
 export function Toasts({ children }: { children?: ReactNode }) {
-  const toasts = useStore((s) => s.toasts)
-  const dismiss = useStore((s) => s.dismissToast)
+  const toasts = useStore((s) => s.toasts);
+  const dismiss = useStore((s) => s.dismissToast);
   return (
     <ToastList toasts={toasts} dismiss={dismiss}>
       {children}
     </ToastList>
-  )
+  );
 }
 
-export function ToastList({ toasts, dismiss, children }: { toasts: ToastItem[]; dismiss: (id: number) => void; children?: ReactNode }) {
+export function ToastList({
+  toasts,
+  dismiss,
+  children,
+}: {
+  toasts: ToastItem[];
+  dismiss: (id: number) => void;
+  children?: ReactNode;
+}) {
   return (
     <div className="pointer-events-none fixed right-6 bottom-6 z-[60] flex w-[400px] max-w-[calc(100vw-3rem)] flex-col gap-3">
       {children}
       {toasts.map((toast) => {
-        const { icon: Icon, color, ring } = STYLES[toast.kind]
+        const { icon: Icon, color, ring } = STYLES[toast.kind];
         return (
           <div
             key={toast.id}
@@ -49,8 +57,8 @@ export function ToastList({ toasts, dismiss, children }: { toasts: ToastItem[]; 
                 <button
                   type="button"
                   onClick={() => {
-                    toast.action!.run()
-                    dismiss(toast.id)
+                    toast.action!.run();
+                    dismiss(toast.id);
                   }}
                   className="mt-2 text-sm font-semibold text-grass-300 hover:text-grass-400"
                 >
@@ -67,8 +75,8 @@ export function ToastList({ toasts, dismiss, children }: { toasts: ToastItem[]; 
               <X size={15} />
             </button>
           </div>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

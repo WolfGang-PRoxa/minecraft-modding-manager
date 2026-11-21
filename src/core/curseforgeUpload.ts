@@ -1,14 +1,14 @@
 // Mise en ligne sur CurseForge avec le jeton d'auteur du publieur (API de minecraft.curseforge.com) : un fichier de
 // modpack sur un projet existant (sa modération se suit par l'API de lecture : projectVersions).
-import { openAsBlob } from 'node:fs'
-import { basename } from 'node:path'
-import { curseForgeApis, curseForgeSecret } from './curseforgeAuth'
-import { StudioError } from './studio/analyze'
+import { openAsBlob } from 'node:fs';
+import { basename } from 'node:path';
+import { curseForgeApis, curseForgeSecret } from './curseforgeAuth';
+import { StudioError } from './studio/analyze';
 
 interface GameVersion {
-  id: number
-  gameVersionTypeID: number
-  name: string
+  id: number;
+  gameVersionTypeID: number;
+  name: string;
 }
 
 /** États d'un fichier sur CurseForge (FileStatus de l'API), tels qu'on les dit au publieur. */
@@ -35,62 +35,76 @@ export const FILE_STATUS_LABELS: Record<number, string> = {
   20: 'en traitement',
   21: 'publication programmée',
   22: 'en traitement',
-  23: 'en traitement'
-}
+  23: 'en traitement',
+};
 
 /** Visible des joueurs (approuvé ou publié). */
-export const isLiveStatus = (status: number) => status === 4 || status === 10
+export const isLiveStatus = (status: number) => status === 4 || status === 10;
 
 export class CurseForgeUploader {
-  private versions: Promise<{ versions: GameVersion[]; minecraftTypes: Set<number> }> | null = null
+  private versions: Promise<{ versions: GameVersion[]; minecraftTypes: Set<number> }> | null = null;
 
   constructor(private readonly token: string) {}
 
   static async create(options: { dotenvDir?: string } = {}): Promise<CurseForgeUploader> {
-    const token = await curseForgeSecret('uploadToken', options)
-    if (!token) throw new StudioError('Aucun jeton d’auteur CurseForge : enregistre-le dans Paramètres → Compte CurseForge.')
-    return new CurseForgeUploader(token.value)
+    const token = await curseForgeSecret('uploadToken', options);
+    if (!token)
+      throw new StudioError('Aucun jeton d’auteur CurseForge : enregistre-le dans Paramètres → Compte CurseForge.');
+    return new CurseForgeUploader(token.value);
   }
 
   private async get<T>(path: string): Promise<T> {
-    let res: Response
+    let res: Response;
     try {
-      res = await fetch(`${curseForgeApis().upload}/${path}`, { headers: { 'X-Api-Token': this.token }, signal: AbortSignal.timeout(60_000) })
+      res = await fetch(`${curseForgeApis().upload}/${path}`, {
+        headers: { 'X-Api-Token': this.token },
+        signal: AbortSignal.timeout(60_000),
+      });
     } catch {
-      throw new StudioError('CurseForge est injoignable. Vérifie ta connexion internet.')
+      throw new StudioError('CurseForge est injoignable. Vérifie ta connexion internet.');
     }
-    if (res.status === 401 || res.status === 403) throw new StudioError('CurseForge refuse le jeton d’auteur : vérifie-le dans Paramètres → Compte CurseForge.')
-    if (!res.ok) throw new StudioError(`CurseForge a répondu ${res.status} (${path}).`)
-    return (await res.json()) as T
+    if (res.status === 401 || res.status === 403)
+      throw new StudioError('CurseForge refuse le jeton d’auteur : vérifie-le dans Paramètres → Compte CurseForge.');
+    if (!res.ok) throw new StudioError(`CurseForge a répondu ${res.status} (${path}).`);
+    return (await res.json()) as T;
   }
 
   /**
    * Identifiants de la version de Minecraft et du chargeur pour la mise en ligne. Une version de Minecraft existe en
    * plusieurs exemplaires (Minecraft, Bukkit, addons…) : on prend celle dont le type est un « minecraft-… ».
    */
-  async gameVersionIds(minecraftVersion: string | string[], loader: string | string[] | null, environments: Array<'Client' | 'Server'> = []): Promise<number[]> {
+  async gameVersionIds(
+    minecraftVersion: string | string[],
+    loader: string | string[] | null,
+    environments: Array<'Client' | 'Server'> = [],
+  ): Promise<number[]> {
     this.versions ??= Promise.all([
       this.get<GameVersion[]>('game/versions'),
-      this.get<Array<{ id: number; slug: string }>>('game/version-types')
-    ]).then(([versions, types]) => ({ versions, minecraftTypes: new Set(types.filter((t) => t.slug.startsWith('minecraft-')).map((t) => t.id)) }))
-    const { versions, minecraftTypes } = await this.versions
-    const ids: number[] = []
+      this.get<Array<{ id: number; slug: string }>>('game/version-types'),
+    ]).then(([versions, types]) => ({
+      versions,
+      minecraftTypes: new Set(types.filter((t) => t.slug.startsWith('minecraft-')).map((t) => t.id)),
+    }));
+    const { versions, minecraftTypes } = await this.versions;
+    const ids: number[] = [];
     for (const name of Array.isArray(minecraftVersion) ? minecraftVersion : [minecraftVersion]) {
-      const game = versions.find((v) => v.name === name && minecraftTypes.has(v.gameVersionTypeID))
-      if (!game) throw new StudioError(`CurseForge ne connaît pas Minecraft ${name}.`)
-      ids.push(game.id)
+      const game = versions.find((v) => v.name === name && minecraftTypes.has(v.gameVersionTypeID));
+      if (!game) throw new StudioError(`CurseForge ne connaît pas Minecraft ${name}.`);
+      ids.push(game.id);
     }
     for (const value of Array.isArray(loader) ? loader : [loader]) {
-      const loaderName = { forge: 'Forge', neoforge: 'NeoForge', fabric: 'Fabric', quilt: 'Quilt' }[/^(neoforge|forge|fabric|quilt)/i.exec(value ?? '')?.[1].toLowerCase() ?? '']
-      const loaderVersion = loaderName ? versions.find((v) => v.name === loaderName) : undefined
-      if (loaderVersion && !ids.includes(loaderVersion.id)) ids.push(loaderVersion.id)
+      const loaderName = { forge: 'Forge', neoforge: 'NeoForge', fabric: 'Fabric', quilt: 'Quilt' }[
+        /^(neoforge|forge|fabric|quilt)/i.exec(value ?? '')?.[1].toLowerCase() ?? ''
+      ];
+      const loaderVersion = loaderName ? versions.find((v) => v.name === loaderName) : undefined;
+      if (loaderVersion && !ids.includes(loaderVersion.id)) ids.push(loaderVersion.id);
     }
     // Côté où un mod fonctionne : « Client », « Server », comme sur les fichiers mis en ligne depuis le site.
     for (const name of environments) {
-      const environment = versions.find((v) => v.name === name)
-      if (environment) ids.push(environment.id)
+      const environment = versions.find((v) => v.name === name);
+      if (environment) ids.push(environment.id);
     }
-    return ids
+    return ids;
   }
 
   /** Met un fichier en ligne sur un projet ; renvoie l'identifiant du fichier créé (il passe ensuite en modération). */
@@ -98,42 +112,50 @@ export class CurseForgeUploader {
     projectId: number,
     file: string,
     metadata: {
-      displayName: string
-      changelog: string
-      releaseType: 'release' | 'beta' | 'alpha'
-      gameVersions: number[]
+      displayName: string;
+      changelog: string;
+      releaseType: 'release' | 'beta' | 'alpha';
+      gameVersions: number[];
       /** Dépendances : projets CurseForge par slug. */
-      relations?: { projects: Array<{ slug: string; type: 'requiredDependency' | 'optionalDependency' | 'embeddedLibrary' | 'incompatible' | 'tool' }> }
-    }
+      relations?: {
+        projects: Array<{
+          slug: string;
+          type: 'requiredDependency' | 'optionalDependency' | 'embeddedLibrary' | 'incompatible' | 'tool';
+        }>;
+      };
+    },
   ): Promise<number> {
-    const form = new FormData()
-    form.set('metadata', JSON.stringify({ ...metadata, changelogType: 'markdown' }))
-    form.set('file', await openAsBlob(file), basename(file))
-    let res: Response
+    const form = new FormData();
+    form.set('metadata', JSON.stringify({ ...metadata, changelogType: 'markdown' }));
+    form.set('file', await openAsBlob(file), basename(file));
+    let res: Response;
     try {
       res = await fetch(`${curseForgeApis().upload}/projects/${projectId}/upload-file`, {
         method: 'POST',
         headers: { 'X-Api-Token': this.token },
         body: form,
-        signal: AbortSignal.timeout(600_000)
-      })
+        signal: AbortSignal.timeout(600_000),
+      });
     } catch {
-      throw new StudioError('Envoi vers CurseForge interrompu : vérifie ta connexion internet.')
+      throw new StudioError('Envoi vers CurseForge interrompu : vérifie ta connexion internet.');
     }
-    const text = await res.text()
+    const text = await res.text();
     if (!res.ok) {
-      let detail = text.slice(0, 300)
+      let detail = text.slice(0, 300);
       try {
-        detail = (JSON.parse(text) as { errorMessage?: string }).errorMessage ?? detail
+        detail = (JSON.parse(text) as { errorMessage?: string }).errorMessage ?? detail;
       } catch {
         // réponse non JSON
       }
-      if (res.status === 403 || res.status === 401) throw new StudioError(`CurseForge refuse l’envoi : ${detail} (le jeton doit appartenir à un auteur du projet).`)
-      if (res.status === 404) throw new StudioError(`Projet CurseForge ${projectId} introuvable.`)
-      throw new StudioError(`CurseForge a refusé le fichier (${res.status}) : ${detail}`)
+      if (res.status === 403 || res.status === 401)
+        throw new StudioError(
+          `CurseForge refuse l’envoi : ${detail} (le jeton doit appartenir à un auteur du projet).`,
+        );
+      if (res.status === 404) throw new StudioError(`Projet CurseForge ${projectId} introuvable.`);
+      throw new StudioError(`CurseForge a refusé le fichier (${res.status}) : ${detail}`);
     }
-    const id = Number((JSON.parse(text) as { id?: unknown }).id)
-    if (!Number.isInteger(id)) throw new StudioError('CurseForge n’a pas renvoyé l’identifiant du fichier envoyé.')
-    return id
+    const id = Number((JSON.parse(text) as { id?: unknown }).id);
+    if (!Number.isInteger(id)) throw new StudioError('CurseForge n’a pas renvoyé l’identifiant du fichier envoyé.');
+    return id;
   }
 }

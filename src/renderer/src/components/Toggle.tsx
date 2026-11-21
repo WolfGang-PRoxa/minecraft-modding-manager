@@ -4,17 +4,17 @@ export function Toggle({
   onChange,
   label,
   disabled = false,
-  size = 'md'
+  size = 'md',
 }: {
-  checked: boolean
-  onChange: (value: boolean) => void
-  label: string
-  disabled?: boolean
-  size?: 'sm' | 'md'
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  label: string;
+  disabled?: boolean;
+  size?: 'sm' | 'md';
 }) {
-  const track = size === 'sm' ? 'h-5 w-9' : 'h-7 w-12'
-  const knob = size === 'sm' ? 'top-0.5 left-0.5 size-4' : 'top-1 left-1 size-5'
-  const shift = size === 'sm' ? 'translate-x-4' : 'translate-x-5'
+  const track = size === 'sm' ? 'h-5 w-9' : 'h-7 w-12';
+  const knob = size === 'sm' ? 'top-0.5 left-0.5 size-4' : 'top-1 left-1 size-5';
+  const shift = size === 'sm' ? 'translate-x-4' : 'translate-x-5';
   return (
     <button
       type="button"
@@ -28,5 +28,5 @@ export function Toggle({
     >
       <span className={`absolute ${knob} rounded-full bg-white shadow transition-transform ${checked ? shift : ''}`} />
     </button>
-  )
+  );
 }

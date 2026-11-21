@@ -69,11 +69,11 @@ plan. Un publieur retrouve la dernière vue utilisée (Bibliothèque ou Studio).
 
 Un installeur relancé alors que l’application est déjà installée le détecte et s’adapte :
 
-| Application déjà installée | Ce que fait l’installeur |
-|---|---|
-| La même version | La fenêtre **Déjà installé** propose de l’ouvrir. **Ouvrir l’application** (ou `Entrée`) l’ouvre, **Réinstaller** la réinstalle, **Annuler** (ou `Échap`) ne fait rien. |
-| Une version plus récente | La fenêtre **Version plus récente installée** prévient avant un retour en arrière. **Ouvrir la …** ouvre la version installée, **Installer la …** revient à la version de l’installeur, **Annuler** ne fait rien. |
-| Une version plus ancienne | Il la met à jour, sans question. |
+| Application déjà installée | Ce que fait l’installeur                                                                                                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| La même version            | La fenêtre **Déjà installé** propose de l’ouvrir. **Ouvrir l’application** (ou `Entrée`) l’ouvre, **Réinstaller** la réinstalle, **Annuler** (ou `Échap`) ne fait rien.                                           |
+| Une version plus récente   | La fenêtre **Version plus récente installée** prévient avant un retour en arrière. **Ouvrir la …** ouvre la version installée, **Installer la …** revient à la version de l’installeur, **Annuler** ne fait rien. |
+| Une version plus ancienne  | Il la met à jour, sans question.                                                                                                                                                                                  |
 
 Si l’application est ouverte, la fenêtre **Application ouverte** prévient qu’elle va être fermée pour continuer.
 **Fermer et continuer** (ou `Entrée`) la ferme, comme un clic sur la croix de sa fenêtre, puis poursuit ;

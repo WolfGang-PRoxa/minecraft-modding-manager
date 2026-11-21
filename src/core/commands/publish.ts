@@ -1,22 +1,25 @@
-import { z } from 'zod'
-import { formatBytes } from '../../shared/format'
-import type { SyncPlan } from '../../shared/studio'
-import { StudioError } from '../studio/analyze'
-import { command } from './registry'
+import { z } from 'zod';
+import { formatBytes } from '../../shared/format';
+import type { SyncPlan } from '../../shared/studio';
+import { StudioError } from '../studio/analyze';
+import { command } from './registry';
 
-const KIND_SIGNS = { create: '+', update: '~', delete: '−' } as const
+const KIND_SIGNS = { create: '+', update: '~', delete: '−' } as const;
 
 export function printPlan(plan: SyncPlan): string {
-  const lines: string[] = []
-  if (plan.pendingZips) lines.push(`⚠ ${plan.pendingZips} zip(s) pas encore rangé(s), ignoré(s) : « ranger apply ».`)
-  lines.push(...plan.warnings.map((w) => `⚠ ${w}`))
-  if (!plan.actions.length) return [...lines, 'GitHub est déjà à jour.'].join('\n')
+  const lines: string[] = [];
+  if (plan.pendingZips) lines.push(`⚠ ${plan.pendingZips} zip(s) pas encore rangé(s), ignoré(s) : « ranger apply ».`);
+  lines.push(...plan.warnings.map((w) => `⚠ ${w}`));
+  if (!plan.actions.length) return [...lines, 'GitHub est déjà à jour.'].join('\n');
   for (const action of plan.actions) {
-    lines.push(`${KIND_SIGNS[action.kind]} ${action.label}`)
-    lines.push(...action.details.map((d) => `    ${d}`), ...action.warnings.map((w) => `    ⚠ ${w}`))
+    lines.push(`${KIND_SIGNS[action.kind]} ${action.label}`);
+    lines.push(...action.details.map((d) => `    ${d}`), ...action.warnings.map((w) => `    ⚠ ${w}`));
   }
-  lines.push(`${plan.actions.length} changement(s) · ${formatBytes(plan.uploadBytes)} à envoyer`, `Empreinte : ${plan.fingerprint}`)
-  return lines.join('\n')
+  lines.push(
+    `${plan.actions.length} changement(s) · ${formatBytes(plan.uploadBytes)} à envoyer`,
+    `Empreinte : ${plan.fingerprint}`,
+  );
+  return lines.join('\n');
 }
 
 export const publishPlan = command({
@@ -28,11 +31,11 @@ export const publishPlan = command({
   params: z.object({}),
   kind: 'read',
   async run(_params, ctx) {
-    const { view } = await ctx.service.freshPlan()
-    return view
+    const { view } = await ctx.service.freshPlan();
+    return view;
   },
-  print: printPlan
-})
+  print: printPlan,
+});
 
 export const publishApply = command({
   name: 'publish apply',
@@ -44,15 +47,15 @@ export const publishApply = command({
     const result = await ctx.service.publish(
       fingerprint,
       (progress) => {
-        if (progress.current) ctx.progress(progress.current.text, progress.current.done, progress.current.total)
+        if (progress.current) ctx.progress(progress.current.text, progress.current.done, progress.current.total);
       },
-      ctx.signal
-    )
-    if (!result.ok) throw new StudioError(result.error)
-    return { changes: result.done }
+      ctx.signal,
+    );
+    if (!result.ok) throw new StudioError(result.error);
+    return { changes: result.done };
   },
-  print: ({ changes }) => `GitHub est à jour (${changes} changement(s)).`
-})
+  print: ({ changes }) => `GitHub est à jour (${changes} changement(s)).`,
+});
 
 export const releasesDelete = command({
   name: 'releases delete',
@@ -61,12 +64,12 @@ export const releasesDelete = command({
   params: z.object({ tags: z.array(z.string().min(1)).min(1).describe('Tags des releases (pack-<id>-v<N>).') }),
   kind: 'destructive',
   async run({ tags }, ctx) {
-    const result = await ctx.service.deleteReleases(tags)
-    if (!result.ok) throw new StudioError(result.error)
-    return { removed: result.done }
+    const result = await ctx.service.deleteReleases(tags);
+    if (!result.ok) throw new StudioError(result.error);
+    return { removed: result.done };
   },
-  print: ({ removed }) => `${removed} release(s) retirée(s) de GitHub.`
-})
+  print: ({ removed }) => `${removed} release(s) retirée(s) de GitHub.`,
+});
 
 export const rangerPlan = command({
   name: 'ranger plan',
@@ -80,11 +83,11 @@ export const rangerPlan = command({
           .flatMap((p) => [
             p.name,
             ...p.errors.map((e) => `  ✖ ${e}`),
-            ...p.renames.map((r) => `  ${r.from} → ${r.to}${r.warning ? `  ⚠ ${r.warning}` : ''}`)
+            ...p.renames.map((r) => `  ${r.from} → ${r.to}${r.warning ? `  ⚠ ${r.warning}` : ''}`),
           ])
           .join('\n')
-      : 'Tout est déjà rangé.'
-})
+      : 'Tout est déjà rangé.',
+});
 
 export const rangerApply = command({
   name: 'ranger apply',
@@ -92,7 +95,7 @@ export const rangerApply = command({
   params: z.object({}),
   kind: 'write',
   async run(_params, ctx) {
-    return { renamed: await ctx.service.applyRanger() }
+    return { renamed: await ctx.service.applyRanger() };
   },
-  print: ({ renamed }) => `${renamed} fichier(s) renommé(s).`
-})
+  print: ({ renamed }) => `${renamed} fichier(s) renommé(s).`,
+});

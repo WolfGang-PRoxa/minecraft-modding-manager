@@ -1,43 +1,46 @@
 // Curseur de l'intervalle entre deux vérifications automatiques (de 1 minute à 6 heures, par crans). Le réglage est
 // enregistré peu après le dernier mouvement, pas à chaque cran franchi pendant le glissement.
-import { useEffect, useRef, useState } from 'react'
-import { CHECK_MINUTE_STEPS, formatCheckInterval, formatEvery, nearestCheckStep } from '../../../shared/autoUpdate'
+import { useEffect, useRef, useState } from 'react';
+import { CHECK_MINUTE_STEPS, formatCheckInterval, formatEvery, nearestCheckStep } from '../../../shared/autoUpdate';
 
-const SAVE_DELAY_MS = 400
+const SAVE_DELAY_MS = 400;
 
 export function CheckInterval({
   label,
   minutes,
   onChange,
-  disabled = false
+  disabled = false,
 }: {
-  label: string
-  minutes: number
-  onChange: (minutes: number) => void
-  disabled?: boolean
+  label: string;
+  minutes: number;
+  onChange: (minutes: number) => void;
+  disabled?: boolean;
 }) {
-  const [step, setStep] = useState(() => nearestCheckStep(minutes))
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const saved = useRef(minutes)
+  const [step, setStep] = useState(() => nearestCheckStep(minutes));
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saved = useRef(minutes);
   // Réglage changé ailleurs (ou enregistré) : le curseur le suit.
   useEffect(() => {
-    if (minutes !== saved.current && !timer.current) setStep(nearestCheckStep(minutes))
-    saved.current = minutes
-  }, [minutes])
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
+    if (minutes !== saved.current && !timer.current) setStep(nearestCheckStep(minutes));
+    saved.current = minutes;
+  }, [minutes]);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
 
-  const value = CHECK_MINUTE_STEPS[step]
+  const value = CHECK_MINUTE_STEPS[step];
   const move = (next: number) => {
-    setStep(next)
-    if (timer.current) clearTimeout(timer.current)
+    setStep(next);
+    if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
-      timer.current = null
-      saved.current = CHECK_MINUTE_STEPS[next]
-      onChange(CHECK_MINUTE_STEPS[next])
-    }, SAVE_DELAY_MS)
-  }
+      timer.current = null;
+      saved.current = CHECK_MINUTE_STEPS[next];
+      onChange(CHECK_MINUTE_STEPS[next]);
+    }, SAVE_DELAY_MS);
+  };
 
   return (
     <div className={disabled ? 'opacity-50' : ''}>
@@ -62,5 +65,5 @@ export function CheckInterval({
         <span>6 heures</span>
       </div>
     </div>
-  )
+  );
 }

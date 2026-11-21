@@ -60,4 +60,4 @@ Méthode :
   GitHub : confirme avec le publieur. Les zips et dossiers supprimés vont à la corbeille de Windows.
 - Ne modifie jamais un profil CurseForge ni les fichiers du dossier des contenus à la main : passe par ces outils.
 - « Patiente : … est en cours » : une autre opération tourne (application ou autre session) ; réessaie plus tard.
-- journal : historique des opérations (qui, quoi, résultat), utile pour savoir ce qui s'est passé.`
+- journal : historique des opérations (qui, quoi, résultat), utile pour savoir ce qui s'est passé.`;

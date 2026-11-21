@@ -9,40 +9,40 @@ L’application contacte GitHub : `api.github.com`, `github.com` et ses serveurs
 contacte aussi CurseForge, Modrinth et Hangar, avec les clés et les jetons que le publieur lui a confiés, et, pour les tests,
 les serveurs de Minecraft et de ses chargeurs. Elle ne contient ni statistiques d’utilisation ni publicité.
 
-| Quand | Ce qui est demandé à GitHub |
-|---|---|
+| Quand                                                                                       | Ce qui est demandé à GitHub                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Au lancement, puis à chaque vérification (toutes les 5 et 10 minutes par défaut, réglables) | Le flux des releases du dépôt suivi et de celui de l’application, puis, s’il a changé (ou toutes les 30 minutes), la liste de leurs releases, sans aucune information sur l’utilisateur. |
-| À l’installation d’un modpack | Le zip et l’image de la version choisie. |
-| Pour afficher un compte ou un dépôt | L’image de profil (avatar) du compte GitHub concerné. |
-| À la mise à jour de l’application | L’installeur de la nouvelle version. |
-| En mode publieur | Avec le jeton du publieur : la vérification de ses droits sur le dépôt, puis la publication de ses releases. |
-| À l’envoi d’un signalement | Le texte saisi, et les informations techniques si elles sont jointes. |
+| À l’installation d’un modpack                                                               | Le zip et l’image de la version choisie.                                                                                                                                                 |
+| Pour afficher un compte ou un dépôt                                                         | L’image de profil (avatar) du compte GitHub concerné.                                                                                                                                    |
+| À la mise à jour de l’application                                                           | L’installeur de la nouvelle version.                                                                                                                                                     |
+| En mode publieur                                                                            | Avec le jeton du publieur : la vérification de ses droits sur le dépôt, puis la publication de ses releases.                                                                             |
+| À l’envoi d’un signalement                                                                  | Le texte saisi, et les informations techniques si elles sont jointes.                                                                                                                    |
 
-| Quand | Ce qui est demandé à CurseForge (publieurs), avec la clé ou le jeton du publieur |
-|---|---|
-| À l’enregistrement de la clé ou du jeton | Une requête qui vérifie que CurseForge l’accepte. |
-| À la recherche des mises à jour des mods | Les fichiers disponibles pour les mods du profil, et leurs notes de version. |
-| À l’application de mises à jour | Les fichiers des mods choisis (`edge.forgecdn.net`). |
-| À la liaison d’un modpack à son projet, ou à l’ouverture de ses versions | Le projet et ses versions, et les fichiers joints à sa dernière version. |
-| À la publication d’une version sur CurseForge | L’export de la version (liste des mods, fichiers joints), ses notes et son type ; pour un mod, ses jars. |
+| Quand                                                                    | Ce qui est demandé à CurseForge (publieurs), avec la clé ou le jeton du publieur                         |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| À l’enregistrement de la clé ou du jeton                                 | Une requête qui vérifie que CurseForge l’accepte.                                                        |
+| À la recherche des mises à jour des mods                                 | Les fichiers disponibles pour les mods du profil, et leurs notes de version.                             |
+| À l’application de mises à jour                                          | Les fichiers des mods choisis (`edge.forgecdn.net`).                                                     |
+| À la liaison d’un modpack à son projet, ou à l’ouverture de ses versions | Le projet et ses versions, et les fichiers joints à sa dernière version.                                 |
+| À la publication d’une version sur CurseForge                            | L’export de la version (liste des mods, fichiers joints), ses notes et son type ; pour un mod, ses jars. |
 
-| Quand | Ce qui est demandé à Modrinth (`api.modrinth.com`, publieurs), avec le jeton du publieur |
-|---|---|
-| À l’enregistrement du jeton | Le compte du jeton, pour vérifier que Modrinth l’accepte. |
-| À la liaison d’un mod à son projet, ou à l’affichage de ses versions | Le projet et ses versions, et les projets de ses dépendances. |
-| À la publication d’une version d’un mod sur Modrinth | Ses jars, ses notes, son numéro et son type. |
+| Quand                                                                | Ce qui est demandé à Modrinth (`api.modrinth.com`, publieurs), avec le jeton du publieur |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| À l’enregistrement du jeton                                          | Le compte du jeton, pour vérifier que Modrinth l’accepte.                                |
+| À la liaison d’un mod à son projet, ou à l’affichage de ses versions | Le projet et ses versions, et les projets de ses dépendances.                            |
+| À la publication d’une version d’un mod sur Modrinth                 | Ses jars, ses notes, son numéro et son type.                                             |
 
-| Quand | Ce qui est demandé à Hangar (`hangar.papermc.io`, publieurs), avec la clé du publieur |
-|---|---|
-| À l’enregistrement de la clé, et avant chaque échange | La clé, échangée contre un jeton de session. |
-| À la liaison d’un plugin à son projet, ou à l’affichage de ses versions | Le projet et ses versions. |
-| À la publication d’une version d’un plugin | Son jar, ses notes, sa version et ses versions de Minecraft. |
+| Quand                                                                   | Ce qui est demandé à Hangar (`hangar.papermc.io`, publieurs), avec la clé du publieur |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| À l’enregistrement de la clé, et avant chaque échange                   | La clé, échangée contre un jeton de session.                                          |
+| À la liaison d’un plugin à son projet, ou à l’affichage de ses versions | Le projet et ses versions.                                                            |
+| À la publication d’une version d’un plugin                              | Son jar, ses notes, sa version et ses versions de Minecraft.                          |
 
-| Quand | Ce qui est demandé ailleurs (publieurs) |
-|---|---|
-| Au premier test d’un profil sur un serveur | Le serveur de son chargeur : `meta.fabricmc.net` (Fabric), `maven.minecraftforge.net` (Forge) ou `maven.neoforged.net` (NeoForge), puis le serveur de Minecraft et ses bibliothèques (`piston-data.mojang.com`, `libraries.minecraft.net`, et `maven.fabricmc.net` pour Fabric). |
-| Pendant un test (serveur ou partie avec des joueurs) | Le serveur et les jeux de test ne se connectent qu’entre eux, sur le PC, sans compte. Comme lors d’une partie ordinaire, Minecraft et certains mods peuvent contacter leurs propres services (vérification de mises à jour, par exemple). |
-| Avec **Confier les échecs à Claude Code** activé | Le résumé d’un passage des mises à jour automatiques qui a échoué (nom du modpack, mises à jour essayées, message des tests) est envoyé à Claude Code, installé sur le PC, qui le transmet à Anthropic avec le compte Claude du publieur. Désactivé par défaut. |
+| Quand                                                | Ce qui est demandé ailleurs (publieurs)                                                                                                                                                                                                                                          |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Au premier test d’un profil sur un serveur           | Le serveur de son chargeur : `meta.fabricmc.net` (Fabric), `maven.minecraftforge.net` (Forge) ou `maven.neoforged.net` (NeoForge), puis le serveur de Minecraft et ses bibliothèques (`piston-data.mojang.com`, `libraries.minecraft.net`, et `maven.fabricmc.net` pour Fabric). |
+| Pendant un test (serveur ou partie avec des joueurs) | Le serveur et les jeux de test ne se connectent qu’entre eux, sur le PC, sans compte. Comme lors d’une partie ordinaire, Minecraft et certains mods peuvent contacter leurs propres services (vérification de mises à jour, par exemple).                                        |
+| Avec **Confier les échecs à Claude Code** activé     | Le résumé d’un passage des mises à jour automatiques qui a échoué (nom du modpack, mises à jour essayées, message des tests) est envoyé à Claude Code, installé sur le PC, qui le transmet à Anthropic avec le compte Claude du publieur. Désactivé par défaut.                  |
 
 Le bouton **Offrir un café** n’envoie rien : il ouvre la page Buy Me a Coffee du développeur dans le navigateur.
 

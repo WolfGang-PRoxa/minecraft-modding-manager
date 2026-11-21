@@ -1,32 +1,32 @@
-import { Download, Play, RefreshCw, X } from 'lucide-react'
-import type { InstallProgress, ModpackVersion } from '../../../shared/types'
-import { formatSpeed } from '../lib/format'
-import { progressFor, versionStatus } from '../lib/status'
-import { useStore } from '../store'
-import { Button, sizes, type ButtonSize } from './Button'
+import { Download, Play, RefreshCw, X } from 'lucide-react';
+import type { InstallProgress, ModpackVersion } from '../../../shared/types';
+import { formatSpeed } from '../lib/format';
+import { progressFor, versionStatus } from '../lib/status';
+import { useStore } from '../store';
+import { Button, sizes, type ButtonSize } from './Button';
 
 const PHASE_LABELS: Record<InstallProgress['phase'], string> = {
   preparing: 'Préparation…',
   downloading: 'Téléchargement',
   verifying: 'Vérification…',
   extracting: 'Extraction',
-  finalizing: 'Ajout à CurseForge…'
-}
+  finalizing: 'Ajout à CurseForge…',
+};
 
 /** Avancement global : le téléchargement pèse 85 %, l'extraction 13 %. */
 function overallRatio(p: InstallProgress): number {
-  const ratio = p.total > 0 ? Math.min(1, p.done / p.total) : 0
+  const ratio = p.total > 0 ? Math.min(1, p.done / p.total) : 0;
   switch (p.phase) {
     case 'preparing':
-      return 0
+      return 0;
     case 'downloading':
-      return 0.85 * ratio
+      return 0.85 * ratio;
     case 'verifying':
-      return 0.85
+      return 0.85;
     case 'extracting':
-      return 0.85 + 0.13 * ratio
+      return 0.85 + 0.13 * ratio;
     case 'finalizing':
-      return 0.98
+      return 0.98;
   }
 }
 
@@ -34,17 +34,18 @@ function ProgressBar({
   progress,
   size,
   className,
-  onCancel
+  onCancel,
 }: {
-  progress: InstallProgress
-  size: ButtonSize
-  className: string
-  onCancel: () => void
+  progress: InstallProgress;
+  size: ButtonSize;
+  className: string;
+  onCancel: () => void;
 }) {
-  const overall = overallRatio(progress)
-  const phaseRatio = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null
-  const cancellable = progress.phase === 'preparing' || progress.phase === 'downloading' || progress.phase === 'extracting'
-  const showPercent = (progress.phase === 'downloading' || progress.phase === 'extracting') && phaseRatio !== null
+  const overall = overallRatio(progress);
+  const phaseRatio = progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : null;
+  const cancellable =
+    progress.phase === 'preparing' || progress.phase === 'downloading' || progress.phase === 'extracting';
+  const showPercent = (progress.phase === 'downloading' || progress.phase === 'extracting') && phaseRatio !== null;
 
   return (
     <div
@@ -79,56 +80,83 @@ function ProgressBar({
         </button>
       )}
     </div>
-  )
+  );
 }
 
 interface InstallButtonProps {
-  version: ModpackVersion
+  version: ModpackVersion;
   /** Dernière version du modpack, pour distinguer une mise à jour d'un retour en arrière. */
-  latest?: ModpackVersion
-  size?: ButtonSize
-  className?: string
+  latest?: ModpackVersion;
+  size?: ButtonSize;
+  className?: string;
 }
 
 export function InstallButton({ version, latest, size = 'md', className = '' }: InstallButtonProps) {
-  const installed = useStore((s) => s.installed)
-  const busyId = useStore((s) => s.busyId)
-  const progress = useStore((s) => progressFor(version.id, s.progress))
-  const install = useStore((s) => s.install)
-  const cancelInstall = useStore((s) => s.cancelInstall)
-  const launchCurseForge = useStore((s) => s.launchCurseForge)
+  const installed = useStore((s) => s.installed);
+  const busyId = useStore((s) => s.busyId);
+  const progress = useStore((s) => progressFor(version.id, s.progress));
+  const install = useStore((s) => s.install);
+  const cancelInstall = useStore((s) => s.cancelInstall);
+  const launchCurseForge = useStore((s) => s.launchCurseForge);
 
   if (busyId === version.id && progress && progress.version === version.version) {
-    return <ProgressBar progress={progress} size={size} className={className} onCancel={cancelInstall} />
+    return <ProgressBar progress={progress} size={size} className={className} onCancel={cancelInstall} />;
   }
 
-  const status = versionStatus(version, installed, latest)
-  const disabled = busyId !== null
+  const status = versionStatus(version, installed, latest);
+  const disabled = busyId !== null;
 
   switch (status.kind) {
     case 'installed':
       return (
-        <Button variant="secondary" size={size} icon={Play} className={className} onClick={() => void launchCurseForge()}>
+        <Button
+          variant="secondary"
+          size={size}
+          icon={Play}
+          className={className}
+          onClick={() => void launchCurseForge()}
+        >
           Ouvrir CurseForge
         </Button>
-      )
+      );
     case 'update':
       return (
-        <Button variant="primary" size={size} icon={RefreshCw} className={className} disabled={disabled} onClick={() => void install(version)}>
+        <Button
+          variant="primary"
+          size={size}
+          icon={RefreshCw}
+          className={className}
+          disabled={disabled}
+          onClick={() => void install(version)}
+        >
           Mettre à jour
         </Button>
-      )
+      );
     case 'other-version':
       return (
-        <Button variant="secondary" size={size} icon={Download} className={className} disabled={disabled} onClick={() => void install(version)}>
+        <Button
+          variant="secondary"
+          size={size}
+          icon={Download}
+          className={className}
+          disabled={disabled}
+          onClick={() => void install(version)}
+        >
           Installer la v{version.version}
         </Button>
-      )
+      );
     case 'available':
       return (
-        <Button variant="primary" size={size} icon={Download} className={className} disabled={disabled} onClick={() => void install(version)}>
+        <Button
+          variant="primary"
+          size={size}
+          icon={Download}
+          className={className}
+          disabled={disabled}
+          onClick={() => void install(version)}
+        >
           {latest && latest.version !== version.version ? `Installer la v${version.version}` : 'Installer'}
         </Button>
-      )
+      );
   }
 }

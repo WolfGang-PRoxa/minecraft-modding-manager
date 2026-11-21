@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
-import { CloudUpload, LifeBuoy, RefreshCw, WifiOff } from 'lucide-react'
-import { showDocs } from '../docs/store'
-import { useStore } from '../store'
-import { Button } from './Button'
-import { Logo } from './Logo'
+import type { ReactNode } from 'react';
+import { CloudUpload, LifeBuoy, RefreshCw, WifiOff } from 'lucide-react';
+import { showDocs } from '../docs/store';
+import { useStore } from '../store';
+import { Button } from './Button';
+import { Logo } from './Logo';
 
 export function LoadingView() {
   return (
@@ -22,20 +22,22 @@ export function LoadingView() {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function CenteredMessage({ children }: { children: ReactNode }) {
   return (
-    <div className="animate-rise flex min-h-[70vh] flex-col items-center justify-center px-8 text-center">{children}</div>
-  )
+    <div className="animate-rise flex min-h-[70vh] flex-col items-center justify-center px-8 text-center">
+      {children}
+    </div>
+  );
 }
 
 export function EmptyView() {
-  const refresh = useStore((s) => s.refresh)
-  const refreshing = useStore((s) => s.refreshing)
-  const publisher = useStore((s) => s.settings?.role === 'publisher')
-  const openStudio = useStore((s) => s.openStudio)
+  const refresh = useStore((s) => s.refresh);
+  const refreshing = useStore((s) => s.refreshing);
+  const publisher = useStore((s) => s.settings?.role === 'publisher');
+  const openStudio = useStore((s) => s.openStudio);
   return (
     <CenteredMessage>
       <div className="relative">
@@ -59,12 +61,12 @@ export function EmptyView() {
         </Button>
       </div>
     </CenteredMessage>
-  )
+  );
 }
 
 export function ErrorView({ message }: { message: string }) {
-  const refresh = useStore((s) => s.refresh)
-  const refreshing = useStore((s) => s.refreshing)
+  const refresh = useStore((s) => s.refresh);
+  const refreshing = useStore((s) => s.refreshing);
   return (
     <CenteredMessage>
       <div className="flex size-20 items-center justify-center rounded-3xl bg-amber-glow/10 text-amber-glow ring-1 ring-amber-glow/30">
@@ -81,5 +83,5 @@ export function ErrorView({ message }: { message: string }) {
         </Button>
       </div>
     </CenteredMessage>
-  )
+  );
 }

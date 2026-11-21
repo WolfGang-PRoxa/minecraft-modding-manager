@@ -2,18 +2,18 @@
 // d'installedAddons (`gameInstanceID`), et dans le fichier caché `.curseclient` du dossier (constaté sur les profils du
 // propriétaire). Un profil copié ou installé depuis un zip doit recevoir une identité à lui, cohérente partout, pour
 // que CurseForge ne le confonde jamais avec celui d'où il vient.
-import { open } from 'node:fs/promises'
-import { join } from 'node:path'
+import { open } from 'node:fs/promises';
+import { join } from 'node:path';
 
-export const CURSECLIENT_FILE = '.curseclient'
+export const CURSECLIENT_FILE = '.curseclient';
 
-type Json = Record<string, unknown>
+type Json = Record<string, unknown>;
 
 /** Donne le guid au profil et à chacune de ses entrées d'installedAddons. */
 export function applyInstanceGuid(instance: Json, guid: string): void {
-  instance.guid = guid
+  instance.guid = guid;
   for (const addon of (instance.installedAddons as Json[] | undefined) ?? []) {
-    if (addon && typeof addon === 'object') addon.gameInstanceID = guid
+    if (addon && typeof addon === 'object') addon.gameInstanceID = guid;
   }
 }
 
@@ -22,12 +22,12 @@ export function applyInstanceGuid(instance: Json, guid: string): void {
  * réécrit donc en place s'il existe.
  */
 export async function writeCurseClientFile(dir: string, guid: string): Promise<void> {
-  const file = join(dir, CURSECLIENT_FILE)
-  const handle = await open(file, 'r+').catch(() => open(file, 'w'))
+  const file = join(dir, CURSECLIENT_FILE);
+  const handle = await open(file, 'r+').catch(() => open(file, 'w'));
   try {
-    await handle.truncate(0)
-    await handle.write(guid, 0, 'utf8')
+    await handle.truncate(0);
+    await handle.write(guid, 0, 'utf8');
   } finally {
-    await handle.close()
+    await handle.close();
   }
 }
