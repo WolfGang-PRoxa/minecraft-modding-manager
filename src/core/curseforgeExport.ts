@@ -1,7 +1,7 @@
 // Export au format des modpacks de CurseForge (celui que CurseForge produit lui-même) à partir du zip d'une version :
 // manifest.json (projets et fichiers CurseForge, sans les mods eux-mêmes), modlist.html, et dans overrides/ les seuls
 // fichiers choisis par le publieur (packs de textures, réglages des shaders…). Format relevé sur les fichiers publiés
-// du propriétaire (voir CLAUDE.md).
+// du propriétaire (voir docs/developpement.md, « Faits CurseForge vérifiés »).
 import { createWriteStream } from 'node:fs'
 import { rename, rm } from 'node:fs/promises'
 import { basename } from 'node:path'

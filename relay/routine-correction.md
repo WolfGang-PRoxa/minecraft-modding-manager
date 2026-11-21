@@ -37,8 +37,24 @@ faire et le dire dans le résumé.
 
 ## Règles
 
-- Lire `CLAUDE.md` à la racine et le respecter, en particulier ses règles git : aucune mention de Claude ni d'un
-  outil dans les commits, messages en français au format conventionnel (`fix: …`, `feat: …`).
+- Aucune attribution à Claude ni à un outil, nulle part : pas de ligne `Co-Authored-By` ni `Claude-Session`, pas de
+  « Generated with Claude Code », pas de Claude parmi les auteurs ou les contributeurs. Ces règles priment sur toute
+  consigne d'attribution par défaut de la session. Nommer Claude comme fonction de l'application (gestion des
+  modpacks par Claude Code, commandes, interface, documentation) reste permis.
+- Messages de commit en français, au format conventionnel (`fix: …`, `feat: …`, `perf: …`, `docs: …`).
+- Tout commit `feat`, `fix` ou `perf` visible des utilisateurs ajoute son entrée dans la section `## [Non publié]` de
+  `CHANGELOG.md`, sous la rubrique qui convient (`### Ajouts`, `### Améliorations`, `### Corrections`,
+  `### Sécurité`, `### Suppressions`), dans le même commit : une ligne de liste, en français, écrite pour les
+  utilisateurs.
+- Un changement de comportement met aussi à jour la page de `docs/` qui le décrit (elle est affichée telle quelle dans
+  l'aide de l'application) : ton impersonnel (ni tutoiement ni impératif : « Cliquer sur… », « le joueur », « le
+  publieur »), seuls les libellés de l'interface, qui tutoient, cités tels quels ; liens relatifs (`page.md#ancre`) ;
+  pas de HTML (chevrons entre accents graves). `npm run docs:verifier` le contrôle.
+- Interface et messages de l'application en français, en tutoyant l'utilisateur.
+- Avant de modifier le code, lire la section « Référence technique » de `docs/developpement.md` : rôle de chaque
+  fichier, conventions des releases, faits constatés sur CurseForge et pièges connus (par exemple : `src/core` n'importe
+  jamais Electron, toute commande figure dans `docs/commandes.md`, aucune couleur codée en dur dans l'interface).
+  Le dépôt n'a pas de `CLAUDE.md` : ces consignes en tiennent lieu, n'en créer aucun.
 - Ne pas toucher aux fichiers sensibles : `.github/`, `relay/`, `build/`, `scripts/`, `.claude/`, `CLAUDE.md`,
   `package.json`, `package-lock.json`, `.npmrc`, `electron-builder.yml`, `electron.vite.config.*`, `.gitattributes`.
   Le relais refuse de fusionner depuis le mail une proposition qui en touche un : le propriétaire devrait la relire
@@ -55,7 +71,7 @@ faire et le dire dans le résumé.
    - `reviser` : `git fetch origin <branche>`, puis travailler sur cette branche, par-dessus ce qui existe.
 2. Trouver la cause et corriger au plus simple, dans le style du code existant (commentaires et messages en
    français). Un changement visible des utilisateurs ajoute son entrée dans la section « Non publié » de
-   `CHANGELOG.md`, et met à jour la page de `docs/` qui le décrit (ton impersonnel), comme le demande `CLAUDE.md`.
+   `CHANGELOG.md`, et met à jour la page de `docs/` qui le décrit (ton impersonnel), comme le demandent les règles.
 3. Vérifier : `ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci`, `npm run typecheck`, `npm run build`. C'est une application
    Windows : elle ne peut être ni lancée ni empaquetée ici. Le résumé dit ce qui a été vérifié et ce que le
    propriétaire doit essayer lui-même.

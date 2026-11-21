@@ -1,7 +1,7 @@
 // Remplacer, dans un profil CurseForge, le fichier d'un projet (mod, pack de textures, shader) par un autre fichier
 // de CurseForge, comme le ferait CurseForge : téléchargement vérifié, ancien fichier retiré, entrée d'installedAddons
-// mise à jour dans le format de CurseForge (voir CLAUDE.md, « Faits CurseForge »). À n'utiliser que sur une copie
-// d'essai : le profil d'origine du publieur n'est jamais modifié ainsi.
+// mise à jour dans le format de CurseForge (voir docs/developpement.md, « Faits CurseForge vérifiés »). À n'utiliser
+// que sur une copie d'essai : le profil d'origine du publieur n'est jamais modifié ainsi.
 import { createHash, randomUUID } from 'node:crypto'
 import { createReadStream, createWriteStream } from 'node:fs'
 import { mkdir, rename, rm } from 'node:fs/promises'

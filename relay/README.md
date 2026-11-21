@@ -39,7 +39,10 @@ branche poussée ──webhook──▶ relais ──mail 2──▶ propriétai
     `relay/`, `build/`, `scripts/`, `.claude/`, `CLAUDE.md`, `package.json`, `package-lock.json`, `.npmrc`,
     `electron-builder.yml`, `electron.vite.config.*`, `.gitattributes`), ou qui modifie trop de fichiers pour être
     vérifiée. Le mail l'annonce en rouge et ne propose pas le bouton ; la page le revérifie sur GitHub au moment du
-    clic. Une telle proposition se relit et se fusionne à la main.
+    clic. Une telle proposition se relit et se fusionne à la main. Le dépôt n'a ni `CLAUDE.md` ni `.claude/` : ils
+    restent dans la liste parce qu'en ajouter un donnerait des consignes aux sessions suivantes. Les règles de travail
+    de la session de correction sont écrites dans `routine-correction.md`, et la référence technique du code dans
+    `docs/developpement.md`.
   - *Invalider* : renvoie la correction en session, avec les recommandations saisies.
   - *Faire évaluer le risque* : lance la routine d'évaluation (une évaluation précédente est remplacée).
 - Tant que la branche de correction existe, une proposition attend une réponse. L'issue porte en plus l'étiquette
