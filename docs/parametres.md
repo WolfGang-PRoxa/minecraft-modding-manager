@@ -101,11 +101,19 @@ notification, et se rouvre aussitôt (clic sur l’icône, menu Démarrer, racco
 première fois, une bulle le rappelle. Pour la quitter vraiment : clic droit sur son icône, puis **Quitter Modding
 Manager**. Un publieur y trouve aussi **Ouvrir la Bibliothèque** et **Ouvrir le Studio**. Si une publication est en
 cours, quitter demande d’abord une confirmation.
-- **Se mettre à jour automatiquement** (activé par défaut) : quand une nouvelle version est sortie, l’application
-  l’installe d’elle-même au lancement, ou pendant qu’elle tourne en arrière-plan (vérifié toutes les 6 heures et au
-  réveil du PC ; fenêtre ouverte, elle attend sa fermeture), puis redémarre. Désactivé, la mise à jour reste proposée
-  en haut de la fenêtre et s’installe en un clic. Voir
-  [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique).
+- **Mettre à jour les modpacks automatiquement** (activé par défaut) : une nouvelle version d’un modpack installé
+  par l’application s’installe d’elle-même, fenêtre ouverte ou fermée, sauf pendant une partie lancée avec ce
+  modpack. Désactivé, la mise à jour reste proposée par le bouton **Mettre à jour**. Voir
+  [Mise à jour automatique des modpacks](bibliotheque.md#mise-à-jour-automatique).
+  - **Vérifier les modpacks publiés** : intervalle entre deux vérifications, de chaque minute à toutes les 6 heures
+    (toutes les 5 minutes par défaut). Il vaut même quand la mise à jour automatique est désactivée : les nouvelles
+    versions apparaissent dans la Bibliothèque.
+- **Mettre l’application à jour automatiquement** (activé par défaut) : quand une nouvelle version est sortie,
+  l’application l’installe d’elle-même au lancement, ou pendant qu’elle tourne en arrière-plan (fenêtre ouverte, elle
+  attend sa fermeture), puis redémarre. Désactivé, la mise à jour reste proposée en haut de la fenêtre et s’installe
+  en un clic. Voir [Mises à jour de l’application](mises-a-jour.md#mise-à-jour-automatique).
+  - **Vérifier les nouvelles versions de l’application** : intervalle entre deux vérifications, de chaque minute à
+    toutes les 6 heures (toutes les 10 minutes par défaut). Le réveil du PC déclenche aussi une vérification.
 
 ## Fenêtre à l’ouverture
 

@@ -11,7 +11,7 @@ les serveurs de Minecraft et de ses chargeurs. Elle ne contient ni statistiques 
 
 | Quand | Ce qui est demandé à GitHub |
 |---|---|
-| Au lancement, puis toutes les 30 minutes | La liste des releases du dépôt suivi et de celui de l’application, sans aucune information sur l’utilisateur. |
+| Au lancement, puis à chaque vérification (toutes les 5 et 10 minutes par défaut, réglables) | Le flux des releases du dépôt suivi et de celui de l’application, puis, s’il a changé (ou toutes les 30 minutes), la liste de leurs releases, sans aucune information sur l’utilisateur. |
 | À l’installation d’un modpack | Le zip et l’image de la version choisie. |
 | Pour afficher un compte ou un dépôt | L’image de profil (avatar) du compte GitHub concerné. |
 | À la mise à jour de l’application | L’installeur de la nouvelle version. |

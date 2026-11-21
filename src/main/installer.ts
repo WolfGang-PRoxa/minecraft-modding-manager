@@ -234,7 +234,9 @@ async function validImagePath(value: unknown, targetDir: string, stagingDir: str
 
 export async function installModpack(
   version: ModpackVersion,
-  emit: (progress: InstallProgress) => void
+  emit: (progress: InstallProgress) => void,
+  /** Mise à jour automatique : CurseForge n'est jamais ouvert par l'application. */
+  options: { background?: boolean } = {}
 ): Promise<InstallResult> {
   if (jobs.size > 0) {
     return { ok: false, cancelled: false, error: 'Une installation est déjà en cours.' }
@@ -378,7 +380,8 @@ export async function installModpack(
     // Déjà ouvert, CurseForge peut ne pas afficher le profil : la fenêtre propose alors de le relancer
     // plutôt que de le mettre au premier plan tel quel.
     const curseForgeRunning = await isCurseForgeRunning(instancesDir)
-    const curseForgeLaunched = settings.openCurseForgeAfterInstall && !curseForgeRunning ? await launchCurseForge() : false
+    const curseForgeLaunched =
+      settings.openCurseForgeAfterInstall && !curseForgeRunning && !options.background ? await launchCurseForge() : false
     return {
       ok: true,
       updated: previous !== null,

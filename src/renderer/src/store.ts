@@ -10,6 +10,7 @@ import type {
   CurseForgeStatus,
   InstalledModpack,
   InstallProgress,
+  InstallResult,
   ModpackVersion,
   RoleResult,
   Settings,
@@ -52,8 +53,6 @@ interface State {
 
   init(): Promise<void>
   refresh(force?: boolean): Promise<void>
-  /** Relit GitHub en silence si la dernière lecture date : nouvelle version de l'application, nouveaux modpacks. */
-  autoRefresh(): Promise<void>
   refreshLocal(): Promise<void>
   install(version: ModpackVersion): Promise<void>
   cancelInstall(): void
@@ -86,11 +85,6 @@ interface State {
   dismissToast(id: number): void
 }
 
-// GitHub décompte chaque lecture anonyme (60 par heure et par adresse IP) : les vérifications restent espacées.
-const AUTO_REFRESH_MS = 30 * 60_000
-/** Après un échec (hors ligne, PC qui sort de veille…), on réessaie plus tôt. */
-const AUTO_REFRESH_RETRY_MS = 5 * 60_000
-
 function presentIn(catalog: Catalog | null, installed: InstalledModpack[], profiles: CurseForgeProfile[]): PresentVersion[] {
   if (!catalog) return []
   return findPresentVersions(
@@ -103,7 +97,6 @@ function presentIn(catalog: Catalog | null, installed: InstalledModpack[], profi
 let toastSeq = 0
 let restartingCurseForge = false
 let initialized = false
-let nextAutoRefresh = 0
 // Seule la réponse à la dernière lecture demandée est gardée (changement de dépôt pendant une lecture…).
 let catalogSeq = 0
 
@@ -133,6 +126,27 @@ export const useStore = create<State>((set, get) => ({
     if (initialized) return
     initialized = true
     window.api.onInstallProgress((progress) => set({ progress }))
+    // Vérifications régulières faites par l'application (main/backgroundUpdate.ts), fenêtre ouverte ou cachée.
+    window.api.onCatalog((catalog) => {
+      if (get().loading) return
+      ++catalogSeq
+      // Panne passagère : on garde la liste affichée plutôt que de l'annoncer.
+      if (catalog.error && !get().catalog?.error) return
+      set({ catalog, present: presentIn(catalog, get().installed, get().profiles) })
+    })
+    // Mise à jour automatique d'un modpack installé : suivie comme une installation lancée à la main.
+    window.api.onAutoInstall((event) => {
+      if (event.kind === 'start') {
+        set({
+          busyId: event.version.id,
+          progress: { id: event.version.id, version: event.version.version, phase: 'preparing', done: 0, total: 0, bytesPerSecond: 0 }
+        })
+        return
+      }
+      set({ busyId: null, progress: null })
+      if (event.announce) announceInstall(event.version, event.result, true)
+      void get().refreshLocal()
+    })
     window.api.onAppUpdateProgress((appUpdateProgress) => set({ appUpdateProgress }))
     window.api.onWindowStateChange((windowState) => set({ windowState }))
     window.api.onActivated((view) => {
@@ -176,28 +190,11 @@ export const useStore = create<State>((set, get) => ({
     try {
       const catalog = await window.api.getCatalog(force)
       if (seq !== catalogSeq) return
-      nextAutoRefresh = Date.now() + (catalog.error ? AUTO_REFRESH_RETRY_MS : AUTO_REFRESH_MS)
       set({ catalog, present: presentIn(catalog, get().installed, get().profiles) })
       if (force && catalog.error) get().pushToast({ kind: 'error', title: 'Actualisation impossible', message: catalog.error })
     } finally {
       if (seq === catalogSeq) set({ loading: false, refreshing: false })
     }
-  },
-
-  async autoRefresh() {
-    if (get().loading || get().refreshing || Date.now() < nextAutoRefresh) return
-    const seq = ++catalogSeq
-    nextAutoRefresh = Date.now() + AUTO_REFRESH_RETRY_MS
-    const catalog = await window.api.getCatalog().catch(() => null)
-    if (!catalog || seq !== catalogSeq) return
-    const present = presentIn(catalog, get().installed, get().profiles)
-    if (catalog.error) {
-      // Vérification silencieuse : on garde la liste affichée plutôt que d'annoncer une panne passagère.
-      if (get().catalog?.error) set({ catalog, present })
-      return
-    }
-    nextAutoRefresh = Date.now() + AUTO_REFRESH_MS
-    set({ catalog, present })
   },
 
   async refreshLocal() {
@@ -223,36 +220,7 @@ export const useStore = create<State>((set, get) => ({
     })
     try {
       const result = await window.api.install(version)
-      if (result.ok) {
-        const title = result.updated ? `${version.name} est à jour` : `${version.name} est installé`
-        const n = result.keptConfigs
-        const kept = n > 0 ? ` ${n} fichier${n > 1 ? 's' : ''} de configuration que tu avais modifié${n > 1 ? 's ont' : ' a'} été gardé${n > 1 ? 's' : ''}.` : ''
-        if (result.curseForgeRunning) {
-          // CurseForge ne relit ses profils qu'au démarrage : ouvert pendant l'installation, il peut ne pas voir celui-ci.
-          get().pushToast({
-            kind: 'success',
-            title,
-            message: `CurseForge était déjà ouvert : s’il n’affiche pas encore ce modpack, relance-le.${kept}`,
-            action: { label: 'Relancer CurseForge', run: () => void get().restartCurseForge() },
-            sticky: true
-          })
-        } else {
-          get().pushToast({
-            kind: 'success',
-            title,
-            message: `${
-              result.curseForgeLaunched
-                ? 'CurseForge est ouvert : lance le profil depuis l’onglet Minecraft.'
-                : 'Le profil est disponible dans CurseForge, onglet Minecraft.'
-            }${kept}`,
-            action: result.curseForgeLaunched ? undefined : { label: 'Ouvrir CurseForge', run: () => void get().launchCurseForge() }
-          })
-        }
-      } else if (result.cancelled) {
-        get().pushToast({ kind: 'info', title: 'Installation annulée' })
-      } else {
-        get().pushToast({ kind: 'error', title: `Échec de l’installation de ${version.name}`, message: result.error })
-      }
+      announceInstall(version, result, false)
     } finally {
       set({ busyId: null, progress: null })
       await get().refreshLocal()
@@ -427,3 +395,45 @@ export const useStore = create<State>((set, get) => ({
     set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }))
   }
 }))
+
+/** Notification de fin d'une installation : lancée à la main, ou mise à jour automatique (`auto`). */
+function announceInstall(version: ModpackVersion, result: InstallResult, auto: boolean): void {
+  const { pushToast, restartCurseForge, launchCurseForge } = useStore.getState()
+  if (result.ok) {
+    const title = result.updated ? `${version.name} est à jour` : `${version.name} est installé`
+    const n = result.keptConfigs
+    const kept = n > 0 ? ` ${n} fichier${n > 1 ? 's' : ''} de configuration que tu avais modifié${n > 1 ? 's ont' : ' a'} été gardé${n > 1 ? 's' : ''}.` : ''
+    const done = auto ? `Version ${version.version} installée automatiquement. ` : ''
+    if (result.curseForgeRunning) {
+      // CurseForge ne relit ses profils qu'au démarrage : ouvert pendant l'installation, il peut ne pas voir celui-ci.
+      pushToast({
+        kind: 'success',
+        title,
+        message: `${done}CurseForge était déjà ouvert : s’il n’affiche pas encore ${auto ? 'la nouvelle version' : 'ce modpack'}, relance-le.${kept}`,
+        action: { label: 'Relancer CurseForge', run: () => void restartCurseForge() },
+        sticky: true
+      })
+    } else if (auto) {
+      pushToast({ kind: 'success', title, message: `${done.trim()}${kept}` })
+    } else {
+      pushToast({
+        kind: 'success',
+        title,
+        message: `${
+          result.curseForgeLaunched
+            ? 'CurseForge est ouvert : lance le profil depuis l’onglet Minecraft.'
+            : 'Le profil est disponible dans CurseForge, onglet Minecraft.'
+        }${kept}`,
+        action: result.curseForgeLaunched ? undefined : { label: 'Ouvrir CurseForge', run: () => void launchCurseForge() }
+      })
+    }
+  } else if (result.cancelled) {
+    pushToast({ kind: 'info', title: auto ? `Mise à jour de ${version.name} annulée` : 'Installation annulée' })
+  } else {
+    pushToast({
+      kind: 'error',
+      title: auto ? `Mise à jour automatique de ${version.name} impossible` : `Échec de l’installation de ${version.name}`,
+      message: result.error
+    })
+  }
+}

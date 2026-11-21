@@ -250,6 +250,12 @@ export interface Settings {
   maintenanceClaude: boolean
   /** Au démarrage, une nouvelle version de l'application s'installe d'elle-même. */
   autoUpdate: boolean
+  /** Minutes entre deux vérifications d'une nouvelle version de l'application (1 à 360, 10 par défaut). */
+  appCheckMinutes: number
+  /** Une nouvelle version d'un modpack installé par l'application s'installe d'elle-même. */
+  autoUpdatePacks: boolean
+  /** Minutes entre deux vérifications des modpacks publiés (1 à 360, 5 par défaut). */
+  packCheckMinutes: number
   /** L'application se lance au démarrage de Windows. */
   launchAtStartup: boolean
   /**
@@ -333,6 +339,12 @@ export interface InstallProgress {
   total: number
   bytesPerSecond: number
 }
+
+/** Mise à jour automatique d'un modpack installé, annoncée à la fenêtre (qui suit sa progression et en dit l'issue). */
+export type AutoInstallEvent =
+  | { kind: 'start'; version: ModpackVersion }
+  /** `announce` : l'issue est à dire (un échec n'est dit qu'au premier essai d'une version). */
+  | { kind: 'end'; version: ModpackVersion; result: InstallResult; announce: boolean }
 
 export type InstallResult =
   | {
@@ -476,6 +488,10 @@ export interface RendererApi extends AuthApi, RoleApi, ClaudeApi, CurseForgeAuth
   install(version: ModpackVersion): Promise<InstallResult>
   cancelInstall(id: string): Promise<void>
   onInstallProgress(listener: (progress: InstallProgress) => void): () => void
+  /** Un modpack installé se met à jour de lui-même (réglage autoUpdatePacks). */
+  onAutoInstall(listener: (event: AutoInstallEvent) => void): () => void
+  /** Catalogue relu par une vérification automatique. */
+  onCatalog(listener: (catalog: Catalog) => void): () => void
   getCurseForgeStatus(): Promise<CurseForgeStatus>
   launchCurseForge(): Promise<boolean>
   /** Ferme puis rouvre CurseForge, pour qu'il relise ses profils. */

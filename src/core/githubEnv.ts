@@ -8,6 +8,11 @@ export function setGitHubApiOverride(url: string | null | undefined): void {
   override = url ? url.replace(/\/+$/, '') : null
 }
 
+/** Un faux GitHub remplace l'API (tests) : rien d'autre que l'API n'est alors lu sur github.com. */
+export function hasGitHubApiOverride(): boolean {
+  return override !== null
+}
+
 export function repoApiBase(repo: RepoRef): string {
   return override ?? repoApiUrl(repo)
 }

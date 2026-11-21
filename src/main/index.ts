@@ -235,6 +235,7 @@ if (process.argv.includes(MAINTENANCE_SWITCH)) {
     await createTray({ open: (view) => void showWindow(view), quit: () => app.quit() }).catch((err) => console.warn('Icône de la zone de notification impossible :', err))
     backgroundUpdates = startBackgroundUpdates({
       getWindow: () => mainWindow,
+      showWindow: () => void showWindow(),
       enabled: () => backgroundUpdateEnabled(autoUpdateOnLaunch(true, false)),
       install: appUpdates.installAppUpdate
     })

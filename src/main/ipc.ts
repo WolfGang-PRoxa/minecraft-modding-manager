@@ -20,6 +20,7 @@ import { syncLaunchAtStartup } from './startup'
 import { studioTask } from './studioIpc'
 import { applyInterfaceScale, describeDisplays, toggleMaximize } from './windowState'
 import { normalizeAppearance } from '../shared/appearance'
+import { DEFAULT_APP_CHECK_MINUTES, DEFAULT_PACK_CHECK_MINUTES, normalizeCheckMinutes } from '../shared/autoUpdate'
 import { normalizeWindowPlacement } from '../shared/windowPlacement'
 
 export function registerIpc(
@@ -98,6 +99,9 @@ export function registerIpc(
     if (typeof patch.shortcutPrompted === 'boolean') allowed.shortcutPrompted = patch.shortcutPrompted
     if (patch.lastView === 'library' || patch.lastView === 'studio') allowed.lastView = patch.lastView
     if (typeof patch.autoUpdate === 'boolean') allowed.autoUpdate = patch.autoUpdate
+    if (typeof patch.autoUpdatePacks === 'boolean') allowed.autoUpdatePacks = patch.autoUpdatePacks
+    if (typeof patch.appCheckMinutes === 'number') allowed.appCheckMinutes = normalizeCheckMinutes(patch.appCheckMinutes, DEFAULT_APP_CHECK_MINUTES)
+    if (typeof patch.packCheckMinutes === 'number') allowed.packCheckMinutes = normalizeCheckMinutes(patch.packCheckMinutes, DEFAULT_PACK_CHECK_MINUTES)
     if (typeof patch.launchAtStartup === 'boolean') allowed.launchAtStartup = patch.launchAtStartup
     if (patch.launchMode === 'background' || patch.launchMode === 'window') allowed.launchMode = patch.launchMode
     if (patch.window) allowed.window = normalizeWindowPlacement(patch.window)

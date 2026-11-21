@@ -22,14 +22,19 @@ describe('ouverture de la fenêtre au lancement', () => {
 })
 
 describe('mise à jour régulière en arrière-plan', () => {
-  const hour = 60 * 60_000
-  it('relit les releases toutes les 6 heures', () => {
-    assert.equal(nextStep({ lastCheck: 0, pending: false, hidden: true, now: 5 * hour }), 'wait')
-    assert.equal(nextStep({ lastCheck: 0, pending: false, hidden: false, now: 6 * hour }), 'check')
+  const minute = 60_000
+  it('relit les releases à l’intervalle réglé', () => {
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: 10 * minute, pending: false, hidden: true, now: 9 * minute }), 'wait')
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: 10 * minute, pending: false, hidden: false, now: 10 * minute }), 'check')
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: minute, pending: false, hidden: false, now: minute }), 'check')
   })
 
   it('installe une version trouvée seulement quand la fenêtre est cachée', () => {
-    assert.equal(nextStep({ lastCheck: 0, pending: true, hidden: false, now: hour }), 'wait')
-    assert.equal(nextStep({ lastCheck: 0, pending: true, hidden: true, now: hour }), 'install')
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: 10 * minute, pending: true, hidden: false, now: minute }), 'wait')
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: 10 * minute, pending: true, hidden: true, now: minute }), 'install')
+  })
+
+  it('fenêtre ouverte, une version trouvée n’empêche pas de vérifier encore', () => {
+    assert.equal(nextStep({ lastCheck: 0, intervalMs: 10 * minute, pending: true, hidden: false, now: 10 * minute }), 'check')
   })
 })

@@ -75,8 +75,10 @@ Les récepteurs suivent par défaut le dépôt `WolfGang-PRoxa/minecraft-modding
 autre dépôt, les joueurs doivent connaître son nom : ils le choisissent dans **Paramètres → Utilisation → Modpacks
 de** (voir [Suivre les modpacks d’un autre publieur](bibliotheque.md#suivre-les-modpacks-dun-autre-publieur)).
 
-Après chaque publication, ils voient les nouveautés en actualisant leur application, ou d’eux-mêmes dans les
-30 minutes si elle reste ouverte.
+Après chaque publication, l’application des joueurs trouve les nouveautés d’elle-même (toutes les 5 minutes par
+défaut, tant qu’elle tourne), ou tout de suite avec **Actualiser**. Une nouvelle version d’un modpack qu’ils ont
+installé s’installe alors d’elle-même, sauf s’ils ont désactivé la
+[mise à jour automatique des modpacks](bibliotheque.md#mise-à-jour-automatique).
 
 ## Changer de dépôt ou revenir en récepteur
 

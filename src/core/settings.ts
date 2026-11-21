@@ -1,6 +1,7 @@
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { DEFAULT_APPEARANCE, normalizeAppearance } from '../shared/appearance'
+import { DEFAULT_APP_CHECK_MINUTES, DEFAULT_PACK_CHECK_MINUTES, normalizeCheckMinutes } from '../shared/autoUpdate'
 import { APP_REPO } from '../shared/config'
 import { isRepoRef } from '../shared/repo'
 import { DEFAULT_WINDOW_PLACEMENT, normalizeWindowPlacement } from '../shared/windowPlacement'
@@ -19,6 +20,9 @@ const DEFAULTS: Settings = {
   lastRunVersion: null,
   maintenanceClaude: false,
   autoUpdate: true,
+  appCheckMinutes: DEFAULT_APP_CHECK_MINUTES,
+  autoUpdatePacks: true,
+  packCheckMinutes: DEFAULT_PACK_CHECK_MINUTES,
   launchAtStartup: true,
   launchMode: 'background',
   backgroundHintShown: false,
@@ -54,6 +58,9 @@ export async function getSettings(): Promise<Settings> {
     lastRunVersion: typeof stored?.lastRunVersion === 'string' && stored.lastRunVersion ? stored.lastRunVersion : null,
     maintenanceClaude: stored?.maintenanceClaude === true,
     autoUpdate: stored?.autoUpdate !== false,
+    appCheckMinutes: normalizeCheckMinutes(stored?.appCheckMinutes, DEFAULT_APP_CHECK_MINUTES),
+    autoUpdatePacks: stored?.autoUpdatePacks !== false,
+    packCheckMinutes: normalizeCheckMinutes(stored?.packCheckMinutes, DEFAULT_PACK_CHECK_MINUTES),
     launchAtStartup: stored?.launchAtStartup !== false,
     launchMode: stored?.launchMode === 'window' ? 'window' : 'background',
     backgroundHintShown: stored?.backgroundHintShown === true,

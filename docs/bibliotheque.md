@@ -102,6 +102,26 @@ place. Si quelque chose échoue, rien n’est supprimé et le message indique le
 > Fermer Minecraft avant de mettre à jour un modpack : l’application refuse de toucher à un profil pendant qu’une
 > partie tourne avec lui.
 
+### Mise à jour automatique
+
+Avec **Paramètres → Démarrage et mises à jour → Mettre à jour les modpacks automatiquement** (activé par défaut), une
+nouvelle version d’un modpack installé s’installe d’elle-même dès que l’application la trouve, sans clic : toutes les
+5 minutes par défaut (de chaque minute à toutes les 6 heures, selon **Vérifier les modpacks publiés**), que la fenêtre
+soit ouverte ou fermée. La mise à jour est la même qu’avec le bouton **Mettre à jour** : mondes, réglages et choix du
+joueur sont conservés.
+
+- Pendant une partie lancée avec ce modpack, la mise à jour attend que le jeu soit fermé.
+- Fenêtre ouverte, la progression s’affiche sur la carte du modpack, et une notification annonce la nouvelle version.
+  Fenêtre fermée, une notification Windows l’annonce ; un clic dessus ouvre l’application.
+- CurseForge ne relit ses profils qu’à son démarrage : s’il était ouvert, la notification propose **Relancer
+  CurseForge** pour qu’il affiche la nouvelle version. L’application ne l’ouvre jamais d’elle-même pour une mise à jour
+  automatique.
+- Une mise à jour qui échoue est annoncée une fois, puis retentée une heure plus tard. Annulée (bouton de la barre de
+  progression), elle attend aussi une heure.
+- Un joueur qui revient à une version précédente (voir [Installer une autre version](#installer-une-autre-version))
+  la garde : seule une version publiée ensuite s’installe d’elle-même.
+- Seuls les profils installés par l’application sont mis à jour, jamais un profil créé dans CurseForge ou à la main.
+
 ## Installer une autre version
 
 Dans le panneau de détails du modpack, la section **Historique des versions** liste toutes les versions publiées.
@@ -170,8 +190,9 @@ ensuite. Le profil existant reste intact.
 La liste se met à jour toute seule :
 
 - au lancement de l’application ;
-- toutes les 30 minutes tant que l’application reste ouverte, et au retour sur sa fenêtre si la dernière lecture
-  date de plus de 30 minutes ;
+- régulièrement tant que l’application tourne, fenêtre ouverte ou fermée : toutes les 5 minutes par défaut, de
+  chaque minute à toutes les 6 heures selon **Paramètres → Démarrage et mises à jour → Vérifier les modpacks
+  publiés**, et au réveil du PC ;
 - après une publication depuis le Studio.
 
 Le bouton **Actualiser** (les deux flèches de la barre de titre) relit GitHub tout de suite. Les profils CurseForge,
@@ -182,9 +203,11 @@ l’application.
 **Réessayer**. L’installation d’un modpack demande, elle, une connexion.
 
 > [!NOTE]
-> Sans compte, GitHub autorise 60 lectures par heure depuis une même adresse IP. L’application espace donc ses
-> vérifications ; si la limite est atteinte (plusieurs PC derrière la même box qui actualisent souvent…), elle
-> indique l’heure à laquelle réessayer.
+> Sans compte, GitHub autorise 60 lectures de son API par heure depuis une même adresse IP. Une vérification régulière
+> lit donc d’abord le flux des releases du dépôt (`releases.atom`, hors de cette limite), et l’API seulement quand il a
+> changé, quand une release vient d’être publiée et attend encore ses fichiers, ou toutes les 30 minutes. Si la limite
+> est atteinte (plusieurs PC derrière la même box qui actualisent souvent…), l’application indique l’heure à laquelle
+> réessayer.
 
 ## Suivre les modpacks d’un autre publieur
 

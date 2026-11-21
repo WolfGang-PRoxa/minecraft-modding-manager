@@ -8,6 +8,23 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Pour te
 
 ## [Non publié]
 
+### Ajouts
+
+- Mise à jour automatique des modpacks : une nouvelle version d’un modpack installé s’installe d’elle-même, fenêtre
+  ouverte ou fermée, en gardant mondes et réglages comme avec **Mettre à jour**. Jamais pendant une partie lancée avec
+  ce modpack, et CurseForge n’est pas ouvert pour autant ; une notification annonce la nouvelle version. Un joueur
+  revenu exprès à une version précédente la garde. Activée par défaut, elle se désactive dans **Paramètres →
+  Démarrage et mises à jour**.
+- Fréquence des vérifications réglable dans **Paramètres → Démarrage et mises à jour**, de chaque minute à toutes les
+  6 heures : les modpacks publiés (toutes les 5 minutes par défaut, au lieu de 30) et les nouvelles versions de
+  l’application (toutes les 10 minutes par défaut, au lieu de 6 heures en arrière-plan).
+
+### Améliorations
+
+- Vérifications plus légères : l’application lit d’abord le flux des releases de GitHub, qui ne compte pas dans la
+  limite de 60 lectures par heure, et ne relit la liste complète que s’il a changé (ou toutes les 30 minutes). Des
+  vérifications fréquentes n’atteignent donc pas cette limite.
+
 ## [2.5.0] - 2026-11-17
 
 ### Ajouts

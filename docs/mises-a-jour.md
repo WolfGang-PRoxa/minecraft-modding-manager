@@ -8,7 +8,10 @@ démarrage, ou la propose et l’installe en un clic ; il la télécharge et la 
 L’application vérifie s’il existe une nouvelle version :
 
 - à chaque lancement ;
-- toutes les 30 minutes tant qu’elle reste ouverte ;
+- régulièrement tant qu’elle tourne, fenêtre ouverte ou fermée : toutes les 10 minutes par défaut, de chaque minute
+  à toutes les 6 heures selon **Paramètres → Démarrage et mises à jour → Vérifier les nouvelles versions de
+  l’application** ;
+- au réveil du PC ;
 - à la demande, avec **Paramètres → À propos → Rechercher une mise à jour**, qui confirme aussi quand l’application
   est déjà à jour.
 
@@ -22,14 +25,14 @@ vue : « Nouvelle version disponible : 1.1.0 · tu utilises la 1.0.3 », avec la
 
 ## Mise à jour automatique
 
-Avec **Paramètres → Démarrage et mises à jour → Se mettre à jour automatiquement** (activé par défaut), une nouvelle
+Avec **Paramètres → Démarrage et mises à jour → Mettre l’application à jour automatiquement** (activé par défaut), une nouvelle
 version trouvée au lancement de l’application s’installe d’elle-même : la notification **Mise à jour automatique**
 l’annonce, puis l’installation suit les étapes ci-dessous, sans clic. L’application redémarre dans la nouvelle
 version. Lancée avec Windows, elle se met à jour de la même façon et revient en arrière-plan (ou réduite dans la
 barre des tâches, selon le réglage **Ouvrir la fenêtre au démarrage**).
 
-Fermer la fenêtre ne quitte pas l’application, qui peut tourner des jours en arrière-plan : elle relit donc les
-releases toutes les 6 heures, et au réveil du PC. Une nouvelle version s’installe alors d’elle-même tant que la
+Fermer la fenêtre ne quitte pas l’application, qui peut tourner des jours en arrière-plan : elle continue donc de
+vérifier les nouvelles versions, à l’intervalle réglé et au réveil du PC. Une nouvelle version s’installe alors d’elle-même tant que la
 fenêtre est cachée et que rien n’est en cours (installation d’un modpack, publication…), puis l’application revient en
 arrière-plan dans la nouvelle version. Fenêtre ouverte, rien n’est imposé : la version est proposée en haut de la
 fenêtre, et s’installera d’elle-même peu après sa fermeture. Juste après une mise à jour, l’application ne s’en

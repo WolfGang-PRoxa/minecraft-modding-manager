@@ -8,6 +8,7 @@ import { formatDate } from '../lib/format'
 import { useStore } from '../store'
 import { Button, IconButton } from './Button'
 import { Toggle } from './Toggle'
+import { CheckInterval } from './CheckInterval'
 import { ClaudeCodeSetting, CurseForgeAccountSetting, HangarAccountSetting, MaintenanceSetting, ModrinthAccountSetting, WorkspaceFolderSetting } from '../studio/StudioSettings'
 import { MAINTENANCE_SETTINGS_ID } from '../studio/maintenanceStore'
 import { PlayerUsageSection } from './Usage'
@@ -230,16 +231,44 @@ export function SettingsDialog() {
       </p>
       <div className="mt-5 flex items-center justify-between gap-6">
         <div>
-          <div className="text-sm font-medium text-ink-100">Se mettre à jour automatiquement</div>
+          <div className="text-sm font-medium text-ink-100">Mettre à jour les modpacks automatiquement</div>
           <div className="mt-0.5 text-xs text-ink-400">
-            Une nouvelle version s’installe d’elle-même au lancement, ou pendant que l’application tourne en arrière-plan
-            (vérifié toutes les 6 heures et au réveil du PC). Fenêtre ouverte, elle attend que tu la refermes.
+            Quand une nouvelle version d’un modpack installé est publiée, elle s’installe d’elle-même, même fenêtre
+            fermée. Jamais pendant une partie lancée avec ce modpack : la mise à jour attend que le jeu soit fermé.
           </div>
         </div>
         <Toggle
-          label="Se mettre à jour automatiquement"
+          label="Mettre à jour les modpacks automatiquement"
+          checked={settings.autoUpdatePacks}
+          onChange={(value) => void updateSettings({ autoUpdatePacks: value })}
+        />
+      </div>
+      <div className="mt-3 ml-4 border-l border-tint/10 pl-4">
+        <CheckInterval
+          label="Vérifier les modpacks publiés"
+          minutes={settings.packCheckMinutes}
+          onChange={(packCheckMinutes) => void updateSettings({ packCheckMinutes })}
+        />
+      </div>
+      <div className="mt-5 flex items-center justify-between gap-6">
+        <div>
+          <div className="text-sm font-medium text-ink-100">Mettre l’application à jour automatiquement</div>
+          <div className="mt-0.5 text-xs text-ink-400">
+            Une nouvelle version s’installe d’elle-même au lancement, ou pendant que l’application tourne en arrière-plan
+            (et au réveil du PC). Fenêtre ouverte, elle attend que tu la refermes.
+          </div>
+        </div>
+        <Toggle
+          label="Mettre l’application à jour automatiquement"
           checked={settings.autoUpdate}
           onChange={(value) => void updateSettings({ autoUpdate: value })}
+        />
+      </div>
+      <div className="mt-3 ml-4 border-l border-tint/10 pl-4">
+        <CheckInterval
+          label="Vérifier les nouvelles versions de l’application"
+          minutes={settings.appCheckMinutes}
+          onChange={(appCheckMinutes) => void updateSettings({ appCheckMinutes })}
         />
       </div>
     </Section>

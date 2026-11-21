@@ -15,12 +15,17 @@ import {
 } from '../shared/releases'
 import { repoSlug } from '../shared/repo'
 import type { AppUpdateInfo, Catalog, ContentRelease, ModpackManifest, ModpackVersion, RepoRef } from '../shared/types'
+import { feedSignature, hasIncompleteRelease } from '../shared/autoUpdate'
 import { readJson, writeJsonAtomic } from '../core/fsutil'
-import { repoApiBase } from '../core/githubEnv'
+import { hasGitHubApiOverride, repoApiBase } from '../core/githubEnv'
 import { getSettings } from '../core/settings'
 
 const MAX_PAGES = 5
 const MEMORY_TTL_MS = 60_000
+/** Même si le flux des releases ne change pas, l'API est relue de temps en temps (fichiers remplacés, notes modifiées). */
+const FULL_REFRESH_MS = 30 * 60_000
+/** Flux illisible : l'API est relue, mais pas plus souvent, pour ne pas épuiser le quota. */
+const FEED_FALLBACK_MS = 5 * 60_000
 
 interface HttpCacheEntry {
   etag: string
@@ -213,31 +218,113 @@ function findAppUpdate(releases: GhRelease[]): AppUpdateInfo | null {
   }
 }
 
-export async function getCatalog(force = false): Promise<Catalog> {
+/**
+ * Surveillance d'un dépôt. Sans compte, chaque lecture de l'API compte dans le quota de GitHub (60 par heure et par
+ * adresse IP, réponses 304 comprises) : une vérification toutes les minutes l'épuiserait. Le flux Atom des releases
+ * (`github.com/<compte>/<dépôt>/releases.atom`), lui, n'en fait pas partie : il est lu à chaque vérification, et l'API
+ * seulement quand il a changé, quand une release récente attend encore des fichiers (installeur que la CI ajoute
+ * après coup), ou toutes les 30 minutes.
+ */
+interface RepoWatch {
+  /** Empreinte du flux à la dernière lecture réussie de l'API. */
+  seen: string | null
+  /** Dernier flux reçu, et son ETag. */
+  feed: string | null
+  etag: string | null
+  /** Dernière lecture réussie de l'API, ou 0. */
+  apiAt: number
+  /** Une release récente attendait encore des fichiers à cette lecture. */
+  incomplete: boolean
+}
+
+const watches = new Map<string, RepoWatch>()
+
+function watchOf(repo: RepoRef): RepoWatch {
+  const key = repoApiBase(repo)
+  let watch = watches.get(key)
+  if (!watch) watches.set(key, (watch = { seen: null, feed: null, etag: null, apiAt: 0, incomplete: false }))
+  return watch
+}
+
+/** Empreinte du flux des releases, ou null s'il n'a pas pu être lu. */
+async function readFeed(repo: RepoRef, watch: RepoWatch): Promise<string | null> {
+  try {
+    const headers: Record<string, string> = { Accept: 'application/atom+xml', 'User-Agent': userAgent() }
+    if (watch.etag && watch.feed !== null) headers['If-None-Match'] = watch.etag
+    const res = await fetch(`https://github.com/${repo.owner}/${repo.name}/releases.atom`, {
+      headers,
+      signal: AbortSignal.timeout(20_000)
+    })
+    if (res.status === 304 && watch.feed !== null) return watch.feed
+    if (!res.ok) return null
+    const signature = feedSignature(await res.text())
+    if (signature === null) return null
+    watch.feed = signature
+    watch.etag = res.headers.get('etag')
+    return signature
+  } catch {
+    return null
+  }
+}
+
+/** Comment lire les releases d'un dépôt : l'API tout de suite, selon le flux, ou le cache seulement. */
+type ReadMode = 'api' | 'watch' | 'cache'
+
+const MODE_RANK: Record<ReadMode, number> = { cache: 0, watch: 1, api: 2 }
+
+async function readReleases(repo: RepoRef, mode: ReadMode): Promise<{ releases: GhRelease[]; error: string | null }> {
+  const watch = watchOf(repo)
+  const cachedFirstPage = httpCache![`${repoApiBase(repo)}/releases?per_page=100&page=1`]
+  if (mode === 'cache' && cachedFirstPage) return { releases: cachedReleases(repo), error: null }
+  let signature: string | null = null
+  if (mode === 'watch' && cachedFirstPage && !hasGitHubApiOverride()) {
+    signature = await readFeed(repo, watch)
+    const now = Date.now()
+    const due =
+      signature === null
+        ? now - watch.apiAt >= FEED_FALLBACK_MS
+        : signature !== watch.seen || watch.incomplete || now - watch.apiAt >= FULL_REFRESH_MS
+    if (!due) return { releases: cachedReleases(repo), error: null }
+  }
+  try {
+    const releases = await fetchReleases(repo)
+    watch.apiAt = Date.now()
+    watch.incomplete = hasIncompleteRelease(releases, APP_TAG_PREFIX, watch.apiAt)
+    // Lu juste avant l'API : le flux ne peut pas annoncer une release que cette lecture n'aurait pas vue.
+    watch.seen = signature ?? (await readFeed(repo, watch).catch(() => null)) ?? watch.seen
+    return { releases, error: null }
+  } catch (err) {
+    const error =
+      err instanceof GitHubError ? err.message : 'Impossible de joindre GitHub. Vérifie ta connexion internet.'
+    return { releases: cachedReleases(repo), error }
+  }
+}
+
+/** Ce qu'une vérification automatique relit : le dépôt des modpacks, celui de l'application. */
+export interface CatalogCheck {
+  packs: boolean
+  app: boolean
+}
+
+/**
+ * Le catalogue : modpacks et contenus du dépôt suivi, mise à jour de l'application.
+ *  - `force` (bouton Actualiser, recherche d'une mise à jour) : l'API est relue tout de suite ;
+ *  - `check` (vérifications automatiques) : seuls les dépôts demandés sont surveillés, les autres viennent du cache ;
+ *  - sinon : le catalogue de la dernière minute, ou les deux dépôts surveillés.
+ */
+export async function getCatalog(force = false, check?: CatalogCheck): Promise<Catalog> {
   const { repo } = await getSettings()
   const base = repoApiBase(repo)
-  if (!force && lastCatalog?.base === base && Date.now() - lastCatalog.at < MEMORY_TTL_MS) return lastCatalog.catalog
+  if (!force && !check && lastCatalog?.base === base && Date.now() - lastCatalog.at < MEMORY_TTL_MS) return lastCatalog.catalog
   await loadCaches()
 
-  let releases: GhRelease[]
-  let error: string | null = null
-  let offline = false
-  try {
-    releases = await fetchReleases(repo)
-  } catch (err) {
-    offline = true
-    error =
-      err instanceof GitHubError
-        ? err.message
-        : 'Impossible de joindre GitHub. Vérifie ta connexion internet.'
-    releases = cachedReleases(repo)
-  }
-
-  // Les mises à jour de l'application viennent toujours de son propre dépôt.
-  let appReleases = releases
-  if (repoApiBase(APP_REPO) !== base) {
-    appReleases = await fetchReleases(APP_REPO).catch(() => cachedReleases(APP_REPO))
-  }
+  const packMode: ReadMode = force ? 'api' : check && !check.packs ? 'cache' : 'watch'
+  const appMode: ReadMode = force ? 'api' : check && !check.app ? 'cache' : 'watch'
+  // Les mises à jour de l'application viennent toujours de son propre dépôt (souvent le même que celui des modpacks).
+  const sameRepo = repoApiBase(APP_REPO) === base
+  const { releases, error } = await readReleases(repo, sameRepo && MODE_RANK[appMode] > MODE_RANK[packMode] ? appMode : packMode)
+  const offline = error !== null
+  const appReleases = sameRepo ? releases : (await readReleases(APP_REPO, appMode)).releases
 
   const catalog: Catalog = {
     repo,

@@ -63,7 +63,6 @@ function Library() {
 export function App() {
   const init = useStore((s) => s.init)
   const refreshLocal = useStore((s) => s.refreshLocal)
-  const autoRefresh = useStore((s) => s.autoRefresh)
   // Premier lancement : le rôle n'est pas encore choisi.
   const needsSetup = useStore((s) => s.settings !== null && s.settings.role === null)
   const studio = useStore((s) => s.view === 'studio' && s.settings?.role === 'publisher')
@@ -76,13 +75,9 @@ export function App() {
   useEffect(() => {
     void init()
     // Si l'utilisateur supprime un profil dans CurseForge, on le voit au retour sur la fenêtre.
-    const onFocus = () => {
-      void refreshLocal()
-      void autoRefresh()
-    }
+    // Les releases, elles, sont relues régulièrement par l'application (Paramètres → Démarrage et mises à jour).
+    const onFocus = () => void refreshLocal()
     window.addEventListener('focus', onFocus)
-    // Application laissée ouverte : une nouvelle version finit par être proposée sans la relancer.
-    const timer = setInterval(() => void autoRefresh(), 60_000)
     // F1 ouvre ou ferme l'aide, sauf derrière une fenêtre de dialogue, qui garde la main.
     const onKey = (e: KeyboardEvent) => {
       // Ctrl + / Ctrl - / Ctrl 0 : taille de l'interface, partout.
@@ -102,9 +97,8 @@ export function App() {
     return () => {
       window.removeEventListener('focus', onFocus)
       window.removeEventListener('keydown', onKey)
-      clearInterval(timer)
     }
-  }, [init, refreshLocal, autoRefresh])
+  }, [init, refreshLocal])
 
   return (
     <div className="relative flex h-full flex-col">

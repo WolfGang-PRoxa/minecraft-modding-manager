@@ -55,7 +55,10 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     affichée ou réduite par l'utilisateur revient seulement devant). Plein écran par F11 qui ramène à la taille
     d'avant ; le bouton de la barre de titre agrandit / ramène au niveau inférieur (canaux `window:*`, dont
     `window:displays` et `window:bounds` pour `components/WindowPlacement.tsx`, plan des écrans des paramètres).
-  - `github.ts` : lecture des releases du dépôt suivi (cache ETag sur disque, mode hors ligne), `modpack.json` via
+  - `github.ts` : lecture des releases du dépôt suivi (cache ETag sur disque, mode hors ligne ; surveillance par le
+    flux `github.com/<compte>/<dépôt>/releases.atom`, hors quota : l'API n'est relue que si le flux change, si une
+    release récente attend des fichiers (`hasIncompleteRelease`), toutes les 30 min, ou par `force` ; flux illisible
+    = API au plus toutes les 5 min ; pas de flux avec `MM_GITHUB_API`), `modpack.json` via
     l'URL publique (hors quota API), mises à jour de l'app toujours lues dans `APP_REPO` (tags `app-v*`) :
     `findAppUpdate` ne propose qu'une release dont l'installeur `.exe` est en ligne.
   - `installer.ts` : téléchargement → vérif SHA-256 → extraction dans un dossier de travail sur le même disque
@@ -84,10 +87,18 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
     lieu de la fermer, bulle la première fois (`backgroundHintShown`) ; seul quitter ferme vraiment, avec la
     confirmation d'une tâche du Studio en cours. `second-instance` montre la fenêtre (sauf `--minimized` /
     `--background`). L'installeur ferme l'app de force au bout de 3 s (le `WM_CLOSE` de taskkill ne fait que la cacher).
-  - `backgroundUpdate.ts` : l'app ne se fermant plus, relecture des releases toutes les 6 h (`CHECK_INTERVAL_MS`,
-    examen toutes les 15 min) et au réveil du PC (`powerMonitor` `resume`), réglage `autoUpdate` et app installée ;
-    version trouvée installée (`installAppUpdate` de `ipc.ts`, relance `--background`) seulement fenêtre cachée et
-    rien en cours (`nextStep`), examinée 1 min après chaque fermeture de la fenêtre.
+  - `backgroundUpdate.ts` : vérifications régulières (examen toutes les 30 s), fenêtre ouverte ou cachée, et au réveil
+    du PC (`powerMonitor` `resume`) : modpacks toutes les `packCheckMinutes` (5 par défaut), versions de l'app toutes
+    les `appCheckMinutes` (10 par défaut), réglages de 1 à 360 min (`shared/autoUpdate.ts`). Chaque catalogue relu
+    part à la fenêtre (`catalog:changed` ; le renderer ne relit plus GitHub de lui-même). Version de l'app installée
+    (`installAppUpdate` de `ipc.ts`, relance `--background`) seulement si `autoUpdate`, app installée, fenêtre cachée
+    et rien en cours (`nextStep`), examinée 1 min après chaque fermeture de la fenêtre.
+  - `packAutoUpdate.ts` : mise à jour automatique des modpacks installés (réglage `autoUpdatePacks`, activé par
+    défaut) : `packsToAutoUpdate` (dernière version plus récente que celle installée **et publiée après
+    `installedAt`** : un retour exprès à une version précédente est gardé) ; jamais si le jeu tourne depuis le profil,
+    une installation ou la mise à jour de l'app en cours ; `installModpack(…, { background: true })` n'ouvre pas
+    CurseForge ; événements `install:auto` (start / end, `announce`) pour la fenêtre, notification Windows si elle est
+    cachée ou réduite ; échec ou annulation : même version retentée 1 h après, échec annoncé une fois.
   - `appUpdate.ts` : mise à jour de l'app. `installAppUpdate` relit lui-même les releases (rien ne vient de la
     fenêtre), télécharge l'installeur dans `%LOCALAPPDATA%\Modding Manager\mises-a-jour`, compare son SHA-256 au
     `digest` publié par GitHub, le lance détaché avec `--updated` puis quitte ; l'installeur relance l'app avec
@@ -376,8 +387,8 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
   page (`applyInterfaceScale`, taille minimale de la fenêtre multipliée d'autant), `Ctrl` + `+` / `-` / `0`.
   `components/Appearance.tsx` : section des paramètres et éditeur de style.
   `components/UpdateBar.tsx` : proposition de mise à jour de l'app, sous la barre de titre et hors de `<main>`, donc
-  visible dans toutes les vues (« Plus tard » la replie en rappel dans `TitleBar`). `autoRefresh` relit GitHub en
-  silence toutes les 30 min (minuterie + retour sur la fenêtre) ; `DetailsPanel` est positionné dans la zone de
+  visible dans toutes les vues (« Plus tard » la replie en rappel dans `TitleBar`). Le catalogue est relu par
+  `backgroundUpdate.ts` (événement `catalog:changed`) ; `DetailsPanel` est positionné dans la zone de
   contenu (`absolute`), pas sur la fenêtre, pour s'ouvrir sous cette barre.
   Versions présentes dans CurseForge : `store.present` (bibliothèque, recalculé quand le catalogue, les installations
   ou les profils changent) et `PackCard` (studio, sur les zips du dossier) appellent `findPresentVersions`.
@@ -684,7 +695,9 @@ npx tsx scripts/generate-installer-images.ts   # build/installer/logo-<n>.bmp de
 - Routine de correction : son `environment_id` doit être un identifiant d'environnement réel (`env_…`), pas
   `default`, sinon elle refuse de démarrer (`session_config_rejected`).
 - Quota GitHub sans connexion : 60 lectures par heure et par adresse IP, et les réponses 304 (ETag) comptent aussi.
-  Ne pas rapprocher les vérifications automatiques (`AUTO_REFRESH_MS`).
+  Les vérifications automatiques (jusqu'à chaque minute) passent par le flux `releases.atom` (github.ts) : ne jamais
+  y lire l'API directement. Le conteneur cloud et la VM du PC ne joignent pas github.com (proxy) : flux non essayé
+  depuis une session.
 - Les assets de release exposent `digest` (`sha256:…`) même en lecture anonyme, et `state` (`uploaded` une fois
   l'envoi terminé).
 - `child_process.spawn` signale certaines erreurs par l'événement `error` (fichier absent, accès refusé) et lève les
