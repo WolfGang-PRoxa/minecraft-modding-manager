@@ -33,7 +33,7 @@ async function instanceFields(dir: string): Promise<InstanceFields | null> {
   const key = `${info.mtimeMs}|${info.size}`;
   const cached = instanceCache.get(file);
   if (cached?.key === key) return cached.fields;
-  let fields: InstanceFields | null = null;
+  let fields: InstanceFields | null;
   try {
     const json = JSON.parse((await readFile(file, 'utf8')).replace(/^﻿/, '')) as Record<string, unknown>;
     const loader = json.baseModLoader as { name?: unknown } | null | undefined;

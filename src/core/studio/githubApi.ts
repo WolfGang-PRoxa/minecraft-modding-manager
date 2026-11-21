@@ -205,7 +205,7 @@ export class GitHubClient {
               }
               return;
             }
-            let detail = '';
+            let detail: string;
             try {
               detail = (JSON.parse(text) as { message?: string }).message ?? '';
             } catch {

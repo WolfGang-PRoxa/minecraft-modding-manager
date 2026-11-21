@@ -1698,7 +1698,7 @@ export class StudioService {
   /** Les profils CurseForge du publieur, rangés comme dans CurseForge, face à ses modpacks. */
   async library(): Promise<PublisherLibrary> {
     const overview = await this.overview();
-    let instancesDir: string | null = null;
+    let instancesDir: string | null;
     try {
       instancesDir = (await this.options.getInstancesDir?.()) ?? null;
     } catch (err) {

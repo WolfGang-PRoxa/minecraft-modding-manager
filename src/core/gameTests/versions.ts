@@ -141,7 +141,7 @@ function normalize(list: MavenItem & { kind: 'list' }) {
 
 function parseMaven(text: string): MavenItem | null {
   const version = text.trim().toLowerCase();
-  if (!version || /\s/.test(version) || /[\[\](),]/.test(version)) return null;
+  if (!version || /\s/.test(version) || /[[\](),]/.test(version)) return null;
   const root: MavenItem & { kind: 'list' } = { kind: 'list', items: [] };
   let list = root;
   const stack = [root];
