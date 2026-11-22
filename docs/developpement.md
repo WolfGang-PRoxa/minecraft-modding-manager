@@ -62,7 +62,7 @@ Une application [Electron](https://www.electronjs.org/) : un processus principal
 | `docs`              | Cette documentation.                                                                                                                                                                                                                                                                                                                  |
 | `relay`             | Le service de suivi des signalements, hébergé sur Netlify (voir [relay/README.md](../relay/README.md)).                                                                                                                                                                                                                               |
 | `build`             | Logo (`icon.png`, 1024 × 1024 avec transparence : la seule source du logo, pour l’interface, l’exécutable, les raccourcis et l’installeur), et script NSIS de l’installeur (`installer.nsh`), qui dessine ses fenêtres aux couleurs de l’application. Les images de ces fenêtres (`build/installer/`) sont générées, pas versionnées. |
-| `.github/workflows` | La publication de l’application sur un tag `app-v*`.                                                                                                                                                                                                                                                                                  |
+| `.github/workflows` | La CI (`ci.yml` : `npm run check` et `npm test` à chaque push et pull request, sous Linux, Node de `.node-version`) et la publication de l’application sur un tag `app-v*`.                                                                                                                                                           |
 
 Le dépôt de l’application (`APP_REPO`) et l’identifiant de l’application OAuth GitHub utilisé par « Se connecter avec
 GitHub » (`GITHUB_OAUTH_CLIENT_ID`) sont définis dans `src/shared/config.ts`.
@@ -651,6 +651,9 @@ fenêtre ni de processus. Interface et messages en français.
   (`src/sensitive.mts` : CI, build, scripts, dépendances, relais, consignes de Claude) ne se valide pas depuis le mail
   (`mergeBlocker` dans `action.mts`, revérifié sur GitHub au clic).
   Voir `relay/README.md` pour les variables et le déploiement.
+- `.github/workflows/ci.yml` — à chaque push (toutes branches) et pull request, sous Ubuntu avec le Node de
+  `.node-version` : `npm ci`, `npm run check` (Prettier, ESLint, types, documentation) puis `npm test`. Un test qui
+  dépend de Windows (DPAPI par `powershell.exe`, chemins) se saute hors Windows (`skip`) ou compare avec `path.sep`.
 - `.github/workflows/release-app.yml` — deux jobs : `build` (`contents: read`, `actions: read` pour SignPath) puis
   `publish` (seul `contents: write`, n'exécute pas le code du dépôt) ; actions figées par commit, version en
   commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z` (installeur + `.blockmap`, recalculé après la
