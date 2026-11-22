@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { after, before, describe, it } from 'node:test';
 import { downloadCurseForgeFile, installedFileFrom, replaceAddonFile, type Download } from '../src/core/addonFiles';
 import type { CfFile } from '../src/core/curseforgeApi';
@@ -56,7 +56,7 @@ describe('copie d’essai et fichiers des mods', () => {
     const instance = await readJson(join(trial, 'minecraftinstance.json'));
     assert.notEqual(instance.guid, 'guid-origine');
     assert.equal(instance.name, 'Mon Profil (essai)');
-    assert.equal(instance.installPath, `${trial}\\`);
+    assert.equal(instance.installPath, `${trial}${sep}`);
     assert.equal(await readFile(join(trial, '.curseclient'), 'utf8'), instance.guid);
     for (const addon of instance.installedAddons) {
       assert.equal(addon.gameInstanceID, instance.guid);

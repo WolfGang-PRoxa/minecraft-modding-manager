@@ -42,22 +42,27 @@ describe('compte CurseForge', () => {
     });
   });
 
-  it('enregistre des secrets acceptés, chiffrés, et les retire', async () => {
-    await saveCurseForgeSecret('apiKey', `  ${VALID_API_KEY}  `);
-    await saveCurseForgeSecret('uploadToken', VALID_UPLOAD_TOKEN);
-    const stored = await readFile(join(root.dir, 'curseforge-auth.json'), 'utf8');
-    assert.ok(
-      !stored.includes(VALID_API_KEY) && !stored.includes(VALID_UPLOAD_TOKEN),
-      'le fichier ne contient rien en clair',
-    );
-    assert.deepEqual(await curseForgeSecret('apiKey'), { value: VALID_API_KEY, source: 'saved' });
-    const status = await curseForgeAuthStatus();
-    assert.deepEqual([status.apiKey.valid, status.uploadToken.valid], [true, true]);
+  // Le chiffrement passe par DPAPI (powershell.exe), qui n'existe que sous Windows : la CI tourne sous Linux.
+  it(
+    'enregistre des secrets acceptés, chiffrés, et les retire',
+    { skip: process.platform !== 'win32' && 'chiffrement de Windows (DPAPI) indisponible' },
+    async () => {
+      await saveCurseForgeSecret('apiKey', `  ${VALID_API_KEY}  `);
+      await saveCurseForgeSecret('uploadToken', VALID_UPLOAD_TOKEN);
+      const stored = await readFile(join(root.dir, 'curseforge-auth.json'), 'utf8');
+      assert.ok(
+        !stored.includes(VALID_API_KEY) && !stored.includes(VALID_UPLOAD_TOKEN),
+        'le fichier ne contient rien en clair',
+      );
+      assert.deepEqual(await curseForgeSecret('apiKey'), { value: VALID_API_KEY, source: 'saved' });
+      const status = await curseForgeAuthStatus();
+      assert.deepEqual([status.apiKey.valid, status.uploadToken.valid], [true, true]);
 
-    await saveCurseForgeSecret('apiKey', null);
-    assert.equal(await curseForgeSecret('apiKey'), null);
-    assert.equal((await curseForgeSecret('uploadToken'))?.source, 'saved');
-  });
+      await saveCurseForgeSecret('apiKey', null);
+      assert.equal(await curseForgeSecret('apiKey'), null);
+      assert.equal((await curseForgeSecret('uploadToken'))?.source, 'saved');
+    },
+  );
 
   it('prend une variable d’environnement à défaut, et dit si elle est refusée', async () => {
     process.env.CURSEFORGE_API_KEY = 'cle-perimee';
