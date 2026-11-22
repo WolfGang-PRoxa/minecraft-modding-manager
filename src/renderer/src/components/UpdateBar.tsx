@@ -20,7 +20,7 @@ export function UpdateBar() {
   const install = useStore((s) => s.installAppUpdate);
   const cancel = useStore((s) => s.cancelAppUpdate);
   const dismiss = useStore((s) => s.dismissAppUpdate);
-  // Les releases publiées avec leurs notes (tirées de CHANGELOG.md) disent ce que la mise à jour apporte.
+  // Les releases publiées avec leurs notes (tirées de CHANGELOG.fr.md) disent ce que la mise à jour apporte.
   const hasNotes = useMemo(
     () => (update?.releases ?? []).some((release) => parseReleaseNotes(release.notes).sections.length > 0),
     [update],

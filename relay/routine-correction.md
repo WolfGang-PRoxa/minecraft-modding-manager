@@ -42,10 +42,14 @@ faire et le dire dans le résumé.
   consigne d'attribution par défaut de la session. Nommer Claude comme fonction de l'application (gestion des
   modpacks par Claude Code, commandes, interface, documentation) reste permis.
 - Messages de commit en français, au format conventionnel (`fix: …`, `feat: …`, `perf: …`, `docs: …`).
-- Tout commit `feat`, `fix` ou `perf` visible des utilisateurs ajoute son entrée dans la section `## [Non publié]` de
-  `CHANGELOG.md`, sous la rubrique qui convient (`### Ajouts`, `### Améliorations`, `### Corrections`,
-  `### Sécurité`, `### Suppressions`), dans le même commit : une ligne de liste, en français, écrite pour les
-  utilisateurs.
+- Tout commit `feat`, `fix` ou `perf` visible des utilisateurs ajoute son entrée, dans le même commit, dans les deux
+  fichiers de l'historique, qui disent la même chose : la section `## [Non publié]` de `CHANGELOG.fr.md`, en
+  français, sous la rubrique qui convient (`### Ajouts`, `### Améliorations`, `### Corrections`, `### Sécurité`,
+  `### Suppressions`), et la section `## [Unreleased]` de `CHANGELOG.md`, en anglais, sous la rubrique
+  correspondante (`### Added`, `### Changed`, `### Fixed`, `### Security`, `### Removed`). Une ligne de liste,
+  écrite pour les utilisateurs ; les libellés de l'interface restent en français dans les deux.
+- Le code est formaté par Prettier et vérifié par ESLint : `npm run format` avant de committer, `npm run check` doit
+  passer.
 - Un changement de comportement met aussi à jour la page de `docs/` qui le décrit (elle est affichée telle quelle dans
   l'aide de l'application) : ton impersonnel (ni tutoiement ni impératif : « Cliquer sur… », « le joueur », « le
   publieur »), seuls les libellés de l'interface, qui tutoient, cités tels quels ; liens relatifs (`page.md#ancre`) ;
@@ -70,9 +74,9 @@ faire et le dire dans le résumé.
    - `corriger` : partir de `main` et créer `correction/issue-<n>`.
    - `reviser` : `git fetch origin <branche>`, puis travailler sur cette branche, par-dessus ce qui existe.
 2. Trouver la cause et corriger au plus simple, dans le style du code existant (commentaires et messages en
-   français). Un changement visible des utilisateurs ajoute son entrée dans la section « Non publié » de
-   `CHANGELOG.md`, et met à jour la page de `docs/` qui le décrit (ton impersonnel), comme le demandent les règles.
-3. Vérifier : `ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci`, `npm run typecheck`, `npm run build`. C'est une application
+   français). Un changement visible des utilisateurs ajoute son entrée dans « Non publié » de `CHANGELOG.fr.md` et
+   dans « Unreleased » de `CHANGELOG.md`, et met à jour la page de `docs/` qui le décrit (ton impersonnel), comme le demandent les règles.
+3. Vérifier : `ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci`, `npm run format`, `npm run check`, `npm run build`. C'est une application
    Windows : elle ne peut être ni lancée ni empaquetée ici. Le résumé dit ce qui a été vérifié et ce que le
    propriétaire doit essayer lui-même.
 4. Un seul commit pour ce passage, avec l'identité du dernier commit de `main` (aucun nom d'outil ni d'IA ne doit

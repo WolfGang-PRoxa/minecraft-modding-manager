@@ -73,7 +73,7 @@ empreinte SHA-256 avant d’être lancé ; s’il ne correspond pas, l’install
 
 ## Voir les nouveautés
 
-L’historique des versions de l’application est dans l’aide, page [Nouveautés](../CHANGELOG.md), et s’ouvre aussi
+L’historique des versions de l’application est dans l’aide, page [Nouveautés](../CHANGELOG.fr.md), et s’ouvre aussi
 depuis **Paramètres → À propos → Nouveautés**. Pour chaque version : sa date et ses changements, rangés en
 **Ajouts**, **Améliorations**, **Corrections**, **Sécurité** et **Suppressions**.
 

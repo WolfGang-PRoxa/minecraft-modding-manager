@@ -4,10 +4,17 @@
 //
 // Le sommaire (docs/README.md) liste chaque page de docs/, chaque page commence par son titre, les liens mènent à
 // un fichier existant et à une ancre existante (calculée comme sur GitHub), le texte ne contient pas de HTML (que
-// l'application n'affiche pas), et CHANGELOG.md respecte son format. Lancé par `npm run build`.
+// l'application n'affiche pas), et l'historique des versions (CHANGELOG.fr.md et CHANGELOG.md) respecte son format,
+// les deux fichiers disant la même chose. Lancé par `npm run build`.
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { validateChangelog } from '../src/shared/changelog';
+import {
+  CHANGELOG_EN,
+  CHANGELOG_FR,
+  CHANGELOG_LANGUAGES,
+  compareChangelogs,
+  validateChangelog,
+} from '../src/shared/changelog';
 import {
   extractHeadings,
   extractLinks,
@@ -20,7 +27,6 @@ import {
 
 const root = process.cwd();
 const SUMMARY = 'docs/README.md';
-const CHANGELOG = 'CHANGELOG.md';
 
 const c = {
   bold: (s: string) => `\x1b[1m${s}\x1b[0m`,
@@ -152,14 +158,24 @@ for (const file of checked) {
 
 // Historique des versions.
 let versions = 0;
-if (!exists(CHANGELOG)) {
-  errors.push({ file: CHANGELOG, message: 'fichier introuvable.' });
-} else {
-  const packageVersion = (JSON.parse(read('package.json')) as { version: string }).version;
-  const report = validateChangelog(read(CHANGELOG), { packageVersion });
-  errors.push(...report.errors.map((message) => ({ file: CHANGELOG, message })));
-  warnings.push(...report.warnings.map((message) => ({ file: CHANGELOG, message })));
-  versions = (read(CHANGELOG).match(/^##\s+\[?\d+\.\d+\.\d+/gm) ?? []).length;
+const packageVersion = (JSON.parse(read('package.json')) as { version: string }).version;
+for (const language of CHANGELOG_LANGUAGES) {
+  const file = language.file;
+  if (!exists(file)) {
+    errors.push({ file, message: 'fichier introuvable.' });
+    continue;
+  }
+  const report = validateChangelog(read(file), { packageVersion, language });
+  errors.push(...report.errors.map((message) => ({ file, message })));
+  warnings.push(...report.warnings.map((message) => ({ file, message })));
+  versions = (read(file).match(/^##\s+\[?\d+\.\d+\.\d+/gm) ?? []).length;
+}
+if (exists(CHANGELOG_FR.file) && exists(CHANGELOG_EN.file)) {
+  const mismatches = compareChangelogs(
+    { markdown: read(CHANGELOG_FR.file), language: CHANGELOG_FR },
+    { markdown: read(CHANGELOG_EN.file), language: CHANGELOG_EN },
+  );
+  errors.push(...mismatches.map((message) => ({ file: CHANGELOG_EN.file, message })));
 }
 
 const where = (problem: Problem) => `${problem.file}${problem.line ? `:${problem.line}` : ''}`;

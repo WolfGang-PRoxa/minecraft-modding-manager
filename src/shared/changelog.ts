@@ -1,15 +1,47 @@
-// Historique des versions de l'application : CHANGELOG.md, au format « Keep a Changelog » en français.
-// Lu par l'application (page Nouveautés), par scripts/changelog.ts (suivi, préparation d'une version) et par la CI
-// (notes de la release GitHub, que l'application relit ensuite pour annoncer une mise à jour).
+// Historique des versions de l'application, au format « Keep a Changelog », en deux langues qui disent la même chose :
+// CHANGELOG.md en anglais et CHANGELOG.fr.md en français. Le français est lu par l'application (page Nouveautés) et
+// donne les notes de la release GitHub, que l'application relit pour annoncer une mise à jour ; scripts/changelog.ts
+// tient les deux fichiers (suivi, préparation d'une version) et scripts/docs.ts vérifie qu'ils concordent.
 import { compareVersions } from './releases';
 
-/** Section des changements pas encore publiés, toujours en tête du fichier. */
+/** Section des changements pas encore publiés, toujours en tête du fichier (français). */
 export const UNRELEASED = 'Non publié';
 
-/** Rubriques d'une version, dans l'ordre où elles s'affichent. */
+/** Rubriques d'une version, dans l'ordre où elles s'affichent (français). */
 export const CHANGELOG_CATEGORIES = ['Ajouts', 'Améliorations', 'Corrections', 'Sécurité', 'Suppressions'] as const;
 
 export type ChangelogCategory = (typeof CHANGELOG_CATEGORIES)[number];
+
+/** Une langue de l'historique : son fichier, le titre de « Non publié » et ses rubriques, dans le même ordre. */
+export interface ChangelogLanguage {
+  file: string;
+  /** Code de la langue, pour les messages (« fr », « en »). */
+  code: string;
+  unreleased: string;
+  categories: readonly string[];
+}
+
+export const CHANGELOG_FR: ChangelogLanguage = {
+  file: 'CHANGELOG.fr.md',
+  code: 'fr',
+  unreleased: UNRELEASED,
+  categories: CHANGELOG_CATEGORIES,
+};
+
+export const CHANGELOG_EN: ChangelogLanguage = {
+  file: 'CHANGELOG.md',
+  code: 'en',
+  unreleased: 'Unreleased',
+  categories: ['Added', 'Changed', 'Fixed', 'Security', 'Removed'],
+};
+
+/** Les deux fichiers de l'historique : le français d'abord (celui de l'application et des notes de release). */
+export const CHANGELOG_LANGUAGES = [CHANGELOG_FR, CHANGELOG_EN] as const;
+
+/** Rubrique d'une langue qui correspond à une rubrique française (« Ajouts » → « Added »). */
+export function translateCategory(category: ChangelogCategory, language: ChangelogLanguage): string {
+  return language.categories[CHANGELOG_CATEGORIES.indexOf(category)];
+}
 
 export interface ChangelogSection {
   title: string;
@@ -115,7 +147,7 @@ function parseHeading(heading: string): { label: string; date: string | null } {
 }
 
 const isUnreleased = (label: string) =>
-  label.toLowerCase() === UNRELEASED.toLowerCase() || label.toLowerCase() === 'unreleased';
+  CHANGELOG_LANGUAGES.some((language) => label.toLowerCase() === language.unreleased.toLowerCase());
 
 interface ParsedRelease extends ChangelogRelease {
   block: Block;
@@ -239,7 +271,11 @@ function validDate(date: string): boolean {
  * Vérifie le fichier : titres de version (« ## [1.2.0] - 2026-10-03 »), ordre des versions et des dates,
  * rubriques connues, entrées présentes. `packageVersion` (version de package.json) doit avoir son entrée.
  */
-export function validateChangelog(markdown: string, options: { packageVersion?: string } = {}): ChangelogReport {
+export function validateChangelog(
+  markdown: string,
+  options: { packageVersion?: string; language?: ChangelogLanguage } = {},
+): ChangelogReport {
+  const { unreleased, categories } = options.language ?? CHANGELOG_FR;
   const { changelog, releases } = parse(markdown);
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -251,12 +287,14 @@ export function validateChangelog(markdown: string, options: { packageVersion?: 
   const seen = new Set<string>();
   let previous: ParsedRelease | null = null;
   releases.forEach((release, index) => {
-    const label = release.version ?? UNRELEASED;
+    const label = release.version ?? unreleased;
     if (!release.bracketed)
       warnings.push(at(release.line, `écris le titre « ## [${label}]${release.date ? ` - ${release.date}` : ''} ».`));
     if (release.version === null) {
-      if (index > 0) errors.push(at(release.line, `la section « ${UNRELEASED} » doit être la première.`));
-      if (release.date) warnings.push(at(release.line, `la section « ${UNRELEASED} » n’a pas de date.`));
+      if (index > 0) errors.push(at(release.line, `la section « ${unreleased} » doit être la première.`));
+      if (parseHeading(release.heading).label !== unreleased)
+        errors.push(at(release.line, `la section des changements non publiés s’intitule « ## [${unreleased}] ».`));
+      if (release.date) warnings.push(at(release.line, `la section « ${unreleased} » n’a pas de date.`));
     } else {
       if (!VERSION.test(release.version))
         errors.push(at(release.line, `numéro de version « ${release.version} » invalide (attendu : 1.2.3).`));
@@ -287,19 +325,17 @@ export function validateChangelog(markdown: string, options: { packageVersion?: 
     const titles = new Set<string>();
     let rank = -1;
     for (const section of release.sections) {
-      const known = CHANGELOG_CATEGORIES.indexOf(section.title as ChangelogCategory);
+      const known = categories.indexOf(section.title);
       if (known < 0) {
         errors.push(
           at(
             release.line,
-            `rubrique « ${section.title} » inconnue dans ${label} (rubriques : ${CHANGELOG_CATEGORIES.join(', ')}).`,
+            `rubrique « ${section.title} » inconnue dans ${label} (rubriques : ${categories.join(', ')}).`,
           ),
         );
       } else {
         if (known < rank)
-          warnings.push(
-            at(release.line, `rubriques de ${label} dans le désordre (ordre : ${CHANGELOG_CATEGORIES.join(', ')}).`),
-          );
+          warnings.push(at(release.line, `rubriques de ${label} dans le désordre (ordre : ${categories.join(', ')}).`));
         rank = Math.max(rank, known);
       }
       if (titles.has(section.title))
@@ -309,14 +345,14 @@ export function validateChangelog(markdown: string, options: { packageVersion?: 
         warnings.push(at(release.line, `rubrique « ${section.title} » vide dans ${label}.`));
     }
     for (const line of release.block.orphans)
-      errors.push(at(line, `entrée placée avant toute rubrique (« ### Ajouts »…).`));
+      errors.push(at(line, `entrée placée avant toute rubrique (« ### ${categories[0]} »…).`));
     for (const line of release.block.stray)
       warnings.push(at(line, 'texte ignoré : seules les listes sont lues sous une rubrique.'));
     previous = release;
   });
 
   for (const label of Object.keys(changelog.links)) {
-    if (!releases.some((r) => (r.version ?? UNRELEASED) === label))
+    if (!releases.some((r) => (r.version ?? unreleased) === label))
       warnings.push(`Lien « [${label}] » sans version correspondante.`);
   }
   if (options.packageVersion && !seen.has(options.packageVersion)) {
@@ -325,4 +361,63 @@ export function validateChangelog(markdown: string, options: { packageVersion?: 
     );
   }
   return { errors, warnings };
+}
+
+/**
+ * Vérifie que les deux langues de l'historique disent la même chose : mêmes versions, aux mêmes dates, avec les mêmes
+ * rubriques (« Ajouts » ↔ « Added »…) et autant d'entrées dans chacune. Les textes, eux, ne sont pas comparés.
+ */
+export function compareChangelogs(
+  reference: { markdown: string; language: ChangelogLanguage },
+  translation: { markdown: string; language: ChangelogLanguage },
+): string[] {
+  const errors: string[] = [];
+  const shape = (markdown: string, language: ChangelogLanguage) =>
+    new Map(
+      parseChangelog(markdown).releases.map((release) => [
+        release.version ?? '',
+        {
+          release,
+          sections: new Map(
+            release.sections
+              .filter((section) => section.items.length > 0)
+              .map((section) => [language.categories.indexOf(section.title), section.items.length]),
+          ),
+        },
+      ]),
+    );
+  const ref = shape(reference.markdown, reference.language);
+  const other = shape(translation.markdown, translation.language);
+  const name = (version: string, language: ChangelogLanguage) => (version ? version : language.unreleased);
+  const file = translation.language.file;
+
+  for (const [version, { release, sections }] of ref) {
+    const match = other.get(version);
+    if (!match) {
+      errors.push(`la version ${name(version, reference.language)} de ${reference.language.file} manque dans ${file}.`);
+      continue;
+    }
+    if (release.date !== match.release.date) {
+      errors.push(
+        `la version ${version} est datée du ${release.date} dans ${reference.language.file} et du ${match.release.date} dans ${file}.`,
+      );
+    }
+    const indexes = new Set([...sections.keys(), ...match.sections.keys()]);
+    for (const index of [...indexes].sort((x, y) => x - y)) {
+      const count = sections.get(index) ?? 0;
+      const translated = match.sections.get(index) ?? 0;
+      if (index < 0 || count === translated) continue;
+      errors.push(
+        `${name(version, translation.language)} : ${count} entrée${count > 1 ? 's' : ''} « ${reference.language.categories[index]} » dans ${reference.language.file}, ${translated} « ${translation.language.categories[index]} » dans ${file}.`,
+      );
+    }
+  }
+  for (const version of other.keys()) {
+    if (!ref.has(version)) {
+      errors.push(
+        `la version ${name(version, translation.language)} de ${file} manque dans ${reference.language.file}.`,
+      );
+    }
+  }
+  return errors;
 }

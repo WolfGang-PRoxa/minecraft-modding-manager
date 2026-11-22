@@ -3,7 +3,7 @@
 
 /** Page listée dans le sommaire. */
 export interface SummaryPage {
-  /** Chemin relatif au dossier docs/ (« bibliotheque.md », « ../CHANGELOG.md »). */
+  /** Chemin relatif au dossier docs/ (« bibliotheque.md », « ../CHANGELOG.fr.md »). */
   file: string;
   title: string;
   /** Phrase qui suit le lien dans le sommaire. */
@@ -186,7 +186,7 @@ export function parseSummary(markdown: string): DocsSummary {
 
 /**
  * Chemin, depuis la racine du dépôt, d'un lien relatif écrit dans le fichier `from` (lui aussi depuis la racine) :
- * « ../CHANGELOG.md » écrit dans « docs/a.md » donne « CHANGELOG.md ». null si le lien sort du dépôt.
+ * « ../CHANGELOG.fr.md » écrit dans « docs/a.md » donne « CHANGELOG.fr.md ». null si le lien sort du dépôt.
  */
 export function resolveRepoPath(from: string, target: string): string | null {
   const parts = target.startsWith('/') ? [] : from.split('/').slice(0, -1);

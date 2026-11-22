@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import {
   CHANGELOG_CATEGORIES,
+  CHANGELOG_FR,
   parseReleaseNotes,
   releaseHasChanges,
   UNRELEASED,
@@ -42,7 +43,7 @@ const CATEGORY_STYLES: Record<string, { icon: LucideIcon; accent: string; chip: 
 };
 const OTHER_CATEGORY = { icon: Tag, accent: 'text-ink-200', chip: 'bg-tint/[0.06] text-ink-200 ring-tint/10' };
 
-const CHANGELOG_PATH = 'CHANGELOG.md';
+const CHANGELOG_PATH = CHANGELOG_FR.file;
 const releaseUrl = (version: string) => `${APP_REPO_URL}/releases/tag/app-v${version}`;
 const asList = (items: string[]) => items.map((item) => `- ${item.replace(/\n/g, '\n  ')}`).join('\n');
 
@@ -209,7 +210,7 @@ function AvailableUpdate({ onLink }: { onLink: (link: DocLink) => void }) {
   );
 }
 
-/** Page « Nouveautés » de l'aide : l'historique des versions de l'application (CHANGELOG.md). */
+/** Page « Nouveautés » de l'aide : l'historique des versions de l'application (CHANGELOG.fr.md). */
 export function ChangelogPage({ title, onLink }: { title: string; onLink: (link: DocLink) => void }) {
   const appVersion = useStore((s) => s.appVersion);
   const updatedFrom = useDocs((s) => s.updatedFrom);

@@ -32,7 +32,7 @@ Cette documentation est aussi intégrée à l’application : bouton **Aide** de
 - [Paramètres](parametres.md) : chaque réglage, la fenêtre et les raccourcis clavier.
 - [Mises à jour de l’application](mises-a-jour.md) : comment l’application se tient à jour.
 - [Signaler un problème](signalement.md) : décrire un problème ou proposer une idée.
-- [Nouveautés](../CHANGELOG.md) : l’historique des versions de l’application.
+- [Nouveautés](../CHANGELOG.fr.md) : l’historique des versions de l’application.
 
 ## Référence
 

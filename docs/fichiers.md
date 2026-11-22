@@ -123,7 +123,7 @@ qui ne connaissent que les modpacks, ne les affichent pas : elles n’ont ni le 
 
 Les releases `app-v<version>` du dépôt de l’application contiennent l’installeur de chaque version de l’application,
 son blockmap (`<installeur>.exe.blockmap`, depuis la 2.3.2 : la liste de ses blocs, qui permet de ne télécharger que
-ceux qui ont changé) et ses notes, tirées de l’[historique des versions](../CHANGELOG.md).
+ceux qui ont changé) et ses notes, tirées de l’[historique des versions](../CHANGELOG.fr.md).
 
 ## L’empreinte des mods
 

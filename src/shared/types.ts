@@ -65,7 +65,7 @@ export interface Modpack {
 export interface AppReleaseNotes {
   version: string;
   publishedAt: string;
-  /** Texte de la release, tiré de CHANGELOG.md par la CI : ses rubriques sont les nouveautés de la version. */
+  /** Texte de la release, tiré de CHANGELOG.fr.md par la CI : ses rubriques sont les nouveautés de la version. */
   notes: string;
   url: string;
 }

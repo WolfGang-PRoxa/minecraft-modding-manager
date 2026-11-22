@@ -1,7 +1,8 @@
-// Contenu de l'aide : les pages de docs/ et l'historique des versions (CHANGELOG.md), intégrés à la compilation.
+// Contenu de l'aide : les pages de docs/ et l'historique des versions en français (CHANGELOG.fr.md), intégrés à la
+// compilation.
 // Le sommaire (docs/README.md) fixe les pages affichées, leur groupe et leur ordre, comme sur GitHub.
-import changelogSource from '../../../../CHANGELOG.md?raw';
-import { parseChangelog, type ChangelogRelease } from '../../../shared/changelog';
+import changelogSource from '../../../../CHANGELOG.fr.md?raw';
+import { CHANGELOG_FR, parseChangelog, type ChangelogRelease } from '../../../shared/changelog';
 import { APP_REPO_URL } from '../../../shared/config';
 import {
   extractHeadings,
@@ -19,7 +20,7 @@ const sources = import.meta.glob<string>('../../../../docs/*.md', { query: '?raw
 const files = new Map(Object.entries(sources).map(([key, text]) => [key.replace(/^(?:\.\.\/)+/, ''), text]));
 
 const SUMMARY_PATH = 'docs/README.md';
-const CHANGELOG_PATH = 'CHANGELOG.md';
+const CHANGELOG_PATH = CHANGELOG_FR.file;
 
 export const HOME = 'accueil';
 export const CHANGELOG_PAGE = 'nouveautes';

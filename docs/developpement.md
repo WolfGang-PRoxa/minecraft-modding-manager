@@ -30,6 +30,9 @@ d’Electron est donc téléchargé au premier lancement. S’il manque, `node -
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `npm run dev`                                  | L’application en développement, avec rechargement à chaud de l’interface.                                                                                                                                                                                                                  |
 | `npm run studio`                               | La même chose, ouverte sur le Studio (`--studio`).                                                                                                                                                                                                                                         |
+| `npm run format`                               | Formate tout le dépôt avec Prettier.                                                                                                                                                                                                                                                       |
+| `npm run lint`                                 | Analyse du code par ESLint.                                                                                                                                                                                                                                                                |
+| `npm run check`                                | Tout ce que vérifie la CI hors tests : formatage (`prettier --check`), ESLint, types et documentation.                                                                                                                                                                                     |
 | `npm run typecheck`                            | Vérification des types : processus principal, scripts, interface et relais.                                                                                                                                                                                                                |
 | `npm run docs:verifier`                        | Vérification de la documentation et de l’historique des versions (voir plus bas).                                                                                                                                                                                                          |
 | `npm test`                                     | Les tests (`test/*.test.ts`, avec `node:test` et tsx) : moteur, commandes, serveur MCP, sur des dossiers temporaires et un faux GitHub.                                                                                                                                                    |
@@ -83,25 +86,35 @@ l’intègre à la compilation : bouton **Aide** de la barre de titre, ou `F1`.
 - Les tableaux, listes, blocs de code et la mise en forme courante de Markdown sont pris en charge.
 
 `npm run docs:verifier` contrôle le sommaire (chaque page existe et y figure), les titres, les liens (fichier et
-ancre) et le format de `CHANGELOG.md`. `npm run build` le lance avant chaque compilation : une documentation cassée
+ancre), le format de l’historique des versions et la concordance de ses deux fichiers. `npm run build` le lance avant chaque compilation : une documentation cassée
 bloque la publication.
 
 Une modification de comportement de l’application s’accompagne de la mise à jour de la page qui le décrit.
 
 ## Suivi des changements
 
-L’historique des versions est tenu dans [CHANGELOG.md](../CHANGELOG.md), au format
-[Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) : une section par version, de la plus récente à la plus
-ancienne, `## [1.2.0] - 2026-10-03`, découpée en rubriques `### Ajouts`, `### Améliorations`, `### Corrections`,
-`### Sécurité` et `### Suppressions`. Chaque entrée est une ligne de liste, écrite pour les utilisateurs.
+L’historique des versions est tenu en deux langues, au format [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
+dans deux fichiers qui disent la même chose :
 
-La section `## [Non publié]`, en tête, reçoit les changements qui ne sont pas encore sortis. **Chaque commit qui
-change ce que voient les utilisateurs (`feat`, `fix`, `perf`) y ajoute son entrée, dans le même commit.**
+- [CHANGELOG.fr.md](../CHANGELOG.fr.md), en français : rubriques `### Ajouts`, `### Améliorations`,
+  `### Corrections`, `### Sécurité` et `### Suppressions`, section `## [Non publié]` en tête ;
+- [CHANGELOG.md](../CHANGELOG.md), en anglais : rubriques `### Added`, `### Changed`, `### Fixed`, `### Security` et
+  `### Removed`, section `## [Unreleased]` en tête.
 
-Le même texte sert partout :
+Une section par version, de la plus récente à la plus ancienne, `## [1.2.0] - 2026-10-03`, découpée en rubriques.
+Chaque entrée est une ligne de liste, écrite pour les utilisateurs. Les libellés de l’interface, en français, sont
+cités tels quels dans les deux fichiers.
+
+La section « Non publié » (« Unreleased »), en tête, reçoit les changements qui ne sont pas encore sortis. **Chaque
+commit qui change ce que voient les utilisateurs (`feat`, `fix`, `perf`) ajoute son entrée dans les deux fichiers,
+dans le même commit.** `npm run docs:verifier` vérifie qu’ils concordent : mêmes versions, mêmes dates, mêmes
+rubriques et autant d’entrées dans chacune.
+
+Le texte français sert partout dans l’application :
 
 1. l’application affiche l’historique dans **Aide → Nouveautés**, avec la mention **Ta version** ;
-2. à la publication d’une version, la CI tire de `CHANGELOG.md` le texte de la release GitHub ;
+2. à la publication d’une version, la CI tire de `CHANGELOG.fr.md` le texte de la release GitHub, suivi des mêmes
+   nouveautés en anglais tirées de `CHANGELOG.md` ;
 3. l’application installée relit ce texte pour présenter les nouveautés d’une mise à jour avant de l’installer, puis
    les met en avant juste après.
 
@@ -109,30 +122,36 @@ Le même texte sert partout :
 
 ```bash
 npm run changelog                       # état : « Non publié » et commits depuis la dernière version
-npm run changelog -- --brouillon        # ajoute à « Non publié » les commits qui n’y sont pas
-npm run changelog -- --version 1.2.0    # prépare la version 1.2.0
+npm run changelog -- --brouillon        # ajoute aux deux fichiers les commits qui n’y sont pas
+npm run changelog -- --version 1.2.0    # prépare la version 1.2.0 dans les deux fichiers
 npm run changelog -- --notes 1.2.0      # affiche le texte de la release GitHub de la 1.2.0
 ```
 
-- **Sans option**, la commande vérifie le fichier, affiche le contenu de « Non publié », puis liste les commits
-  depuis le dernier tag `app-v*`. Un commit `feat`, `fix` ou `perf` est **mentionné** s’il a modifié `CHANGELOG.md`,
-  ou si son empreinte figure dans un commentaire du fichier (`<!-- 8f35361 -->`). Les autres types (`chore`, `docs`,
-  `refactor`…) sont ignorés.
-- **`--brouillon`** ajoute une entrée pour chaque commit non mentionné, dans la rubrique qui correspond à son type
-  (`feat` → Ajouts, `fix` → Corrections, `perf` → Améliorations), à partir de son message et suivie de son empreinte en
-  commentaire. Ces entrées sont ensuite à reformuler pour les utilisateurs.
-- **`--version`** transforme « Non publié » en version datée du jour, recrée une section « Non publié » vide, met à
-  jour les liens de comparaison en bas du fichier et la version de `package.json` et `package-lock.json`. Elle ne
-  crée ni commit ni tag.
-- **`--notes`** écrit le texte de la release : les rubriques de la version, puis le mode d’emploi de l’installeur.
+- **Sans option**, la commande vérifie les deux fichiers, affiche le contenu de « Non publié », puis liste les
+  commits depuis le dernier tag `app-v*`. Un commit `feat`, `fix` ou `perf` est **mentionné** dans un fichier s’il
+  l’a modifié, ou si son empreinte figure dans un commentaire du fichier (`<!-- 8f35361 -->`) ; il doit l’être dans
+  les deux, sinon la commande dit dans lequel le reporter. Les autres types (`chore`, `docs`, `refactor`…) sont
+  ignorés.
+- **`--brouillon`** ajoute, dans chaque fichier où il manque, une entrée pour chaque commit non mentionné, dans la
+  rubrique qui correspond à son type (`feat` → Ajouts / Added, `fix` → Corrections / Fixed, `perf` → Améliorations /
+  Changed), à partir de son message et suivie de son empreinte en commentaire. Ces entrées sont ensuite à reformuler
+  pour les utilisateurs, en anglais dans `CHANGELOG.md`.
+- **`--version`** vérifie que les deux fichiers concordent, puis transforme dans chacun « Non publié » en version
+  datée du jour, recrée une section « Non publié » vide, met à jour les liens de comparaison en bas du fichier et la
+  version de `package.json` et `package-lock.json`. Elle ne crée ni commit ni tag.
+- **`--notes`** écrit le texte de la release : les rubriques françaises de la version, le mode d’emploi de
+  l’installeur, puis, après un second trait horizontal, les mêmes nouveautés en anglais. L’application ne lit que ce
+  qui précède le premier trait.
 
-Pour qu’un commit qui ne concerne pas les utilisateurs ne soit plus signalé, citer son empreinte dans un commentaire,
-par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publié ».
+Pour qu’un commit qui ne concerne pas les utilisateurs ne soit plus signalé, citer son empreinte dans un commentaire
+des deux fichiers, par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publié ».
 
 ## Publier une nouvelle version
 
-1. `npm run changelog` : vérifier que tous les changements sont mentionnés, et relire la section « Non publié ».
-2. `npm run changelog -- --version 1.2.0` : la section devient la version 1.2.0, et `package.json` passe en 1.2.0.
+1. `npm run changelog` : vérifier que tous les changements sont mentionnés dans les deux fichiers, et relire la
+   section « Non publié ».
+2. `npm run changelog -- --version 1.2.0` : la section devient la version 1.2.0 dans les deux fichiers, et
+   `package.json` passe en 1.2.0.
 3. Committer : `git commit -am "chore: version 1.2.0"`.
 4. Pousser le commit et le tag :
 
@@ -142,7 +161,7 @@ par exemple `<!-- sans effet visible : 1a2b3c4 -->` dans la section « Non publi
    ```
 
 Le workflow [`release-app.yml`](../.github/workflows/release-app.yml) vérifie que le tag correspond à `package.json`,
-tire les notes de `CHANGELOG.md` (il s’arrête si la version n’y figure pas), construit l’installeur, le fait signer
+tire les notes de `CHANGELOG.fr.md` et `CHANGELOG.md` (il s’arrête si la version manque dans l’un d’eux), construit l’installeur, le fait signer
 par SignPath si la signature est configurée (pas encore le cas : approbation manuelle sur signpath.io), recalcule son
 blockmap (`scripts/blockmap.ts`, avec le code d’electron-builder : la signature modifie l’installeur) et publie la
 release avec l’installeur et son `.blockmap`, qui sert aux
@@ -572,7 +591,7 @@ fenêtre ni de processus. Interface et messages en français.
   arborescence d'un zip, partagée avec `ContentsDialog` (mentions « Exclu » et « Désactivé chez les joueurs »).
   `components/Toggle.tsx` : interrupteur partagé.
   `src/docs/` : l'aide intégrée (bouton Aide de `TitleBar`, `F1`). `content.ts` embarque `docs/*.md` et
-  `CHANGELOG.md` à la compilation (`import.meta.glob` / `?raw`, hors de la racine du renderer) ; le sommaire
+  `CHANGELOG.fr.md` à la compilation (`import.meta.glob` / `?raw`, hors de la racine du renderer) ; le sommaire
   `docs/README.md` fixe les pages, leurs groupes et leur ordre. `DocsCenter` couvre la zone de contenu (`z-[45]`,
   sous les fenêtres de dialogue, au-dessus de `DetailsPanel`) : navigation, recherche (`search.ts`, sans accents),
   « Sur cette page », retour (`Alt + ←`). `DocMarkdown` : ancres comme GitHub (`headingSlug`), liens entre pages,
@@ -596,7 +615,8 @@ fenêtre ni de processus. Interface et messages en français.
   contenu, jokers `*`, `?` et `**/`, casse ignorée) ; `DEFAULT_EXCLUSIONS`, données propres à la partie du publieur.
   `studio.ts` : types du Studio, et `matchesDisabledMod` (même règle pour le Studio et la fenêtre).
   `docs.ts` : sommaire, titres et ancres calculées comme GitHub, liens (`resolveRepoPath`, chemins depuis la racine).
-  `changelog.ts` : lecture et vérification de `CHANGELOG.md` (Keep a Changelog en français), notes d'une version,
+  `changelog.ts` : lecture et vérification de l'historique (Keep a Changelog, langues `CHANGELOG_FR` et
+  `CHANGELOG_EN`, concordance des deux fichiers par `compareChangelogs`), notes d'une version,
   lecture des notes d'une release GitHub (`parseReleaseNotes` : tout ce qui précède le premier `---`).
 - `README.md` (anglais, affiché par défaut sur GitHub) et ses traductions `README.<langue>.md` (`README.fr.md`),
   chacune avec les boutons des langues en tête : un changement se reporte dans toutes. Liens et ancres vérifiés par
@@ -605,8 +625,10 @@ fenêtre ni de processus. Interface et messages en français.
   tutoiement ni impératif (« Cliquer sur… », « le joueur », « le publieur ») ; seuls les libellés et messages de
   l'interface, qui tutoient, sont cités tels quels. Une page = un `# Titre` puis un paragraphe d'introduction ; liens relatifs `page.md#ancre` ; pas de HTML (non affiché : chevrons entre accents graves) ; saut de
   ligne par `\` en fin de ligne. Toute page doit figurer dans `docs/README.md`.
-- `CHANGELOG.md` — historique des versions de l'app : `## [Non publié]` en tête, puis `## [x.y.z] - AAAA-MM-JJ`,
-  rubriques `###`, liens de comparaison en fin de fichier. Un commentaire `<!-- 1a2b3c4 -->` cite un commit.
+- `CHANGELOG.fr.md` et `CHANGELOG.md` — historique des versions de l'app, en français (lu par l'app) et en anglais,
+  qui disent la même chose : `## [Non publié]` / `## [Unreleased]` en tête, puis `## [x.y.z] - AAAA-MM-JJ`,
+  rubriques `###`, liens de comparaison en fin de fichier. Un commentaire `<!-- 1a2b3c4 -->` cite un commit. Tout
+  commit `feat`, `fix` ou `perf` ajoute son entrée dans les deux.
 - `scripts/changelog.ts` et `scripts/docs.ts` — suivi de l'historique et vérification de la documentation.
 - `relay/` — service Netlify indépendant de l'application (aucune dépendance, fonctions dans `netlify/functions`,
   code partagé dans `src/`, syntaxe TypeScript effaçable : il s'exécute aussi tel quel avec `node`). `/github`
@@ -633,7 +655,8 @@ fenêtre ni de processus. Interface et messages en français.
   `publish` (seul `contents: write`, n'exécute pas le code du dépôt) ; actions figées par commit, version en
   commentaire. Build de l'installeur et release sur tag `app-vX.Y.Z` (installeur + `.blockmap`, recalculé après la
   signature par `scripts/blockmap.ts` avec le code d'electron-builder), dont le texte vient de
-  `CHANGELOG.md` (`changelog.ts --notes`, la CI s'arrête si la version n'y figure pas). Signature par SignPath
+  `CHANGELOG.fr.md`, suivi de l'anglais de `CHANGELOG.md` (`changelog.ts --notes`, la CI s'arrête si la version
+  manque dans l'un d'eux). Signature par SignPath
   Foundation (gratuite, open source, licence MIT) si le secret `SIGNPATH_API_TOKEN` existe (candidature refusée le
   2026-10-20 faute de visibilité publique du projet, à renouveler plus tard ; installeur non signé d'ici là) : envoi de l'installeur
   (artefact), approbation manuelle sur signpath.io, vérification `Get-AuthenticodeSignature`, puis publication.

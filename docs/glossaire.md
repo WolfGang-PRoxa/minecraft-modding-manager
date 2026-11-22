@@ -71,7 +71,7 @@ Le fichier qui décrit une version de modpack dans sa release : nom, version, em
 Le texte qui présente les changements d’une version de modpack, écrit par le publieur dans le Studio.
 
 **Nouveautés**\
-L’historique des versions de l’application, dans l’aide. Voir [Nouveautés](../CHANGELOG.md).
+L’historique des versions de l’application, dans l’aide. Voir [Nouveautés](../CHANGELOG.fr.md).
 
 **pack.json**\
 Le fichier d’un dossier de modpack où le Studio garde son identifiant, son nom, sa description, ses notes et le
