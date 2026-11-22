@@ -10,7 +10,7 @@ resource packs, shaders and server plugins with the Studio, in the same applicat
 Hangar).
 
 **[Download the latest version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest)**
-· [Documentation (French)](docs/README.md) · [Changelog (French)](CHANGELOG.md)
+· [Documentation (French)](docs/README.md) · [Changelog](CHANGELOG.md)
 
 ## Features
 
@@ -47,6 +47,23 @@ The application installs for the current Windows account, without administrator 
 [Installation et premier lancement](docs/installation.md); for problems, see [Dépannage](docs/depannage.md).
 Uninstalling is done from Windows settings (**Apps → Installed apps → Modding Manager → Uninstall**).
 
+## Updating
+
+The application checks for new versions by itself (every 10 minutes by default) and installs them automatically
+while it runs in the background; with its window open, the update is offered at the top of the window, with its
+release notes. Installed modpacks also update by themselves, keeping worlds and settings. Both behaviors can be
+turned off in **Paramètres → Démarrage et mises à jour**. Details are in [Mises à jour](docs/mises-a-jour.md).
+
+## Data location
+
+- The application: `%LOCALAPPDATA%\Programs\minecraft-modding-manager`.
+- Settings, GitHub and CurseForge connections (encrypted by Windows), operations log and cache:
+  `%APPDATA%\Modding Manager`, kept on update and uninstall.
+- Installers kept for differential updates and publishers' test servers: `%LOCALAPPDATA%\Modding Manager`.
+- Installed modpacks: one folder per profile in the CurseForge `Instances` folder.
+
+The full list is in [Fichiers et dossiers](docs/fichiers.md).
+
 ## Documentation
 
 The documentation is built into the application (**Aide** button of the title bar, or `F1`) and can also be read
@@ -58,7 +75,7 @@ here, in French:
   [Préparer une version](docs/versions.md) · [Publier et supprimer](docs/publication.md) ·
   [Claude Code et commandes](docs/commandes.md)
 - **The application**: [Paramètres](docs/parametres.md) · [Mises à jour](docs/mises-a-jour.md) ·
-  [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.md)
+  [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.fr.md)
 - **Reference**: [Dépannage](docs/depannage.md) · [Fichiers et dossiers](docs/fichiers.md) ·
   [Confidentialité et sécurité](docs/confidentialite.md) · [Glossaire](docs/glossaire.md)
 - **Development**: [architecture, commands, change tracking](docs/developpement.md)
@@ -69,6 +86,9 @@ here, in French:
 npm install
 npm run dev              # runs the application with hot reload
 npm run studio           # same, opened on the Studio view (--studio option)
+npm run format           # formats the code with Prettier
+npm run lint             # ESLint
+npm run check            # formatting, ESLint, types and documentation (run by the CI, with the tests)
 npm run typecheck
 npm run docs:verifier    # documentation and version history
 npm test
@@ -81,9 +101,10 @@ The code layout, the documentation rules, change tracking and the ways to test w
 
 ### Releasing a new version of the application
 
-1. `npm run changelog` checks that every visible change is mentioned in the « Non publié » section of
-   [CHANGELOG.md](CHANGELOG.md).
-2. `npm run changelog -- --version 1.1.0` turns this section into version 1.1.0 and sets `package.json` to 1.1.0.
+1. `npm run changelog` checks that every visible change is mentioned in the « Unreleased » section of
+   [CHANGELOG.md](CHANGELOG.md) and in the « Non publié » section of its French translation
+   [CHANGELOG.fr.md](CHANGELOG.fr.md).
+2. `npm run changelog -- --version 1.1.0` turns these sections into version 1.1.0 and sets `package.json` to 1.1.0.
 3. Commit, then push an `app-v1.1.0` tag:
 
    ```bash
@@ -93,8 +114,7 @@ The code layout, the documentation rules, change tracking and the ways to test w
    ```
 
 GitHub Actions checks that the version is in the history, builds the installer, has it signed once signing is set
-up (see below) and creates
-the release, with the release notes taken from `CHANGELOG.md`. Installed applications then offer the new version at
+up (see below) and creates the release, with the release notes taken from `CHANGELOG.fr.md` and `CHANGELOG.md`. Installed applications then offer the new version at
 the top of their window, with its release notes, and update in one click.
 
 ### Problem report tracking (maintainer)

@@ -10,7 +10,7 @@ leurs modpacks, mods, packs de ressources, shaders et plugins de serveur avec le
 (GitHub, CurseForge, Modrinth, Hangar).
 
 **[Télécharger la dernière version](https://github.com/WolfGang-PRoxa/minecraft-modding-manager/releases/latest)**
-· [Documentation](docs/README.md) · [Nouveautés](CHANGELOG.md)
+· [Documentation](docs/README.md) · [Nouveautés](CHANGELOG.fr.md)
 
 ## Fonctionnalités
 
@@ -31,6 +31,8 @@ leurs modpacks, mods, packs de ressources, shaders et plugins de serveur avec le
 - **Aide intégrée** (`F1`) : toute la documentation et l'historique des versions, avec une recherche.
 - **Signalement d'un problème** depuis l'application, transmis au mainteneur.
 
+L'application et sa documentation sont en français.
+
 ## Installation
 
 1. Installer [CurseForge](https://www.curseforge.com/download/app) s'il ne l'est pas déjà.
@@ -45,8 +47,27 @@ leurs modpacks, mods, packs de ressources, shaders et plugins de serveur avec le
 
 L'application s'installe pour le compte Windows en cours, sans droits d'administrateur. Le détail est dans
 [Installation et premier lancement](docs/installation.md) ; en cas de souci, voir le [Dépannage](docs/depannage.md).
-La désinstallation se fait depuis les paramètres de Windows (**Applications → Applications installées → Modpack
+La désinstallation se fait depuis les paramètres de Windows (**Applications → Applications installées → Modding
 Manager → Désinstaller**).
+
+## Mise à jour
+
+L'application cherche elle-même ses nouvelles versions (toutes les 10 minutes par défaut) et les installe
+automatiquement pendant qu'elle tourne en arrière-plan ; fenêtre ouverte, la mise à jour est proposée en haut de la
+fenêtre, avec ses nouveautés. Les modpacks installés se mettent aussi à jour d'eux-mêmes, en gardant mondes et
+réglages. Les deux se désactivent dans **Paramètres → Démarrage et mises à jour**. Le détail est dans
+[Mises à jour](docs/mises-a-jour.md).
+
+## Emplacement des données
+
+- L'application : `%LOCALAPPDATA%\Programs\minecraft-modding-manager`.
+- Réglages, connexions GitHub et CurseForge (chiffrées par Windows), journal des opérations et cache :
+  `%APPDATA%\Modding Manager`, conservé lors d'une mise à jour ou d'une désinstallation.
+- Installeurs gardés pour les mises à jour différentielles et serveurs de test des publieurs :
+  `%LOCALAPPDATA%\Modding Manager`.
+- Modpacks installés : un dossier par profil dans le dossier `Instances` de CurseForge.
+
+La liste complète est dans [Fichiers et dossiers](docs/fichiers.md).
 
 ## Documentation
 
@@ -58,7 +79,7 @@ La documentation est intégrée à l'application (bouton **Aide** de la barre de
   [Préparer une version](docs/versions.md) · [Publier et supprimer](docs/publication.md) ·
   [Claude Code et commandes](docs/commandes.md)
 - **L'application** : [Paramètres](docs/parametres.md) · [Mises à jour](docs/mises-a-jour.md) ·
-  [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.md)
+  [Signaler un problème](docs/signalement.md) · [Nouveautés](CHANGELOG.fr.md)
 - **Référence** : [Dépannage](docs/depannage.md) · [Fichiers et dossiers](docs/fichiers.md) ·
   [Confidentialité et sécurité](docs/confidentialite.md) · [Glossaire](docs/glossaire.md)
 - **Développement** : [architecture, commandes, suivi des changements](docs/developpement.md)
@@ -69,6 +90,9 @@ La documentation est intégrée à l'application (bouton **Aide** de la barre de
 npm install
 npm run dev              # lance l'application avec rechargement à chaud
 npm run studio           # même chose, ouverte sur la vue Studio (option --studio)
+npm run format           # formate le code avec Prettier
+npm run lint             # ESLint
+npm run check            # formatage, ESLint, types et documentation (lancé par la CI, avec les tests)
 npm run typecheck
 npm run docs:verifier    # documentation et historique des versions
 npm test
@@ -82,8 +106,10 @@ risque sont décrits dans [docs/developpement.md](docs/developpement.md).
 ### Publier une nouvelle version de l'application
 
 1. `npm run changelog` vérifie que chaque changement visible est mentionné dans la section « Non publié » de
+   [CHANGELOG.fr.md](CHANGELOG.fr.md) et dans la section « Unreleased » de sa version anglaise
    [CHANGELOG.md](CHANGELOG.md).
-2. `npm run changelog -- --version 1.1.0` : cette section devient la version 1.1.0, et `package.json` passe en 1.1.0.
+2. `npm run changelog -- --version 1.1.0` : ces sections deviennent la version 1.1.0, et `package.json` passe en
+   1.1.0.
 3. Committer, puis pousser un tag `app-v1.1.0` :
 
    ```bash
@@ -92,8 +118,9 @@ risque sont décrits dans [docs/developpement.md](docs/developpement.md).
    git push origin main app-v1.1.0
    ```
 
-GitHub Actions vérifie que la version figure dans l'historique, construit l'installeur, le fait signer (voir
-ci-dessous) et crée la release, avec les notes de la version tirées de `CHANGELOG.md`. Les applications déjà
+GitHub Actions vérifie que la version figure dans l'historique, construit l'installeur, le fait signer une fois la
+signature en place (voir ci-dessous) et crée la release, avec les notes de la version tirées de `CHANGELOG.fr.md` et
+`CHANGELOG.md`. Les applications déjà
 installées proposent alors la nouvelle version en haut de leur fenêtre, avec ses nouveautés, et se mettent à jour en
 un clic.
 
